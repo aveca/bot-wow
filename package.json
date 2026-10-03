@@ -1,0 +1,8 @@
+{
+  "name": "bot-wow-pages",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  }
+}
