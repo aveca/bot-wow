@@ -1,155 +1,121 @@
-# Bot-Wow
+# Bot-Wow — MVP
 
-Plateforme web de **Bot-Wow**, destinée à fonctionner avec l'écosystème de l'addon WoW.
+Site compagnon de l'addon WoW **Bot-Wow**.
 
-## Objectifs
+## État actuel
 
-- Fournir un site web production-ready pour Bot-Wow.
-- Connecter proprement le site à l'addon et à son backend/API.
-- Migrer progressivement l'infrastructure de Namecheap vers Cloudflare.
-- Remplacer Stripe par **Mollie** pour les paiements.
-- Conserver un chemin de rollback tant que la nouvelle architecture n'est pas validée.
-- Centraliser le code source, les tests et les déploiements dans GitHub.
+**MVP statique prêt pour GitHub Pages.**
 
-## Architecture cible
+Le dépôt public contient désormais le site vitrine, une démo interactive légère, une page 404 et le workflow GitHub Actions de publication.
 
-```
-Utilisateur
-   |
-   v
-bot-wow.com
-   |
-   +--> Cloudflare DNS / SSL / CDN / WAF
-   |
-   +--> Frontend
-   |
-   +--> API / Workers
-             |
-             +--> Database
-             |
-             +--> Mollie
-             |
-             +--> Services Bot-Wow
-```
+- Source : https://github.com/aveca/bot-wow
+- Déploiement : GitHub Pages
+- Domaine cible : `bot-wow.com`
+- FTP / hébergement Namecheap : **hors périmètre du MVP**
+- Cloudflare : **hors périmètre du MVP**
+- Paiement Mollie : **à brancher ultérieurement côté backend**
+- Secrets : **aucun secret dans le dépôt**
 
-Le domaine reste enregistré chez **Namecheap**. La migration prévue consiste à utiliser Cloudflare pour le DNS et les services compatibles, sans transférer immédiatement le registrar.
-
-## Paiement
-
-Le fournisseur cible est **Mollie**.
-
-Le flux attendu est :
+## Structure
 
 ```
-Client
-  -> création de commande
-  -> création du paiement Mollie côté serveur
-  -> Checkout Mollie
-  -> webhook Mollie
-  -> vérification du paiement côté serveur
-  -> commande PAID
-  -> activation / livraison
+.
+├── index.html
+├── 404.html
+├── .nojekyll
+├── assets/
+│   ├── app.js
+│   └── style.css
+└── .github/
+    └── workflows/
+        └── pages.yml
 ```
 
-Le retour navigateur seul ne doit jamais être considéré comme une preuve de paiement.
+## Publication
 
-Stripe peut rester temporairement disponible pendant la migration afin de permettre un rollback, puis être retiré après validation complète de Mollie.
+Le workflow `.github/workflows/pages.yml` publie automatiquement le contenu de `main` sur GitHub Pages après chaque push.
 
-## Environnements
+Dans GitHub :
 
-- **Production** : branche `main`
-- **Staging** : environnement de validation avant production
-- **Local** : développement et tests
+1. **Settings → Pages**
+2. Source : **GitHub Actions**
+3. Vérifier que le workflow `Deploy Bot-Wow to GitHub Pages` termine avec succès.
+4. Le site est alors disponible sur l'URL Pages fournie par GitHub.
 
-Aucun secret ne doit être commité dans Git.
+Le domaine personnalisé `bot-wow.com` sera configuré **après validation du MVP**. Aucun changement DNS Namecheap n'est requis pour tester l'URL GitHub Pages.
 
-## Secrets
+## Ce que fait le MVP
 
-Les credentials doivent être fournis par l'environnement de déploiement ou un secret manager.
+- Landing page responsive.
+- Présentation des fonctions Bot-Wow.
+- Démo interactive du parcours lobby/session.
+- États `ACTION_REQUIRED` clairement affichés lorsque l'action dépend du client WoW.
+- FAQ expliquant les limites du site statique.
+- Aucun paiement ou authentification simulé comme étant réel.
 
-Exemples de variables :
+## Architecture prévue ensuite
 
-```text
-MOLLIE_API_KEY=
-CLOUDFLARE_ACCOUNT_ID=
-CLOUDFLARE_ZONE_ID=
-DATABASE_URL=
-ADMIN_SECRET=
+GitHub Pages reste le frontend statique.
+
+Les fonctions nécessitant un serveur seront séparées :
+
+```
+Visiteur
+  ↓
+GitHub Pages — site Bot-Wow
+  ↓
+API / backend séparé
+  ├── sessions / utilisateurs
+  ├── base de données
+  ├── addon WoW
+  └── Mollie + webhooks
 ```
 
-Les valeurs réelles ne doivent jamais apparaître dans :
-- le code source ;
-- Git ;
-- les logs ;
-- la documentation ;
-- les captures d'écran.
+GitHub Pages ne doit pas recevoir de clé Mollie, secret admin, credential de base de données ou autre secret serveur.
 
-## Migration Cloudflare
+## Mollie
 
-La migration se fait en plusieurs étapes :
+Mollie n'est **pas encore activé dans ce MVP**.
 
-1. Backup complet de l'hébergement actuel.
-2. Import du code réel dans ce dépôt.
-3. Audit de l'architecture existante.
-4. Reproduction des DNS nécessaires dans Cloudflare.
-5. Déploiement staging.
-6. Validation frontend/API/admin/database.
-7. Validation du paiement Mollie et de son webhook.
-8. Validation email et DNS.
-9. Déploiement production.
-10. Changement manuel des nameservers chez Namecheap.
-11. Surveillance et validation post-bascule.
-12. Retrait progressif de l'ancienne infrastructure uniquement après confirmation du rollback.
+Lors de l'intégration :
 
-Les records email (MX, SPF, DKIM, DMARC) doivent être préservés.
+1. le backend crée le paiement ;
+2. l'utilisateur est redirigé vers Mollie ;
+3. Mollie appelle le webhook ;
+4. le backend vérifie l'état réel du paiement ;
+5. la commande passe à `PAID` ;
+6. la livraison/activation est effectuée.
+
+Le retour navigateur ne constitue jamais à lui seul une preuve de paiement.
+
+## Règle d'autonomie
+
+Le site peut évoluer indépendamment de l'addon.
+
+Une action qui nécessite réellement le client WoW ne doit pas être présentée comme exécutée côté serveur : elle passe en `ACTION_REQUIRED`, indique précisément ce que le joueur doit faire, puis peut être confirmée par un événement réel.
 
 ## Sécurité
 
-Avant toute mise en production :
+Ne jamais committer :
 
-- rechercher les secrets exposés ;
-- vérifier les endpoints d'administration ;
-- vérifier l'authentification ;
-- vérifier les webhooks ;
-- vérifier les permissions ;
-- vérifier les injections SQL/XSS/CSRF selon la stack ;
-- vérifier que les fichiers `.env`, backups et répertoires Git ne sont pas publiquement accessibles.
+- `.env`
+- clés API
+- mots de passe
+- tokens
+- cookies/session secrets
+- dumps de base de données
+- credentials Namecheap/Cloudflare/Mollie
 
-Les mots de passe et tokens trouvés accidentellement doivent être révoqués/rotatés, pas documentés dans le dépôt.
+Le dépôt étant public, toute donnée secrète poussée par erreur doit être considérée comme compromise et révoquée.
 
-## Déploiement
+## Prochaines étapes
 
-Aucun déploiement production ne doit être effectué à l'aveugle.
+1. Valider le MVP sur GitHub Pages.
+2. Ajouter le domaine personnalisé `bot-wow.com`.
+3. Finaliser l'addon WoW et son contrat d'intégration.
+4. Ajouter l'API/backend.
+5. Ajouter Mollie côté serveur et les webhooks.
+6. Ajouter les fonctions commerciales et le téléchargement contrôlé de l'addon.
+7. Envisager Cloudflare lorsque le backend/DNS le justifiera.
 
-Chaque changement important doit être :
-
-```
-branche
-  -> tests
-  -> review/validation
-  -> main
-  -> déploiement
-  -> smoke tests
-```
-
-## Rollback
-
-Tant que la migration n'est pas validée :
-
-- conserver le backup Namecheap ;
-- conserver une version Git connue comme stable ;
-- conserver la configuration DNS précédente ;
-- ne pas supprimer l'ancien backend ;
-- pouvoir revenir à l'ancienne architecture en cas d'échec.
-
-## État initial du projet
-
-Ce dépôt constitue le point de départ GitHub de Bot-Wow.
-
-Les prochaines étapes doivent d'abord consister à importer/auditer le code réel actuellement hébergé sur Namecheap avant de considérer la migration comme terminée.
-
----
-
-**Statut : infrastructure de migration en préparation.**
-
-Le site production actuel reste la référence jusqu'à validation complète de la nouvelle architecture.
+**Le MVP actuel ne dépend volontairement ni de FTP ni de Namecheap.**
