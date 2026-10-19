@@ -4,12 +4,12 @@ compatibility_date = "2026-10-17"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "botwow-db"
-database_id = ""
+database_name = "botwow-production"
+database_id = "e57f5874-a9f0-42bf-8dbc-10785ef083f5"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = ""
+id = "5cca39707796468f83d2016350794f72"
 
 [[r2_buckets]]
 binding = "R2_BINARIES"

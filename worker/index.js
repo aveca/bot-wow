@@ -2057,8 +2057,10 @@ var RATE_LIMITS = {
   // 3/h per email
   activate: { max: 30, windowMs: 3e5 },
   // 30/5min per IP
-  download: { max: 20, windowMs: 36e5 }
+  download: { max: 20, windowMs: 36e5 },
   // 20/h per IP
+  subscribe: { max: 10, windowMs: 36e5 }
+  // 10/h per IP
 };
 function generateLicenseKey() {
   const groups = [];
@@ -2175,7 +2177,7 @@ async function handleSubscribe(request, env2) {
     await env2.DB.prepare(`
       INSERT INTO botwow_emails (email, source, consent_marketing, consent_transactional, subscribed_at, status, ip)
       VALUES (?, ?, ?, ?, ?, 'subscribed', ?)
-    `).bind(email, source, consentMarketing, consentTransactional, now, now, ip).run();
+    `).bind(email, source, consentMarketing, consentTransactional, now, ip).run();
     return jsonResponse({ ok: true, message: "Inscription enregistrée.", email }, 200);
   } catch (error) {
     console.error("Subscribe error:", error);
