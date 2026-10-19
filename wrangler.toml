@@ -15,5 +15,8 @@ id = "5cca39707796468f83d2016350794f72"
 binding = "R2_BINARIES"
 bucket_name = "botwow-binaries"
 
+[[domains]]
+domain = "api.bot-wow.com"
+
 [vars]
 ENVIRONMENT = "development"
