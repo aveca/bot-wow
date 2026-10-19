@@ -7,4 +7,160 @@
 <section id="demo" class="demo"><div class="demo-copy"><div class="eyebrow">03 · PLAYGROUND</div><h2>Teste le flow.</h2><p>Une simulation d’interface pour comprendre le parcours avant le branchement avec le client WoW réel.</p><button class="btn primary" id="demoBtn">Lancer une session <span>→</span></button></div><div class="terminal" id="console"><div class="termbar"><i></i><i></i><i></i><span>BOT-WOW / SESSION</span></div><div class="termbody"><p>&gt; <b>BOOT</b> Bot-Wow prêt.</p><p>&gt; Aucun joueur connecté.</p><p class="dim">&gt; En attente…</p></div><div class="status"><span class="pulse"></span> SESSION READY</div></div></section>
 <section id="download" class="download"><div><div class="eyebrow">04 · NEXT</div><h2>Le site est prêt.<br>Le produit arrive.</h2><p>Ce MVP pose le frontend. L’addon WoW, l’API et le paiement seront ajoutés comme briques séparées — sans exposer de secrets dans GitHub Pages.</p></div><a class="btn primary" href="https://github.com/aveca/bot-wow" target="_blank" rel="noreferrer">Suivre le projet GitHub ↗</a></section>
 <section id="faq" class="section faq"><div class="eyebrow">05 · FAQ</div><h2>Les réponses.</h2><details><summary>Le site peut-il fonctionner seul ?</summary><p>Oui pour la présentation et le parcours MVP. Les fonctions qui nécessitent WoW ou un serveur restent signalées comme dépendantes de leur intégration.</p></details><details><summary>Le paiement est-il déjà actif ?</summary><p>Non. Aucun paiement réel n’est simulé. Mollie sera intégré côté serveur lorsque l’API sera prête.</p></details><details><summary>Pourquoi GitHub Pages ?</summary><p>Pour garder un frontend simple, public, versionné et déployé automatiquement par GitHub Actions.</p></details><details><summary>Quand bot-wow.com sera-t-il utilisé ?</summary><p>Plus tard. Le MVP ne dépend volontairement d’aucun domaine personnalisé.</p></details></section>
-</main><footer><span>BOT•WOW · 2026</span><span>GitHub Pages MVP</span></footer><script src="./assets/app.js"></script></body></html>
+</main><footer><span>BOT•WOW · 2026</span><span>GitHub Pages MVP</span></footer>
+
+<!-- === Bitcoin Request Form === -->
+<section class="bitcoin-request section" id="bitcoin-request">
+  <div class="eyebrow">06 · PAIEMENT BITCOIN</h2>
+  <h2>Obtenir BOT-WOW gratuitement</h2>
+  <p>Entrez votre email pour recevoir le client BOT-WOW + votre clé de licence par email (sous 24h).</p>
+  <form id="btc-request-form" novalidate>
+    <div class="form-group">
+      <input type="email" id="btc-email" class="form-input" placeholder="votre@email.com" required>
+      <button type="submit" class="btn primary form-submit">Envoyer par email</button>
+    </div>
+    <p class="form-note">Pas de carte, pas d'abonnement. 100% gratuit.</p>
+  </form>
+</section>
+
+<!-- === Newsletter Signup Form === -->
+<section class="newsletter section" id="newsletter">
+  <div class="eyebrow">07 · NEWSLETTER</h2>
+  <h2>Restez informé·e·s</h2>
+  <p>Recevez les mises à jour, les nouvelles plages et les astuces directement dans votre boîte.</p>
+  <form id="newsletter-form" novalidate>
+    <div class="form-group">
+      <input type="email" id="newsletter-email" class="form-input" placeholder="votre@email.com" required>
+      <div class="checkbox-group">
+        <input type="checkbox" id="consent-marketing" class="checkbox">
+        <label for="consent-marketing">Je souhaite recevoir des informations marketing</label>
+      </div>
+      <button type="submit" class="btn primary form-submit">S'abonner</button>
+    </div>
+    <p class="form-note">Vous pouvez vous désinscrire à tout moment.</p>
+  </form>
+</section>
+
+<!-- === Email Submission Script === -->
+<script>
+/**
+ * Submit email to Bot-wow backend via Supabase Edge Function
+ * Remplace l'ancien mécanisme mailto: purement frontend
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  // Bitcoin request form
+  const btcForm = document.getElementById('btc-request-form');
+  if (btcForm) {
+    btcForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('btc-email');
+      const email = emailInput.value.trim();
+      const submitBtn = btcForm.querySelector('.form-submit');
+      const originalText = submitBtn.textContent;
+
+      if (!email) {
+        alert('Veuillez entrer une adresse email valide.');
+        return;
+      }
+
+      // Disable button during submission
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Envoi...';
+
+      try {
+        const response = await fetch('https://bot-wow.m4ngo.workers.dev/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            source: 'bitcoin_request',
+            consent_marketing: false,
+            consent_transactional: true
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+          alert('Erreur: ' + result.message);
+        } else if (!result.ok) {
+          alert('Erreur: ' + (result.message || 'Échec de l\'inscription.'));
+        } else {
+          alert('Email enregistré avec succès !\nVous recevrez votre client BOT-WOW + clé de licence par email sous 24h.');
+          emailInput.value = '';
+        }
+      } catch (err) {
+        console.error('Submission error:', err);
+        alert('Une erreur est survenue. Veuillez réessayer.');
+      } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
+
+  // Newsletter form
+  const newsletterForm = document.getElementById('newsletter-form');
+  if (newsletterForm) {
+    newsletterForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('newsletter-email');
+      const consentInput = document.getElementById('consent-marketing');
+      const email = emailInput.value.trim();
+      const submitBtn = newsletterForm.querySelector('.form-submit');
+      const originalText = submitBtn.textContent;
+
+      if (!email) {
+        alert('Veuillez entrer une adresse email valide.');
+        return;
+      }
+
+      // Check marketing consent if the checkbox exists
+      const consent = consentInput ? consentInput.checked : true;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Envoi...';
+
+      try {
+        const response = await fetch('https://bot-wow.m4ngo.workers.dev/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            source: 'newsletter',
+            consent_marketing: consent,
+            consent_transactional: true
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+          alert('Erreur: ' + result.message);
+        } else if (!result.ok) {
+          alert('Erreur: ' + (result.message || 'Échec de l\'inscription.'));
+        } else {
+          alert('Inscription réussie !\nMerci de vous être abonné à la newsletter Bot-Wow.');
+          emailInput.value = '';
+          if (consentInput) consentInput.checked = false;
+        }
+      } catch (err) {
+        console.error('Newsletter submission error:', err);
+        alert('Une erreur est survenue. Veuillez réessayer.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
+});
+</script>
+<script src="./assets/app.js"></script>
+
+</body>
+</html>
