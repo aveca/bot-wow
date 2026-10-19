@@ -1,0 +1,19 @@
+name = "bot-wow"
+main = "worker/index.js"
+compatibility_date = "2026-10-17"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "botwow-db"
+database_id = ""
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = ""
+
+[[r2_buckets]]
+binding = "R2_BINARIES"
+bucket_name = "botwow-binaries"
+
+[vars]
+ENVIRONMENT = "development"
