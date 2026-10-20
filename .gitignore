@@ -1,0 +1,5 @@
+# Artefacts de build de la distribution (paquets zip) : jamais versionnes.
+dist/
+
+# Dependances
+node_modules/
