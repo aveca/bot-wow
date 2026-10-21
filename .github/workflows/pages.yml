@@ -29,7 +29,7 @@ jobs:
       - name: Prepare static artifact
         run: |
           mkdir -p _site
-          for f in index.html demo.html success.html cancel.html 404.html .nojekyll; do
+          for f in index.html demo.html success.html cancel.html 404.html .nojekyll version.txt; do
             [ -e "$f" ] && cp "$f" _site/
           done
           for d in assets docs legal; do
