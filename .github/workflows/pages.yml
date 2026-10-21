@@ -29,11 +29,14 @@ jobs:
       - name: Prepare static artifact
         run: |
           mkdir -p _site
-          for f in index.html demo.html success.html cancel.html 404.html .nojekyll version.txt; do
+          for f in index.html demo.html success.html cancel.html 404.html robots.txt sitemap.xml .nojekyll version.txt; do
             [ -e "$f" ] && cp "$f" _site/
           done
-          for d in assets docs legal; do
+          for d in assets docs legal fr; do
             [ -d "$d" ] && cp -r "$d" _site/
+          done
+          for f in features.html fishing.html getting-started.html compatibility.html roadmap.html faq.html; do
+            [ -e "$f" ] && cp "$f" _site/
           done
           echo "--- contenu de l'artefact ---"
           ls -1 _site

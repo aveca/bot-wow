@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feuille de route — BOT-WOW</title>
+<meta name="description" content="Ce que BOT-WOW fait aujourd'hui, ce qui se construit, et la suite — avec des dates seulement quand elles sont tenables.">
+<link rel="canonical" href="https://bot-wow.com/fr/roadmap.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/roadmap.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/roadmap.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./fishing.html">Fonctionnement</a>
+      <a href="./demo.html">Démo</a><a href="../docs/fr/">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="../#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Accueil</a>
+    <h1>Feuille de route <span class="grad">&amp; changelog</span></h1>
+    <p class="kp">Maintenant, ensuite, et jamais — des statuts visibles plutôt que des
+      prédictions confiantes. Les dates n'apparaissent que lorsqu'elles sont tenables.</p>
+
+    <div class="prose">
+      <h2>En place aujourd'hui (v1.2.0)</h2>
+      <ul>
+        <li>Détection du flotteur mesurée et cycle complet lancer → morsure → prise,
+          y compris le mode arrière-plan sans focus de la fenêtre.</li>
+        <li>Mémoire persistante des spots (schéma versionné, export / import) avec
+          visites planifiées, fiabilité mesurée et historique de mobs.</li>
+        <li>Rondes optimisées (plus proche voisin + 2-opt, trois modes) — la démo du site
+          exécute le même planificateur, confronté à celui du bot Python à chaque build.</li>
+        <li>Licences : activation par machine, validation serveur, manifeste SHA-256 sur
+          le paquet de diffusion, rail bitcoin manuel avec approbation admin explicite.</li>
+      </ul>
+
+      <h2>En cours</h2>
+      <ul>
+        <li><b>Trajet entre spots</b> — l'odomètre + l'auto-run passent les tests unitaires
+          (dérive nulle au repos, arrivée vérifiée) ; la validation en jeu du trajet
+          complet est l'étape restante.</li>
+        <li><b>Retour au cadavre</b> — la chaîne de défaillance (mort vue seulement au
+          repos, pas de confirmation de fantôme, pas de navigation vers le cadavre,
+          signal de résurrection ambigu) a été documentée ; une machine à états bornée
+          avec délais par étape est en cours d'implémentation. Tant qu'elle ne tient pas
+          en jeu, une mort laisse le bot à l'arrêt et attend un humain.</li>
+      </ul>
+
+      <h2>Prévu (sans date promise)</h2>
+      <ul>
+        <li>Autres clients de jeu (profils TBC / WotLK) — après la validation cœur en jeu,
+          jamais avant.</li>
+        <li>Partage de la carte des spots entre utilisateurs.</li>
+      </ul>
+
+      <h2>Jamais (sauf si cette page change la première)</h2>
+      <ul>
+        <li>Rôles grinding / collecte / quêtes / champs de bataille / combat.</li>
+        <li>Lecture mémoire ou injection dans le processus du jeu.</li>
+        <li>Toute promesse « sûr » ou « indétectable » — voyez la
+          <a href="./compatibility.html">page compatibilité</a> pour la version honnête.</li>
+      </ul>
+
+      <div class="callout green">📜 <span>Le changelog détaillé et versionné vit dans
+        <a href="../docs/fr/changelog.html">docs/changelog.html</a>. Chaque entrée cite les
+        mesures ou les tests qui justifient le changement.</span></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans lien avec ni l'aval de Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="./features.html">Fonctions</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./compatibility.html">Compatibilité</a></li>
+          <li><a href="../#offre">Prix</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs &amp; légal</h4>
+        <ul>
+          <li><a href="../docs/fr/changelog.html">Notes de version</a></li>
+          <li><a href="../docs/fr/known-issues.html">Problèmes connus</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="../legal/fr/terms.html">CGV · Confidentialité · Remboursements</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. N'est pas un produit Blizzard.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

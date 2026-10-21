@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Demonstration du bot de peche Casinobabe : decouverte des bancs, carte d'une oasis et rondes optimisees. Donnees simulees.">
+<meta name="description" content="Demonstration of the Casinobabe fishing bot: spot discovery, an oasis map, optimised rounds. Simulated data.">
 <meta name="theme-color" content="#08080d">
-<title>Demo — Bot de peche Casinobabe</title>
+<title>Demo — the Casinobabe fishing bot</title>
+<link rel="canonical" href="https://bot-wow.com/demo.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./assets/style.css">
 <style>
   .demo-wrap{max-width:1180px;margin:0 auto;padding:34px 22px 90px}
@@ -42,89 +46,91 @@
 </style>
 </head>
 <body>
-<header class="nav">
-  <a class="brand" href="./">BOT<span>·</span>WOW</a>
-  <nav><a href="./#how">Comment ça marche</a><a href="./#features">Fonctions</a><a href="./demo.html" class="nav-cta">Démo pêche</a></nav>
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="brand" href="./">BOT<span>·</span>WOW</a>
+    <nav class="site-nav"><a href="./#features">Features</a><a href="./fishing.html">How it works</a><a href="./#offre">Pricing</a></nav>
+  </div>
 </header>
 
 <main class="demo-wrap">
-  <a class="backlink" href="./">← Retour à l'accueil</a>
-  <h1 style="margin:.2em 0 .3em;font-size:30px">Démo — le bot de pêche</h1>
+  <a class="backlink" href="./">← Back to home</a>
+  <h1 style="margin:.2em 0 .3em;font-size:30px">Demo — the fishing bot</h1>
   <p style="color:#8b8ba7;max-width:760px;margin:0 0 8px;line-height:1.6">
-    Le bot <b>détecte et mémorise les bancs de poissons</b>, construit une carte de l'oasis,
-    calcule une <b>ronde optimisée</b> et se déplace automatiquement d'un point de pêche à l'autre.
-    Voici la démonstration de la carte et du calcul de ronde.
+    The bot <b>detects and memorises fishing spots</b>, builds the oasis map,
+    computes an <b>optimised round</b> and walks from one fishing spot to the next.
+    This is the map and round-computation demonstration.
   </p>
 
   <div class="sim-banner">
     <span>⚠</span>
-    <div><b>DONNÉES SIMULÉES.</b> Cette carte est un jeu d'essai : les positions sont
-    synthétiques et ne correspondent à aucune session de jeu réelle. Les règles de calcul
-    (pondération du risque, disponibilité, rendement attendu) sont exactement celles du
-    programme local — une parité automatisée compare les deux implémentations à chaque build.</div>
+    <div><b>SIMULATED DATA.</b> This map is a test fixture: the positions are synthetic and
+    do not correspond to any real game session. The computation rules (risk weighting,
+    availability, expected yield) are exactly the ones of the local program — an automated
+    parity check compares both implementations at each build.</div>
   </div>
 
   <div class="grid-demo">
     <div class="panel">
-      <h3>Carte de l'oasis</h3>
-      <p class="sub">Bancs mémorisés, niveau de risque, et ronde calculée.</p>
-      <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Carte de l'oasis de démonstration"></svg>
+      <h3>Oasis map</h3>
+      <p class="sub">Memorised spots, risk level, and the computed round.</p>
+      <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Demonstration oasis map"></svg>
       <div class="legend">
-        <span><i style="background:#5ad07a"></i>banc sûr (fiabilité élevée)</span>
-        <span><i style="background:#e6c65a"></i>banc moyen</span>
-        <span><i style="background:#ef7a7a"></i>banc risqué (mobs / faible rendement)</span>
-        <span><i style="background:#ef7a7a;border-radius:2px"></i>mob repéré</span>
-        <span><i style="background:#6ea8ff"></i>ronde calculée</span>
+        <span><i style="background:#5ad07a"></i>safe spot (high reliability)</span>
+        <span><i style="background:#e6c65a"></i>medium spot</span>
+        <span><i style="background:#ef7a7a"></i>risky spot (mobs / low yield)</span>
+        <span><i style="background:#ef7a7a;border-radius:2px"></i>mob spotted</span>
+        <span><i style="background:#6ea8ff"></i>computed round</span>
       </div>
     </div>
 
     <div>
       <div class="panel" style="margin-bottom:16px">
-        <h3>Paramètres</h3>
-        <p class="sub">Modifiez un paramètre : la ronde est recalculée immédiatement.</p>
+        <h3>Params</h3>
+        <p class="sub">Change one value: the round is recomputed immediately.</p>
         <div class="controls">
           <div class="ctl"><label for="mode">Mode</label>
             <select id="mode">
-              <option value="prudent">Prudent</option>
-              <option value="equilibre" selected>Équilibré</option>
+              <option value="prudent">Cautious</option>
+              <option value="equilibre" selected>Balanced</option>
               <option value="exploration">Exploration</option>
             </select>
           </div>
-          <div class="ctl"><label for="maxspots">Bancs max</label>
+          <div class="ctl"><label for="maxspots">Max spots</label>
             <input type="range" id="maxspots" min="1" max="6" value="6">
             <span id="maxspotsv">6</span>
           </div>
         </div>
         <table class="metrics">
-          <tr><td>Bancs dans la ronde</td><td id="m-spots">–</td></tr>
-          <tr><td>Déplacement cumulé</td><td id="m-travel">–</td></tr>
-          <tr><td>Temps de pêche cumulé</td><td id="m-fish">–</td></tr>
-          <tr><td>Prises <b>attendues</b> (estimation)</td><td id="m-exp">–</td></tr>
-          <tr><td>Rendement attendu</td><td id="m-h">–</td></tr>
-          <tr><td>Segments non mesurés</td><td id="m-unv">–</td></tr>
+          <tr><td>Spots in the round</td><td id="m-spots">–</td></tr>
+          <tr><td>Travel time</td><td id="m-travel">–</td></tr>
+          <tr><td>Fishing time</td><td id="m-fish">–</td></tr>
+          <tr><td><b>Expected</b> catches (estimate)</td><td id="m-exp">–</td></tr>
+          <tr><td>Expected yield</td><td id="m-h">–</td></tr>
+          <tr><td>Unmeasured legs</td><td id="m-unv">–</td></tr>
         </table>
         <p class="note">
-          Les « prises attendues » sont une <b>estimation</b> fondée sur l'historique simulé des
-          bancs, pas une mesure. Un chemin dont la traversabilité n'a jamais été vérifiée
-          n'est proposé qu'en mode <code>exploration</code>, et il est alors signalé.
+          "Expected catches" are an <b>estimate</b> based on the simulated history of the
+          spots, not a measurement. A path whose walkability has never been verified is
+          only offered in <code>exploration</code> mode, and it is flagged when it is.
         </p>
       </div>
 
       <div class="panel">
-        <h3>Déroulé de la ronde</h3>
-        <p class="sub">Ordre des points de pêche et risque de chaque trajet.</p>
+        <h3>Round timeline</h3>
+        <p class="sub">Order of the fishing spots and the risk of each leg.</p>
         <ol class="steps" id="steps"></ol>
       </div>
 
       <div class="panel" style="margin-top:16px">
-        <h3>Spot sélectionné</h3>
-        <p class="sub">Cliquez un banc sur la carte.</p>
-        <div id="spotPanel"><p class="dim">Cliquez un banc sur la carte pour voir ses caractéristiques (données simulées).</p></div>
+        <h3>Selected spot</h3>
+        <p class="sub">Click a spot on the map.</p>
+        <div id="spotPanel"><p class="dim">Click a spot on the map to see its characteristics (simulated data).</p></div>
       </div>
 
       <div class="panel" style="margin-top:16px">
-        <h3>Pourquoi cette ronde</h3>
-        <p class="sub">Explication du choix de l'itinéraire.</p>
+        <h3>Why this round</h3>
+        <p class="sub">Explanation of the route choice.</p>
         <div id="explain"></div>
       </div>
     </div>

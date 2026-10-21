@@ -64,11 +64,20 @@ for (const file of ["assets/demo.js", "assets/route-planner.js", "scripts/build-
 
 // --- Site public : pages liees, aucune page morte -------------------------
 const PUBLIC_PAGES = [
-  "index.html", "demo.html", "success.html", "cancel.html",
+  "index.html", "demo.html", "success.html", "cancel.html", "404.html",
+  "features.html", "fishing.html", "getting-started.html",
+  "compatibility.html", "roadmap.html", "faq.html",
   "docs/index.html", "docs/install.html", "docs/changelog.html",
   "docs/known-issues.html", "docs/license.html",
+  "docs/fr/index.html", "docs/fr/install.html", "docs/fr/changelog.html",
+  "docs/fr/known-issues.html", "docs/fr/license.html",
   "legal/terms.html", "legal/privacy.html", "legal/refund.html",
-  "assets/favicon.svg",
+  "legal/fr/terms.html", "legal/fr/privacy.html", "legal/fr/refund.html",
+  "fr/index.html", "fr/demo.html", "fr/success.html", "fr/cancel.html",
+  "fr/404.html", "fr/features.html", "fr/fishing.html",
+  "fr/getting-started.html", "fr/compatibility.html", "fr/roadmap.html",
+  "fr/faq.html",
+  "assets/favicon.svg", "robots.txt", "sitemap.xml",
 ];
 for (const file of PUBLIC_PAGES) {
   if (!fs.existsSync(path.join(root, file))) failures.push(`missing page: ${file}`);

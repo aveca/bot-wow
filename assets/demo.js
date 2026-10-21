@@ -12,6 +12,47 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('oasis');
 const state = { map: null, round: null, selected: null };
 
+/* Couleurs s'appuient sur l'ID elementText uniquement. Textes affiches :
+   la langue vient de <html lang> (EN par defaut, FR sous /fr/). */
+const IS_FR = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+const T = IS_FR ? {
+  spotEmpty: 'Cliquez un banc sur la carte pour voir ses caractéristiques (données simulées).',
+  kindAppat: 'Appât', kindCible: 'Cible', kindBanc: 'Banc',
+  kindLowAppat: 'appât', kindLowCible: 'cible', kindLowBanc: 'banc',
+  mobsNone: 'aucun observé',
+  colType: 'Type', colScore: 'Score de détection', colRel: 'Fiabilité observée',
+  colCatches: 'Prises / visites (simulé)', colRate: 'Taux de prise attendu (estimation)',
+  colMobs: 'Mobs autour', colLegs: 'Trajets mesurés vers ce banc',
+  legUnverified: 'non vérifié', legRisk: 'risque : ', legRel: 'fiabilité ', legMastered: 'maîtrisé',
+  modePrudent: 'Prudent', modeEquilibre: 'Équilibré', modeExploration: 'Exploration',
+  explHead: 'Mode <b>%M</b> : l\'ordre minimise le <b>coût attendu</b> (temps de déplacement mesuré + pénalité de risque + probabilité d\'échec), puis l\'ordre est amélioré localement (2-opt).',
+  explUnv: '<b>%N</b> segment(s) de la ronde n\'ont <b>jamais été mesurés</b> : ils sont signalés et ne sont proposés qu\'en exploration.',
+  explAll: 'Tous les segments de cette ronde ont été <b>mesurés</b>.',
+  explTravel: 'Déplacement cumulé : <b>%T s</b> · pêche estimée : <b>%F s</b>.',
+  explCatch: 'Prises <b>attendues</b> : <b>%C</b> — estimation sur données simulées, jamais une mesure de jeu.',
+  stepCatches: '%K — %C prise(s) sur %V visite(s)',
+  stepFallback: 'banc',
+  mapUnavailable: 'Carte indisponible : %E',
+} : {
+  spotEmpty: 'Click a spot on the map to see its characteristics (simulated data).',
+  kindAppat: 'Bait', kindCible: 'Target', kindBanc: 'School',
+  kindLowAppat: 'bait', kindLowCible: 'target', kindLowBanc: 'school',
+  mobsNone: 'none observed',
+  colType: 'Type', colScore: 'Detection score', colRel: 'Observed reliability',
+  colCatches: 'Catches / visits (simulated)', colRate: 'Expected catch rate (estimate)',
+  colMobs: 'Mobs nearby', colLegs: 'Measured legs to this spot',
+  legUnverified: 'unverified', legRisk: 'risk: ', legRel: 'reliability ', legMastered: 'mastered',
+  modePrudent: 'Cautious', modeEquilibre: 'Balanced', modeExploration: 'Exploration',
+  explHead: 'Mode <b>%M</b>: the order minimises the <b>expected cost</b> (measured travel time + risk penalty + failure probability), then is improved locally (2-opt).',
+  explUnv: '<b>%N</b> leg(s) of the round have <b>never been measured</b>: they are flagged and only offered in exploration mode.',
+  explAll: 'Every leg of this round has been <b>measured</b>.',
+  explTravel: 'Total travel: <b>%T s</b> · estimated fishing: <b>%F s</b>.',
+  explCatch: '<b>Expected</b> catches: <b>%C</b> — an estimate over simulated data, never a game measurement.',
+  stepCatches: '%K — %C catch(es) over %V visit(s)',
+  stepFallback: 'school',
+  mapUnavailable: 'Map unavailable: %E',
+};
+
 function el(tag, attrs = {}, text = null) {
   const n = document.createElementNS(SVG_NS, tag);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
@@ -30,10 +71,10 @@ function riskColor(spot) {
 }
 
 function riskLabel(leg) {
-  if (!leg.verified) return { txt: 'non vérifié', cls: 'risk-mid' };
-  if ((leg.obstacles || []).length) return { txt: 'risque : ' + leg.obstacles.join(', '), cls: 'risk-hi' };
-  if (leg.successRate < 0.8) return { txt: 'fiabilité ' + Math.round(leg.successRate * 100) + ' %', cls: 'risk-mid' };
-  return { txt: 'maîtrisé', cls: 'risk-ok' };
+  if (!leg.verified) return { txt: T.legUnverified, cls: 'risk-mid' };
+  if ((leg.obstacles || []).length) return { txt: T.legRisk + leg.obstacles.join(', '), cls: 'risk-hi' };
+  if (leg.successRate < 0.8) return { txt: T.legRel + Math.round(leg.successRate * 100) + ' %', cls: 'risk-mid' };
+  return { txt: T.legMastered, cls: 'risk-ok' };
 }
 
 function draw() {
@@ -101,22 +142,22 @@ function renderSpotPanel() {
   const map = state.map;
   const s = (map.spots || []).find((x) => x.id === state.selected);
   if (!s) {
-    panel.innerHTML = '<p class="dim">Cliquez un banc sur la carte pour voir ses caractéristiques (données simulées).</p>';
+    panel.innerHTML = `<p class="dim">${T.spotEmpty}</p>`;
     return;
   }
-  const kind = s.kind === 'appat' ? 'Appât' : (s.kind === 'cible' ? 'Cible' : 'Banc');
-  const mobs = (s.mobs || []).length ? (s.mobs || []).join(', ') : 'aucun observé';
+  const kind = s.kind === 'appat' ? T.kindAppat : (s.kind === 'cible' ? T.kindCible : T.kindBanc);
+  const mobs = (s.mobs || []).length ? (s.mobs || []).join(', ') : T.mobsNone;
   const legs = (state.round.legs || []).filter((l) => l.from === s.id || l.to === s.id);
   const verified = legs.filter((l) => l.verified).length;
   panel.innerHTML =
     '<table class="metrics">' +
-    `<tr><td>Type</td><td>${kind}</td></tr>` +
-    `<tr><td>Score de détection</td><td>${Math.round(Number(s.score || 0) * 100)} %</td></tr>` +
-    `<tr><td>Fiabilité observée</td><td>${Math.round(Number(s.reliability || 0) * 100)} %</td></tr>` +
-    `<tr><td>Prises / visites (simulé)</td><td>${s.catches || 0} / ${s.visits || 0}</td></tr>` +
-    `<tr><td>Taux de prise attendu (estimation)</td><td>${Math.round(Number(s.expectedCatchRate || 0) * 100)} %</td></tr>` +
-    `<tr><td>Mobs autour</td><td>${mobs}</td></tr>` +
-    `<tr><td>Trajets mesurés vers ce banc</td><td>${verified} / ${legs.length}</td></tr>` +
+    `<tr><td>${T.colType}</td><td>${kind}</td></tr>` +
+    `<tr><td>${T.colScore}</td><td>${Math.round(Number(s.score || 0) * 100)} %</td></tr>` +
+    `<tr><td>${T.colRel}</td><td>${Math.round(Number(s.reliability || 0) * 100)} %</td></tr>` +
+    `<tr><td>${T.colCatches}</td><td>${s.catches || 0} / ${s.visits || 0}</td></tr>` +
+    `<tr><td>${T.colRate}</td><td>${Math.round(Number(s.expectedCatchRate || 0) * 100)} %</td></tr>` +
+    `<tr><td>${T.colMobs}</td><td>${mobs}</td></tr>` +
+    `<tr><td>${T.colLegs}</td><td>${verified} / ${legs.length}</td></tr>` +
     '</table>';
 }
 
@@ -126,16 +167,16 @@ function renderExplanation() {
   if (!box) return;
   const r = state.round;
   const m = r.metrics || {};
-  const modeLabel = { prudent: 'Prudent', equilibre: 'Équilibré', exploration: 'Exploration' }[r.mode] || r.mode;
+  const modeLabel = { prudent: T.modePrudent, equilibre: T.modeEquilibre, exploration: T.modeExploration }[r.mode] || r.mode;
   const lines = [];
-  lines.push(`Mode <b>${modeLabel}</b> : l'ordre minimise le <b>coût attendu</b> (temps de déplacement mesuré + pénalité de risque + probabilité d'échec), puis l'ordre est amélioré localement (2-opt).`);
+  lines.push(T.explHead.replace('%M', modeLabel));
   if (m.unverifiedLegs > 0) {
-    lines.push(`<b>${m.unverifiedLegs}</b> segment(s) de la ronde n'ont <b>jamais été mesurés</b> : ils sont signalés et ne sont proposés qu'en exploration.`);
+    lines.push(T.explUnv.replace('%N', m.unverifiedLegs));
   } else {
-    lines.push('Tous les segments de cette ronde ont été <b>mesurés</b>.');
+    lines.push(T.explAll);
   }
-  lines.push(`Déplacement cumulé : <b>${m.travelSec} s</b> · pêche estimée : <b>${m.fishSec} s</b>.`);
-  lines.push(`Prises <b>attendues</b> : <b>${m.expectedCatches}</b> — estimation sur données simulées, jamais une mesure de jeu.`);
+  lines.push(T.explTravel.replace('%T', m.travelSec).replace('%F', m.fishSec));
+  lines.push(T.explCatch.replace('%C', m.expectedCatches));
   box.innerHTML = '<ul>' + lines.map((l) => `<li>${l}</li>`).join('') + '</ul>';
 }
 
@@ -163,10 +204,10 @@ function render() {
     n.className = 'n';
     n.textContent = String(i + 1).padStart(2, '0');
     const txt = document.createElement('span');
-    const kind = s && s.kind === 'appat' ? 'appât' : (s && s.kind === 'cible' ? 'cible' : 'banc');
+    const kind = s && s.kind === 'appat' ? T.kindLowAppat : (s && s.kind === 'cible' ? T.kindLowCible : T.kindLowBanc);
     const catches = s ? (s.catches || 0) : 0;
     const visits = s ? (s.visits || 0) : 0;
-    txt.textContent = s ? `${kind} — ${catches} prise(s) sur ${visits} visite(s)` : 'banc';
+    txt.textContent = s ? T.stepCatches.replace('%K', kind).replace('%C', catches).replace('%V', visits) : T.stepFallback;
     li.appendChild(n);
     li.appendChild(txt);
     if (i < r.legs.length) {
@@ -185,7 +226,10 @@ function render() {
 }
 
 async function boot() {
-  const res = await fetch('./assets/demo-map.json', { cache: 'no-cache' });
+  // La carte est un file voisin du module (assets/demo-map.json) : la
+  // resolution passe par import.meta.url pour fonctionner aussi depuis
+  // une page sertie sous /fr/.
+  const res = await fetch(new URL('demo-map.json', import.meta.url), { cache: 'no-cache' });
   state.map = await res.json();
   document.getElementById('mode').addEventListener('change', render);
   const ms = document.getElementById('maxspots');
@@ -198,5 +242,5 @@ async function boot() {
 
 boot().catch((e) => {
   document.getElementById('steps').innerHTML =
-    `<li style="color:#ef7a7a">Carte indisponible : ${String(e).slice(0, 120)}</li>`;
+    `<li style="color:#ef7a7a">${T.mapUnavailable.replace('%E', String(e).slice(0, 120))}</li>`;
 });

@@ -1,62 +1,68 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Commande confirmée — BOT-WOW</title>
-<meta name="description" content="Retour après un paiement BOT-WOW : vérification du paiement côté serveur et délivrance de la licence.">
-<meta name="theme-color" content="#04060b">
+<title>Order placed — BOT-WOW</title>
+<meta name="description" content="Return from a BOT-WOW payment: confirmation happens server-side, then your licence is issued.">
 <link rel="canonical" href="https://bot-wow.com/success.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/success.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/success.html">
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/style.css">
+<link rel="stylesheet" href="./assets/site.css">
 </head>
 <body>
-<header class="site-head">
-  <div class="wrap head-in">
-    <a class="brand" href="./" aria-label="BOT·WOW — accueil">
-      <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
-        <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
-        <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
-        <path d="M16 3v8" stroke="#46e6ff" stroke-width="1.4" stroke-linecap="round"/>
-        <circle cx="16" cy="22" r="4" fill="#ffb545"/>
-      </svg>
-      <span>BOT<span class="dim">·</span>WOW</span>
-      <span class="dot" aria-hidden="true"></span>
-    </a>
-    <nav class="site-nav" aria-label="Navigation principale">
-      <a href="./#demo">Démo</a>
-      <a href="./#compat">Compatibilité</a>
-      <a href="./#offre">Offre</a>
-      <a href="./docs/">Documentation</a>
-      <a class="btn primary sm" href="./#offre">Acheter — 20 €</a>
-    </nav>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links"><a href="./features.html">Features</a><a href="./demo.html">Demo</a><a href="./docs/index.html">Docs</a></div>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre">Buy — €20.00</a>
+    </div>
   </div>
-</header>
+</nav>
+
 <main class="page">
-  <div class="wrap">
-    <div class="panel">
-      <span class="eyebrow">Paiement</span>
-      <h1>Merci — votre paiement est en cours de vérification</h1>
-      <p class="lead">Le paiement n'est <b>pas</b> confirmé par la seule visite de cette page : il est vérifié côté serveur, auprès de notre prestataire de paiement.</p>
-      <h2>Ce qui se passe maintenant</h2>
+  <div class="w">
+    <a class="backlink2" href="./">← Home</a>
+    <div class="callout green" style="padding:22px 24px">
+      <span style="font-size:28px">✅</span>
+      <span><b>Thank you — your order is in.</b> Seeing this page alone does <b>not</b>
+        confirm the payment: it is verified server-side, with our payment provider.</span>
+    </div>
+
+    <div class="prose">
+      <h2>What happens now</h2>
       <ol>
-        <li>La confirmation du prestataire de paiement est reçue par notre serveur (un webhook signé).</li>
-        <li>Le serveur vérifie le statut <code>paid</code>, le montant, la devise et le produit, puis crée votre licence.</li>
-        <li>Vous recevez par e-mail votre <b>clé de licence</b> et votre <b>lien de téléchargement</b>, ainsi que la procédure d'installation.</li>
+        <li>Our server receives the provider's signed confirmation (a webhook).</li>
+        <li>It verifies the <code>paid</code> status, the amount, the currency and the
+            product, then creates your licence. A replayed confirmation is ignored.</li>
+        <li>You receive an email with your <b>licence key</b> and your <b>download
+            link</b>, plus the install procedure.</li>
       </ol>
-      <h2>Si le courriel n'arrive pas</h2>
-      <p>Vérifiez les courriers indésirables, puis écrivez à <a href="mailto:support@bot-wow.com">support@bot-wow.com</a> en indiquant l'adresse utilisée lors du paiement : la commande est conservée, aucune licence n'est perdue.</p>
-      <p style="margin-top:22px"><a class="btn" href="./docs/install.html">Lire le guide d'installation →</a></p>
+      <h2>If the email does not arrive</h2>
+      <p>Check your spam folder, then write to
+        <a href="mailto:support@bot-wow.com">support@bot-wow.com</a> with the address used
+        at payment: the order is stored, no licence is lost.</p>
+      <p style="margin-top:22px"><a class="btn btn-gold" href="./docs/install.html">Read the install guide →</a></p>
     </div>
   </div>
 </main>
-<footer class="site-foot">
-  <div class="wrap">
-    <div class="foot-base">
-      <span>© 2026 Casinobabe — BOT-WOW</span>
-      <a href="./">Retour à l'accueil</a>
+
+<footer>
+  <div class="w">
+    <div class="foot-bottom">
+      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Not affiliated with or endorsed by Blizzard Entertainment.</div>
+      <a href="./">← Home</a>
     </div>
   </div>
 </footer>
+
 </body>
 </html>

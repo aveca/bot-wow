@@ -1,19 +1,21 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Notes de version — BOT-WOW</title>
-<meta name="description" content="Historique des versions du bot de pêche BOT-WOW, avec les mesures qui justifient chaque correctif.">
+<title>Release notes — BOT-WOW</title>
+<meta name="description" content="Version history of the BOT-WOW fishing bot, with the measurements that justify each fix.">
 <meta name="theme-color" content="#04060b">
 <link rel="canonical" href="https://bot-wow.com/docs/changelog.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/changelog.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/changelog.html">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 <header class="site-head">
   <div class="wrap head-in">
-    <a class="brand" href="../" aria-label="BOT·WOW — accueil">
+    <a class="brand" href="../" aria-label="BOT·WOW — home">
       <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
         <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
         <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
@@ -23,12 +25,12 @@
       <span>BOT<span class="dim">·</span>WOW</span>
       <span class="dot" aria-hidden="true"></span>
     </a>
-    <nav class="site-nav" aria-label="Navigation principale">
-      <a href="../#demo">Démo</a>
-      <a href="../#compat">Compatibilité</a>
-      <a href="../#offre">Offre</a>
-      <a href="../docs/">Documentation</a>
-      <a class="btn primary sm" href="../#offre">Acheter — 20 €</a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="../#demo">Demo</a>
+      <a href="../compatibility.html">Compatibility</a>
+      <a href="../#offre">Pricing</a>
+      <a href="./index.html">Documentation</a>
+      <a class="btn primary sm" href="../#offre">Buy — €20.00</a>
     </nav>
   </div>
 </header>
@@ -36,27 +38,27 @@
   <div class="wrap">
     <div class="panel">
       <span class="eyebrow">Documentation</span>
-      <h1>Notes de version</h1>
-      <p class="lead">Chaque correctif important est associé à sa mesure. Les chiffres ci-dessous proviennent de sessions de jeu réelles (Lushwater Oasis, client 2336×1323).</p>
-      <h2>1.2.0 —_edition actuelle_</h2>
+      <h1>Release notes</h1>
+      <p class="lead">Every significant fix comes with its measurement. The figures below come from real game sessions (Lushwater Oasis, client 2336×1323).</p>
+      <h2>1.2.0 — current release</h2>
       <ul>
-        <li>Mémoire des spots, carte et export/import versionnés.</li>
-        <li>Planificateur de rondes : plus proche voisin + 2-opt, trois modes (prudent / équilibré / exploration).</li>
-        <li>Démonstration web de la carte, avec parité vérifiée entre le calcul du site et celui du bot local.</li>
-        <li>Paquet de distribution versionné avec manifeste SHA-256.</li>
+        <li>Spot memory, map, and versioned export / import.</li>
+        <li>Round planner: nearest neighbour + 2-opt, three modes (cautious / balanced / exploration).</li>
+        <li>Web demo of the map, with parity verified between the site computation and the local bot.</li>
+        <li>Versioned distribution package with a SHA-256 manifest.</li>
       </ul>
-      <h2>1.1.0 — correctifs de fiabilité</h2>
+      <h2>1.1.0 — reliability fixes</h2>
       <ul>
-        <li>Détection du flotteur recalibrée sur l'eau de jour <b>et</b> de nuit (l'eau de l'oasis est mesurée entre H45-62 le jour et H78-95 la nuit).</li>
-        <li>Discrimination de la texture de l'eau (IQR ≤ 3) : l'herbe est texturée, l'eau est lisse.</li>
-        <li>Plancher d'aire (20 px²) : la mèche de chevelure rousse a la même signature couleur que le flotteur et n'est plus confondue avec lui.</li>
-        <li>Garde « pas d'eau, pas de lancer » (seuil 0,40).</li>
-        <li>Résilience : une erreur isolée (par exemple <code>SetCursorPos</code> refusé) ne tue plus la session.</li>
+        <li>Float detection recalibrated for day <b>and</b> night water (oasis water measures H45-62 by day and H78-95 by night).</li>
+        <li>Water texture discrimination (IQR ≤ 3): grass is textured, water is smooth.</li>
+        <li>Area floor (20 px²): the red-haired braid shares the float's colour signature and is no longer confused with it.</li>
+        <li>The "no water, no cast" guard (threshold 0.40).</li>
+        <li>Resilience: an isolated error (e.g. <code>SetCursorPos</code> refused) no longer kills the session.</li>
       </ul>
-      <h2>1.0.0 — première version publique</h2>
+      <h2>1.0.0 — first public release</h2>
       <ul>
-        <li>Cycle complet : lancer → détection de la morsure → clic → vérification.</li>
-        <li>Latence de clic instrumentée et mesurée (médiane 308 ms, p95 358 ms sur 46 cycles).</li>
+        <li>Full cycle: cast → bite detection → click → verification.</li>
+        <li>Instrumented, measured click latency (median 308 ms, p95 358 ms over 46 cycles).</li>
       </ul>
     </div>
   </div>
@@ -65,7 +67,7 @@
   <div class="wrap">
     <div class="foot-base">
       <span>© 2026 Casinobabe — BOT-WOW</span>
-      <a href="../">Retour à l'accueil</a>
+      <a href="../">Back to the home page</a>
     </div>
   </div>
 </footer>

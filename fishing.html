@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fishing in depth — BOT-WOW</title>
+<meta name="description" content="How BOT-WOW fishes: capture, HSV detection, background clicks, spot memory, optimised rounds — with the measurements behind each claim.">
+<link rel="canonical" href="https://bot-wow.com/fishing.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/fishing.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/fishing.html">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="./">Home</a><a href="./features.html">Features</a><a href="./demo.html">Demo</a>
+      <a href="./roadmap.html">Roadmap</a><a href="./docs/index.html">Docs</a><a href="./faq.html">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre">Buy — €20.00</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Home</a>
+    <h1>How the bot <span class="grad">fishes</span></h1>
+    <p class="kp">Every mechanism below is either measured in our logged sessions or tested
+      in the offline suites. Where the evidence stops, we say so.</p>
+
+    <div class="prose">
+      <h2>1 · Capture</h2>
+      <p>The bot snapshots the game window with <code>PrintWindow</code>, a documented
+        Windows API. No injection into the game process, no memory reading: the bot sees
+        what you see on screen.</p>
+
+      <h2>2 · Detection</h2>
+      <p>Each capture is analysed in HSV colour space: the float and the water hue are
+        separated with day/night ranges, texture and area thresholds tuned on a real
+        Classic 1.13 client at 2336×1323. When detection is ambiguous, the bot does not
+        click blind — it re-checks.</p>
+
+      <h2>3 · The cycle</h2>
+      <p>Cast → wait for bite → click. The bite → click latency is measured per cycle and
+        logged; the median we announced (308&thinsp;ms) comes from those logs. Clicks are
+        sent as window messages so the window does not need foreground focus.</p>
+
+      <h2>4 · Memory</h2>
+        <p>Every visit to a spot feeds a persistent record: position, catch rate measured
+        across visits, mobs seen nearby, time spent. The store is versioned (migrations,
+        backups, atomic writes) and exportable — you own your data.</p>
+
+      <h2>5 · Rounds</h2>
+      <p>The planner keeps the good spots in rotation: expected cost per leg (measured
+        travel time + mob risk + failure probability), ordered by nearest-neighbour then
+        2-opt improvement, in three modes (Cautious / Balanced / Exploration). The
+        browser demo runs the <b>same</b> JS planner, compared with the Python one on
+        the same map at each build.</p>
+
+      <h2>6 · Safety stops</h2>
+      <ul>
+        <li><b>F9</b>: immediate clean stop, from any state.</li>
+        <li>Bounded waits everywhere: no unbounded click loop.</li>
+        <li>Failures degrade, not escalate: a failed cast is retried with limits, logged,
+          and diagnosed; mass cast failures pause the bot instead of forcing clicks.</li>
+        <li>Character death: the bot stops and asks for a human (recovery is on the
+          <a href="./roadmap.html">roadmap</a>).</li>
+      </ul>
+
+      <div class="callout green">✅ <span><b>Try it now.</b> The <a href="./demo.html">browser
+        demo</a> shows the real map view and real round computation on simulated data — no
+        account, no install.</span></div>
+
+      <div class="callout">⚠️ <span><b>What this bot is not.</b> It is not an XP grinder, a
+        gatherer, a quester, nor a combat engine —
+        see the full statuses on <a href="./features.html">features</a>.</span></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Fishing assistant for WoW Classic. Published by Casinobabe.
+           Not affiliated with or endorsed by Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="./features.html">Features</a></li>
+          <li><a href="./demo.html">Demo (simulated data)</a></li>
+          <li><a href="./compatibility.html">Compatibility</a></li>
+          <li><a href="./#offre">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs &amp; legal</h4>
+        <ul>
+          <li><a href="./docs/install.html">Installation</a></li>
+          <li><a href="./docs/changelog.html">Release notes</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="./legal/terms.html">Terms · Privacy · Refunds</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Not a Blizzard product.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

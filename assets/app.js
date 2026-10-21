@@ -92,12 +92,24 @@ async function startCheckout(email) {
   const btn = document.getElementById('buyBtn');
   const err = document.getElementById('buyErr');
   const ok = document.getElementById('buyOk');
+  // La page est servie en EN par defaut et en FR sous /fr/ ; la langue
+  // declaree par <html lang> pilote aussi la langue de livraison de la cle.
+  const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+  const T = isFr
+    ? { pending: 'Redirection…',
+        fail: 'Le paiement n’a pas pu être lancé (%1) — réessayez, ou rejoignez la liste d’attente ci-dessous, ou écrivez à support@bot-wow.com.',
+        waitOk: 'Merci ! Vous êtes inscrit·e. Nous vous écrirons dès que le paiement sera ouvert.',
+        waitErr: 'Inscription impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' }
+    : { pending: 'Redirecting…',
+        fail: 'Payment could not be started (%1) — try again, join the waitlist below, or email support@bot-wow.com.',
+        waitOk: 'Thank you! You are on the list. We will email you as soon as payment goes live.',
+        waitErr: 'Could not register (%1) — try again or email support@bot-wow.com.' };
   err.textContent = '';
   ok.textContent = '';
   btn.disabled = true;
   const original = btn.textContent;
-  btn.textContent = 'Redirection…';
-  const payload = { email, lang: 'fr' };
+  btn.textContent = T.pending;
+  const payload = { email, lang: isFr ? 'fr' : 'en' };
   let data = null;
   let lastError = null;
   for (const base of [API_BASE, '']) {
@@ -117,11 +129,49 @@ async function startCheckout(email) {
   if (!data) {
     btn.disabled = false;
     btn.textContent = original;
-    err.textContent = 'Le paiement n’a pas pu être lancé (' + (lastError || 'erreur') +
-      ') — réessayez ou écrivez à support@bot-wow.com';
+    err.textContent = T.fail.replace('%1', lastError || 'error');
     return;
   }
   window.location.href = data.checkoutUrl;
+}
+
+/* ---------------------------------------------------- liste d'attente */
+// Si le paiement n'est pas encore ouvert (secret Mollie absent), le visiteur
+// peut laisser son e-mail : le meme canal /api/subscribe alimente la file.
+async function wireWaitlist() {
+  for (const form of document.querySelectorAll('form[data-waitlist]')) {
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+      const input = form.querySelector('input[type=email]');
+      const out = form.querySelector('.wl-state');
+      const value = (input.value || '').trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) {
+        if (out) out.textContent = isFr ? 'Adresse e-mail invalide.' : 'Invalid email address.';
+        return;
+      }
+      const btn = form.querySelector('button');
+      if (btn) btn.disabled = true;
+      let sent = false, lastError = null;
+      for (const base of [API_BASE, '']) {
+        try {
+          const res = await fetch(base + '/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: value, lang: isFr ? 'fr' : 'en' }),
+          });
+          if (res.ok) { sent = true; break; }
+          lastError = res.status;
+        } catch (e) { lastError = String(e && e.message ? e.message : e); }
+      }
+      if (btn) btn.disabled = false;
+      if (out) {
+        out.textContent = sent
+          ? (isFr ? 'Merci ! Votre adresse est enregistrée.' : 'Thank you! Your address is registered.')
+          : (isFr ? 'Inscription impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' : 'Could not register (%1) — try again or email support@bot-wow.com.').replace('%1', lastError);
+      }
+    });
+  }
 }
 
 function wireBuyForm() {
@@ -163,6 +213,7 @@ function wireReveal() {
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
+  wireWaitlist();
   wireReveal();
   try {
     const res = await fetch('./assets/demo-map.json', { cache: 'no-cache' });

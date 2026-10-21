@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibilité — BOT-WOW</title>
+<meta name="description" content="Ce qui est testé (Classic 1.13 et serveurs privés), ce qui ne l'est pas (Mac, autres clients), et une note honnête sur les risques de l'automatisation.">
+<link rel="canonical" href="https://bot-wow.com/fr/compatibility.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/compatibility.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./demo.html">Démo</a>
+      <a href="./getting-started.html">Démarrage</a><a href="../docs/fr/">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="../#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Accueil</a>
+    <h1>Matrice de <span class="grad">compatibilité</span></h1>
+    <p class="kp">Non testé = non pris en charge. Nous préférons une liste courte et honnête
+      à une liste longue et fausse.</p>
+
+    <div class="compatwrap">
+      <table>
+        <thead><tr><th>Élément</th><th>Statut</th><th>Détail</th><th>Ce qui est couvert</th></tr></thead>
+        <tbody>
+          <tr><td><b>WoW Classic 1.13 (anniversary)</b></td>
+              <td><span class="st st-ok"><i></i>Testé</span></td>
+              <td>Client 2336×1323, Lushwater Oasis</td>
+              <td>Détection, cycle de pêche, clic, arrêt propre</td></tr>
+          <tr><td><b>Serveur privé</b></td>
+              <td><span class="st st-ok"><i></i>Testé</span></td>
+              <td>Environnement de développement du produit</td>
+              <td>Identique au client officiel (aucune détection réseau)</td></tr>
+          <tr><td><b>Mode arrière-plan</b></td>
+              <td><span class="st st-ok"><i></i>Testé</span></td>
+              <td>Clics sans focus de la fenêtre</td>
+              <td>Cycle, détection, arrêt</td></tr>
+          <tr><td><b>Déplacement entre spots</b></td>
+              <td><span class="st st-dev"><i></i>En développement</span></td>
+              <td>Odomètre + auto-run validés, trajet complet en validation en jeu</td>
+              <td>Lecture de position, déplacement, garde-fous</td></tr>
+          <tr><td><b>Retour au cadavre</b></td>
+              <td><span class="st st-plan"><i></i>Prévu</span></td>
+              <td>Chaîne de défaillance identifiée, machine à états en cours d'implémentation</td>
+              <td>—</td></tr>
+          <tr><td><b>WoW TBC / WotLK / Live</b></td>
+              <td><span class="st st-no"><i></i>Non testé</span></td>
+              <td>Non pris en charge à ce stade</td>
+              <td>—</td></tr>
+          <tr><td><b>MacOS / Linux</b></td>
+              <td><span class="st st-no"><i></i>Non pris en charge</span></td>
+              <td>Le bot s'appuie sur les API Windows du client</td>
+              <td>—</td></tr>
+          <tr><td><b>Champs de bataille / donjons / quêtes / combat</b></td>
+              <td><span class="st st-no"><i></i>Hors périmètre</span></td>
+              <td>Ce produit est un assistant de pêche</td>
+              <td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout red mt">⚠️ <span><b>Note honnête sur le bannissement.</b> Aucun outil
+      d'automatisation n'est dépourvu de risque. L'automatisation intensive est
+      détectable par l'analyse de comportement. Utilisez ce logiciel sur un compte dont
+      vous êtes prêt à perdre, et ne partez pas du principe que le risque est inexistant.
+      Ceci s'applique à chaque bot, quelles que soient ses promesses commerciales.</span></div>
+
+    <div class="callout mt">🛡️ <span><b>Antivirus.</b> Le bot lit les pixels de la fenêtre de jeu
+      et envoie des entrées synthétiques ; un antivirus heuristique peut signaler les
+      utilitaires qui lisent l'écran. Le guide d'installation décrit exactement ce que
+      fait le binaire pour que vous jugiez, et le paquet porte un manifeste SHA-256.</span></div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans lien avec ni l'aval de Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="./features.html">Fonctions</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./roadmap.html">Feuille de route</a></li>
+          <li><a href="../#offre">Prix</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs &amp; légal</h4>
+        <ul>
+          <li><a href="../docs/fr/known-issues.html">Problèmes connus</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="../legal/fr/terms.html">CGV · Confidentialité · Remboursements</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. N'est pas un produit Blizzard.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>
