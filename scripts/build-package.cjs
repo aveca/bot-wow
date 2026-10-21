@@ -24,7 +24,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const zlib = require('node:zlib');
 
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);
@@ -70,6 +70,102 @@ function sha256(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
+/**
+ * Ecrit une archive ZIP en pur Node (deflate brut, CRC-32 calcule).
+ * Pourquoi : le build ne doit dependre ni de PowerShell (absent sur les
+ * runners Linux de la CI) ni d'un paquet npm : le paquet doit se construire
+ * partout, y compris en CI.
+ */
+const CRC_TABLE = (() => {
+  const t = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c;
+  }
+  return t;
+})();
+
+function crc32(buf) {
+  let c = 0 ^ -1;
+  for (let i = 0; i < buf.length; i++) c = (c >>> 8) ^ CRC_TABLE[(c ^ buf[i]) & 0xff];
+  return (c ^ -1) >>> 0;
+}
+
+function zipDirectory(dir, outFile, prefix = '') {
+  const entries = [];
+  (function walk(d, base = d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) walk(full, base);
+      else entries.push(full);
+    }
+  })(dir);
+
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+  for (const file of entries) {
+    const name = (prefix + path.relative(dir, file)).replace(/\\/g, '/');
+    const raw = fs.readFileSync(file);
+    const deflated = zlib.deflateRawSync(raw, { level: 9 });
+    const useDeflate = deflated.length < raw.length;
+    const data = useDeflate ? deflated : raw;
+    const method = useDeflate ? 8 : 0;
+    const crc = crc32(raw);
+    const nameBuf = Buffer.from(name, 'utf8');
+
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);           // version needed
+    local.writeUInt16LE(0x0800, 6);       // flag : nom de fichier en UTF-8
+    local.writeUInt16LE(method, 8);
+    local.writeUInt16LE(0, 10);           // heure
+    local.writeUInt16LE(0x21, 12);        // date (1996-01-01) : reproductible
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(raw.length, 22);
+    local.writeUInt16LE(nameBuf.length, 26);
+    local.writeUInt16LE(0, 28);
+    chunks.push(local, nameBuf, data);
+
+    const cd = Buffer.alloc(46);
+    cd.writeUInt32LE(0x02014b50, 0);
+    cd.writeUInt16LE(20, 4);
+    cd.writeUInt16LE(20, 6);
+    cd.writeUInt16LE(0x0800, 8);
+    cd.writeUInt16LE(method, 10);
+    cd.writeUInt16LE(0, 12);
+    cd.writeUInt16LE(0x21, 14);
+    cd.writeUInt32LE(crc, 16);
+    cd.writeUInt32LE(data.length, 20);
+    cd.writeUInt32LE(raw.length, 24);
+    cd.writeUInt16LE(nameBuf.length, 28);
+    cd.writeUInt16LE(0, 30);
+    cd.writeUInt16LE(0, 32);
+    cd.writeUInt16LE(0, 34);
+    cd.writeUInt16LE(0, 36);
+    cd.writeUInt32LE(0, 38);
+    cd.writeUInt32LE(offset, 42);
+    central.push(Buffer.concat([cd, nameBuf]));
+
+    offset += local.length + nameBuf.length + data.length;
+  }
+
+  const cdBuf = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(entries.length, 8);
+  end.writeUInt16LE(entries.length, 10);
+  end.writeUInt32LE(cdBuf.length, 12);
+  end.writeUInt32LE(offset, 16);
+  end.writeUInt16LE(0, 20);
+  fs.writeFileSync(outFile, Buffer.concat([...chunks, cdBuf, end]));
+  return entries.length;
+}
+
 function main() {
   if (!fs.existsSync(SOURCE)) {
     console.error(`Source introuvable : ${SOURCE}`);
@@ -84,11 +180,15 @@ function main() {
   const copy = (rel, destRel) => {
     const from = path.join(SOURCE, rel);
     if (!fs.existsSync(from)) return false;
-    const to = path.join(stage, destRel);
+    // Les cles du manifeste utilisent ALWAYS des separateurs POSIX : le
+    // manifeste doit etre identique quelle que soit la machine qui a
+    // construit le paquet (Windows ou Linux).
+    const key = destRel.replace(/\\/g, '/');
+    const to = path.join(stage, key);
     fs.mkdirSync(path.dirname(to), { recursive: true });
     const buf = fs.readFileSync(from);
     fs.writeFileSync(to, buf);
-    manifest.files[destRel] = { sha256: sha256(buf), bytes: buf.length, source: rel };
+    manifest.files[key] = { sha256: sha256(buf), bytes: buf.length, source: rel.replace(/\\/g, '/') };
     return true;
   };
 
@@ -154,23 +254,16 @@ function main() {
   fs.writeFileSync(path.join(pkgDir, 'MANIFEST.json'), JSON.stringify(manifest, null, 2) + '\n');
   fs.writeFileSync(path.join(pkgDir, 'VERSION'), VERSION + '\n');
 
-  // 6. archive
+  // 6. archive (ZIP ecrit en pur Node : portable, sans dependance externe)
   const zip = path.join(OUT, `casinobabe-fishing-${VERSION}.zip`);
   fs.rmSync(zip, { force: true });
-  try {
-    execFileSync('powershell', [
-      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-      `Compress-Archive -Path '${path.join(pkgDir, '*')}' -DestinationPath '${zip}' -Force`,
-    ], { stdio: 'inherit' });
-  } catch (e) {
-    console.error("Compression impossible (PowerShell/Compress-Archive) : " + e.message);
-    process.exit(1);
-  }
+  const count = zipDirectory(pkgDir, zip);
 
   console.log(`Paquet construit : ${zip}`);
   console.log(`  version   : ${VERSION}`);
   console.log(`  addon     : ${addonCount} fichier(s)`);
   console.log(`  bot       : ${botCount} script(s)`);
+  console.log(`  archive   : ${count} entree(s)`);
   console.log(`  manifeste : ${Object.keys(manifest.files).length} entree(s) (sha256)`);
 }
 
