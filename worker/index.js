@@ -2186,13 +2186,11 @@ async function handleSubscribe(request, env2) {
 }
 __name(handleSubscribe, "handleSubscribe");
 async function handleClaim(request, env2) {
-  const ip = getClientIp(request);
-  const rl = await checkRateLimit(env2.RATE_LIMIT, "claim", ip, RATE_LIMITS.claim);
-  if (!rl.allowed) {
-    return jsonResponse({ ok: false, error: "rate_limited" }, 429, {
-      "Retry-After": String(rl.retryAfter || 3600)
-    });
-  }
+  // FIX 2026-10-21 (audit paiement) : ce canal creait une licence A VIE
+  // GRATUITE pour n'importe quel e-mail (10/h/IP). Il est incompatible avec
+  // l'offre unique payante (20 EUR) et constituait une livraison sans
+  // paiement. Il est desactive : seule la boutique (/api/checkout) delivre.
+  return jsonResponse({ ok: false, error: "claim_disabled" }, 410, {});
   let body;
   try {
     body = await request.json();
@@ -2654,6 +2652,12 @@ async function handleMollieWebhook(request, env2) {
     return new Response("Missing email", { status: 400 });
   }
   const status = String(payment.status || "");
+  // FIX 2026-10-21 : un remboursement ou une contestation doit revoquer la
+  // licence liee — AVANT le garde statut-ouvert (sinon jamais traitee).
+  if (status === "refunded" || status === "charged_back") {
+    await revokeLicense(env2, payment, email, `refund:${paymentId}`);
+    return new Response("OK", { status: 200 });
+  }
   if (status !== "paid" && status !== "failed" && status !== "expired" && status !== "canceled") {
     // open / pending : rien a faire, la confirmation suivra.
     console.log(`Webhook: paiement ${paymentId} statut=${status} (en attente)`);
@@ -2677,6 +2681,9 @@ async function handleMollieWebhook(request, env2) {
     console.error("Webhook: insertion de l'evenement impossible", msg);
     return new Response("Server Error", { status: 500 });
   }
+  // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
+  // doit revoquer la licence liee (le signal existait mais n'etait jamais
+  // branche sur le flux du webhook).
   if (status === "paid") {
     await fulfillOrder(env2, payment, email, lang, eventId);
   } else {
@@ -2758,10 +2765,18 @@ async function revokeLicense(env2, payment, email, eventId) {
   if (license) {
     await env2.DB.batch([
       env2.DB.prepare("UPDATE licenses SET status = ? WHERE id = ?").bind("revoked", license.id),
-      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id),
-      env2.DB.prepare("INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now)
+      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id)
     ]);
     console.log(`License revoked: ${license.key} (refund/chargeback for ${payment.id})`);
+  } else {
+    console.log(`No license to revoke for ${payment.id} (refund/chargeback)`);
+  }
+  // L'evenement de remboursement est journalise meme sans licence associee :
+  // ce MARQUEUR rend les rejeux du webhook naturellement sans effet.
+  try {
+    await env2.DB.prepare("INSERT OR IGNORE INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now).run();
+  } catch (e) {
+    console.error("Refund event logging failed:", e && e.message);
   }
 }
 __name(revokeLicense, "revokeLicense");
@@ -3037,9 +3052,13 @@ async function handleBitcoinCheckout(request, env2) {
     const now = Date.now();
     const orderReference = `BTC-${generateToken(8).toUpperCase()}`;
     const orderResult = await env2.DB.prepare(`
-      INSERT INTO orders (provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-      VALUES ('bitcoin_manual', ?, ?, ?, 'eur', 'pending_payment', ?, ?, ?)
+      INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+      VALUES (?, 'bitcoin_manual', ?, ?, ?, 'eur', 'pending_payment', ?, ?, ?)
     `).bind(
+      // FIX 2026-10-21 (audit paiement) : id TEXT explicite. Sans lui la
+      // colonne TEXT PRIMARY KEY recevait NULL (toutes les lignes NULL) et la
+      // jointure commandes <-> licences ne pouvait jamais aboutir.
+      `ord_bitcoin_manual_${orderReference}`,
       orderReference,
       email,
       PRICE_EUR,
@@ -3051,7 +3070,7 @@ async function handleBitcoinCheckout(request, env2) {
       now,
       now
     ).run();
-    const orderId = orderResult.meta.last_row_id;
+    const orderId = `ord_bitcoin_manual_${orderReference}`;
     const mailtoSubject = encodeURIComponent(`Bot-Wow \u2014 Paiement Bitcoin \u2014 ${orderReference}`);
     const mailtoBody = encodeURIComponent(generatePaymentEmailBody({
       orderReference,
@@ -3119,16 +3138,28 @@ async function handleBitcoinPaidNotification(request, env2) {
 }
 __name(handleBitcoinPaidNotification, "handleBitcoinPaidNotification");
 async function handleAdminApproveOrder(request, env2) {
+  // FIX 2026-10-21 (audit paiement) : la validation etait atteinte par la route
+  // directe SANS authentification (le garde-fou n'existe que dans le catch-all
+  // /api/admin/*). Toute personne pouvait marquer une commande payee et creer
+  // une licence gratuite. Verification obligatoire ici.
+  const auth = await verifyAdminAuth(request, env2);
+  if (!auth) {
+    return jsonResponse3({ ok: false, error: "unauthorized" }, 401);
+  }
   const url = new URL(request.url);
   const pathParts = url.pathname.split("/").filter((p) => p);
-  const orderId = parseInt(pathParts[pathParts.length - 2] || "0");
-  if (!orderId) {
+  // FIX 2026-10-21 (audit paiement) : les ids de commande sont des TEXT
+  // (ordre_*) ; accepter egalement la reference fournisseur (BTC-*) en repli.
+  const orderIdRaw = decodeURIComponent(pathParts[pathParts.length - 2] || "");
+  if (!orderIdRaw) {
     return jsonResponse3({ ok: false, error: "invalid_order_id" }, 400);
   }
   try {
     const order = await env2.DB.prepare(`
-      SELECT * FROM orders WHERE id = ?
-    `).bind(orderId).first();
+      SELECT * FROM orders
+      WHERE id = ?1 OR (provider = 'bitcoin_manual' AND provider_id = ?1)
+      LIMIT 1
+    `).bind(orderIdRaw).first();
     if (!order) {
       return jsonResponse3({ ok: false, error: "order_not_found" }, 404);
     }
@@ -3146,13 +3177,13 @@ async function handleAdminApproveOrder(request, env2) {
     const licenseResult = await env2.DB.prepare(`
       INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
       VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-    `).bind(licenseKey, orderId, email, lang, 2, now, now).run();
+    `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
     const licenseId = licenseResult.meta.last_row_id;
     const downloadToken = generateToken();
     await env2.DB.batch([
       env2.DB.prepare(`
         UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ?
-      `).bind(now, orderId),
+      `).bind(now, order.id),
       env2.DB.prepare(`
         INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
         VALUES (?, ?, ?, 0, ?, ?)
@@ -3192,10 +3223,16 @@ async function handleAdminApproveOrder(request, env2) {
 }
 __name(handleAdminApproveOrder, "handleAdminApproveOrder");
 async function handleAdminRejectOrder(request, env2) {
+  // FIX 2026-10-21 (audit paiement) : meme garde d'authentification que l'app
+  // robation des commandes (la route directe contournait verifierAdminAuth).
+  const auth = await verifyAdminAuth(request, env2);
+  if (!auth) {
+    return jsonResponse3({ ok: false, error: "unauthorized" }, 401);
+  }
   const url = new URL(request.url);
   const pathParts = url.pathname.split("/").filter((p) => p);
-  const orderId = parseInt(pathParts[pathParts.length - 2] || "0");
-  if (!orderId) {
+  const orderIdRaw = decodeURIComponent(pathParts[pathParts.length - 2] || "");
+  if (!orderIdRaw) {
     return jsonResponse3({ ok: false, error: "invalid_order_id" }, 400);
   }
   let body;
@@ -3206,8 +3243,10 @@ async function handleAdminRejectOrder(request, env2) {
   }
   try {
     const order = await env2.DB.prepare(`
-      SELECT * FROM orders WHERE id = ?
-    `).bind(orderId).first();
+      SELECT * FROM orders
+      WHERE id = ?1 OR (provider = 'bitcoin_manual' AND provider_id = ?1)
+      LIMIT 1
+    `).bind(orderIdRaw).first();
     if (!order) {
       return jsonResponse3({ ok: false, error: "order_not_found" }, 404);
     }
@@ -3223,7 +3262,7 @@ async function handleAdminRejectOrder(request, env2) {
     `).bind(
       now,
       JSON.stringify({ ...JSON.parse(order.metadata || "{}"), rejectionReason: body.reason || "Payment not received" }),
-      orderId
+      order.id
     ).run();
     return jsonResponse3({ ok: true, message: "Order rejected" });
   } catch (error) {

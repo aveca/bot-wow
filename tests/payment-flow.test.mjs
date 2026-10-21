@@ -43,7 +43,31 @@ function makeEnv(state) {
               }
               state.events.add(args[0]);
             }
-            if (/INSERT INTO orders/i.test(key)) state.orders.push(args[0]);
+            if (/INSERT INTO orders/i.test(key)) {
+              state.orders.push(args[0]);
+              if (state.orderRows) {
+                const email = args.filter((a) => typeof a === 'string' && a.includes('@'))[0] || '';
+                state.orderRows[args[0]] = {
+                  id: args[0],
+                  provider: /'bitcoin_manual'/.test(key) ? 'bitcoin_manual' : 'mollie',
+                  provider_id: /'bitcoin_manual'/.test(key) ? args[1] : args[1],
+                  email,
+                  amount: 2000, currency: 'eur',
+                  status: /pending_payment/.test(key) ? 'pending_payment' : 'paid',
+                  metadata: args.filter((a) => typeof a === 'string' && a.startsWith('{'))[0] || '{}',
+                };
+              }
+            }
+            if (/UPDATE orders SET status = 'paid'/i.test(key) && state.orderRows) {
+              const row = state.orderRows[args[1]];
+              if (row) row.status = 'paid';
+            }
+            if (/UPDATE orders SET status = 'rejected'/i.test(key) && state.orderRows) {
+              const row = state.orderRows[args[1]];
+              if (row) row.status = 'rejected';
+            }
+            if (/UPDATE licenses SET status/i.test(key)) state.licenseRevoked = true;
+            if (/INSERT OR IGNORE INTO webhook_events/i.test(key)) state.events.add(args[0]);
             if (/INSERT INTO licenses/i.test(key)) state.licenses.push(args);
             if (/INSERT INTO downloads/i.test(key)) state.downloads.push(args);
             if (/INSERT INTO deliveries/i.test(key)) state.deliveries.push(args);
@@ -55,6 +79,19 @@ function makeEnv(state) {
             if (/FROM mollie_customers/i.test(key)) return null;
             if (/FROM webhook_events/i.test(key)) {
               return state.events.has(args[0]) ? { id: args[0] } : null;
+            }
+            // FIX 2026-10-21 : SELECT * FROM orders -> retrouver une commande
+            // reelle par id (ord_*) ou reference fournisseur (BTC-*).
+            if (/SELECT \* FROM orders/i.test(key)) {
+              const id = args[0];
+              const rows = Object.values(state.orderRows || {});
+              return state.orderRows?.[id] || rows.find((r) => r.id === id || r.provider_id === id) || null;
+            }
+            // revokeLicense : licenses JOIN orders -> licence active liee.
+            if (/JOIN orders o ON o.id = l.order_id/i.test(key)) {
+              const lic = (state.licenses || [])[0];
+              if (!lic || state.licenseRevoked) return null;
+              return { id: 1, key: lic[0] };
             }
             return null;
           },
@@ -78,6 +115,7 @@ function makeEnv(state) {
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
+    ADMIN_JWT_SECRET: 'test_admin_secret',
     state,
   };
 }
@@ -117,13 +155,25 @@ globalThis.fetch = async (url, opts = {}) => {
   return realFetch(url, opts);
 };
 
-async function callWorker(path, { method = 'GET', body = null, env } = {}) {
+async function callWorker(path, { method = 'GET', body = null, env, headers = {} } = {}) {
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : {},
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
     body: body ? JSON.stringify(body) : undefined,
   });
   return workerMod.default.fetch(req, env, {});
+}
+
+/* Signature JWT admin (HS256) — meme format que generateJWT du Worker */
+async function signAdminJWT(secret) {
+  const b64u = (buf) => Buffer.from(buf).toString('base64url');
+  const enc = new TextEncoder();
+  const header = b64u(enc.encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
+  const now = Math.floor(Date.now() / 1e3);
+  const payload = b64u(enc.encode(JSON.stringify({ role: 'admin', iat: now, exp: now + 3600 })));
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${header}.${payload}`));
+  return `${header}.${payload}.${b64u(new Uint8Array(sig))}`;
 }
 
 /* ------------------------------------------------------------------ tests */
@@ -251,8 +301,74 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     `(status=${res.status} licences=${state.licenses.length})`);
 }
 
-globalThis.fetch = realFetch;
-rmSync(tmpWorker, { force: true });
+/* 9. FIX 2026-10-21 : /api/claim (licences gratuites illimitees) est desactive */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  const res = await callWorker('/api/claim', {
+    method: 'POST', body: { email: 'free@test.fr', lang: 'fr' }, env,
+  });
+  check('le canal de licences gratuites est desactive (410)', res.status === 410, `(status=${res.status})`);
+  check('aucune licence gratuite n\'est delivree', state.licenses.length === 0, `(${state.licenses.length})`);
+}
+
+/* 10. FIX 2026-10-21 : la validation admin SANS jeton est refusee (401) */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [], orderRows: {} };
+  const env = makeEnv(state);
+  const res = await callWorker('/api/admin/orders/999/approve', { method: 'POST', env });
+  check('valider une commande sans jeton admin est refuse', res.status === 401, `(status=${res.status})`);
+  check('aucune licence n\'est creee sans jeton admin', state.licenses.length === 0, `(${state.licenses.length})`);
+  const res2 = await callWorker('/api/admin/orders/999/reject', { method: 'POST', env });
+  check('rejeter une commande sans jeton admin est refuse', res2.status === 401, `(status=${res2.status})`);
+}
+
+/* 11. FIX 2026-10-21 : commande bitcoin a l'id TEXT explicite + approuvee via reference ou id */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [], orderRows: {} };
+  const env = makeEnv(state);
+  const res = await callWorker('/api/bitcoin/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env,
+  });
+  const data = await res.json();
+  check('la commande bitcoin porte un id TEXT ord_*',
+    res.status === 200 && typeof data.orderId === 'string' && data.orderId.startsWith('ord_bitcoin_manual_'),
+    `(recu ${data.orderId})`);
+  const adminToken = await signAdminJWT(env.ADMIN_JWT_SECRET);
+  const resOk = await callWorker(`/api/admin/orders/${encodeURIComponent(data.orderReference)}/approve`, {
+    method: 'POST', env, headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  const dataOk = await resOk.json();
+  check('l\'approbation par reference BTC cree une licence', resOk.status === 200 && state.licenses.length === 1,
+    `(status=${resOk.status} licences=${state.licenses.length})`);
+  check('la licence reference l\'id TEXT de la commande bitcoin',
+    state.licenses[0] && state.licenses[0][1] === data.orderId,
+    `(licence.orderId=${state.licenses[0] && state.licenses[0][1]})`);
+  const res2 = await callWorker(`/api/admin/orders/${encodeURIComponent(data.orderId)}/approve`, {
+    method: 'POST', env, headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  check('reapprouver une commande deja payee est refuse (400)', res2.status === 400, `(status=${res2.status})`);
+  check('la seconde approbation ne cree pas de seconde licence', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* 12. FIX 2026-10-21 : un remboursement Mollie revoque la licence */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_refund', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
+  check('la licence existe avant remboursement', state.licenses.length === 1, `(${state.licenses.length})`);
+  paymentState = { ...paymentState, status: 'refunded' };
+  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
+  check('le webhook de remboursement repond 200', res.status === 200, `(status=${res.status})`);
+  check('la licence est revoquee apres remboursement', state.licenseRevoked === true);
+  const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
+  check('le rejeu du webhook de remboursement reste sans effet (200)', res2.status === 200, `(status=${res2.status})`);
+  check('aucune seconde licence n\'est creee, aucun crash', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+
 
 console.log('');
 console.log(failures === 0 ? 'PARCOURS DE PAIEMENT : OK' : `PARCOURS DE PAIEMENT : ${failures} ECHEC(S)`);
