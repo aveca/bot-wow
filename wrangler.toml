@@ -19,4 +19,22 @@ bucket_name = "botwow-binaries"
 domain = "api.bot-wow.com"
 
 [vars]
-ENVIRONMENT = "development"
+# FIX 2026-10-21 : l'environnement ne doit plus宣称 "development" alors que
+# la boutique est en production. Le passage reel en mode "live" depend des
+# secrets Mollie (voir documentation/deployment.md).
+ENVIRONMENT = "production"
+# Nom de l'objet R2 livre au client (le build produit
+# casinobabe-fishing-<version>.zip ; le Worker essaie aussi ce nom et l'ancien
+# "Casinobabe-v1.0.38.zip" par repli).
+R2_OBJECT_KEY = "casinobabe-fishing-1.2.0.zip"
+# Expediteur des e-mails de livraison (la cle d'envoi est un SECRET Cloudflare).
+MAIL_FROM = "BOT-WOW <licences@bot-wow.com>"
+
+# ---------------------------------------------------------------------------
+# SECRETS A CONFIGURER (wrangler secret put <NOM>) — JAMAIS dans le code :
+#   MOLLIE_API_KEY        cle API Mollie (mode test ou live selon le compte)
+#   MOLLIE_WEBHOOK_SECRET secret de signature des webhooks (optionnel :
+#                         le webhook verifie l'etat du paiement via l'API)
+#   MOLLIE_PROFILE_ID    identifiant de profil Mollie (optionnel)
+#   RESEND_API_KEY        cle d'envoi d'e-mails (livraison de la licence)
+# ---------------------------------------------------------------------------

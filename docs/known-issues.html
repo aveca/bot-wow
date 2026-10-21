@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Problèmes connus — BOT-WOW</title>
+<meta name="description" content="Problèmes connus du bot de pêche BOT-WOW, cas particuliers du client et procédures de récupération.">
+<meta name="theme-color" content="#04060b">
+<link rel="canonical" href="https://bot-wow.com/docs/known-issues.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="brand" href="../" aria-label="BOT·WOW — accueil">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
+        <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
+        <path d="M16 3v8" stroke="#46e6ff" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="16" cy="22" r="4" fill="#ffb545"/>
+      </svg>
+      <span>BOT<span class="dim">·</span>WOW</span>
+      <span class="dot" aria-hidden="true"></span>
+    </a>
+    <nav class="site-nav" aria-label="Navigation principale">
+      <a href="../#demo">Démo</a>
+      <a href="../#compat">Compatibilité</a>
+      <a href="../#offre">Offre</a>
+      <a href="../docs/">Documentation</a>
+      <a class="btn primary sm" href="../#offre">Acheter — 20 €</a>
+    </nav>
+  </div>
+</header>
+<main class="page">
+  <div class="wrap">
+    <div class="panel">
+      <span class="eyebrow">Documentation</span>
+      <h1>Problèmes connus</h1>
+      <p class="lead">État honnête des limites du logiciel, avec la marche à suivre.</p>
+      <h2>Le bot ne clique pas</h2>
+      <ul>
+        <li>Vérifiez <code>reports/fishing-bot-log.jsonl</code> : un <code>MANUAL_SUSPEND</code> signifie que vous avez bougé la souris (le bot suspend ses entrées, il ne force jamais un clic).</li>
+        <li>Un <code>BOT_CRASH</code> est normally followed de <code>BOT_RECOVERED</code> : le bot relance sa boucle tout seul.</li>
+        <li>Si la détection ne trouve rien : vérifiez que vous êtes bien en jeu et que l'addon est chargé.</li>
+      </ul>
+      <h2>Le bot ne détecte pas l'eau</h2>
+      <p>La détection est calibrée sur le client WoW Classic 1.13 (anniversary) à 2336×1323, et sur des zones contenant de l'eau claire. Un décor atypique (eau sombre, nuit profonde) peut être détecté comme « pas d'eau ». Le garde-fou arrête alors de lancer plutôt que de lancer à l'aveugle.</p>
+      <h2>Le déplacement automatique n'est pas encore au niveau</h2>
+      <p>La lecture de position (odomètre de minicarte) et le mécanisme de déplacement (auto-run) sont implémentés et testés ; le trajet complet d'un banc à l'autre reste en cours de validation. La fonction est <b>désactivée par défaut</b> dans la configuration.</p>
+      <h2>Mise à jour ratée</h2>
+      <ol>
+        <li>Arrêtez le bot (F9).</li>
+        <li>Réécrivez <code>addon/Casinobabe</code> et <code>scripts/</code> avec le contenu du nouveau paquet.</li>
+        <li>Conservez <code>state/</code> : la mémoire et la carte sont versionnées et migrées automatiquement.</li>
+        <li>Relancez et vérifiez la version chargée dans le journal.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-base">
+      <span>© 2026 Casinobabe — BOT-WOW</span>
+      <a href="../">Retour à l'accueil</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

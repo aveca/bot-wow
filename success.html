@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commande confirmée — BOT-WOW</title>
+<meta name="description" content="Retour après un paiement BOT-WOW : vérification du paiement côté serveur et délivrance de la licence.">
+<meta name="theme-color" content="#04060b">
+<link rel="canonical" href="https://bot-wow.com/success.html">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="brand" href="./" aria-label="BOT·WOW — accueil">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
+        <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
+        <path d="M16 3v8" stroke="#46e6ff" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="16" cy="22" r="4" fill="#ffb545"/>
+      </svg>
+      <span>BOT<span class="dim">·</span>WOW</span>
+      <span class="dot" aria-hidden="true"></span>
+    </a>
+    <nav class="site-nav" aria-label="Navigation principale">
+      <a href="./#demo">Démo</a>
+      <a href="./#compat">Compatibilité</a>
+      <a href="./#offre">Offre</a>
+      <a href="./docs/">Documentation</a>
+      <a class="btn primary sm" href="./#offre">Acheter — 20 €</a>
+    </nav>
+  </div>
+</header>
+<main class="page">
+  <div class="wrap">
+    <div class="panel">
+      <span class="eyebrow">Paiement</span>
+      <h1>Merci — votre paiement est en cours de vérification</h1>
+      <p class="lead">Le paiement n'est <b>pas</b> confirmé par la seule visite de cette page : il est vérifié côté serveur, auprès de notre prestataire de paiement.</p>
+      <h2>Ce qui se passe maintenant</h2>
+      <ol>
+        <li>La confirmation du prestataire de paiement est reçue par notre serveur (un webhook signé).</li>
+        <li>Le serveur vérifie le statut <code>paid</code>, le montant, la devise et le produit, puis crée votre licence.</li>
+        <li>Vous recevez par e-mail votre <b>clé de licence</b> et votre <b>lien de téléchargement</b>, ainsi que la procédure d'installation.</li>
+      </ol>
+      <h2>Si le courriel n'arrive pas</h2>
+      <p>Vérifiez les courriers indésirables, puis écrivez à <a href="mailto:support@bot-wow.com">support@bot-wow.com</a> en indiquant l'adresse utilisée lors du paiement : la commande est conservée, aucune licence n'est perdue.</p>
+      <p style="margin-top:22px"><a class="btn" href="./docs/install.html">Lire le guide d'installation →</a></p>
+    </div>
+  </div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-base">
+      <span>© 2026 Casinobabe — BOT-WOW</span>
+      <a href="./">Retour à l'accueil</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

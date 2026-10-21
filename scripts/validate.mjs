@@ -57,10 +57,51 @@ if (fs.existsSync(path.join(root, "assets/demo-map.json"))) {
     failures.push("assets/demo-map.json spots must carry 'observations'");
   }
 }
-for (const file of ["assets/demo.js", "assets/route-planner.js", "scripts/build-package.cjs"]) {
+for (const file of ["assets/demo.js", "assets/route-planner.js", "scripts/build-package.cjs", "assets/app.js"]) {
   const s = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
   if (s.status !== 0) failures.push(`${file} syntax check failed`);
 }
+
+// --- Site public : pages liees, aucune page morte -------------------------
+const PUBLIC_PAGES = [
+  "index.html", "demo.html", "success.html", "cancel.html",
+  "docs/index.html", "docs/install.html", "docs/changelog.html",
+  "docs/known-issues.html", "docs/license.html",
+  "legal/terms.html", "legal/privacy.html", "legal/refund.html",
+  "assets/favicon.svg",
+];
+for (const file of PUBLIC_PAGES) {
+  if (!fs.existsSync(path.join(root, file))) failures.push(`missing page: ${file}`);
+}
+
+// Chaque lien interne de la page d'accueil doit pointer vers un fichier
+// existant (une page morte est un obstacle a l'achat).
+const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const hrefs = [...home.matchAll(/href="([^"#][^"]*)"/g)].map((m) => m[1]);
+for (const href of new Set(hrefs)) {
+  if (/^(https?:|mailto:)/.test(href)) continue;
+  const target = href.split("#")[0].replace(/^\.\//, "");
+  if (!target) continue;
+  if (!fs.existsSync(path.join(root, target))) {
+    failures.push(`lien interne mort dans index.html : ${href}`);
+  }
+}
+
+// Aucune promesse non verifiee ne doit figurer dans les sections COMMERCIALES
+// (hero, avantages, offre). Les sections de documentation et d'avertissement
+// peuvent au contraire mentionner ces notions pour les mettre en sourdine.
+const commercial = [
+  home.slice(home.indexOf('<section class="hero">'), home.indexOf('<!-- ===') >= 0 ? home.indexOf('<!-- ===') : home.length),
+  (home.split('id="offre"')[1] || '').split('</section>')[0],
+].join('\n');
+const forbidden = [/\bzero ban\b/i, /\bzéro ban\b/i, /24\/7/i, /garanti/i,
+  /sans risque/i, /\bBG\b/, /Retail/i, /tous les niveaux/i, /\+\+ *joueurs/i,
+  /zéro risque/i];
+for (const re of forbidden) {
+  if (re.test(commercial)) failures.push(`section commerciale : promesse a ne pas prouver : ${re}`);
+}
+// Le prix annonce doit correspondre a celui du serveur (20 EUR).
+if (!home.includes("20,00 €")) failures.push("index.html : le prix de l'offre doit etre affiche (20,00 EUR)");
 
 // --- Migrations D1 : le schema doit etre reproductible --------------------
 for (const file of ["migrations/0001_botwow_emails.sql", "migrations/0002_botwow_licenses.sql"]) {
