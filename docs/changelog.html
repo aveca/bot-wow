@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release notes — BOT-WOW</title>
+<meta name="description" content="Version history of the BOT-WOW fishing bot, with the measurements that justify each fix.">
+<meta name="theme-color" content="#04060b">
+<link rel="canonical" href="https://bot-wow.com/docs/changelog.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/changelog.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/changelog.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="brand" href="../" aria-label="BOT·WOW — home">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
+        <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
+        <path d="M16 3v8" stroke="#46e6ff" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="16" cy="22" r="4" fill="#ffb545"/>
+      </svg>
+      <span>BOT<span class="dim">·</span>WOW</span>
+      <span class="dot" aria-hidden="true"></span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="../#demo">Demo</a>
+      <a href="../compatibility.html">Compatibility</a>
+      <a href="../#offre">Pricing</a>
+      <a href="./index.html">Documentation</a>
+      <a class="btn primary sm" href="../#offre">Buy — €20.00</a>
+    </nav>
+  </div>
+</header>
+<main class="page">
+  <div class="wrap">
+    <div class="panel">
+      <span class="eyebrow">Documentation</span>
+      <h1>Release notes</h1>
+      <p class="lead">Every significant fix comes with its measurement. The figures below come from real game sessions (Lushwater Oasis, client 2336×1323).</p>
+      <h2>1.2.0 — current release</h2>
+      <ul>
+        <li>Spot memory, map, and versioned export / import.</li>
+        <li>Round planner: nearest neighbour + 2-opt, three modes (cautious / balanced / exploration).</li>
+        <li>Web demo of the map, with parity verified between the site computation and the local bot.</li>
+        <li>Versioned distribution package with a SHA-256 manifest.</li>
+      </ul>
+      <h2>1.1.0 — reliability fixes</h2>
+      <ul>
+        <li>Float detection recalibrated for day <b>and</b> night water (oasis water measures H45-62 by day and H78-95 by night).</li>
+        <li>Water texture discrimination (IQR ≤ 3): grass is textured, water is smooth.</li>
+        <li>Area floor (20 px²): the red-haired braid shares the float's colour signature and is no longer confused with it.</li>
+        <li>The "no water, no cast" guard (threshold 0.40).</li>
+        <li>Resilience: an isolated error (e.g. <code>SetCursorPos</code> refused) no longer kills the session.</li>
+      </ul>
+      <h2>1.0.0 — first public release</h2>
+      <ul>
+        <li>Full cycle: cast → bite detection → click → verification.</li>
+        <li>Instrumented, measured click latency (median 308 ms, p95 358 ms over 46 cycles).</li>
+      </ul>
+    </div>
+  </div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-base">
+      <span>© 2026 Casinobabe — BOT-WOW</span>
+      <a href="../">Back to the home page</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

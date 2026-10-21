@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation — BOT-WOW</title>
+<meta name="description" content="Installing the BOT-WOW fishing bot: prerequisites, addon copy, configuration, first run and clean stop.">
+<meta name="theme-color" content="#04060b">
+<link rel="canonical" href="https://bot-wow.com/docs/install.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/install.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/install.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="brand" href="../" aria-label="BOT·WOW — home">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#46e6ff" stroke-opacity=".45"/>
+        <circle cx="16" cy="16" r="8" stroke="#46e6ff" stroke-opacity=".28"/>
+        <path d="M16 3v8" stroke="#46e6ff" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="16" cy="22" r="4" fill="#ffb545"/>
+      </svg>
+      <span>BOT<span class="dim">·</span>WOW</span>
+      <span class="dot" aria-hidden="true"></span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="../#demo">Demo</a>
+      <a href="../compatibility.html">Compatibility</a>
+      <a href="../#offre">Pricing</a>
+      <a href="./index.html">Documentation</a>
+      <a class="btn primary sm" href="../#offre">Buy — €20.00</a>
+    </nav>
+  </div>
+</header>
+<main class="page">
+  <div class="wrap">
+    <div class="panel">
+      <span class="eyebrow">Documentation</span>
+      <h1>Installation</h1>
+      <p class="lead">The package contains the addon, the bot and a configuration template. No web install is required: everything runs locally.</p>
+      <h2>1. Prerequisites</h2>
+      <ul>
+        <li>Windows 10 or 11 (64-bit).</li>
+        <li>Python 3.11 or newer (<code>python --version</code>).</li>
+        <li>WoW Classic 1.13 (anniversary), running and connected.</li>
+        <li>OpenCV and NumPy (<code>pip install opencv-python-headless numpy</code>) if you do not use the provided package.</li>
+      </ul>
+      <h2>2. Unzip and copy the addon</h2>
+      <ol>
+        <li>Unzip <code>casinobabe-fishing-&lt;version&gt;.zip</code>.</li>
+        <li>Copy <code>package/addon/Casinobabe</code> to <code>&lt;WoW&gt;\Interface\AddOns\Casinobabe</code>.</li>
+        <li>Make sure <code>Casinobabe.toc</code> sits in that folder: without it, the client ignores the addon.</li>
+      </ol>
+      <h2>3. Configuration</h2>
+      <p>Copy <code>package/config.example.json</code> to <code>state/fishing-bot-config.json</code> and adjust:</p>
+      <ul>
+        <li><code>clickAfterBiteMs</code> — bite → click delay. Recommended measured value: <b>450</b> (first-click success went from 18% at 150 ms to 43% at 450 ms, over samples of 17 to 23 bites).</li>
+        <li><code>castKey</code> — the key bound to your fishing action (default <code>2</code>).</li>
+        <li><code>waterRatioMin</code> — the "no water, no cast" guard (0.40).</li>
+      </ul>
+      <h2>4. First run</h2>
+      <ol>
+        <li><code>python scripts/fishing_bot.py --cli</code></li>
+        <li>The bot waits for the game window (up to 5 minutes), then checks you are actually in game.</li>
+        <li>Clean stop: press <b>F9</b> on the game window. The process exits and releases its lock.</li>
+      </ol>
+      <p class="note">Never run two instances: the second one refuses to start (<code>state/fishing-bot.pid</code> lock).</p>
+      <h2>5. First check</h2>
+      <p>In <code>reports/fishing-bot-log.jsonl</code> you should see <code>CAST</code>, then <code>CATCH_DETECTED</code> and <code>CLICK_BOBBER</code>. If the bot detects nothing, see the <a href="./known-issues.html">known issues</a> page.</p>
+    </div>
+  </div>
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-base">
+      <span>© 2026 Casinobabe — BOT-WOW</span>
+      <a href="../">Back to the home page</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

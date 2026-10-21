@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registre des modules — ce qui est réel, ce qui vient, ce qui n'arrivera pas · BOT-WOW</title>
+<meta name="description" content="Le registre des modules BOT-WOW : un module disponible (Pêche), trois en développement (Navigation, Inventaire & vendeur, Récupération), quatre planifiés. Chaque statut est adossé à des tests ré-exécutables. Aucune fonction inventée.">
+<meta name="theme-color" content="#05070f">
+<link rel="canonical" href="https://bot-wow.com/fr/modules.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/modules.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/modules.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BOT-WOW">
+<meta property="og:title" content="BOT-WOW — registre des modules, statuts honnêtes">
+<meta property="og:description" content="Un module disponible, trois en développement, quatre planifiés — chaque statut adossé à des tests ré-exécutables.">
+<meta property="og:url" content="https://bot-wow.com/fr/modules.html">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="w"><span><b>v1.2.0</b> version actuelle</span><span>Windows 10/11 · Python 3.11+</span>
+    <span>Registre généré depuis le dépôt du bot</span><span>Paiement pris en charge par Mollie</span></div>
+</div>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="./modules.html" aria-current="page">Modules</a>
+      <a href="./features.html">Fonctionnalités</a>
+      <a href="./demo.html">Démo</a>
+      <a href="./getting-started.html">Premiers pas</a>
+      <a href="./compatibility.html">Compatibilité</a>
+      <a href="./roadmap.html">Feuille de route</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="../docs/index.html">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./modules.html">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================= TÊTE -->
+<section class="pad" style="padding-bottom:26px">
+  <div class="w">
+    <span class="eyebrow">Registre des modules</span>
+    <h1 class="h2" style="max-width:20ch">Ce qui est réel, ce qui vient, ce qui n'arrivera pas.</h1>
+    <p class="lead" style="max-width:70ch">
+      Cette page est le contrat du produit. La pêche est disponible et couverte par la licence ;
+      trois rôles sont en développement avec du code réel et testé ; quatre autres sont planifiés
+      et clairement marqués « conception seulement ». <strong style="color:var(--txt)">Un statut
+      ne vaut que par les tests derrière lui.</strong>
+    </p>
+    <p class="honest-note" style="margin-inline:0;max-width:72ch">
+      Registre <span class="mono">v1.2.0</span> — 1 disponible · 3 en développement · 4 planifiés.
+      Source de vérité : <span class="mono">Casinobabe/scripts/botwow_modules.py</span>, exporté vers
+      <span class="mono">assets/modules.json</span> et vérifié à l'octet près à chaque build par
+      <span class="mono">npm test</span> (modules-parity). L'export est déterministe : pas de dates
+      inventées, pas de compteurs décoratifs.
+    </p>
+  </div>
+</section>
+
+<!-- ====================================================== DISPONIBLE -->
+<section class="pad" style="padding-top:34px">
+  <div class="w">
+    <div class="band"><span class="st st-ok"><i></i>Disponible</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">implémenté · testé · preuves</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Pêche — assistant + rondes optimisées</h3>
+        <p class="m-desc">Le noyau qui fonctionne : détection mesurée du flotteur, mémoire
+          persistante des spots, planificateur à parité vérifiée, mode arrière-plan, arrêt F9.</p>
+        <div class="mod">
+          <div class="mod-col has">
+            <div class="mod-label">Livré et vérifié</div>
+            <ul>
+              <li>Cycle lancer → touche → prise instrumenté (médiane mesurée 308 ms)</li>
+              <li>Mémoire persistante des spots (migrations, écritures atomiques, export/import)</li>
+              <li>Planificateur : plus proche voisin + 2-opt sur coûts mesurés ; 3 modes</li>
+              <li>Capture d'arrière-plan Windows (PrintWindow) et clics par messages</li>
+            </ul>
+          </div>
+          <div class="mod-col dep">
+            <div class="mod-label">Limites</div>
+            <ul>
+              <li>Clients Classic 1.13 uniquement, Windows 10/11</li>
+              <li>L'addon runtime observe l'état du jeu ; il ne simule jamais d'entrées</li>
+            </ul>
+          </div>
+        </div>
+        <p class="mono" style="margin:10px 0 0;font-size:11.5px;color:var(--mut2)">
+          suites : python tests/fishing_bot_test.py · node tests/run-fishing-harness.mjs
+          &nbsp;|&nbsp; fichiers : scripts/fishing_bot.py · scripts/fishing_memory.py</p>
+      </div>
+      <div class="m-status"><span class="st st-ok"><i></i>Disponible</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== EN DÉVELOPPEMENT -->
+<section class="pad" style="padding-top:26px">
+  <div class="w">
+    <div class="band"><span class="st st-dev"><i></i>En développement</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">code réel testé hors-ligne · validation en jeu en attente</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Navigation — déplacements spot à spot</h3>
+        <p class="m-desc">Odomètre minimap et contrôleur de déplacement bornés existent, testés
+          hors-ligne ; le trajet complet reste à valider en jeu.</p>
+        <div class="mod">
+          <div class="mod-col has">
+            <div class="mod-label">Existe aujourd'hui</div>
+            <ul>
+              <li>Odométrie via le marqueur fantôme minimap (tests : dérive nulle à l'arrêt)</li>
+              <li>Contrôles d'arrivée par position observée ; attentes bornées</li>
+            </ul>
+          </div>
+          <div class="mod-col dep">
+            <div class="mod-label">Manquant avant « disponible »</div>
+            <ul>
+              <li>Trajets complets validés en jeu (écrans + journaux)</li>
+              <li>Profils pour destinations hors pêche une fois les trajets prouvés</li>
+            </ul>
+          </div>
+        </div>
+        <p class="mono" style="margin:10px 0 0;font-size:11.5px;color:var(--mut2)">
+          suites : python tests/fishing_bot_test.py &nbsp;|&nbsp; fichiers : scripts/fishing_bot.py</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Inventaire & vendeur</h3>
+        <p class="m-desc">Planificateur hors-ligne implémenté et testé (math des sacs, listes de
+          vente/réappro, plan de tournée vendeur) ; le flux de données en jeu est l'étape restante.</p>
+        <div class="mod">
+          <div class="mod-col has">
+            <div class="mod-label">Existe aujourd'hui</div>
+            <ul>
+              <li>Math des sacs, liste de vente, liste de réappro, plan de tournée — fonctions pures, tests hors-ligne</li>
+              <li>Contrat de données BagSnapshot défini (émetteur addon ou déclaration manuelle)</li>
+            </ul>
+          </div>
+          <div class="mod-col dep">
+            <div class="mod-label">Manquant avant « disponible »</div>
+            <ul>
+              <li>Flux BagSnapshot depuis le jeu (émetteur addon + consommation côté bridge)</li>
+              <li>Validation en jeu d'une tournée vendeur complète</li>
+            </ul>
+          </div>
+        </div>
+        <p class="mono" style="margin:10px 0 0;font-size:11.5px;color:var(--mut2)">
+          suites : python tests/test_inventory_vendor.py &nbsp;|&nbsp; fichiers : scripts/inventory_vendor.py</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Récupération — chaîne de mort</h3>
+        <p class="m-desc">Machine à états entièrement spécifiée (détection de mort → confirmation
+          fantôme → navigation cadavre → résurrection). En implémentation, désactivée par défaut.</p>
+        <div class="mod">
+          <div class="mod-col has">
+            <div class="mod-label">Existe aujourd'hui</div>
+            <ul>
+              <li>Détection de mort + gestion de boîte de dialogue déjà testées (elles arrêtent le bot en sécurité)</li>
+            </ul>
+          </div>
+          <div class="mod-col dep">
+            <div class="mod-label">Manquant avant « disponible »</div>
+            <ul>
+              <li>Chaîne complète de retour au cadavre (transitions + preuve en jeu)</li>
+            </ul>
+          </div>
+        </div>
+        <p class="honest-note" style="margin:12px 0 0;text-align:left">
+          Tant que ce n'est pas prouvé, le comportement après mort reste :
+          <strong style="color:var(--txt)">arrêt et demande à un humain.</strong></p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= PLANIFIÉS -->
+<section class="pad" style="padding-top:26px">
+  <div class="w">
+    <div class="band"><span class="st st-plan"><i></i>Planifié</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">conception écrite seulement — pas de code, pas de promesse, pas de date</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Grind & rotations de combat</h3>
+        <p class="m-desc">Phase de conception seulement. Dépend d'une couche de détection de combat
+          (état de cible, cooldowns) qui n'existe pas encore. Aucune implémentation livrée ; rien
+          de simulé.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planifié</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Scripting — tâches personnalisées bornées</h3>
+        <p class="m-desc">Phase de conception : un exécuteur de tâches bornées réutilisant les
+          primitives des modules (déplacement, sacs, jalons), bac à sable d'abord. Aucun éditeur
+          de scripts ne sera livré tant que le concept n'est pas prouvé.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planifié</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Follower & assistance aux quêtes</h3>
+        <p class="m-desc">Non engagé. Exigerait des couches navigation ET combat prouvées d'abord.
+          Pas de date, pas de promesse. Listé pour que le registre soit complet, pas pour vendre
+          une fonction.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planifié</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Autres clients (TBC / WotLK / Retail)</h3>
+        <p class="m-desc">Classic 1.13 est le périmètre testé aujourd'hui. Un addon runtime TBC
+          Anniversary existe dans le dépôt, mais la couverture suit la validation du noyau, profil
+          par profil. La <a href="./compatibility.html" style="color:var(--cyan)">page compatibilité</a>
+          reste la référence de ce qui tourne aujourd'hui.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planifié</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== JAMAIS -->
+<section class="pad" style="padding-top:26px">
+  <div class="w">
+    <div class="band"><span class="st st-no"><i></i>Jamais</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">refus fermes, pas des entrées de feuille de route</span></div>
+    <div class="callout warn" style="margin-inline:0;max-width:none">
+      <span class="ico" aria-hidden="true">✕</span>
+      <span><strong>Ceci n'est pas des fonctionnalités et ne sera jamais annoncé :</strong>
+        toute prétention d'indétectabilité · toute promesse que votre compte serait à l'abri de
+        sanctions · lecture mémoire ou injection de processus. BOT-WOW observe des pixels et
+        envoie des messages fenêtres, et il peut violer les conditions d'utilisation du jeu —
+        la page compatibilité le dit avant l'achat, pas après.</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== FINAL -->
+<section class="pad final">
+  <div class="w">
+    <h2 class="h2">Tenez le registre à sa propre règle</h2>
+    <p class="lead" style="max-width:64ch">Chaque mention « livré » de cette page correspond à un
+      fichier et à une suite de tests que vous pouvez ré-exécuter. Si une mention cesse de
+      correspondre au code, le registre est en tort — dites-le :
+      <a class="foot-mail" href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p>
+    <div class="hero-cta">
+      <a class="btn btn-gold btn-lg" href="./demo.html">Essayer la démo (données simulées)</a>
+      <a class="btn btn-ghost btn-lg" href="./#offre">Voir l'offre</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans affiliation, approbation ni lien avec Blizzard Entertainment.
+           Les outils d'automatisation peuvent violer les conditions d'utilisation du jeu ;
+           lisez la page compatibilité avant utilisation.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="./modules.html" aria-current="page">Registre des modules</a></li>
+          <li><a href="./features.html">Fonctionnalités</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./compatibility.html">Compatibilité</a></li>
+          <li><a href="./roadmap.html">Feuille de route</a></li>
+          <li><a href="./#offre">Tarif</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs & support</h4>
+        <ul>
+          <li><a href="../docs/install.html">Installation</a></li>
+          <li><a href="../docs/changelog.html">Notes de version</a></li>
+          <li><a href="../docs/known-issues.html">Problèmes connus</a></li>
+          <li><a href="../docs/license.html">Licence & activation</a></li>
+          <li><a href="./faq.html">FAQ</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. BOT-WOW n'est pas un produit Blizzard et
+        n'est ni affilié à Blizzard Entertainment ni approuvé par Blizzard Entertainment. World of
+        Warcraft est une marque de Blizzard Entertainment. Utilisez les logiciels d'automatisation
+        de manière responsable et dans le respect des règles du serveur sur lequel vous jouez.</div>
+      <span class="mono">v1.2.0 · contenus : <a href="../legal/terms.html">conditions</a> ·
+        <a href="../legal/privacy.html">confidentialité</a> · <a href="../legal/refund.html">remboursements</a></span>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="../assets/app.js"></script>
+</body>
+</html>
