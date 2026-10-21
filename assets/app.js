@@ -82,6 +82,12 @@ function drawHeroMap(map, round) {
 }
 
 /* ---------------------------------------------------------------- achat */
+// L'API vit sur api.bot-wow.com : le site statique n'a pas de proxy meme
+// origine (verifie : /api/config sur bot-wow.com renvoie 404). On utilise
+// donc l'URL absolue de l'API, avec un repli meme origine si l'API est
+// proxifiee ulterieurement.
+const API_BASE = 'https://api.bot-wow.com';
+
 async function startCheckout(email) {
   const btn = document.getElementById('buyBtn');
   const err = document.getElementById('buyErr');
@@ -91,24 +97,31 @@ async function startCheckout(email) {
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = 'Redirection…';
-  try {
-    // Le navigateur n'envoie QUE l'e-mail : ni montant, ni devise, ni URL.
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, lang: 'fr' }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.checkoutUrl) {
-      throw new Error(data.error || ('checkout_failed (' + res.status + ')'));
+  const payload = { email, lang: 'fr' };
+  let data = null;
+  let lastError = null;
+  for (const base of [API_BASE, '']) {
+    try {
+      const res = await fetch(base + '/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.checkoutUrl) { data = body; break; }
+      lastError = body.error || ('http_' + res.status);
+    } catch (e) {
+      lastError = String(e && e.message ? e.message : e);
     }
-    window.location.href = data.checkoutUrl;
-  } catch (e) {
+  }
+  if (!data) {
     btn.disabled = false;
     btn.textContent = original;
-    err.textContent = 'Le paiement n’a pas pu être lancé : ' + (e.message || e) +
-      ' — réessayez ou écrivez à support@bot-wow.com';
+    err.textContent = 'Le paiement n’a pas pu être lancé (' + (lastError || 'erreur') +
+      ') — réessayez ou écrivez à support@bot-wow.com';
+    return;
   }
+  window.location.href = data.checkoutUrl;
 }
 
 function wireBuyForm() {
