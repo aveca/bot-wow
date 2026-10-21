@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/site.css">
+<link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="./">Home</a><a href="./demo.html">Demo</a><a href="./compatibility.html">Compatibility</a>
       <a href="./roadmap.html">Roadmap</a><a href="./docs/index.html">Docs</a><a href="./faq.html">FAQ</a>
     </div>
@@ -38,82 +40,139 @@
       tested), <b>In development</b> (partially built, not announced), <b>Planned</b>
       (identified, not built), <b>Out of scope</b> (this product will not do it).</p>
 
+    <div class="band"><span class="st st-ok"><i></i>Available</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">implemented · tested · evidence</span></div>
     <div class="feats">
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Float detection</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Float detection</h3>
         <p>PrintWindow capture of the game window, HSV colour analysis, day/night water
            ranges, texture discrimination, area thresholds. Detection parameters were
            calibrated on real captures of a real client, not on screenshots found online.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Cast → bite → catch cycle</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Cast → bite → catch cycle</h3>
         <p>Bite detection, instrumented bite → click latency (median 308 ms in our logged
            sessions), background clicks without window focus. F9 stops everything cleanly,
            at any time.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Persistent spot memory</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Persistent spot memory</h3>
         <p>Each fishing spot: position, reliability measured over repeated visits, real
            results, mobs seen nearby, time spent on site. Versioned schema with migrations
            and backups; export / import as JSON.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Route planner</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Route planner</h3>
         <p>Nearest neighbour + 2-opt optimiser over expected cost (travel time, mob risk,
            failure probability), three modes: Cautious, Balanced, Exploration.
            The site's JS planner and the bot's Python planner are compared on the same map
            at each build.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Casinobabe runtime addon</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Casinobabe runtime addon</h3>
         <p>A WM-monitored in-game addon keeps the fishing journal (casts, targets, spots,
            risks) visible to the bot. The addon deliberately performs no input simulation:
            nothing it does can act on your character.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Licences &amp; delivery</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Licences &amp; delivery</h3>
         <p>Machine-locked licence keys, server-side validation, limited-count download
            link, manual bitcoin rail with explicit admin approval. Payment via Mollie
            checkout (card).</p></div>
+    </div>
 
-      <div class="feat"><div class="st st-dev"><i></i>In development</div>
-        <h3 style="margin-top:12px">Movement between spots</h3>
-        <p>Minimap odometer and movement controller implemented and unit-tested (zero drift
-           at rest, observed-position arrival checks). Full spot-to-spot travel is being
-           validated in game before we claim it.</p></div>
+    <div class="band" style="margin-top:44px"><span class="st st-dev"><i></i>In development</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">real code, offline-tested · in-game validation pending</span></div>
 
-      <div class="feat"><div class="st st-plan"><i></i>Planned</div>
-        <h3 style="margin-top:12px">Corpse-run recovery</h3>
-        <p>After character death the bot currently stops safely and waits for a human.
-           A recovery state machine (detect death → confirm ghost → navigate to corpse →
-           ressurect) has been specified and is being implemented. Nothing is promised.</p></div>
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Movement between spots</h3>
+        <p class="m-desc">Minimap odometer and movement controller implemented and unit-tested
+           (zero drift at rest, observed-position arrival checks). Full spot-to-spot travel is
+           being validated in game before we claim it.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
 
-      <div class="feat"><div class="st st-plan"><i></i>Planned</div>
-        <h3 style="margin-top:12px">More game clients</h3>
-        <p>Only WoW Classic 1.13 (anniversary) is tested today. TBC / WotLK / Retail
-           profiles could follow once core in-game validation is done — when we can name
-           a date, we will.</p></div>
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Inventory & vendor</h3>
+        <p class="m-desc">Bag planning and vendor trips exist today as a tested offline planner
+           (free-slot math, sell/restock lists, bounded trip plan) with a defined BagSnapshot
+           data contract. Wiring it to the game is the current step — nothing runs in-game yet.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
 
-      <div class="feat"><div class="st st-no"><i></i>Out of scope</div>
-        <h3 style="margin-top:12px">Grinding, gathering, questing, battlegrounds, combat</h3>
-        <p>BOT-WOW is a fishing assistant. These roles will never be announced for this
-           product; if that changes, this page changes its statuses first.</p></div>
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Corpse-run recovery</h3>
+        <p class="m-desc">After character death the bot stops safely and asks for a human — that
+           part is tested. The full recovery state machine (detect death → confirm ghost →
+           navigate to corpse → resurrect) is specified and being implemented. Nothing is
+           promised.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
 
-      <div class="feat"><div class="st st-no"><i></i>Out of scope</div>
-        <h3 style="margin-top:12px">MacOS / Linux</h3>
-        <p>The bot relies on Windows display and input APIs of the game client. No macOS
-           or Linux build exists.</p></div>
+    <div class="band" style="margin-top:44px"><span class="st st-plan"><i></i>Planned</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">written design only — no code, no promise, no date</span></div>
 
-      <div class="feat"><div class="st st-no"><i></i>Out of scope</div>
-        <h3 style="margin-top:12px">"Undetectable" operation</h3>
-        <p>No automation tool is undetectable. Behaviour analysis can spot intensive
-           automation. We document risks on the compatibility page instead of promising
-           safety we cannot prove.</p></div>
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Grind, gathering, questing, battlegrounds</h3>
+        <p class="m-desc">Design phase only. These combat roles need a detection layer (target
+           state, cooldowns) that does not exist yet; no code has been written and no date is
+           promised. When real work starts, the
+           <a href="./modules.html" style="color:var(--cyan)">module ledger</a> shows them as
+           In development first.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Scripting & follower</h3>
+        <p class="m-desc">A bounded script runner and a follower mode are written designs,
+           sequenced after navigation and combat prove themselves. No editor ships while the
+           concept is unproved, and no date is promised.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>More game clients</h3>
+        <p class="m-desc">Only WoW Classic 1.13 (anniversary) is tested today. TBC / WotLK /
+           Retail profiles could follow once core in-game validation is done — when we can
+           name a date, we will.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
+    </div>
+
+    <div class="band" style="margin-top:44px"><span class="st st-no"><i></i>Out of scope</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">hard refusals, not roadmap items</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>MacOS / Linux</h3>
+        <p class="m-desc">The bot relies on Windows display and input APIs of the game client.
+           No macOS or Linux build exists.</p>
+      </div>
+      <div class="m-status"><span class="st st-no"><i></i>Out of scope</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>"Undetectable" operation</h3>
+        <p class="m-desc">No automation tool is undetectable. Behaviour analysis can spot
+           intensive automation. We document risks on the
+           <a href="./compatibility.html" style="color:var(--cyan)">compatibility page</a> instead
+           of promising safety we cannot prove.</p>
+      </div>
+      <div class="m-status"><span class="st st-no"><i></i>Out of scope</span></div>
     </div>
 
     <div class="callout mt">💡 <span>Statuses on this page are checked against the test suites
-      of the repository (12 planner parity checks, 118 Python unit tests, 94 offline harness
-      checks). When a status improves, the changelog entry cites the tests that prove it.</span></div>
+      of the repository (12 planner parity checks, 124 Python checks across 6 offline suites,
+      94 harness checks) and against the <a href="./modules.html" style="color:inherit;font-weight:700">module
+      ledger</a>. When a status improves, the changelog entry cites the tests that prove it.</span></div>
   </div>
 </main>
 

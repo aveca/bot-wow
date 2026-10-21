@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="../">Accueil</a><a href="./demo.html">Démo</a><a href="./compatibility.html">Compatibilité</a>
       <a href="./roadmap.html">Feuille de route</a><a href="../docs/fr/">Docs</a><a href="./faq.html">FAQ</a>
     </div>
@@ -38,85 +40,121 @@
       testé), <b>En développement</b> (partiellement construit, pas annoncé), <b>Prévu</b>
       (identifié, pas construit), <b>Hors périmètre</b> (ce produit ne le fera pas).</p>
 
+    <div class="band"><span class="st st-ok"><i></i>Disponible</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">implémenté · testé · preuves</span></div>
     <div class="feats">
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Détection du flotteur</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Détection du flotteur</h3>
         <p>Capture PrintWindow de la fenêtre de jeu, analyse HSV, plages de teinte de l'eau
            jour/nuit, discrimination de texture, seuils d'aire. Les paramètres ont été
            calibrés sur des captures d'un client réel, pas sur des captures d'écran
            trouvées en ligne.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Cycle lancer → morsure → prise</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Cycle lancer → morsure → prise</h3>
         <p>Détection de la morsure, latence morsure → clic instrumentée (médiane 308 ms dans
            nos sessions journalisées), clics en arrière-plan sans focus de fenêtre. F9
            arrête tout proprement, à tout moment.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Mémoire persistante des spots</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Mémoire persistante des spots</h3>
         <p>Chaque point de pêche : position, fiabilité mesurée sur des visites répétées,
            résultats réels, mobs vus à proximité, temps passé sur place. Schéma versionné
            avec migrations et sauvegardes ; export / import en JSON.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Planificateur de rondes</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Planificateur de rondes</h3>
         <p>Optimiseur plus proche voisin + 2-opt sur le coût attendu (temps de trajet, risque
            de mob, probabilité d'échec), trois modes : Prudent, Équilibré, Exploration.
            Le planificateur JS du site et celui du bot Python sont comparés sur la même
            carte à chaque build.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Runtime addon Casinobabe</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Runtime addon Casinobabe</h3>
         <p>Un addon en jeu surveillé par WM tient le journal de pêche (lancers, cibles,
            spots, risques) que le bot consulte. L'addon ne simule délibérément aucune
            entrée : rien de ce qu'il fait ne peut agir sur votre personnage.</p></div>
 
-      <div class="feat"><div class="st st-ok"><i></i>Disponible</div>
-        <h3 style="margin-top:12px">Licences &amp; livraison</h3>
+      <div class="feat">
+        <h3 style="margin-top:0">Licences &amp; livraison</h3>
         <p>Clés verrouillées à une machine, validation côté serveur, lien de téléchargement
            à quota limité, rail bitcoin manuel avec approbation admin explicite. Paiement
            via un checkout Mollie (carte).</p></div>
-
-      <div class="feat"><div class="st st-dev"><i></i>En développement</div>
-        <h3 style="margin-top:12px">Déplacement entre les spots</h3>
-        <p>Odomètre de minicarte et contrôleur de déplacement implémentés et testés en
-           unitaire (dérive nulle au repos, arrivée vérifiée par observation). Le trajet
-           complet d'un banc à l'autre est en validation en jeu avant toute annonce.</p></div>
-
-      <div class="feat"><div class="st st-plan"><i></i>Prévu</div>
-        <h3 style="margin-top:12px">Retour au cadavre</h3>
-        <p>Après une mort, le bot s'arrête aujourd'hui proprement et attend un humain. Une
-           machine à états de récupération (détecter la mort → confirmer le fantôme →
-           naviguer vers le cadavre → résurrection) a été spécifiée et sa mise en œuvre
-           est en cours. Rien n'est promis.</p></div>
-
-      <div class="feat"><div class="st st-plan"><i></i>Prévu</div>
-        <h3 style="margin-top:12px">Autres clients de jeu</h3>
-        <p>Seul WoW Classic 1.13 (anniversary) est testé aujourd'hui. Des profils TBC /
-           WotLK / Retail pourraient suivre une fois la validation cœur en jeu faite —
-           quand nous pourrons donner une date, nous la donnerons.</p></div>
-
-      <div class="feat"><div class="st st-no"><i></i>Hors périmètre</div>
-        <h3 style="margin-top:12px">Grinding, collecte, quêtes, champs de bataille, combat</h3>
-        <p>BOT-WOW est un assistant de pêche. Ces rôles ne seront jamais annoncés pour ce
-           produit ; si cela change, cette page révisera ses statuts en premier.</p></div>
-
-      <div class="feat"><div class="st st-no"><i></i>Hors périmètre</div>
-        <h3 style="margin-top:12px">MacOS / Linux</h3>
-        <p>Le bot s'appuie sur les API Windows d'affichage et d'entrée du client de jeu.
-           Aucun build macOS ou Linux n'existe.</p></div>
-
-      <div class="feat"><div class="st st-no"><i></i>Hors périmètre</div>
-        <h3 style="margin-top:12px">« Indétectable »</h3>
-        <p>Aucun outil d'automatisation n'est indétectable. L'analyse de comportement peut
-           repérer une automatisation intensive. Nous documentons les risques sur la page
-           compatibilité au lieu de promettre une sûreté impossible à prouver.</p></div>
     </div>
 
+    <div class="band" style="margin-top:44px"><span class="st st-dev"><i></i>En développement</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">code réel testé hors-ligne · validation en jeu en attente</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Déplacement entre les spots</h3>
+        <p class="m-desc">Odomètre de minicarte et contrôleur de déplacement implémentés et testés en unitaire (dérive nulle au repos, arrivée vérifiée par observation). Le trajet complet d'un banc à l'autre est en validation en jeu avant toute annonce.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Inventaire & vendeur</h3>
+        <p class="m-desc">La planification des sacs et des tournées vendeur existe aujourd'hui comme planificateur hors-ligne testé (math des emplacements, listes de vente/réappro, plan de tournée borné) avec un contrat de données BagSnapshot défini. Le câblage au jeu est l'étape en cours — rien ne tourne en jeu pour l'instant.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Retour au cadavre</h3>
+        <p class="m-desc">Après une mort, le bot s'arrête proprement et attend un humain — cette partie est testée. La machine à états complète (détecter la mort → confirmer le fantôme → naviguer vers le cadavre → résurrection) est spécifiée et en cours d'implémentation. Rien n'est promis.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>En développement</span></div>
+    </div>
+
+        <div class="band" style="margin-top:44px"><span class="st st-plan"><i></i>Prévu</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">conception écrite seulement — pas de code, pas de promesse, pas de date</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Grind, collecte, quêtes, champs de bataille</h3>
+        <p class="m-desc">Phase de conception seulement. Ces rôles de combat exigent une couche de détection (état de cible, cooldowns) qui n'existe pas encore ; aucun code écrit, aucune date promise. Quand le travail réel commence, le <a href="./modules.html">registre des modules</a> les affichera d'abord « En développement ».</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Prévu</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Scripting & follower</h3>
+        <p class="m-desc">Un exécuteur de tâches bornées et un mode follower sont des conceptions écrites, séquencées après la preuve de la navigation et du combat. Aucun éditeur ne sera livré tant que le concept n'est pas prouvé, aucune date promise.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Prévu</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Autres clients de jeu</h3>
+        <p class="m-desc">Seul WoW Classic 1.13 (anniversary) est testé aujourd'hui. Des profils TBC / WotLK / Retail pourraient suivre une fois la validation cœur en jeu faite — quand nous pourrons donner une date, nous la donnerons.</p>
+      </div>
+      <div class="m-status"><span class="st st-plan"><i></i>Prévu</span></div>
+    </div>
+
+        <div class="band" style="margin-top:44px"><span class="st st-no"><i></i>Hors périmètre</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">refus fermes, pas des entrées de feuille de route</span></div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>MacOS / Linux</h3>
+        <p class="m-desc">Le bot s'appuie sur les API Windows d'affichage et d'entrée du client de jeu. Aucun build macOS ou Linux n'existe.</p>
+      </div>
+      <div class="m-status"><span class="st st-no"><i></i>Hors périmètre</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>« Indétectable »</h3>
+        <p class="m-desc">Aucun outil d'automatisation n'est indétectable. L'analyse de comportement peut repérer une automatisation intensive. Nous documentons les risques sur la page compatibilité au lieu de promettre une sûreté impossible à prouver.</p>
+      </div>
+      <div class="m-status"><span class="st st-no"><i></i>Hors périmètre</span></div>
+    </div>
     <div class="callout mt">💡 <span>Les statuts de cette page sont confrontés aux suites de tests
-      du dépôt (12 vérifications de parité du planificateur, 118 tests unitaires Python, 94
-      contrôles de harnais hors ligne). Quand un statut s'améliore, la note de version
-      cite les tests qui le prouvent.</span></div>
+      du dépôt (12 vérifications de parité du planificateur, 124 vérifications Python réparties
+      sur 6 suites hors ligne, 94 contrôles de harnais) et au
+      <a href="./modules.html" style="color:inherit;font-weight:700">registre des modules</a>.
+      Quand un statut s'améliore, la note de version cite les tests qui le prouvent.</span></div>
   </div>
 </main>
 

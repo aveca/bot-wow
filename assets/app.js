@@ -216,7 +216,11 @@ async function boot() {
   wireWaitlist();
   wireReveal();
   try {
-    const res = await fetch('./assets/demo-map.json', { cache: 'no-cache' });
+    // Résolu depuis l'URL du MODULE (pas de la page) : la carte doit se
+    // charger identiquement depuis /, /fr/ et /docs/... (bug FR repéré en QA
+    // visuelle : fetch relatif à la page -> 404 sur les pages /fr/).
+    const mapUrl = new URL('demo-map.json', import.meta.url);
+    const res = await fetch(mapUrl, { cache: 'no-cache' });
     const map = await res.json();
     const round = planRound(map, { mode: 'equilibre' });
     drawHeroMap(map, round);

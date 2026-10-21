@@ -38,28 +38,35 @@ Légende : **[C]** confirmé par une source publique lue le 2026-10-21 ·
 **[I]** inféré (déduit de la documentation, non vérifié en exécution) ·
 **[?]** inconnu · **[Cas]** capacité Casinobabe mesurée dans notre dépôt.
 
-| Capacité | PixelBuddy | Source | Casinobabe | Preuve Casinobabe |
-|---|---|---|---|---|
-| Bot **externe** (pixels, pas d'injection) | ✔ annoncé explicitement | page produit | ✔ | `scripts/fishing_bot.py` : capture `PrintWindow`/OBS, entrées `WM_*` |
-| Addon client (canal de données) | ✔ « custom addon » qui affiche des données encodées en haut à gauche | page produit | ✔ (mesure de l'addon, pas d'affichage) | `runtime-addon/Casinobabe/CasinobabeFishing.lua` |
-| **Pêche** par IA (modèle entraîné) | ✔ annoncé | page produit | ✘ (détection classique par couleur) | `detect_bobber` / `detect_bobber_hybrid` |
-| Mode arrière-plan (sans focus) | ✔ annoncé | page produit | ✔ **mesuré** | `send_key` / `send_mouse_click_wm` (WM_*, sans focus) |
-| **Mémoire des spots** de pêche | **[?]** non documenté publiquement | — | ✔ **implémenté et testé** | `scripts/fishing_spots.py` (47/47) : déduplication, confirmation, fiabilité, historique, export/import |
-| **Planification de routes** de pêche | **[?]** non documenté | — | ✔ **implémenté et testé** | `scripts/fishing_routes.py` : coût attendu, plus proche voisin + 2-opt, 3 modes (parité JS↔Python vérifiée) |
-| **Déplacement automatique entre points** | ✔ « mesh navigation », profils/waypoints éditables | page produit | ⚠ **en cours** (mécanisme mesuré, arrivée non validée) | `docs/navigation-findings.md` (constats du 2026-10-21) |
-| Navigation par **profils** éditables à la main | ✔ | captures de l'éditeur | ✘ (approche mémoire automatique) | — |
-| Boutique de profils/rotations **gratuite** | ✔ | page produit | ✘ | — |
-| Grinder / Gather / Rotation / Quester / Follower / Scripter | ✔ 8 rôles | page produit | ✘ **hors périmètre** (pêche) | — |
-| Serveurs **privés** | ✘ **exclus** | FAQ (« Official WoW only ») | ✔ **cible principale** | session réelle sur serveur privé |
-| Vanille/Classic/Live | ✔ | FAQ | ⚠ **Classic 1.13 testé** ; Retail/TBC/WotLK non testés | `state/fishing-bot-config.json` + tableau de compatibilité du site |
-| 16 langues d'interface | ✔ | page produit | ✘ (français) | — |
-| Pilotage par smartphone | ✔ | page produit | ✘ | — |
-| Assistant d'installation (wizard) | ✔ | page produit | ✔ (guide + `INSTALL.md` + `config.example.json`) | `distribution/INSTALL.md` |
-| Licence par machine | **[I]** (clé + activation, format non publié) | — | ✔ **implémenté et testé** | `worker/index.js` (`licenses`, `activations`) + `tests/payment-flow.test.mjs` |
-| Essai payant 48 h | ✔ 1,99 € | page produit | ✔ **gratuit** (démo navigateur, sans compte) | `demo.html` + `assets/route-planner.js` |
-| Abonnement | ✔ 30 j / 90 j | page produit | ✘ (licence à vie 20 €) | `wrangler.toml` + `PRICE_TABLE` |
-| Vigilance anti-bannissement | ✔ **avertie explicitement** (« yes ») | FAQ | ✔ même position (avertissement sur le site) | `index.html` (section compatibilité) |
-| Anti-virus | ✔ **averti** (peut être signalé) | FAQ | ✔ même honnêteté (le bot lit l'écran et envoie des touches) | `distribution/INSTALL.md` |
+| Capacité | PixelBuddy | Source PB | Casinobabe (registre v1.2.0) | Statut réel Casinobabe | Preuve Casinobabe |
+|---|---|---|---|---|---|
+| Bot **externe** (pixels, pas d'injection) | ✔ annoncé explicitement | page produit | ✔ implémenté et mesuré | Disponible | `scripts/fishing_bot.py` : capture `PrintWindow`/OBS, entrées `WM_*` ; `tests/fishing_bot_test.py` (42/42), harness 94/94 |
+| Addon client (canal de données) | ✔ « custom addon » qui affiche des données encodées en haut à gauche | page produit | ✔ implémenté (mesure, pas d'affichage) | Disponible | `runtime-addon/Casinobabe/CasinobabeFishing.lua` |
+| **Pêche** par IA (modèle entraîné) | ✔ annoncé | page produit | ✘ détection classique par couleur (pas d'IA) | Absent | `detect_bobber` / `detect_bobber_hybrid` |
+| Mode arrière-plan (sans focus fenêtre) | ✔ annoncé | page produit | ✔ mesuré | Disponible | `send_key` / `send_mouse_click_wm` (WM_*) ; logs instrumentés |
+| **Mémoire des spots** de pêche | **[?]** non documenté publiquement | — | ✔ implémenté et testé | Disponible | `scripts/fishing_spots.py` (47/47) : déduplication, confirmation, fiabilité, historique, export/import |
+| **Planification de routes** de pêche | **[?]** non documenté | — | ✔ implémenté et testé | Disponible | `scripts/fishing_routes.py` : coût attendu, plus proche voisin + 2-opt, 3 modes (parité JS↔Python 12/12 vérifiée) |
+| **Déplacement automatique entre points** | ✔ « mesh navigation », profils/waypoints éditables | page produit | ⚠ mécanisme mesuré, arrivée **non** validée en jeu | In development | `docs/navigation-findings.md` (constats du 2026-10-21) ; zero drift au repos (unitaire) |
+| Navigation par **profils** éditables à la main | ✔ | captures de l'éditeur | ✘ approche mémoire automatique | Absent | — |
+| Boutique de profils/rotations **gratuite** | ✔ | page produit | ✘ | Absent | — |
+| **Inventaire & vendeur** (gestion sacs, tournées) | non (boutique de profils ≠ gestion de sacs) | — | ⚠ planner pur, flux BagSnapshot **absent** du jeu | In development | `scripts/inventory_vendor.py` (fonctions pures) + `tests/test_inventory_vendor.py` (26/26) ; **non vérifiable en jeu** tant que BagSnapshot n'existe pas |
+| **Grind** (rotations de combat) | ✔ 8 rôles | page produit | conception écrite uniquement, pas de code | Planned | registre `scripts/botwow_modules.py` (id `grind`, `shipped: []`) ; rien dans l'interface |
+| **Gathering / quête / battlegrounds** | ✔ 8 rôles | page produit | conception écrite uniquement, pas de code | Planned | registre `scripts/botwow_modules.py` (id `grind`) |
+| **Follower** | ✔ 8 rôles | page produit | conception écrite uniquement, pas de code | Planned | registre `scripts/botwow_modules.py` (id `follower`) ; dépend de navigate + grind prouvés |
+| **Scripting** (tâches personnalisées) | ✔ 8 rôles | page produit | conception écrite uniquement, pas de code, pas d'éditeur | Planned | registre `scripts/botwow_modules.py` (id `scripting`) |
+| Serveurs **privés** | ✘ **exclus** | FAQ (« Official WoW only ») | ✔ cible principale | Disponible (pour la pêche) | session réelle sur serveur privé |
+| Vanille / Classic / Live | ✔ | FAQ | ⚠ Classic 1.13 testé ; Retail/TBC/WotLK non testés | ⚠ Classic 1.13 | `state/fishing-bot-config.json` + page compatibilité |
+| 16 langues d'interface | ✔ | page produit | ✘ (français seulement) | Absent | — |
+| Pilotage par smartphone | ✔ | page produit | ✘ | Absent | — |
+| Assistant d'installation (wizard) | ✔ | page produit | ✔ guide + fichiers d'exemple | Disponible | `distribution/INSTALL.md` + `config.example.json` |
+| Licence par machine | **[I]** (clé + activation, format non publié) | — | ✔ implémenté et testé (simulation) | Disponible (simulé) | `worker/index.js` (`licenses`, `activations`) + `tests/payment-flow.test.mjs` |
+| Essai payant 48 h | ✔ 1,99 € | page produit | ✔ **gratuit** (démo navigateur, sans compte) | Disponible (simulé) | `demo.html` + `assets/route-planner.js` |
+| Abonnement | ✔ 30 j / 90 j | page produit | ✘ (licence à vie 20 €) | Absent | `wrangler.toml` + `PRICE_TABLE` |
+| Vigilance anti-bannissement | ✔ **avertie explicitement** (« yes ») | FAQ | ✔ même position | Out of scope (refus) | `index.html` (section compatibilité) |
+| Anti-virus | ✔ **averti** (peut être signalé) | FAQ | ✔ même honnêteté | Out of scope (refus) | `distribution/INSTALL.md` |
+| Mémoire / injection dans le processus | non documenté | — | ✘ **refus ferme** | Never | `index.html`, `features.html` (jamais) |
+
+Règle de lecture : « Disponible » = code implémenté **et** tests qui passent ; « In development » = code réel hors-ligne, validation en jeu **en attente** ; « Planned » = conception écrite uniquement, aucun code, aucune date ; « Out of scope / Never » = refus ferme documenté.
 
 ## 2. Faits / inférences / inconnues
 

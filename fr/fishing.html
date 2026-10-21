@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./demo.html">Démo</a>
       <a href="./roadmap.html">Feuille de route</a><a href="../docs/fr/">Docs</a><a href="./faq.html">FAQ</a>
     </div>
@@ -49,11 +51,34 @@
         client Classic 1.13 réel en 2336×1323. En cas d'ambiguïté, le bot ne clique pas
         dans le flou — il revérifie.</p>
 
+      <figure class="evidence">
+        <img src="../assets/evidence/fishing-real-capture.jpg"
+             alt="Client WoW Classic 1.13 réel à Lushwater Oasis — le type d'image que le bot capture et analyse"
+             loading="lazy" width="1200" height="515">
+        <figcaption>
+          <span class="tag">Capture client réel</span>
+          <span>Session de calibration à Lushwater Oasis (Classic 1.13) — le même bassin que
+            la carte de démo. Image utilisée pour régler les plages de détection, pas une
+            affirmation de session en cours.</span>
+        </figcaption>
+      </figure>
+
       <h2>3 · Le cycle</h2>
       <p>Lancer → attendre la morsure → cliquer. La latence morsure → clic est mesurée à
         chaque cycle et journalisée ; la médiane annoncée (308&thinsp;ms) vient de ces
         journaux. Les clics sont envoyés comme messages de fenêtre, donc la fenêtre n'a
         pas besoin d'être au premier plan.</p>
+
+      <div class="cycle">
+        <div class="c-step"><span class="c-k">1 · Lancer</span><span class="v c-v">WM_KEY</span>
+          <span class="c-note">envoyé comme message de fenêtre — sans voler le focus</span></div>
+        <div class="c-step"><span class="c-k">2 · Morsure</span><span class="v c-v cy">revérif. HSV</span>
+          <span class="c-note">ambiguïté → le bot revérifie, ne clique jamais à l'aveugle</span></div>
+        <div class="c-step"><span class="c-k">3 · Clic</span><span class="v c-v am">308&thinsp;ms <small>médiane</small></span>
+          <span class="c-note">morsure → clic, instrumenté à chaque cycle</span></div>
+        <div class="c-step"><span class="c-k">4 · Journal</span><span class="v c-v">par cycle</span>
+          <span class="c-note">écrit en mémoire + flux addon</span></div>
+      </div>
 
       <h2>4 · Mémoire</h2>
       <p>Chaque visite d'un spot alimente un enregistrement persistant : position, taux de
@@ -75,17 +100,21 @@
         <li>Les échecs dégradent sans s'aggraver : un lancer raté est retenté dans une
           limite, journalisé et diagnostiqué ; des lancers bloqués en série mettent le
           bot en pause au lieu de forcer des clics.</li>
-        <li>Mort du personnage : le bot s'arrête et attend un humain (la récupération est
-          sur la <a href="./roadmap.html">feuille de route</a>).</li>
+        <li>Mort du personnage : le bot s'arrête et attend un humain — la récupération est
+          <a href="./modules.html">en développement</a> (la machine à états est spécifiée et
+          en cours d'implémentation ; tant qu'elle ne tient pas en jeu, l'arrêt sûr reste le
+          comportement).</li>
       </ul>
 
       <div class="callout green">✅ <span><b>Essayez maintenant.</b> La <a href="./demo.html">démo
         navigateur</a> montre la vraie vue carte et le vrai calcul de ronde sur des données
         simulées — sans compte, sans installation.</span></div>
 
-      <div class="callout">⚠️ <span><b>Ce que ce bot n'est pas.</b> Ni bot d'XP, ni collecteur,
-        ni bot de quêtes, ni moteur de combat —
-        voyez les statuts complets sur <a href="./features.html">fonctions</a>.</span></div>
+      <div class="callout">⚠️ <span><b>Ce que ce bot n'est pas — aujourd'hui.</b> Ni bot d'XP,
+        ni collecteur, ni bot de quêtes, ni moteur de combat. Ces rôles sont en conception
+        écrite seulement (ils exigent une couche de détection de combat qui n'existe pas
+        encore) — suivez leurs statuts réels sur le
+        <a href="./modules.html">registre des modules</a>.</span></div>
     </div>
   </div>
 </main>

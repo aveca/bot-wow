@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./fishing.html">Fonctionnement</a>
       <a href="./demo.html">Démo</a><a href="../docs/fr/">Docs</a>
     </div>
@@ -38,7 +40,7 @@
       prédictions confiantes. Les dates n'apparaissent que lorsqu'elles sont tenables.</p>
 
     <div class="prose">
-      <h2>En place aujourd'hui (v1.2.0)</h2>
+      <h2><span class="st st-ok"><i></i>En place aujourd'hui — v1.2.0</span></h2>
       <ul>
         <li>Détection du flotteur mesurée et cycle complet lancer → morsure → prise,
           y compris le mode arrière-plan sans focus de la fenêtre.</li>
@@ -50,7 +52,7 @@
           le paquet de diffusion, rail bitcoin manuel avec approbation admin explicite.</li>
       </ul>
 
-      <h2>En cours</h2>
+      <h2><span class="st st-dev"><i></i>En cours</span></h2>
       <ul>
         <li><b>Trajet entre spots</b> — l'odomètre + l'auto-run passent les tests unitaires
           (dérive nulle au repos, arrivée vérifiée) ; la validation en jeu du trajet
@@ -60,18 +62,28 @@
           signal de résurrection ambigu) a été documentée ; une machine à états bornée
           avec délais par étape est en cours d'implémentation. Tant qu'elle ne tient pas
           en jeu, une mort laisse le bot à l'arrêt et attend un humain.</li>
+        <li><b>Inventaire & vendeur</b> — le planificateur hors-ligne (math des sacs,
+          listes de vente/réappro, plan de tournée vendeur borné) est implémenté et testé
+          en unitaire avec un contrat BagSnapshot défini ; le câblage du flux de données
+          depuis le jeu est l'étape en cours.</li>
       </ul>
 
-      <h2>Prévu (sans date promise)</h2>
+      <h2><span class="st st-plan"><i></i>Prévu — sans date promise</span></h2>
       <ul>
+        <li><b>Grind, collecte, quêtes, champs de bataille</b> — rôles de combat en
+          conception écrite seulement ; ils dépendent d'une couche de détection de combat
+          qui n'existe pas encore. Quand le travail réel commence, le
+          <a href="./modules.html">registre des modules</a> les passera d'abord
+          « En développement ».</li>
+        <li><b>Scripting</b> (tâches personnalisées bornées) et <b>follower</b> —
+          conceptions séquencées après la preuve de la navigation et du combat.</li>
         <li>Autres clients de jeu (profils TBC / WotLK) — après la validation cœur en jeu,
           jamais avant.</li>
         <li>Partage de la carte des spots entre utilisateurs.</li>
       </ul>
 
-      <h2>Jamais (sauf si cette page change la première)</h2>
+      <h2><span class="st st-no"><i></i>Jamais — sauf si cette page change la première</span></h2>
       <ul>
-        <li>Rôles grinding / collecte / quêtes / champs de bataille / combat.</li>
         <li>Lecture mémoire ou injection dans le processus du jeu.</li>
         <li>Toute promesse « sûr » ou « indétectable » — voyez la
           <a href="./compatibility.html">page compatibilité</a> pour la version honnête.</li>

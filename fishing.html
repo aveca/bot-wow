@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/site.css">
+<link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="./">Home</a><a href="./features.html">Features</a><a href="./demo.html">Demo</a>
       <a href="./roadmap.html">Roadmap</a><a href="./docs/index.html">Docs</a><a href="./faq.html">FAQ</a>
     </div>
@@ -49,10 +51,33 @@
         Classic 1.13 client at 2336×1323. When detection is ambiguous, the bot does not
         click blind — it re-checks.</p>
 
+      <figure class="evidence">
+        <img src="./assets/evidence/fishing-real-capture.jpg"
+             alt="Real WoW Classic 1.13 client at Lushwater Oasis — the kind of frame the bot captures and analyses"
+             loading="lazy" width="1200" height="515">
+        <figcaption>
+          <span class="tag">Real client capture</span>
+          <span>Calibration session at Lushwater Oasis (Classic 1.13) — the same pool the
+            demo map uses. Frame used to tune the detection ranges, not a claim of a running
+            session.</span>
+        </figcaption>
+      </figure>
+
       <h2>3 · The cycle</h2>
       <p>Cast → wait for bite → click. The bite → click latency is measured per cycle and
         logged; the median we announced (308&thinsp;ms) comes from those logs. Clicks are
         sent as window messages so the window does not need foreground focus.</p>
+
+      <div class="cycle">
+        <div class="c-step"><span class="c-k">1 · Cast</span><span class="v c-v">WM_KEY</span>
+          <span class="c-note">sent as a window message — no focus stolen</span></div>
+        <div class="c-step"><span class="c-k">2 · Bite</span><span class="v c-v cy">HSV re-check</span>
+          <span class="c-note">ambiguous → the bot re-checks, never clicks blind</span></div>
+        <div class="c-step"><span class="c-k">3 · Click</span><span class="v c-v am">308&thinsp;ms <small>median</small></span>
+          <span class="c-note">bite → click, instrumented per cycle</span></div>
+        <div class="c-step"><span class="c-k">4 · Journal</span><span class="v c-v">per cycle</span>
+          <span class="c-note">logged to memory + addon feed</span></div>
+      </div>
 
       <h2>4 · Memory</h2>
         <p>Every visit to a spot feeds a persistent record: position, catch rate measured
@@ -72,17 +97,19 @@
         <li>Bounded waits everywhere: no unbounded click loop.</li>
         <li>Failures degrade, not escalate: a failed cast is retried with limits, logged,
           and diagnosed; mass cast failures pause the bot instead of forcing clicks.</li>
-        <li>Character death: the bot stops and asks for a human (recovery is on the
-          <a href="./roadmap.html">roadmap</a>).</li>
+        <li>Character death: the bot stops and asks for a human — recovery is
+          <a href="./modules.html">in development</a> (the state machine is specified and
+          being implemented; until it holds in game, the safe stop is the behaviour).</li>
       </ul>
 
       <div class="callout green">✅ <span><b>Try it now.</b> The <a href="./demo.html">browser
         demo</a> shows the real map view and real round computation on simulated data — no
         account, no install.</span></div>
 
-      <div class="callout">⚠️ <span><b>What this bot is not.</b> It is not an XP grinder, a
-        gatherer, a quester, nor a combat engine —
-        see the full statuses on <a href="./features.html">features</a>.</span></div>
+      <div class="callout">⚠️ <span><b>What this bot is not — today.</b> It is not an XP
+        grinder, a gatherer, a quester, nor a combat engine. Those roles are in written
+        design only (they need a combat-detection layer that does not exist yet) — follow
+        their real statuses on the <a href="./modules.html">module ledger</a>.</span></div>
     </div>
   </div>
 </main>

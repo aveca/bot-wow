@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/site.css">
+<link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
 
@@ -20,6 +21,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+        <a href="./modules.html">Modules</a>
       <a href="./">Home</a><a href="./features.html">Features</a><a href="./fishing.html">How it works</a>
       <a href="./demo.html">Demo</a><a href="./docs/index.html">Docs</a>
     </div>
@@ -38,7 +40,7 @@
       Dates appear only when we can commit to them.</p>
 
     <div class="prose">
-      <h2>Live now (v1.2.0)</h2>
+      <h2><span class="st st-ok"><i></i>Live now — v1.2.0</span></h2>
       <ul>
         <li>Measured float detection and the full cast → bite → catch cycle, including
           background mode without window focus.</li>
@@ -50,7 +52,7 @@
           distribution package, manual bitcoin rail with explicit admin approval.</li>
       </ul>
 
-      <h2>In development</h2>
+      <h2><span class="st st-dev"><i></i>In development</span></h2>
       <ul>
         <li><b>Spot-to-spot travel</b> — the odometer + auto-run controller pass unit tests
           (zero drift at rest, verified arrival); in-game validation of the full path is
@@ -60,18 +62,26 @@
           been documented; a bounded state machine with per-step timeouts is being
           implemented. Until it holds in game, death keeps the bot stopped and asks
           for a human.</li>
+        <li><b>Inventory & vendor</b> — the offline planner (bag math, sell/restock lists,
+          bounded vendor-trip plan) is implemented and unit-tested with a defined
+          BagSnapshot contract; wiring the data feed from the game is the current step.</li>
       </ul>
 
-      <h2>Planned (no date promised)</h2>
+      <h2><span class="st st-plan"><i></i>Planned — no date promised</span></h2>
       <ul>
+        <li><b>Grind, gathering, questing, battlegrounds</b> — combat roles in written design
+          only; they depend on a combat-detection layer that does not exist yet. When real
+          work starts, the <a href="./modules.html">module ledger</a> moves them to
+          In development first.</li>
+        <li><b>Scripting</b> (bounded custom tasks) and <b>follower assistance</b> — designs
+          sequenced after navigation and combat prove themselves.</li>
         <li>Additional game clients (TBC / WotLK profiles) — after the core in-game
           validation, never before.</li>
         <li>Spot map sharing between users.</li>
       </ul>
 
-      <h2>Never (unless this page changes first)</h2>
+      <h2><span class="st st-no"><i></i>Never — unless this page changes first</span></h2>
       <ul>
-        <li>Grinding / gathering / questing / battlegrounds / combat roles.</li>
         <li>Memory reading or injection into the game process.</li>
         <li>Any "safe" or "undetectable" claim — see the
           <a href="./compatibility.html">compatibility page</a> for the honest version.</li>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOT-WOW — the WoW Classic fishing bot that learns its spots</title>
 <meta name="description" content="BOT-WOW / Casinobabe: a fishing assistant for WoW Classic (including private servers). Measured float detection, persistent spot memory, oasis maps and optimised rounds. Lifetime licence €20.">
-<meta name="theme-color" content="#06070d">
+<meta name="theme-color" content="#05070f">
 <link rel="canonical" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/">
@@ -18,8 +18,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/style.css">
 <link rel="stylesheet" href="./assets/site.css">
+<link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
 
@@ -32,6 +32,7 @@
   <div class="w">
     <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
     <div class="nav-links">
+      <a href="./modules.html">Modules</a>
       <a href="./features.html">Features</a>
       <a href="./demo.html">Demo</a>
       <a href="./getting-started.html">Getting started</a>
@@ -51,12 +52,13 @@
 <section class="hero">
   <div class="w">
     <div>
-      <span class="badge"><span class="dot"></span> Casinobabe Fishing Assistant — v1.2.0</span>
-      <h1>The WoW Classic fishing bot<br><span class="grad">that learns its spots.</span></h1>
+      <span class="badge"><span class="dot"></span> Living in the wild — v1.2.0 instrumented build</span>
+      <h1>The WoW Classic<br>fishing bot that<br>learns its spots.</h1>
       <p class="hero-sub">
-        Measured float detection, <b>persistent spot memory</b>, oasis maps and
-        <b>optimised rounds</b> that chain fishing spots together. Built for
-        WoW Classic 1.13, private servers included.
+        Measured float detection, <b>persistent spot memory</b> and optimised
+        rounds that chain fishing spots together — and a module ledger that
+        tells you exactly what else is shipped, in development or planned.
+        Built for Classic 1.13, private servers included.
       </p>
       <div class="hero-cta">
         <a class="btn btn-gold btn-lg" href="./demo.html">Try the browser demo</a>
@@ -95,7 +97,7 @@
     <div class="factrow">
       <div class="fact reveal"><b>308 ms</b><small>median bite → click</small><span class="src">instrumented sessions, per-cycle logs</span></div>
       <div class="fact reveal"><b>12 / 12</b><small>JS ↔ Python planner parity checks</small><span class="src">route-planner-parity.test.mjs, run at each build</span></div>
-      <div class="fact reveal"><b>118</b><small>offline Python unit tests</small><span class="src">casinobabe-v2 test suite</span></div>
+      <div class="fact reveal"><b>124</b><small>offline Python checks, 6 suites</small><span class="src">fishing 42 · safety 4 · learning 24 · observer 10 · modules 18 · vendor 26</span></div>
       <div class="fact reveal"><b>94 / 94</b><small>offline harness checks</small><span class="src">tests/run-fishing-harness.mjs</span></div>
     </div>
     <p class="honest-note">These figures come from our own instrumented runs and offline test suites in this repository.
@@ -103,58 +105,66 @@
   </div>
 </section>
 
-<!-- ========================================================= FEATURES -->
-<section class="pad" id="features">
+<!-- ========================================================= MODULES -->
+<section class="pad" id="modules">
   <div class="w">
-    <span class="eyebrow">Capabilities</span>
-    <h2 class="h2">A product focused on fishing</h2>
-    <p class="sub">Not a bundle of eight roles. One product, built around fishing, that owns its limits.</p>
-    <div class="feats">
-      <div class="feat reveal">
-        <div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Float detection calibrated on real captures</h3>
-        <p>Day/night water hue ranges, texture discrimination, area threshold.
-           Bite → click latency is instrumented (measured median: 308 ms) and the click
-           delay was tuned with measurement campaigns, not intuition.</p>
+    <span class="eyebrow">Modules</span>
+    <h2 class="h2">One bot architecture. Honest roles, added one by one.</h2>
+    <p class="sub">Fishing carries the product today. The same screens, memory and planner foundation
+       extend to the next roles — each lands as a tested module or stays visibly marked.</p>
+
+    <div class="modrow" style="margin-top:28px">
+      <div class="m-main">
+        <h3>Fish — assistant + optimised rounds</h3>
+        <p class="m-desc">Float detection, memory, planner, background mode, F9 stop: the module that pays for everything, measured session after session.</p>
+        <div class="mod">
+          <div class="mod-col has">
+            <div class="mod-label">Shipped &amp; verified</div>
+            <ul>
+              <li>308 ms median bite → click, per-cycle logs</li>
+              <li>Versioned spot memory, exportable maps</li>
+              <li>12 / 12 JS ↔ Python planner parity at each build</li>
+            </ul>
+          </div>
+          <div class="mod-col dep">
+            <div class="mod-label">Bounds</div>
+            <ul>
+              <li>Classic 1.13 clients only, Windows 10/11</li>
+              <li>Addon assists observation; it never simulates input</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="feat reveal">
-        <div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Spot memory that survives restarts</h3>
-        <p>Spots are stored in a versioned database (migrations, backups, atomic writes).
-           Export and import are supported: a map can be corrected, completed or shared
-           without losing observation history.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Optimised rounds, parity-tested</h3>
-        <p>The planner ranks legs by expected cost — measured time, mob risk, failure
-           probability — then optimises the order (nearest neighbour + 2-opt).
-           The JS planner of this site and the Python bot are compared on the same map
-           at every build.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="st st-dev"><i></i>In development</div>
-        <h3 style="margin-top:12px">Movement between fishing spots</h3>
-        <p>The minimap odometer and the movement controller are implemented and tested
-           (zero drift at rest, arrival confirmed by observation). Full spot-to-spot travel
-           is still being validated in game: we do not claim it works end-to-end yet.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="st st-ok"><i></i>Available</div>
-        <h3 style="margin-top:12px">Background mode</h3>
-        <p>The bot reads pixels and sends inputs without taking focus — measured in our
-           sessions. Anti-virus software may flag screen-reading tools; the install guide
-           says so up front.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="st st-plan"><i></i>Planned</div>
-        <h3 style="margin-top:12px">Corpse-run recovery after death</h3>
-        <p>Today the bot stops safely and asks for a human after death. The failure chain
-           has been identified (state machine, navigation to corpse, confirmation
-           of resurrection) and is being implemented. It is announced as planned — not
-           as working.</p>
-      </div>
+      <div class="m-status"><span class="st st-ok"><i></i>Available</span></div>
     </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Navigate — spot-to-spot movement</h3>
+        <p class="m-desc">Minimap odometer and movement controller implemented and unit-tested (zero drift at rest); full spot-to-spot travel is still being validated in game.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Inventory &amp; vendor</h3>
+        <p class="m-desc">Bag planning and vendor-repair routine: the planner exists today as tested offline code, with a defined per-module data contract; wiring it to the game is the pending step.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
+
+    <div class="modrow">
+      <div class="m-main">
+        <h3>Recovery — the death chain</h3>
+        <p class="m-desc">State machine fully specified (detect death → confirm ghost → navigate → resurrect); being implemented, nothing promised.</p>
+      </div>
+      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
+    </div>
+
+    <p class="center mt">
+      <a class="btn btn-ghost" href="./modules.html">The full module ledger — with tests per status</a>
+    </p>
   </div>
 </section>
 
@@ -171,7 +181,7 @@
     <p class="honest-note"><strong>Simulated data.</strong> This map is a test fixture:
       positions are synthetic and do not correspond to any real game session.
       Overall catch figures are <b>estimates</b> computed on that fictional history.</p>
-    <p class="center mt"><a class="btn btn-gold" href="./demo.html">Open the full demo →</a></p>
+    <p class="center mt"><a class="btn btn-gold" href="./demo.html">Open the full demo</a></p>
   </div>
 </section>
 
@@ -197,7 +207,7 @@
           <tr><td>Route planner (cost + optimiser)</td>
               <td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
           <tr><td>Automatic movement between spots</td>
-              <td class="us"><span class="no">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh + profiles)</td></tr>
+              <td class="us"><span class="warn">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh + profiles)</td></tr>
           <tr><td>Game scope</td>
               <td class="us">Classic 1.13 <small>incl. private servers</small></td>
               <td>Official WoW only <small>excludes private servers</small></td></tr>
@@ -206,7 +216,8 @@
           <tr><td>Price model</td>
               <td class="us"><b>€20 lifetime</b></td><td>subscription 30 / 90 days</td></tr>
           <tr><td>Number of roles</td>
-              <td class="us">1 (fishing)</td><td>8 roles</td></tr>
+              <td class="us">1 shipped + 3 in development, all visible in the <a href="./modules.html" style="color:var(--cyan)">module ledger</a></td>
+              <td>8 roles announced</td></tr>
         </tbody>
       </table>
     </div>
@@ -227,8 +238,15 @@
     <div class="price-wrap">
       <div class="price-card">
         <div class="price-tag">Lifetime licence</div>
+        <div class="callout warn" style="margin:0 0 16px;font-size:13.5px">
+          <span class="ico" aria-hidden="true">⚠</span>
+          <span><strong>Card payments are being finalised (Mollie).</strong>
+            If the button below fails, use the waitlist just under this card —
+            we email you the moment checkout goes live. No payments are being
+            accepted yet.</span>
+        </div>
         <div class="amt center"><b>20,00 €</b> <small style="color:var(--mut2);font-size:18px">EUR</small></div>
-        <p class="once">one-time payment · no renewal, ever</p>
+        <p class="once center">one-time payment · no renewal, ever</p>
         <ul>
           <li><span class="v">✓</span><span>The full fishing bot, v1.2.0, and future updates of the 1.x branch</span></li>
           <li><span class="v">✓</span><span>The Casinobabe addon, shipped with a SHA-256 manifest</span></li>
@@ -242,8 +260,8 @@
           <input class="pm-input" id="email" name="email" type="email" required autocomplete="email"
                  placeholder="you@example.com" inputmode="email" style="margin-bottom:14px">
           <button class="btn btn-gold btn-block" type="submit" id="buyBtn">Pay €20.00</button>
-          <p class="formerr" id="buyErr" role="alert" style="color:var(--red);font-size:13px;margin-top:12px"></p>
-          <p class="formsent" id="buyOk" role="status" style="color:var(--green);font-size:13px;margin-top:8px"></p>
+          <p class="formerr" id="buyErr" role="alert" style="font-size:13px;margin-top:12px"></p>
+          <p class="formsent" id="buyOk" role="status" style="font-size:13px;margin-top:8px"></p>
         </form>
         <div class="pay-badges">
           <span>🔒 Payment by <b style="color:var(--mut)">Mollie</b></span>
@@ -272,13 +290,13 @@
   <div class="w">
     <span class="eyebrow">Documentation &amp; trust</span>
     <h2 class="h2">Everything to install it, and what to do if anything jams</h2>
-    <div class="feats mt">
-      <div class="feat reveal"><h3>Install guide</h3><p>Prerequisites, addon copy, initial configuration, run and clean stop.</p><p><a href="./docs/install.html" style="color:var(--gold)">Read the guide →</a></p></div>
-      <div class="feat reveal"><h3>Release notes</h3><p>What changes in every version, with the measurements behind the fixes.</p><p><a href="./docs/changelog.html" style="color:var(--gold)">See the releases →</a></p></div>
-      <div class="feat reveal"><h3>Known issues</h3><p>Detection stalls, client edge cases, and the recovery procedure.</p><p><a href="./docs/known-issues.html" style="color:var(--gold)">Consult →</a></p></div>
-      <div class="feat reveal"><h3>Licence recovery</h3><p>Find your key again and re-activate the licence on a new machine.</p><p><a href="./docs/license.html" style="color:var(--gold)">Procedure →</a></p></div>
-      <div class="feat reveal"><h3>Compatibility</h3><p>What is tested: Classic 1.13 and private servers. What is not: Retail, Mac.</p><p><a href="./compatibility.html" style="color:var(--gold)">Read the matrix →</a></p></div>
-      <div class="feat reveal"><h3>Support</h3><p>A real, human-readable email address, with an announced response time.</p><p><a href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p></div>
+    <div class="linklist mt">
+      <a href="./docs/install.html"><span class="n">01</span><span class="t">Install guide</span><span class="d">Prerequisites, addon copy, first run, clean stop</span></a>
+      <a href="./docs/changelog.html"><span class="n">02</span><span class="t">Release notes</span><span class="d">What changes in every version, with the measurements</span></a>
+      <a href="./docs/known-issues.html"><span class="n">03</span><span class="t">Known issues</span><span class="d">Detection stalls, client edge cases, recovery procedure</span></a>
+      <a href="./docs/license.html"><span class="n">04</span><span class="t">Licence recovery</span><span class="d">Find your key, re-activate on a new machine</span></a>
+      <a href="./compatibility.html"><span class="n">05</span><span class="t">Compatibility</span><span class="d">Tested: Classic 1.13, private servers. Not: Retail, Mac</span></a>
+      <a href="mailto:support@bot-wow.com"><span class="n">06</span><span class="t">Support</span><span class="d">support@bot-wow.com — a real, human-readable address</span></a>
     </div>
   </div>
 </section>
@@ -286,8 +304,10 @@
 <!-- ======================================================= FINAL -->
 <section class="pad final">
   <div class="w">
-    <h2 class="grad">Start fishing smarter</h2>
-    <p>Try the browser demo in two minutes, then decide. One price, no subscription.</p>
+    <span class="eyebrow">Start here</span>
+    <h2 class="h2">Try it for free, then own it</h2>
+    <p>The browser demo runs in two minutes with no install and no account. If it convinces you,
+       one payment covers the licence for life.</p>
     <div class="hero-cta" style="justify-content:center">
       <a class="btn btn-gold btn-lg" href="#offre">Buy — €20.00</a>
       <a class="btn btn-ghost btn-lg" href="./demo.html">Try the demo</a>
@@ -310,6 +330,7 @@
       <div>
         <h4>Product</h4>
         <ul>
+          <li><a href="./modules.html">Module ledger</a></li>
           <li><a href="./features.html">Features</a></li>
           <li><a href="./demo.html">Demo (simulated data)</a></li>
           <li><a href="./compatibility.html">Compatibility</a></li>
