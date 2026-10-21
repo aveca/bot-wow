@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOT-WOW — le bot de pêche WoW Classic qui apprend ses spots</title>
+<meta name="description" content="BOT-WOW / Casinobabe : assistant de pêche pour WoW Classic (serveurs privés inclus). Détection du flotteur mesurée, mémoire persistante des spots, rondes optimisées. Licence à vie 20 €.">
+<meta name="theme-color" content="#06070d">
+<link rel="canonical" href="https://bot-wow.com/fr/">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BOT-WOW">
+<meta property="og:title" content="BOT-WOW — le bot de pêche WoW Classic qui apprend ses spots">
+<meta property="og:description" content="Assistant de pêche pour WoW Classic : détection mesurée, mémoire des spots, rondes optimisées. Licence à vie 20 €.">
+<meta property="og:url" content="https://bot-wow.com/fr/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="w"><span><b>v1.2.0</b> version actuelle</span><span>Windows 10/11 · Python 3.11+</span>
+    <span>Démo navigateur — <b>données simulées</b></span><span>Paiement assuré par Mollie</span></div>
+</div>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="./features.html">Fonctions</a>
+      <a href="./demo.html">Démo</a>
+      <a href="./getting-started.html">Démarrage</a>
+      <a href="./compatibility.html">Compatibilité</a>
+      <a href="./roadmap.html">Feuille de route</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="../docs/fr/">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <div class="w">
+    <div>
+      <span class="badge"><span class="dot"></span> Casinobabe Fishing Assistant — v1.2.0</span>
+      <h1>Le bot de pêche WoW Classic<br><span class="grad">qui apprend ses spots.</span></h1>
+      <p class="hero-sub">
+        Détection du flotteur mesurée, <b>mémoire persistante</b> des points de pêche,
+        carte d'une oasis et <b>rondes optimisées</b> pour enchaîner les bancs.
+        Conçu pour WoW Classic 1.13, serveurs privés inclus.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-gold btn-lg" href="./demo.html">Essayer la démo navigateur</a>
+        <a class="btn btn-ghost btn-lg" href="#offre">Découvrir l'offre</a>
+      </div>
+      <div class="hero-trust">
+        <span><span class="check">✓</span> Détection calibrée sur des captures réelles</span>
+        <span><span class="check">✓</span> Mémoire avec export / import</span>
+        <span><span class="check">✓</span> Un seul prix, à vie</span>
+      </div>
+    </div>
+
+    <!-- Même carte et même planificateur que la démo (parité vérifiée à chaque build) -->
+    <div class="radar" id="heroRadar">
+      <div class="radar-head">
+        <span>Lushwater Oasis — carte</span>
+        <span class="live">SIMULÉ</span>
+      </div>
+      <div class="radar-body">
+        <svg id="heroMap" viewBox="-60 -60 120 120" role="img"
+             aria-label="Carte de démonstration : bancs, niveaux de risque, ronde calculée"></svg>
+      </div>
+      <div class="radar-foot">
+        <div class="radar-stat"><span class="k">bancs</span><span class="v cy" id="heroSpots">–</span></div>
+        <div class="radar-stat"><span class="k">trajet</span><span class="v" id="heroTravel">–</span></div>
+        <div class="radar-stat"><span class="k">attendu</span><span class="v am" id="heroExpected">–</span></div>
+        <div class="radar-stat"><span class="k">non vérifié</span><span class="v" id="heroUnv">–</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== MESURÉ -->
+<section class="pad">
+  <div class="w">
+    <div class="factrow">
+      <div class="fact reveal"><b>308 ms</b><small>médiane morsure → clic</small><span class="src">sessions instrumentées, journal par cycle</span></div>
+      <div class="fact reveal"><b>12 / 12</b><small>vérifications de parité planificateur JS ↔ Python</small><span class="src">route-planner-parity.test.mjs, exécuté à chaque build</span></div>
+      <div class="fact reveal"><b>118</b><small>tests unitaires Python hors ligne</small><span class="src">suite de tests casinobabe-v2</span></div>
+      <div class="fact reveal"><b>94 / 94</b><small>contrôles du harnais hors ligne</small><span class="src">tests/run-fishing-harness.mjs</span></div>
+    </div>
+    <p class="honest-note">Ces chiffres viennent de nos propres exécutions instrumentées et de suites de
+      tests hors ligne de ce dépôt. Les valeurs estimées sont toujours marquées comme estimations.
+      Aucun compteur inventé ne paraît sur ce site.</p>
+  </div>
+</section>
+
+<!-- ========================================================= FONCTIONS -->
+<section class="pad" id="fonctions">
+  <div class="w">
+    <span class="eyebrow">Capacités</span>
+    <h2 class="h2">Un produit resserré sur la pêche</h2>
+    <p class="sub">Pas un pack de huit rôles. Un seul produit, construit autour de la pêche, qui assume ses limites.</p>
+    <div class="feats">
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Disponible</div>
+        <h3 style="margin-top:12px">Détection du flotteur calibrée sur des captures réelles</h3>
+        <p>Plages de teinte de l'eau jour/nuit, discrimination de texture, seuil d'aire.
+           La latence morsure → clic est instrumentée (médiane mesurée : 308 ms) et le
+           délai de clic a été réglé par campagnes de mesure, pas par intuition.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Disponible</div>
+        <h3 style="margin-top:12px">Une mémoire des spots qui survit aux redémarrages</h3>
+        <p>Les spots sont stockés dans une base versionnée (migrations, sauvegardes,
+           écriture atomique). Export et import sont pris en charge : une carte peut être
+           corrigée, complétée ou partagée sans perdre l'historique des observations.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Disponible</div>
+        <h3 style="margin-top:12px">Rondes optimisées, testées par parité</h3>
+        <p>Le planificateur classe les segments par coût attendu — temps mesuré, risque de
+           mob, probabilité d'échec — puis optimise l'ordre (plus proche voisin + 2-opt).
+           Le planificateur JS de ce site et celui du bot Python sont comparés sur la même
+           carte à chaque build.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-dev"><i></i>En développement</div>
+        <h3 style="margin-top:12px">Déplacement entre les points de pêche</h3>
+        <p>L'odomètre de minicarte et le contrôleur de déplacement sont implémentés et
+           testés (dérive nulle au repos, arrivée confirmée par observation). Le trajet
+           complet d'un banc à l'autre reste en validation en jeu : nous ne l'annonçons
+           pas comme acquis.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Disponible</div>
+        <h3 style="margin-top:12px">Mode arrière-plan</h3>
+        <p>Le bot lit les pixels et envoie des entrées sans prendre le focus — mesuré dans
+           nos sessions. Un antivirus peut signaler les outils qui lisent l'écran ; le
+           guide d'installation le dit d'emblée.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-plan"><i></i>Prévu</div>
+        <h3 style="margin-top:12px">Retour au cadavre après une mort</h3>
+        <p>Aujourd'hui, le bot s'arrête proprement et demande un humain après une mort.
+           La chaîne de défaillance a été identifiée (machine à états, navigation vers le
+           cadavre, confirmation de résurrection) et sa mise en œuvre est en cours.
+           La fonction est annoncée comme prévue — pas comme disponible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ DÉMO -->
+<section class="pad" id="demo">
+  <div class="w">
+    <span class="eyebrow">Démonstration</span>
+    <h2 class="h2">La carte et la ronde, en vrai</h2>
+    <p class="sub">
+      La démo navigateur utilise <b>exactement</b> le même planificateur que le bot local —
+      la parité entre les deux implémentations est vérifiée à chaque build. Changez le mode
+      ou le nombre de bancs : la ronde est recalculée en direct.
+    </p>
+    <p class="honest-note"><strong>Données simulées.</strong> Cette carte est un jeu d'essai :
+      les positions sont synthétiques et ne correspondent à aucune session de jeu réelle.
+      Les totaux de prises sont des <b>estimations</b> calculées sur cet historique fictif.</p>
+    <p class="center mt"><a class="btn btn-gold" href="./demo.html">Ouvrir la démo complète →</a></p>
+  </div>
+</section>
+
+<!-- ===================================================== COMPARAISON -->
+<section class="pad" id="comparaison">
+  <div class="w">
+    <span class="eyebrow">Benchmark</span>
+    <h2 class="h2">BOT-WOW face aux bots « tout-en-un »</h2>
+    <p class="sub">
+      Faits issus des pages publiques du bot multi-outils de référence, lues le 2026-10-21,
+      confrontés à ce qui est implémenté et testé dans notre dépôt.
+    </p>
+    <div class="cmptable">
+      <table class="vs">
+        <thead><tr>
+          <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Bot externe (pixels, sans injection)</td>
+              <td class="us"><span class="yes">✔ mesuré</span></td><td><span class="yes">✔</span> annoncé</td></tr>
+          <tr><td>Mémoire persistante des spots de pêche</td>
+              <td class="us"><span class="yes">✔ testé</span></td><td><span class="no">?</span> non documenté</td></tr>
+          <tr><td>Planificateur de routes (coût + optimiseur)</td>
+              <td class="us"><span class="yes">✔ testé</span></td><td><span class="no">?</span> non documenté</td></tr>
+          <tr><td>Déplacement automatique entre spots</td>
+              <td class="us"><span class="no">⚠ en développement</span></td><td><span class="yes">✔</span> annoncé (mesh + profils)</td></tr>
+          <tr><td>Périmètre de jeu</td>
+              <td class="us">Classic 1.13 <small>serveurs privés inclus</small></td>
+              <td>WoW officiel seul <small>exclut les serveurs privés</small></td></tr>
+          <tr><td>Essai gratuit sans compte</td>
+              <td class="us"><span class="yes">✔</span> démo navigateur (simulée)</td><td>essai 48 h — 1,99 €</td></tr>
+          <tr><td>Modèle de prix</td>
+              <td class="us"><b>20 € à vie</b></td><td>abonnement 30 / 90 jours</td></tr>
+          <tr><td>Nombre de rôles</td>
+              <td class="us">1 (pêche)</td><td>8 rôles</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="honest-note">
+      La colonne PixelBuddy rapporte uniquement ce que leurs propres pages publiques
+      énoncent (annonce, FAQ, avis) ; ce n'est pas une mesure indépendante de leur
+      logiciel, et nous ne l'avons jamais testé. Nos propres chiffres sont mesurés.
+      Rien sur cette page n'est inventé : ce qui n'est pas vérifiable est marqué
+      « non documenté », jamais deviné.</p>
+  </div>
+</section>
+
+<!-- ==================================================== PRIX / OFFRE -->
+<section class="pad" id="offre">
+  <div class="w">
+    <span class="eyebrow">Tarif</span>
+    <h2 class="h2">Un prix. Une fois. À vie.</h2>
+    <p class="sub">Pas d'abonnement, pas de modules cachés, pas de renouvellement surprise. Vous payez 20 €, c'est à vous.</p>
+    <div class="price-wrap">
+      <div class="price-card">
+        <div class="price-tag">Licence à vie</div>
+        <div class="amt center"><b>20,00 €</b> <small style="color:var(--mut2);font-size:18px">EUR</small></div>
+        <p class="once">paiement unique · aucun renouvellement, jamais</p>
+        <ul>
+          <li><span class="v">✓</span><span>Le bot de pêche complet, v1.2.0, et les mises à jour futures de la branche 1.x</span></li>
+          <li><span class="v">✓</span><span>L'addon Casinobabe, livré avec un manifeste SHA-256</span></li>
+          <li><span class="v">✓</span><span>Activation sur une machine, avec rappel de licence sur demande</span></li>
+          <li><span class="v">✓</span><span>Carte des spots exportable / importable (JSON versionné)</span></li>
+          <li><span class="v">✓</span><span>Documentation, notes de version et support par e-mail</span></li>
+        </ul>
+        <form id="buyForm" novalidate>
+          <label style="display:block;font-size:12.5px;color:var(--mut);margin-bottom:7px;font-weight:600"
+                 for="email">Votre e-mail (pour recevoir la clé et le lien de téléchargement)</label>
+          <input class="pm-input" id="email" name="email" type="email" required autocomplete="email"
+                 placeholder="vous@exemple.fr" inputmode="email" style="margin-bottom:14px">
+          <button class="btn btn-gold btn-block" type="submit" id="buyBtn">Payer 20,00 €</button>
+          <p class="formerr" id="buyErr" role="alert" style="color:var(--red);font-size:13px;margin-top:12px"></p>
+          <p class="formsent" id="buyOk" role="status" style="color:var(--green);font-size:13px;margin-top:8px"></p>
+        </form>
+        <div class="pay-badges">
+          <span>🔒 Paiement par <b style="color:var(--mut)">Mollie</b></span>
+          <span><a href="../legal/terms.html" style="color:inherit">CGV</a> ·
+                <a href="../legal/refund.html" style="color:inherit">Remboursements</a> ·
+                <a href="../legal/privacy.html" style="color:inherit">Confidentialité</a></span>
+        </div>
+        <p class="pay-note">Le montant et la devise sont fixés côté serveur ; le navigateur n'envoie que votre e-mail.</p>
+      </div>
+    </div>
+    <div class="wl mt reveal">
+      <h3 style="font-size:17px">Le paiement n'est pas encore disponible pour vous ?</h3>
+      <p>Le paiement par carte via Mollie est en cours de finalisation. Si le bouton
+         d'achat échoue, laissez votre e-mail et nous vous écrirons dès son ouverture.</p>
+      <form data-waitlist novalidate>
+        <input type="email" placeholder="vous@exemple.fr" autocomplete="email" aria-label="E-mail pour la liste d'attente">
+        <button class="btn btn-ghost" type="submit">Me prévenir</button>
+        <p class="wl-state" style="flex-basis:100%"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== DOCS/AI CONF -->
+<section class="pad">
+  <div class="w">
+    <span class="eyebrow">Documentation &amp; confiance</span>
+    <h2 class="h2">Tout pour installer, et quoi faire si ça coince</h2>
+    <div class="feats mt">
+      <div class="feat reveal"><h3>Guide d'installation</h3><p>Prérequis, copie de l'addon, configuration initiale, lancement et arrêt propre.</p><p><a href="../docs/install.html" style="color:var(--gold)">Lire le guide →</a></p></div>
+      <div class="feat reveal"><h3>Notes de version</h3><p>Ce qui change à chaque version, avec les mesures qui justifient les correctifs.</p><p><a href="../docs/changelog.html" style="color:var(--gold)">Voir les versions →</a></p></div>
+      <div class="feat reveal"><h3>Problèmes connus</h3><p>Blocages de détection, cas particuliers du client, procédure de récupération.</p><p><a href="../docs/known-issues.html" style="color:var(--gold)">Consulter →</a></p></div>
+      <div class="feat reveal"><h3>Récupération de licence</h3><p>Retrouver votre clé et réactiver la licence sur une nouvelle machine.</p><p><a href="../docs/license.html" style="color:var(--gold)">Procédure →</a></p></div>
+      <div class="feat reveal"><h3>Compatibilité</h3><p>Ce qui est testé : Classic 1.13 et serveurs privés. Ce qui ne l'est pas : Mac.</p><p><a href="./compatibility.html" style="color:var(--gold)">Lire la matrice →</a></p></div>
+      <div class="feat reveal"><h3>Support</h3><p>Une adresse e-mail réelle, lisible par un humain, avec un délai annoncé.</p><p><a href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= FINAL -->
+<section class="pad final">
+  <div class="w">
+    <h2 class="grad">Pêchez plus intelligemment</h2>
+    <p>Essayez la démo navigateur en deux minutes, puis décidez. Un prix, pas d'abonnement.</p>
+    <div class="hero-cta" style="justify-content:center">
+      <a class="btn btn-gold btn-lg" href="#offre">Acheter — 20,00 €</a>
+      <a class="btn btn-ghost btn-lg" href="./demo.html">Essayer la démo</a>
+    </div>
+    <p class="honest-note">Les données de la démo sont simulées. Le bot lui-même vise Windows et
+      WoW Classic 1.13. Lisez la page compatibilité avant l'achat.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans lien avec Blizzard Entertainment. Un bot d'automatisation peut contrevenir
+           aux conditions d'utilisation du jeu ; lisez la page compatibilité avant l'usage.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="./features.html">Fonctions</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./compatibility.html">Compatibilité</a></li>
+          <li><a href="./roadmap.html">Feuille de route</a></li>
+          <li><a href="#offre">Prix</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs &amp; support</h4>
+        <ul>
+          <li><a href="../docs/install.html">Installation</a></li>
+          <li><a href="../docs/changelog.html">Notes de version</a></li>
+          <li><a href="../docs/known-issues.html">Problèmes connus</a></li>
+          <li><a href="../docs/license.html">Licence &amp; activation</a></li>
+          <li><a href="./faq.html">FAQ</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. BOT-WOW n'est pas un produit Blizzard
+        et n'est ni affilié à ni approuvé par Blizzard Entertainment. World of Warcraft est une
+        marque déposée de Blizzard Entertainment. Utilisez un logiciel d'automatisation de
+        façon responsable et dans les règles du serveur où vous jouez.</div>
+      <span class="mono">v1.2.0 · mentions : <a href="../legal/terms.html">CGV</a> ·
+        <a href="../legal/privacy.html">confidentialité</a> · <a href="../legal/refund.html">remboursements</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="mbar">
+  <div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div>
+  <a class="btn btn-gold" style="padding:10px 22px" href="#offre">Acheter</a>
+</div>
+
+<script type="module" src="../assets/app.js"></script>
+</body>
+</html>

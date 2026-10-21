@@ -1,166 +1,350 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Bot-Wow — l’expérience sociale WoW pour organiser, animer et lancer vos parties."><meta name="theme-color" content="#08080d"><title>Bot-Wow — Play. Host. Win.</title><link rel="stylesheet" href="./assets/style.css"></head><body>
-<header class="nav"><a class="brand" href="./">BOT<span>•</span>WOW</a><nav><a href="#how">Comment ça marche</a><a href="#features">Fonctions</a><a href="#demo">Démo</a><a href="#faq">FAQ</a><a class="nav-cta" href="#download">Commencer</a></nav></header>
-<main>
-<section class="hero"><div class="badge">⚡ BOT-WOW · MVP</div><h1>Le jeu social.<br><em>Dans WoW.</em></h1><p class="lead">Organisez vos sessions, accueillez vos joueurs et faites monter la tension. Bot-Wow transforme une simple soirée WoW en véritable événement.</p><div class="actions"><a class="btn primary" href="#demo">Lancer la démo <span>→</span></a><a class="btn ghost" href="#how">Découvrir</a></div><div class="proof"><span>●</span> Site MVP en ligne <b>·</b> GitHub Pages <b>·</b> aucune installation web</div></section>
-<section id="how" class="section"><div class="eyebrow">01 · LE PARCOURS</div><h2>Simple pour le joueur.<br><span>Puissant pour l’hôte.</span></h2><div class="steps"><div class="step"><strong>01</strong><h3>Recevoir</h3><p>Le joueur vous contacte. L’organisateur identifie immédiatement la session et son état.</p></div><div class="step"><strong>02</strong><h3>Inviter</h3><p>Les annonces et invitations sont orchestrées depuis l’expérience Bot-Wow.</p></div><div class="step"><strong>03</strong><h3>Lancer</h3><p>La partie passe par des états explicites jusqu’au lancement confirmé dans WoW.</p></div><div class="step"><strong>04</strong><h3>Jouer</h3><p>Les événements réels du client deviennent la source de vérité pour la suite.</p></div></div></section>
-<section id="features" class="section dark"><div class="eyebrow">02 · FONCTIONS</div><h2>Construit autour<br>du <span>moment de jeu.</span></h2><div class="grid"><article><span class="icon">💬</span><h3>Lobby & joueurs</h3><p>Whispers, accueil, invitations et statut des participants dans un parcours lisible.</p></article><article><span class="icon">🎲</span><h3>Sessions</h3><p>Préparer une partie, afficher les règles, lancer le rand et suivre chaque étape.</p></article><article><span class="icon">📣</span><h3>Showtime</h3><p>Emotes, annonces et feedback visuel pour transformer chaque lancement en événement.</p></article><article><span class="icon">🛡️</span><h3>Action réelle</h3><p>Une action WoW non confirmée ne devient jamais artificiellement « réussie ».</p></article></div></section>
-<section id="demo" class="demo"><div class="demo-copy"><div class="eyebrow">03 · PLAYGROUND</div><h2>Teste le flow.</h2><p>Une simulation d’interface pour comprendre le parcours avant le branchement avec le client WoW réel.</p><button class="btn primary" id="demoBtn">Lancer une session <span>→</span></button></div><div class="terminal" id="console"><div class="termbar"><i></i><i></i><i></i><span>BOT-WOW / SESSION</span></div><div class="termbody"><p>&gt; <b>BOOT</b> Bot-Wow prêt.</p><p>&gt; Aucun joueur connecté.</p><p class="dim">&gt; En attente…</p></div><div class="status"><span class="pulse"></span> SESSION READY</div></div></section>
-<section id="download" class="download"><div><div class="eyebrow">04 · NEXT</div><h2>Le site est prêt.<br>Le produit arrive.</h2><p>Ce MVP pose le frontend. L’addon WoW, l’API et le paiement seront ajoutés comme briques séparées — sans exposer de secrets dans GitHub Pages.</p></div><a class="btn primary" href="https://github.com/aveca/bot-wow" target="_blank" rel="noreferrer">Suivre le projet GitHub ↗</a></section>
-<section id="faq" class="section faq"><div class="eyebrow">05 · FAQ</div><h2>Les réponses.</h2><details><summary>Le site peut-il fonctionner seul ?</summary><p>Oui pour la présentation et le parcours MVP. Les fonctions qui nécessitent WoW ou un serveur restent signalées comme dépendantes de leur intégration.</p></details><details><summary>Le paiement est-il déjà actif ?</summary><p>Non. Aucun paiement réel n’est simulé. Mollie sera intégré côté serveur lorsque l’API sera prête.</p></details><details><summary>Pourquoi GitHub Pages ?</summary><p>Pour garder un frontend simple, public, versionné et déployé automatiquement par GitHub Actions.</p></details><details><summary>Quand bot-wow.com sera-t-il utilisé ?</summary><p>Plus tard. Le MVP ne dépend volontairement d’aucun domaine personnalisé.</p></details></section>
-</main><footer><span>BOT•WOW · 2026</span><span>GitHub Pages MVP</span></footer>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOT-WOW — the WoW Classic fishing bot that learns its spots</title>
+<meta name="description" content="BOT-WOW / Casinobabe: a fishing assistant for WoW Classic (including private servers). Measured float detection, persistent spot memory, oasis maps and optimised rounds. Lifetime licence €20.">
+<meta name="theme-color" content="#06070d">
+<link rel="canonical" href="https://bot-wow.com/">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BOT-WOW">
+<meta property="og:title" content="BOT-WOW — the WoW Classic fishing bot that learns its spots">
+<meta property="og:description" content="Fishing assistant for WoW Classic: measured detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
+<meta property="og:url" content="https://bot-wow.com/">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/style.css">
+<link rel="stylesheet" href="./assets/site.css">
+</head>
+<body>
 
-<!-- === Bitcoin Request Form === -->
-<section class="bitcoin-request section" id="bitcoin-request">
-  <div class="eyebrow">06 · PAIEMENT BITCOIN</h2>
-  <h2>Obtenir BOT-WOW gratuitement</h2>
-  <p>Entrez votre email pour recevoir le client BOT-WOW + votre clé de licence par email (sous 24h).</p>
-  <form id="btc-request-form" novalidate>
-    <div class="form-group">
-      <input type="email" id="btc-email" class="form-input" placeholder="votre@email.com" required>
-      <button type="submit" class="btn primary form-submit">Envoyer par email</button>
+<div class="topbar">
+  <div class="w"><span><b>v1.2.0</b> current release</span><span>Windows 10/11 · Python 3.11+</span>
+    <span>Browser demo — <b>simulated data</b></span><span>Payment handled by Mollie</span></div>
+</div>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><span class="mark">W</span> BOT-WOW</a>
+    <div class="nav-links">
+      <a href="./features.html">Features</a>
+      <a href="./demo.html">Demo</a>
+      <a href="./getting-started.html">Getting started</a>
+      <a href="./compatibility.html">Compatibility</a>
+      <a href="./roadmap.html">Roadmap</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="./docs/index.html">Docs</a>
     </div>
-    <p class="form-note">Pas de carte, pas d'abonnement. 100% gratuit.</p>
-  </form>
-</section>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="#offre">Buy — €20.00</a>
+    </div>
+  </div>
+</nav>
 
-<!-- === Newsletter Signup Form === -->
-<section class="newsletter section" id="newsletter">
-  <div class="eyebrow">07 · NEWSLETTER</h2>
-  <h2>Restez informé·e·s</h2>
-  <p>Recevez les mises à jour, les nouvelles plages et les astuces directement dans votre boîte.</p>
-  <form id="newsletter-form" novalidate>
-    <div class="form-group">
-      <input type="email" id="newsletter-email" class="form-input" placeholder="votre@email.com" required>
-      <div class="checkbox-group">
-        <input type="checkbox" id="consent-marketing" class="checkbox">
-        <label for="consent-marketing">Je souhaite recevoir des informations marketing</label>
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <div class="w">
+    <div>
+      <span class="badge"><span class="dot"></span> Casinobabe Fishing Assistant — v1.2.0</span>
+      <h1>The WoW Classic fishing bot<br><span class="grad">that learns its spots.</span></h1>
+      <p class="hero-sub">
+        Measured float detection, <b>persistent spot memory</b>, oasis maps and
+        <b>optimised rounds</b> that chain fishing spots together. Built for
+        WoW Classic 1.13, private servers included.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-gold btn-lg" href="./demo.html">Try the browser demo</a>
+        <a class="btn btn-ghost btn-lg" href="#offre">See the offer</a>
       </div>
-      <button type="submit" class="btn primary form-submit">S'abonner</button>
+      <div class="hero-trust">
+        <span><span class="check">✓</span> Detection calibrated on real captures</span>
+        <span><span class="check">✓</span> Memory with export / import</span>
+        <span><span class="check">✓</span> One single lifetime price</span>
+      </div>
     </div>
-    <p class="form-note">Vous pouvez vous désinscrire à tout moment.</p>
-  </form>
+
+    <!-- Same map and same planner as the demo (parity verified at each build) -->
+    <div class="radar" id="heroRadar">
+      <div class="radar-head">
+        <span>Lushwater Oasis — map</span>
+        <span class="live">SIMULATED</span>
+      </div>
+      <div class="radar-body">
+        <svg id="heroMap" viewBox="-60 -60 120 120" role="img"
+             aria-label="Demo map: fishing spots, risk levels, computed round"></svg>
+      </div>
+      <div class="radar-foot">
+        <div class="radar-stat"><span class="k">spots</span><span class="v cy" id="heroSpots">–</span></div>
+        <div class="radar-stat"><span class="k">travel</span><span class="v" id="heroTravel">–</span></div>
+        <div class="radar-stat"><span class="k">expected</span><span class="v am" id="heroExpected">–</span></div>
+        <div class="radar-stat"><span class="k">unverified</span><span class="v" id="heroUnv">–</span></div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- === Email Submission Script === -->
-<script>
-/**
- * Submit email to Bot-wow backend via Supabase Edge Function
- * Remplace l'ancien mécanisme mailto: purement frontend
- */
-document.addEventListener('DOMContentLoaded', function() {
-  // Bitcoin request form
-  const btcForm = document.getElementById('btc-request-form');
-  if (btcForm) {
-    btcForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const emailInput = document.getElementById('btc-email');
-      const email = emailInput.value.trim();
-      const submitBtn = btcForm.querySelector('.form-submit');
-      const originalText = submitBtn.textContent;
+<!-- ======================================================== MEASURED -->
+<section class="pad">
+  <div class="w">
+    <div class="factrow">
+      <div class="fact reveal"><b>308 ms</b><small>median bite → click</small><span class="src">instrumented sessions, per-cycle logs</span></div>
+      <div class="fact reveal"><b>12 / 12</b><small>JS ↔ Python planner parity checks</small><span class="src">route-planner-parity.test.mjs, run at each build</span></div>
+      <div class="fact reveal"><b>118</b><small>offline Python unit tests</small><span class="src">casinobabe-v2 test suite</span></div>
+      <div class="fact reveal"><b>94 / 94</b><small>offline harness checks</small><span class="src">tests/run-fishing-harness.mjs</span></div>
+    </div>
+    <p class="honest-note">These figures come from our own instrumented runs and offline test suites in this repository.
+      Estimated values are always labelled as estimates. No invented counter goes on this site.</p>
+  </div>
+</section>
 
-      if (!email) {
-        alert('Veuillez entrer une adresse email valide.');
-        return;
-      }
+<!-- ========================================================= FEATURES -->
+<section class="pad" id="features">
+  <div class="w">
+    <span class="eyebrow">Capabilities</span>
+    <h2 class="h2">A product focused on fishing</h2>
+    <p class="sub">Not a bundle of eight roles. One product, built around fishing, that owns its limits.</p>
+    <div class="feats">
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Available</div>
+        <h3 style="margin-top:12px">Float detection calibrated on real captures</h3>
+        <p>Day/night water hue ranges, texture discrimination, area threshold.
+           Bite → click latency is instrumented (measured median: 308 ms) and the click
+           delay was tuned with measurement campaigns, not intuition.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Available</div>
+        <h3 style="margin-top:12px">Spot memory that survives restarts</h3>
+        <p>Spots are stored in a versioned database (migrations, backups, atomic writes).
+           Export and import are supported: a map can be corrected, completed or shared
+           without losing observation history.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Available</div>
+        <h3 style="margin-top:12px">Optimised rounds, parity-tested</h3>
+        <p>The planner ranks legs by expected cost — measured time, mob risk, failure
+           probability — then optimises the order (nearest neighbour + 2-opt).
+           The JS planner of this site and the Python bot are compared on the same map
+           at every build.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-dev"><i></i>In development</div>
+        <h3 style="margin-top:12px">Movement between fishing spots</h3>
+        <p>The minimap odometer and the movement controller are implemented and tested
+           (zero drift at rest, arrival confirmed by observation). Full spot-to-spot travel
+           is still being validated in game: we do not claim it works end-to-end yet.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-ok"><i></i>Available</div>
+        <h3 style="margin-top:12px">Background mode</h3>
+        <p>The bot reads pixels and sends inputs without taking focus — measured in our
+           sessions. Anti-virus software may flag screen-reading tools; the install guide
+           says so up front.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="st st-plan"><i></i>Planned</div>
+        <h3 style="margin-top:12px">Corpse-run recovery after death</h3>
+        <p>Today the bot stops safely and asks for a human after death. The failure chain
+           has been identified (state machine, navigation to corpse, confirmation
+           of resurrection) and is being implemented. It is announced as planned — not
+           as working.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-      // Disable button during submission
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Envoi...';
+<!-- ============================================================ DEMO -->
+<section class="pad" id="demo">
+  <div class="w">
+    <span class="eyebrow">Demonstration</span>
+    <h2 class="h2">The map and the round, for real</h2>
+    <p class="sub">
+      The browser demo uses <b>exactly</b> the same planner as the local bot —
+      parity between both implementations is verified at each build. Change the mode
+      or the number of spots: the round is recomputed live.
+    </p>
+    <p class="honest-note"><strong>Simulated data.</strong> This map is a test fixture:
+      positions are synthetic and do not correspond to any real game session.
+      Overall catch figures are <b>estimates</b> computed on that fictional history.</p>
+    <p class="center mt"><a class="btn btn-gold" href="./demo.html">Open the full demo →</a></p>
+  </div>
+</section>
 
-      try {
-        const response = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            source: 'bitcoin_request',
-            consent_marketing: false,
-            consent_transactional: true
-          })
-        });
+<!-- ========================================================= COMPARE -->
+<section class="pad" id="compare">
+  <div class="w">
+    <span class="eyebrow">Benchmark</span>
+    <h2 class="h2">BOT-WOW vs. all-in-one bots</h2>
+    <p class="sub">
+      Facts from public product pages of the leading multi-tool bot, read on 2026-10-21,
+      against what is implemented and tested in our repository.
+    </p>
+    <div class="cmptable">
+      <table class="vs">
+        <thead><tr>
+          <th>Capability</th><th class="us">BOT-WOW</th><th>PixelBuddy (public pages)</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>External bot (pixels, no injection)</td>
+              <td class="us"><span class="yes">✔ measured</span></td><td><span class="yes">✔</span> announced</td></tr>
+          <tr><td>Persistent fishing-spot memory</td>
+              <td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
+          <tr><td>Route planner (cost + optimiser)</td>
+              <td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
+          <tr><td>Automatic movement between spots</td>
+              <td class="us"><span class="no">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh + profiles)</td></tr>
+          <tr><td>Game scope</td>
+              <td class="us">Classic 1.13 <small>incl. private servers</small></td>
+              <td>Official WoW only <small>excludes private servers</small></td></tr>
+          <tr><td>Free trial without an account</td>
+              <td class="us"><span class="yes">✔</span> browser demo (simulated)</td><td>48 h trial — €1.99</td></tr>
+          <tr><td>Price model</td>
+              <td class="us"><b>€20 lifetime</b></td><td>subscription 30 / 90 days</td></tr>
+          <tr><td>Number of roles</td>
+              <td class="us">1 (fishing)</td><td>8 roles</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="honest-note">
+      The PixelBuddy column only reports what their own public pages state (announcement,
+      FAQ, reviews); it is not an independent measurement of their software, and we have
+      never tested it. Our own figures are measured ones. Nothing on this page is invented:
+      unverifiable items are marked as "not documented" instead of guessed.</p>
+  </div>
+</section>
 
-        const result = await response.json();
+<!-- ======================================================== PRICE -->
+<section class="pad" id="offre">
+  <div class="w">
+    <span class="eyebrow">Pricing</span>
+    <h2 class="h2">One price. Once. For life.</h2>
+    <p class="sub">No subscription, no hidden modules, no surprise renewal. You pay €20, it stays yours.</p>
+    <div class="price-wrap">
+      <div class="price-card">
+        <div class="price-tag">Lifetime licence</div>
+        <div class="amt center"><b>20,00 €</b> <small style="color:var(--mut2);font-size:18px">EUR</small></div>
+        <p class="once">one-time payment · no renewal, ever</p>
+        <ul>
+          <li><span class="v">✓</span><span>The full fishing bot, v1.2.0, and future updates of the 1.x branch</span></li>
+          <li><span class="v">✓</span><span>The Casinobabe addon, shipped with a SHA-256 manifest</span></li>
+          <li><span class="v">✓</span><span>Activation on one machine, with licence re-send on request</span></li>
+          <li><span class="v">✓</span><span>Exportable / importable spot map (versioned JSON)</span></li>
+          <li><span class="v">✓</span><span>Documentation, release notes and email support</span></li>
+        </ul>
+        <form id="buyForm" novalidate>
+          <label style="display:block;font-size:12.5px;color:var(--mut);margin-bottom:7px;font-weight:600"
+                 for="email">Your email (to receive the key and the download link)</label>
+          <input class="pm-input" id="email" name="email" type="email" required autocomplete="email"
+                 placeholder="you@example.com" inputmode="email" style="margin-bottom:14px">
+          <button class="btn btn-gold btn-block" type="submit" id="buyBtn">Pay €20.00</button>
+          <p class="formerr" id="buyErr" role="alert" style="color:var(--red);font-size:13px;margin-top:12px"></p>
+          <p class="formsent" id="buyOk" role="status" style="color:var(--green);font-size:13px;margin-top:8px"></p>
+        </form>
+        <div class="pay-badges">
+          <span>🔒 Payment by <b style="color:var(--mut)">Mollie</b></span>
+          <span><a href="./legal/terms.html" style="color:inherit">Terms</a> ·
+                <a href="./legal/refund.html" style="color:inherit">Refunds</a> ·
+                <a href="./legal/privacy.html" style="color:inherit">Privacy</a></span>
+        </div>
+        <p class="pay-note">The amount and currency are fixed server-side; the browser only sends your email.</p>
+      </div>
+    </div>
+    <div class="wl mt reveal">
+      <h3 style="font-size:17px">Payment not available for you yet?</h3>
+      <p>Card payments via Mollie are being finalised. If the payment button fails,
+         leave your email and we will write to you the moment it opens.</p>
+      <form data-waitlist novalidate>
+        <input type="email" placeholder="you@example.com" autocomplete="email" aria-label="Email for the waitlist">
+        <button class="btn btn-ghost" type="submit">Keep me posted</button>
+        <p class="wl-state" style="flex-basis:100%"></p>
+      </form>
+    </div>
+  </div>
+</section>
 
-        if (result.error) {
-          alert('Erreur: ' + result.message);
-        } else if (!result.ok) {
-          alert('Erreur: ' + (result.message || 'Échec de l\'inscription.'));
-        } else {
-          alert('Email enregistré avec succès !\nVous recevrez votre client BOT-WOW + clé de licence par email sous 24h.');
-          emailInput.value = '';
-        }
-      } catch (err) {
-        console.error('Submission error:', err);
-        alert('Une erreur est survenue. Veuillez réessayer.');
-      } finally {
-        // Re-enable button
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    });
-  }
+<!-- ===================================================== DOCS/TRUST -->
+<section class="pad">
+  <div class="w">
+    <span class="eyebrow">Documentation &amp; trust</span>
+    <h2 class="h2">Everything to install it, and what to do if anything jams</h2>
+    <div class="feats mt">
+      <div class="feat reveal"><h3>Install guide</h3><p>Prerequisites, addon copy, initial configuration, run and clean stop.</p><p><a href="./docs/install.html" style="color:var(--gold)">Read the guide →</a></p></div>
+      <div class="feat reveal"><h3>Release notes</h3><p>What changes in every version, with the measurements behind the fixes.</p><p><a href="./docs/changelog.html" style="color:var(--gold)">See the releases →</a></p></div>
+      <div class="feat reveal"><h3>Known issues</h3><p>Detection stalls, client edge cases, and the recovery procedure.</p><p><a href="./docs/known-issues.html" style="color:var(--gold)">Consult →</a></p></div>
+      <div class="feat reveal"><h3>Licence recovery</h3><p>Find your key again and re-activate the licence on a new machine.</p><p><a href="./docs/license.html" style="color:var(--gold)">Procedure →</a></p></div>
+      <div class="feat reveal"><h3>Compatibility</h3><p>What is tested: Classic 1.13 and private servers. What is not: Retail, Mac.</p><p><a href="./compatibility.html" style="color:var(--gold)">Read the matrix →</a></p></div>
+      <div class="feat reveal"><h3>Support</h3><p>A real, human-readable email address, with an announced response time.</p><p><a href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p></div>
+    </div>
+  </div>
+</section>
 
-  // Newsletter form
-  const newsletterForm = document.getElementById('newsletter-form');
-  if (newsletterForm) {
-    newsletterForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const emailInput = document.getElementById('newsletter-email');
-      const consentInput = document.getElementById('consent-marketing');
-      const email = emailInput.value.trim();
-      const submitBtn = newsletterForm.querySelector('.form-submit');
-      const originalText = submitBtn.textContent;
+<!-- ======================================================= FINAL -->
+<section class="pad final">
+  <div class="w">
+    <h2 class="grad">Start fishing smarter</h2>
+    <p>Try the browser demo in two minutes, then decide. One price, no subscription.</p>
+    <div class="hero-cta" style="justify-content:center">
+      <a class="btn btn-gold btn-lg" href="#offre">Buy — €20.00</a>
+      <a class="btn btn-ghost btn-lg" href="./demo.html">Try the demo</a>
+    </div>
+    <p class="honest-note">Demo data is simulated. The bot itself is for Windows and WoW Classic 1.13.
+      Read the compatibility page before buying.</p>
+  </div>
+</section>
 
-      if (!email) {
-        alert('Veuillez entrer une adresse email valide.');
-        return;
-      }
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><span class="mark">W</span> BOT-WOW</a>
+        <p>Fishing assistant for WoW Classic. Published by Casinobabe.
+           Not affiliated with, endorsed by, or connected to Blizzard Entertainment.
+           Automation tools can violate the game's terms of service; read the
+           compatibility page before use.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="./features.html">Features</a></li>
+          <li><a href="./demo.html">Demo (simulated data)</a></li>
+          <li><a href="./compatibility.html">Compatibility</a></li>
+          <li><a href="./roadmap.html">Roadmap</a></li>
+          <li><a href="#offre">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs &amp; support</h4>
+        <ul>
+          <li><a href="./docs/install.html">Installation</a></li>
+          <li><a href="./docs/changelog.html">Release notes</a></li>
+          <li><a href="./docs/known-issues.html">Known issues</a></li>
+          <li><a href="./docs/license.html">Licence &amp; activation</a></li>
+          <li><a href="./faq.html">FAQ</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. BOT-WOW is not a Blizzard product and
+        is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a
+        trademark of Blizzard Entertainment. Use automation software responsibly and within
+        the rules of the server you play on.</div>
+      <span class="mono">v1.2.0 · contents: <a href="./legal/terms.html">terms</a> ·
+        <a href="./legal/privacy.html">privacy</a> · <a href="./legal/refund.html">refunds</a></span>
+    </div>
+  </div>
+</footer>
 
-      // Check marketing consent if the checkbox exists
-      const consent = consentInput ? consentInput.checked : true;
+<div class="mbar">
+  <div class="mp" style="color:var(--txt)">20,00 € <small>lifetime licence</small></div>
+  <a class="btn btn-gold" style="padding:10px 22px" href="#offre">Buy</a>
+</div>
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Envoi...';
-
-      try {
-        const response = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            source: 'newsletter',
-            consent_marketing: consent,
-            consent_transactional: true
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.error) {
-          alert('Erreur: ' + result.message);
-        } else if (!result.ok) {
-          alert('Erreur: ' + (result.message || 'Échec de l\'inscription.'));
-        } else {
-          alert('Inscription réussie !\nMerci de vous être abonné à la newsletter Bot-Wow.');
-          emailInput.value = '';
-          if (consentInput) consentInput.checked = false;
-        }
-      } catch (err) {
-        console.error('Newsletter submission error:', err);
-        alert('Une erreur est survenue. Veuillez réessayer.');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    });
-  }
-});
-</script>
-<script src="./assets/app.js"></script>
-
+<script type="module" src="./assets/app.js"></script>
 </body>
 </html>

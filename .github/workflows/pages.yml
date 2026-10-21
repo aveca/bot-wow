@@ -22,8 +22,27 @@ jobs:
         run: npm run validate
 
       - uses: actions/configure-pages@v5
+
+      # FIX 2026-10-21 : le deploiement uploadait TOUT le depot, ce qui
+      # exposait publiquement worker/index.js, les migrations SQL, package.json
+      # et les sources. L'artefact ne contient plus que le site statique.
+      - name: Prepare static artifact
+        run: |
+          mkdir -p _site
+          for f in index.html demo.html success.html cancel.html 404.html robots.txt sitemap.xml .nojekyll version.txt; do
+            [ -e "$f" ] && cp "$f" _site/
+          done
+          for d in assets docs legal fr; do
+            [ -d "$d" ] && cp -r "$d" _site/
+          done
+          for f in features.html fishing.html getting-started.html compatibility.html roadmap.html faq.html; do
+            [ -e "$f" ] && cp "$f" _site/
+          done
+          echo "--- contenu de l'artefact ---"
+          ls -1 _site
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

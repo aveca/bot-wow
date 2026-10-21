@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /worker/
+Disallow: /backups/
+Disallow: /migrations/
+Disallow: /tests/
+
+Sitemap: https://bot-wow.com/sitemap.xml

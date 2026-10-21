@@ -18,3 +18,9 @@ jobs:
 
       - name: Validate static project
         run: npm run validate
+
+      # Tests de la demonstration (parite JS/Python des regles de ronde) et
+      # de la distribution (integrite du paquet, absence de donnees client).
+      # La parite est IGNOREE si Python n'est pas disponible sur le runner.
+      - name: Run demo and distribution tests
+        run: npm test

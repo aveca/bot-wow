@@ -1,0 +1,328 @@
+{
+  "schema": 2,
+  "reference": "minimap",
+  "limits": {
+    "referentiel": "minimap",
+    "unite": "pixel de minicarte (rayon utile ~ 45 px)",
+    "origine": "centre de la minicarte = position du joueur ; nord = -y",
+    "limites": [
+      "la minicarte est verrouillee au nord : le referentiel ne depend pas de l'orientation de la camera (avantage) mais il ne donne pas la position monde absolue",
+      "la resolution de la minicarte borne la precision : 1 px ~ 1 unite de carte, l'echelle monde reelle n'est pas connue",
+      "les positions observees hors minicarte (banc dans le chat) ne sont pas localisables : elles ne sont PAS stockees"
+    ]
+  },
+  "updatedAt": 1792540233.7808175,
+  "spots": [
+    {
+      "id": "spot-26d8884979eb",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "cible",
+      "x": -30.0,
+      "y": -6.0,
+      "score": 0.93,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 10,
+      "catches": 9,
+      "reliability": 0.9,
+      "expectedCatchRate": 0.9,
+      "availability": 1.0,
+      "mobs": [],
+      "lastSeenAt": 1792540233.7808175,
+      "accessTimes": [
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0,
+        20.0,
+        10.0
+      ],
+      "fishTimes": [
+        28.0,
+        29.0,
+        30.0,
+        31.0,
+        32.0,
+        33.0,
+        34.0,
+        35.0,
+        36.0
+      ],
+      "revisitAfterSec": 0.0
+    },
+    {
+      "id": "spot-b0b498490a38",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "cible",
+      "x": 0.0,
+      "y": -32.0,
+      "score": 0.88,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 8,
+      "catches": 6,
+      "reliability": 0.75,
+      "expectedCatchRate": 0.75,
+      "availability": 1.0,
+      "mobs": [],
+      "lastSeenAt": 1792540233.7818265,
+      "accessTimes": [
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        10.0,
+        11.0
+      ],
+      "fishTimes": [
+        28.0,
+        29.0,
+        30.0,
+        31.0,
+        32.0,
+        33.0
+      ],
+      "revisitAfterSec": 0.0
+    },
+    {
+      "id": "spot-e989d4c60fe3",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "cible",
+      "x": 28.0,
+      "y": -10.0,
+      "score": 0.81,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 7,
+      "catches": 4,
+      "reliability": 0.571,
+      "expectedCatchRate": 0.571,
+      "availability": 1.0,
+      "mobs": [
+        "loup"
+      ],
+      "lastSeenAt": 1792540233.7818265,
+      "accessTimes": [
+        12.0,
+        13.0,
+        14.0,
+        10.0,
+        11.0,
+        12.0
+      ],
+      "fishTimes": [
+        28.0,
+        29.0,
+        30.0
+      ],
+      "revisitAfterSec": 0.0
+    },
+    {
+      "id": "spot-cb91c2fcb8a4",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "appat",
+      "x": 24.0,
+      "y": 18.0,
+      "score": 0.76,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 6,
+      "catches": 2,
+      "reliability": 0.333,
+      "expectedCatchRate": 0.333,
+      "availability": 1.0,
+      "mobs": [],
+      "lastSeenAt": 1792540233.7818265,
+      "accessTimes": [
+        12.0,
+        13.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0
+      ],
+      "fishTimes": [
+        28.0,
+        29.0
+      ],
+      "revisitAfterSec": 0.0
+    },
+    {
+      "id": "spot-9b609cf5bf9d",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "cible",
+      "x": -4.0,
+      "y": 30.0,
+      "score": 0.69,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 6,
+      "catches": 2,
+      "reliability": 0.333,
+      "expectedCatchRate": 0.333,
+      "availability": 1.0,
+      "mobs": [
+        "loup"
+      ],
+      "lastSeenAt": 1792540233.7818265,
+      "accessTimes": [
+        12.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0
+      ],
+      "fishTimes": [
+        28.0
+      ],
+      "revisitAfterSec": 0.0
+    },
+    {
+      "id": "spot-d2190f200998",
+      "zone": "Lushwater Oasis",
+      "subsection": null,
+      "kind": "cible",
+      "x": -32.0,
+      "y": 22.0,
+      "score": 0.84,
+      "observations": 3,
+      "confirmations": 2,
+      "status": "confirmed",
+      "visits": 7,
+      "catches": 4,
+      "reliability": 0.571,
+      "expectedCatchRate": 0.571,
+      "availability": 1.0,
+      "mobs": [],
+      "lastSeenAt": 1792540233.7818265,
+      "accessTimes": [
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        10.0,
+        11.0,
+        12.0
+      ],
+      "fishTimes": [
+        28.0,
+        29.0,
+        30.0,
+        31.0
+      ],
+      "revisitAfterSec": 0.0
+    }
+  ],
+  "segments": {
+    "spot-26d8884979eb>spot-b0b498490a38": {
+      "a": "spot-26d8884979eb",
+      "b": "spot-b0b498490a38",
+      "runs": 1,
+      "success": 1,
+      "failure": 0,
+      "durations": [
+        14.0
+      ],
+      "distance": 40.0,
+      "obstacles": [],
+      "lastUsedAt": 1792540233.7818265
+    },
+    "spot-b0b498490a38>spot-e989d4c60fe3": {
+      "a": "spot-b0b498490a38",
+      "b": "spot-e989d4c60fe3",
+      "runs": 1,
+      "success": 1,
+      "failure": 0,
+      "durations": [
+        21.0
+      ],
+      "distance": 36.0,
+      "obstacles": [],
+      "lastUsedAt": 1792540233.7818265
+    },
+    "spot-e989d4c60fe3>spot-cb91c2fcb8a4": {
+      "a": "spot-e989d4c60fe3",
+      "b": "spot-cb91c2fcb8a4",
+      "runs": 1,
+      "success": 1,
+      "failure": 0,
+      "durations": [
+        18.0
+      ],
+      "distance": 28.0,
+      "obstacles": [
+        "loup"
+      ],
+      "lastUsedAt": 1792540233.7818265
+    },
+    "spot-cb91c2fcb8a4>spot-9b609cf5bf9d": {
+      "a": "spot-cb91c2fcb8a4",
+      "b": "spot-9b609cf5bf9d",
+      "runs": 1,
+      "success": 1,
+      "failure": 0,
+      "durations": [
+        16.0
+      ],
+      "distance": 30.0,
+      "obstacles": [],
+      "lastUsedAt": 1792540233.7818265
+    },
+    "spot-26d8884979eb>spot-9b609cf5bf9d": {
+      "a": "spot-26d8884979eb",
+      "b": "spot-9b609cf5bf9d",
+      "runs": 1,
+      "success": 0,
+      "failure": 1,
+      "durations": [
+        26.0
+      ],
+      "distance": 44.0,
+      "obstacles": [
+        "loup"
+      ],
+      "lastUsedAt": 1792540233.7818265
+    },
+    "spot-e989d4c60fe3>spot-d2190f200998": {
+      "a": "spot-e989d4c60fe3",
+      "b": "spot-d2190f200998",
+      "runs": 1,
+      "success": 0,
+      "failure": 1,
+      "durations": [
+        30.0
+      ],
+      "distance": 68.0,
+      "obstacles": [],
+      "lastUsedAt": 1792540233.7818265
+    }
+  },
+  "exportedAt": 1792540233.7818265,
+  "exportedBy": "casinobabe-fishing-v2",
+  "simulated": true,
+  "notice": "DONNEES SIMULEES - carte de demonstration du site. Les positions sont synthetiques et ne correspondent a aucune session de jeu reelle.",
+  "zones": [
+    {
+      "id": "lushwater-oasis",
+      "name": "Lushwater Oasis",
+      "reference": "minimap",
+      "radiusUnits": 45
+    }
+  ]
+}
