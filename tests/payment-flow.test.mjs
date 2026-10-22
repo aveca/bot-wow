@@ -109,8 +109,22 @@ function makeEnv(state) {
     get: async () => null,
     put: async () => {},
   };
+  /* Base de TELEMETRIE (dediee) : elle ne recoit QUE la mesure de
+     conversion ecrite par le serveur. */
+  const telemetry = {
+    prepare: (sql) => ({
+      bind: (...args) => ({
+        run: async () => {
+          state.telemetry = state.telemetry || [];
+          state.telemetry.push({ sql, args });
+          return { success: true };
+        },
+      }),
+    }),
+  };
   return {
     DB: db,
+    TELEMETRY_DB: telemetry,
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key',
@@ -237,6 +251,24 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('la licence reference la meme commande', state.licenses[0] && state.licenses[0][1] === state.orders[0],
     `(licence=${state.licenses[0] && state.licenses[0][1]} commande=${state.orders[0]})`);
   check('un jeton de telechargement est cree', state.downloads.length === 1, `(${state.downloads.length})`);
+}
+
+/* 3b. un webhook paye enregistre UNE conversion (mesure serveur) */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_conv', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_conv' }, env });
+  check('le webhook paye repond 200', res.status === 200, `(status=${res.status})`);
+  const rows = state.telemetry || [];
+  const conv = rows.filter((r) => /'conversion'/.test(r.sql));
+  check('une conversion est ecrite dans la base de telemetrie', conv.length === 1, `(${conv.length})`);
+  check('la conversion est ecrite dans la table des evenements', conv.length === 1 && /INSERT INTO events/i.test(conv[0].sql));
+  const flat = JSON.stringify(conv[0] ? conv[0].args : []);
+  check('la conversion ne contient ni e-mail ni montant en clair de commande',
+    !flat.includes('client@test.fr') && !flat.includes('tr_conv'), `(${flat.slice(0, 120)})`);
+  check('la conversion porte le montant confirme', flat.includes('20'), `(${flat.slice(0, 120)})`);
 }
 
 /* 4. un webhook rejoue ne cree PAS de seconde licence */
