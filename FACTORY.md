@@ -3,11 +3,11 @@
 ## Last verified delivery
 
 - **Version:** V13.1 (hero editorial bold, variant C — EN + FR)
-- **Commit:** `8dbf98f` (pushed to origin/main)
+- **Commit:** `22d75f6` (pushed to origin/main)
 - **Date:** 2026-10-22
 - **Production URLs:**
-  - Cloudflare Pages: https://bot-wow.com/ (verified: V13 hero serving)
-  - GitHub Pages: https://aveca.github.io/bot-wow/ (verified: V13 hero serving)
+  - Cloudflare Pages: https://bot-wow.com/ (verified: V13 hero serving on EN + FR)
+  - GitHub Pages: https://aveca.github.io/bot-wow/ (verified: V13 hero serving on EN + FR)
 - **Tests:** `npm run validate` PASS, `npm test` PASS (10 suites)
 - **Gzip budget:** code assets ≈ 67 Ko (under 210 Ko limit)
 - **Known issues:** None critical. Mascot SVG unused in production hero (variant C). Variant A/B CSS files still published.
