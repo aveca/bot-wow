@@ -15,12 +15,12 @@
 <meta property="og:description" content="Assistant de pêche pour WoW Classic : détection mesurée, mémoire persistante des spots, rondes optimisées. Licence à vie 20 €.">
 <meta property="og:url" content="https://bot-wow.com/fr/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="../assets/favicon.svg?v=20261022-7eb6f20b" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=20261022-a70091d1" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20261022-7eb6f20b">
-<link rel="stylesheet" href="../assets/style.css?v=20261022-7eb6f20b">
+<link rel="stylesheet" href="../assets/site.css?v=20261022-a70091d1">
+<link rel="stylesheet" href="../assets/style.css?v=20261022-a70091d1">
 </head>
 <body>
 
@@ -61,17 +61,20 @@
         développement et ce qui est planifié.
       </p>
 
-      <!-- 3 blocs de bénéfices -->
+      <!-- 3 blocs de bénéfices — chacun porte une preuve vérifiable -->
       <div class="benefits">
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Calibré sur captures réelles</b><span>· Détection mesurée session après session</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Mémoire persistante des spots</b><span>· Cartes versionnées, exportables</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Un seul prix à vie</b><span>· 20 €, jamais de renouvellement</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>308 ms de médiane morsure → clic</b><span>· Mesuré session après session, journal par cycle</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Parité du planificateur 12/12</b><span>· Mêmes règles en JavaScript et en Python — lancez le test</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Classic 1.13 + serveurs privés</b><span>· Notre environnement de référence, testé là-bas</span></div></div>
       </div>
 
       <div class="hero-cta">
         <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Essayer la démo navigateur</a>
         <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">Voir l'offre</a>
       </div>
+      <p class="hero-price">
+        <b>20,00 €</b><span class="hp-sep">·</span><span>licence à vie, paiement unique</span><span class="hp-sep">·</span><a href="#buy" data-track="cta_click" data-cta-id="hero-price">ce qui est inclus</a>
+      </p>
     </div>
 
     <div class="radar-panel" id="heroRadar">
@@ -117,6 +120,118 @@
   </div>
 
   <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
+</section>
+
+<!-- ======================================================== PARCOURS : QUE FAIRE ? -->
+<!-- Le selecteur ne vend que ce qui existe. Le 4e cas dit explicitement
+     que le produit n'est pas adapte : c'est ce qui rend les 3 autres credibles. -->
+<section class="pad journey-sec" id="journey">
+  <div class="w">
+    <header class="section-head">
+      <span class="eyebrow">Commencez ici</span>
+      <h2 class="h2">Que voulez-vous faire exactement ?</h2>
+      <p class="lead">Quatre réponses honnêtes. Trois mènent à ce que BOT-WOW fait réellement aujourd'hui. La quatrième vous dit clairement que ce n'est pas le produit qu'il vous faut.</p>
+    </header>
+
+    <div class="journey-tabs" role="tablist" aria-label="Que voulez-vous faire ?">
+      <button class="journey-tab" type="button" role="tab" id="jtab-fish" aria-controls="jpanel-fish" aria-selected="true" data-intent="fish">Automatiser ma pêche</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-demo" aria-controls="jpanel-demo" aria-selected="false" tabindex="-1" data-intent="demo">Voir avant de payer</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-licence" aria-controls="jpanel-licence" aria-selected="false" tabindex="-1" data-intent="licence">Une licence à vie</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-roles" aria-controls="jpanel-roles" aria-selected="false" tabindex="-1" data-intent="other-roles">Grinder, cueillir, combattre</button>
+    </div>
+
+    <div class="journey-panel" id="jpanel-fish" role="tabpanel" aria-labelledby="jtab-fish">
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">La pêche, de la ligne à la prise</h3>
+          <p class="journey-lead">Le seul rôle que BOT-WOW livre aujourd'hui : il lance, surveille le flotteur, clique à la morsure, et retient chaque spot pêché.</p>
+          <ul class="journey-list">
+            <li>Détection du flotteur calibrée sur de vraies captures de Classic 1.13 — <b>308 ms</b> de médiane morsure → clic sur les sessions journalisées</li>
+            <li>Mémoire persistante des spots : votre carte, versionnée, exportable, dédupliquée</li>
+            <li>Planificateur de rondes en trois modes — <b>parité 12/12</b> entre l'implémentation JavaScript et l'implémentation Python</li>
+            <li>Capture d'écran en arrière-plan sous Windows ; F9 arrête tout, à tout moment</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Nécessite</b><span>Windows 10/11, Python 3.11+, WoW Classic 1.13. Les serveurs privés sont notre environnement de référence.</span></div>
+          <div class="journey-fact"><b>Limites</b><span>Le déplacement d'un spot à l'autre est encore en validation en jeu. Ni grinding, ni cueillette, ni combat.</span></div>
+          <div class="journey-fact"><b>Démarrage</b><span>Décompressez le paquet, collez votre clé de licence, appuyez sur F9.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="journey-fish-buy">Prendre la licence — 20,00 €</a>
+            <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="journey-fish-demo">Voir d'abord la démo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel" id="jpanel-demo" role="tabpanel" aria-labelledby="jtab-demo" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">La démo navigateur — sans compte, sans e-mail</h3>
+          <p class="journey-lead">Deux minutes, rien à installer. Elle utilise le même planificateur de rondes que le bot, sur une carte simulée.</p>
+          <ul class="journey-list">
+            <li>Regardez le planificateur calculer une ronde : spots, trajet, rendement attendu, segments non vérifiés</li>
+            <li>Changez de mode prudent, équilibré ou exploration et voyez la ronde se recomposer</li>
+            <li>Cliquez un spot pour lire sa fiabilité, son risque et son historique</li>
+            <li><b>Données simulées</b>, clairement indiquées : une fixture de test, pas une session de production</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Nécessite</b><span>Un navigateur. Rien d'autre.</span></div>
+          <div class="journey-fact"><b>Limites</b><span>C'est une carte et un planificateur, pas le bot : ni détection, ni clic.</span></div>
+          <div class="journey-fact"><b>Démarrage</b><span>Ouvrez la page et changez de mode.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="./demo.html" data-track="cta_click" data-cta-id="journey-demo-open">Ouvrir la démo navigateur</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel" id="jpanel-licence" role="tabpanel" aria-labelledby="jtab-licence" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">20 € une fois. Elle est à vous.</h3>
+          <p class="journey-lead">Un produit, un prix, pas d'abonnement ni de renouvellement : la licence est liée à votre machine, pas à une date.</p>
+          <ul class="journey-list">
+            <li>Le bot de pêche complet v1.2.0 et les mises à jour de la branche 1.x</li>
+            <li>L'addon et le paquet de livraison, avec un manifeste SHA-256</li>
+            <li>Licence réexpédiée sur demande si vous réinstallez</li>
+            <li>Documentation, notes de version et support par e-mail</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Livraison</b><span>Immédiatement par e-mail : lien de téléchargement et clé de licence, juste après le paiement.</span></div>
+          <div class="journey-fact"><b>Remboursement</b><span>Dans les 14 jours suivant l'achat, tant que la licence n'a pas été activée sur une machine. Procédure complète dans la politique de remboursement.</span></div>
+          <div class="journey-fact"><b>Risque</b><span>L'automatisation peut enfreindre les conditions d'un serveur. Utilisez un compte que vous êtes prêt à perdre.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="journey-licence-buy">Voir l'offre</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel is-not" id="jpanel-roles" role="tabpanel" aria-labelledby="jtab-roles" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">Pas ce produit — autant le dire maintenant</h3>
+          <p class="journey-lead">BOT-WOW fait un seul travail : la pêche. Si vous voulez du grinding de mobs, cueillir, des rotations de combat ou du PvP, c'est le mauvais outil, et aucune remise ne changerait cela.</p>
+          <ul class="journey-list">
+            <li>Trois autres rôles sont en développement. Le registre des modules indique pour chacun son statut réel et les tests qui l'entourent</li>
+            <li>Rien n'est vendu comme « à venir » sans statut : livré, en développement, ou planifié</li>
+            <li>Si vous avez besoin de ces rôles aujourd'hui, un bot multi-rôles est le choix honnête pour vous</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Nécessite</b><span>Rien — lisez ceci.</span></div>
+          <div class="journey-fact"><b>Limites</b><span>BOT-WOW livre un seul rôle et ne deviendra pas un bot fourre-tout.</span></div>
+          <div class="journey-fact"><b>Démarrage</b><span>Ouvrez le registre pour voir le statut de chaque rôle.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-ghost" href="./modules.html" data-track="cta_click" data-cta-id="journey-roles-ledger">Ouvrir le registre des modules</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ======================================================== TELEMETRY : 4 MESURES REELLES -->
@@ -309,6 +424,41 @@
       </article>
     </div>
 
+    <!-- ======================================================== AVANT DE PAYER -->
+    <!-- Recapitulatif honnete : ce que vous recevez, ce que vous ne
+         recevez PAS, et les conditions. -->
+    <div class="before-buy">
+      <div class="bb-col">
+        <h3 class="bb-h bb-in">Ce que vous recevez</h3>
+        <ul class="bb-list">
+          <li>Le bot de pêche v1.2.0 et les mises à jour de la branche 1.x</li>
+          <li>L'addon et le paquet de livraison, avec un manifeste SHA-256</li>
+          <li>Votre carte de spots : versionnée, exportable, dédupliquée</li>
+          <li>Une activation sur une machine, clé réexpédiée sur demande</li>
+          <li>Documentation, notes de version, support par e-mail</li>
+        </ul>
+      </div>
+      <div class="bb-col">
+        <h3 class="bb-h bb-out">Ce que vous ne recevez pas</h3>
+        <ul class="bb-list">
+          <li>Ni grinding, ni cueillette, ni combat, ni PvP — un seul rôle</li>
+          <li>Pas de gestionnaire multi-comptes ni multi-profils</li>
+          <li>Pas encore de déplacement entre les spots : le mécanisme existe, l'arrivée à un spot est encore en validation en jeu</li>
+          <li>Aucune autre version du jeu : Classic 1.13 est le seul environnement que nous testons</li>
+          <li>Aucune garantie qu'un compte piloté ne sera jamais sanctionné</li>
+        </ul>
+      </div>
+      <div class="bb-col">
+        <h3 class="bb-h">Livraison, mises à jour, remboursement</h3>
+        <dl class="bb-dl">
+          <dt>Livraison</dt><dd>Immédiatement par e-mail : lien de téléchargement et clé de licence, juste après le paiement.</dd>
+          <dt>Mises à jour</dt><dd>Incluses pour la branche 1.x, sous forme de paquets versionnés avec notes de version.</dd>
+          <dt>Remboursement</dt><dd>Dans les 14 jours suivant l'achat, tant que la licence n'a pas été activée sur une machine. <a href="../legal/fr/refund.html">Procédure</a>.</dd>
+          <dt>Risque</dt><dd>L'automatisation peut enfreindre les conditions d'un serveur. Utilisez un compte que vous êtes prêt à perdre.</dd>
+        </dl>
+      </div>
+    </div>
+
     <div class="wl mt">
       <h3 style="font-size:17px">Le paiement n'est pas encore disponible pour vous ?</h3>
       <p>Le paiement par carte via Mollie est en cours de finalisation. Si le bouton de paiement échoue, laissez votre e-mail : nous vous écrirons dès l'ouverture.</p>
@@ -381,6 +531,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Acheter</a></div>
 
-<script type="module" src="../assets/app.js?v=20261022-7eb6f20b"></script>
+<script type="module" src="../assets/app.js?v=20261022-a70091d1"></script>
 </body>
 </html>

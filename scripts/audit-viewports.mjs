@@ -81,8 +81,34 @@ const PROBE = `(() => {
   const box = (el) => { if (!el) return null; const r = el.getBoundingClientRect();
     return { top: Math.round(r.top + window.scrollY), bottom: Math.round(r.bottom + window.scrollY), height: Math.round(r.height), width: Math.round(r.width) }; };
   const cta = pick('.hero-cta .btn') || pick('[data-track="cta_click"]');
-  const ctaAll = [...document.querySelectorAll('.hero-cta .btn')].map((b) => ({
-    id: b.getAttribute('data-cta-id') || b.textContent.trim().slice(0, 28), ...box(b) }));
+  /* Selection generique : si la page n'a pas nos classes, on prend le
+     premier lien/bouton d'action visible dans la zone haute. Permet de
+     mesurer un concurrent sans adapter l'outil. */
+  let ctaGeneric = null;
+  if (!cta) {
+    const RE_CTA = /^(buy|try|download|start|get|demo|essai|voir|acheter|telecharger|order|subscribe|press)/i;
+    const cands = [...document.querySelectorAll('a,button')].filter((el) => {
+      const txt = (el.textContent || '').replace(/\\s+/g, ' ').replace(/^[^A-Za-z0-9]+/, '').trim();
+      if (!txt || txt.length > 40) return false;
+      const r = el.getBoundingClientRect();
+      if (r.top < 60 || r.top > 1400 || r.width < 40 || r.height < 20) return false;
+      if (el.closest('header, nav, [role="banner"]')) return false; // pas le CTA de nav
+      const cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+      return RE_CTA.test(txt);
+    });
+    if (cands.length) {
+      cands.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+      ctaGeneric = cands[0];
+    }
+  }
+  const ctaAll = [...document.querySelectorAll('.hero-cta .btn, a.btn, button.btn, .elementor-button')]
+    .map((b) => ({
+      id: b.getAttribute('data-cta-id') || (b.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 28),
+      ...box(b),
+    }))
+    .filter((b) => b.height > 0);
+  const ctaBox = cta ? box(cta) : (ctaGeneric ? box(ctaGeneric) : null);
   const h1 = pick('h1');
   const hero = pick('.hero');
   const doc = document.documentElement;

@@ -378,11 +378,11 @@ footer li a:hover{transform:translateX(2px)}
   background:rgba(6,7,11,.35);
 }
 .radar-panel .visual picture{
-  display:block;flex:none;width:96px;border-radius:8px;overflow:hidden;
+  display:block;flex:none;width:132px;border-radius:8px;overflow:hidden;
   border:1px solid var(--line);
 }
 .radar-panel .visual img{
-  display:block;width:100%;height:auto;max-height:46px;object-fit:cover;
+  display:block;width:100%;height:auto;max-height:74px;object-fit:cover;
   transition:none;
 }
 .radar-panel .visual-caption{
@@ -546,6 +546,144 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
    flottaison dans les deux langues. */
 .hero{padding-top:clamp(48px,5vw,80px)}
 :lang(fr) .hero-copy h1{font-size:clamp(36px,4.9vw,54px)}
+
+/* ============================================================ V11.2 — HERO :
+   LE CTA ET LE PRIX DANS L'ECRAN
+   Mesure V10/V11 sur la version publiee (1440x900) : CTA principal a
+   792 px, prix absent du hero. Le rythme vertical est resserre (-57 px)
+   et le prix est affiche : l'Offre est decidee dans le premier ecran.
+   Mesure du concurrent (PixelBuddy, meme viewport) : CTA a 666 px, sans
+   prix dans le hero non plus.
+
+   CORRECTIF DE GRILLE : site.css pose `.hero .w{grid-template-columns:1.05fr
+   .95fr}` (specificite 0-2-0) alors que hero.css ne pose que `.hero-grid`
+   (0-1-0) : la regle media de hero.css ne pouvait donc jamais s'appliquer,
+   et le hero restait sur deux colonnes entre 881 et 1024 px. La colonne de
+   texte tombait a 422 px de large (chapo sur 6 lignes) au lieu de
+   s'empiler. On redonne la priorite a la grille du hero sur cette plage. */
+@media (min-width:761px){
+  .hero{padding-top:clamp(44px,4vw,64px)}
+  .hero-copy h1{font-size:clamp(38px,4.6vw,54px);margin-bottom:16px}
+  .hero-copy .badge{margin-bottom:16px}
+  .hero-copy .lead{margin-bottom:18px}
+  .benefits{margin-bottom:18px}
+}
+
+@media (max-width:1080px){
+  /* Sur un petit ecran, l'instrument de droite ne tient pas dans la
+     hauteur de vue : mieux vaut une colonne de texte pleine largeur
+     (promesse + CTA au-dessus de la ligne de flottaison) que deux
+     colonnes et un CTA coupe. */
+  .hero .w{grid-template-columns:1fr;gap:36px}
+}
+@media (max-width:880px){
+  .hero .w{grid-template-columns:1fr;gap:32px}
+}
+
+/* Ligne de prix sous le CTA : lisible sans scroller, explicite. */
+.hero-price{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin-top:14px;font-size:14px;color:var(--mut2)
+}
+.hero-price b{font-size:20px;color:var(--txt);font-weight:800;letter-spacing:-.01em}
+.hero-price .hp-sep{opacity:.45}
+.hero-price a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,162,39,.35);padding-bottom:1px}
+.hero-price a:hover{border-bottom-color:var(--gold)}
+
+/* Note de bas de comparateur : date d'observation et prudence. */
+.cmp-note{
+  margin:14px 0 0;padding:12px 16px;font-size:12.5px;line-height:1.6;
+  color:var(--mut2);border:1px dashed var(--line);border-radius:12px;
+  background:rgba(255,255,255,.02)
+}
+.cmp-note b{color:var(--mut)}
+
+/* ============================================================ V11.2 — RECAPITULATIF
+   AVANT PAIER
+   Trois colonnes separees par des filets, pas trois cartes : c'est un
+   tableau de lecture, pas une collection de boites. */
+.before-buy{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:28px;
+  border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02);
+  overflow:hidden
+}
+.bb-col{padding:22px 24px;border-right:1px solid var(--line)}
+.bb-col:last-child{border-right:none}
+.bb-h{
+  margin:0 0 14px;font-size:13px;font-family:var(--mono);font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.bb-h.bb-in{color:var(--green)}
+.bb-h.bb-out{color:var(--red)}
+.bb-list{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.bb-list li{position:relative;padding-left:18px;font-size:13.5px;line-height:1.55;color:var(--mut)}
+.bb-list li::before{
+  content:"";position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:2px;
+  background:var(--green);opacity:.75
+}
+.bb-h.bb-out ~ .bb-list li::before{background:var(--red)}
+.bb-dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px;line-height:1.55}
+.bb-dl dt{color:var(--gold);font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-top:3px;white-space:nowrap}
+.bb-dl dd{margin:0;color:var(--mut)}
+.bb-dl a{color:var(--gold)}
+@media (max-width:860px){
+  .before-buy{grid-template-columns:1fr}
+  .bb-col{border-right:none;border-bottom:1px solid var(--line)}
+  .bb-col:last-child{border-bottom:none}
+}
+
+/* ============================================================ V11.2 — SELECTEUR
+   DE PARCOURS
+   Le selecteur doit se lire comme un outil de decision, pas comme une
+   grille de cartes : un jeu d'onglets, puis UN panneau. Les faits (besoins,
+   limites, demarrage) sont alignes en colonnes, pas empiles en boites. */
+.journey-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px;
+  border-bottom:1px solid var(--line);padding-bottom:14px}
+.journey-tab{
+  appearance:none;cursor:pointer;font:inherit;font-size:14px;font-weight:600;
+  color:var(--mut);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:9px 18px;
+  transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out);
+}
+.journey-tab:hover{color:var(--txt);border-color:var(--line-bright)}
+.journey-tab[aria-selected="true"]{color:#1a1205;background:linear-gradient(100deg,var(--gold),var(--gold2));border-color:transparent}
+.journey-tab:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+.journey-panel{border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:14px;padding:26px 28px;background:var(--glass)}
+.js .journey-panel[hidden]{display:none}
+.journey-panel.is-not{border-left-color:var(--red)}
+
+.journey-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:start}
+.journey-title{margin:0 0 8px;font-size:21px;line-height:1.25}
+.journey-lead{margin:0 0 16px;color:var(--mut);font-size:15px;line-height:1.65;max-width:56ch}
+.journey-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.journey-list li{position:relative;padding-left:22px;color:var(--mut);font-size:14.5px;line-height:1.6}
+.journey-list li b{color:var(--txt)}
+.journey-list li::before{
+  content:"";position:absolute;left:0;top:8px;width:9px;height:9px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 10px rgba(201,162,39,.45)
+}
+.journey-panel.is-not .journey-list li::before{background:var(--red);box-shadow:0 0 10px rgba(224,108,94,.35)}
+
+.journey-facts{display:grid;gap:14px}
+.journey-fact{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:start}
+.journey-fact b{
+  font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);padding-top:2px
+}
+.journey-fact span{color:var(--mut);font-size:14px;line-height:1.6}
+.journey-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+
+@media (max-width:900px){
+  .journey-grid{grid-template-columns:1fr;gap:24px}
+  .journey-panel{padding:20px 18px}
+}
+@media (max-width:560px){
+  .journey-tab{font-size:13.5px;padding:8px 14px}
+  .journey-fact{grid-template-columns:1fr;gap:2px}
+  .journey-cta .btn{width:100%}
+}
 
 /* ============================================================ V11 — ANCRES
    La nav est sticky (91 px sur desktop, 77 px sur mobile). Sans

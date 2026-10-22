@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS events (
   ref       TEXT,                      -- correlation (evenements de test)
   test      INTEGER NOT NULL DEFAULT 0,-- 1 : evenement de test (exclu des stats)
   ip_hash   TEXT,                      -- hash sale de l'IP (anti-abus)
-  ua        TEXT                       -- famille d agent, <= 80 caracteres
+  ua        TEXT,                      -- famille d agent, <= 80 caracteres
+  value_eur REAL,                      -- montant confirme (conversion uniquement)
+  source    TEXT                       -- origine (mollie pour une conversion)
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);
