@@ -1,0 +1,33 @@
+# Cloudflare Pages — directives de cache et de securite.
+#
+# Le site est statique et ses ressources ne sont pas versionnees par hash :
+# un cache long faisait donc servir d'anciennes versions (CSS/JS d'avant
+# une correction) pendant des heures. On impose :
+#  - HTML : revalidation a chaque visite (contenu toujours frais) ;
+#  - ressources : 10 minutes (absorbe un pic, trop court pour servir une
+#    version perimee) ;
+#  - chemins herites du deploiement "racine du depot" : jamais stockes.
+
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/assets/*
+  Cache-Control: public, max-age=600, must-revalidate
+
+/worker/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/package.json
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/scripts/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/tests/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
