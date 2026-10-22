@@ -68,49 +68,65 @@ export function computeStamp(root = ROOT) {
 
 // Stamp force ou automatique.
 const forced = process.argv[2];
-const STAMP = forced || computeStamp();
-console.log('stamp :', STAMP);
 
-let changed = 0;
+/**
+ * Applique le stamp aux fichiers HTML, a style.css et aux modules ES
+ * d'un repertoire donne. Exporte pour que le build puisse versionner
+ * l'artefact publie sans toucher aux sources.
+ */
+export function applyStamp(dir, stamp) {
+  let changed = 0;
 
-// 1. HTML : assets/X -> assets/X?v=STAMP
-for (const file of walk(ROOT)) {
-  const rel = path.relative(ROOT, file);
-  let t = fs.readFileSync(file, 'utf8');
-  const before = t;
-  for (const a of ASSETS) {
-    const esc = a.replace(/\./g, '\\.');
-    t = t.replace(new RegExp(`((?:\\.\\./|\\./)?assets/${esc})\\?v=[0-9a-zA-Z._-]+`, 'g'), `$1?v=${STAMP}`);
-    t = t.replace(new RegExp(`((?:\\.\\./|\\./)?assets/${esc})(["'\\s>])`, 'g'), `$1?v=${STAMP}$2`);
+  // 1. HTML : assets/X -> assets/X?v=STAMP
+  for (const file of walk(dir)) {
+    const rel = path.relative(dir, file);
+    let t = fs.readFileSync(file, 'utf8');
+    const before = t;
+    for (const a of ASSETS) {
+      const esc = a.replace(/\./g, '\\.');
+      t = t.replace(new RegExp(`((?:\\.\\./|\\./)?assets/${esc})\\?v=[0-9a-zA-Z._-]+`, 'g'), `$1?v=${stamp}`);
+      t = t.replace(new RegExp(`((?:\\.\\./|\\./)?assets/${esc})(["'\\s>])`, 'g'), `$1?v=${stamp}$2`);
+    }
+    if (t !== before) {
+      fs.writeFileSync(file, t, 'utf8');
+      changed++;
+      if (dir === ROOT) console.log(`  versionne : ${rel}`);
+    }
   }
-  if (t !== before) {
-    fs.writeFileSync(file, t, 'utf8');
-    changed++;
-    console.log(`  versionne : ${rel}`);
+
+  // 2. style.css : les @import pointent sur un fichier local (relatif a assets/)
+  {
+    const p = path.join(dir, 'assets', 'style.css');
+    if (fs.existsSync(p)) {
+      let t = fs.readFileSync(p, 'utf8');
+      const before = t;
+      t = t.replace(/@import url\("([^"]+)"\)(?!;?\s*\*\/)/g, (m, url) => {
+        if (STAMP_RE.test(url)) return `@import url("${url.replace(STAMP_RE, '?v=' + stamp)}")`;
+        return `@import url("${url}?v=${stamp}")`;
+      });
+      if (t !== before) { fs.writeFileSync(p, t, 'utf8'); changed++; if (dir === ROOT) console.log('  versionne : assets/style.css'); }
+    }
   }
+
+  // 3. modules ES : import depuis un fichier local
+  for (const name of ['app.js', 'demo.js']) {
+    const p = path.join(dir, 'assets', name);
+    if (!fs.existsSync(p)) continue;
+    let t = fs.readFileSync(p, 'utf8');
+    const before = t;
+    t = t.replace(/(from|import)\s+'(\.\/[a-z0-9-]+\.js)(\?v=[0-9a-zA-Z._-]+)?'/g,
+      (m, kw, url) => `${kw} '${url}?v=${stamp}'`);
+    if (t !== before) { fs.writeFileSync(p, t, 'utf8'); changed++; if (dir === ROOT) console.log(`  versionne : assets/${name}`); }
+  }
+
+  return changed;
 }
 
-// 2. style.css : les @import pointent sur un fichier local (relatif a assets/)
-{
-  const p = path.join(ROOT, 'assets', 'style.css');
-  let t = fs.readFileSync(p, 'utf8');
-  const before = t;
-  t = t.replace(/@import url\("([^"]+)"\)(?!;?\s*\*\/)/g, (m, url) => {
-    if (STAMP_RE.test(url)) return `@import url("${url.replace(STAMP_RE, '?v=' + STAMP)}")`;
-    return `@import url("${url}?v=${STAMP}")`;
-  });
-  if (t !== before) { fs.writeFileSync(p, t, 'utf8'); changed++; console.log('  versionne : assets/style.css'); }
+/* Execute le versionnage seulement en appel direct : le module reste
+   importable par le build (qui versionne l'artefact, pas les sources). */
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const STAMP = forced || computeStamp();
+  console.log('stamp :', STAMP);
+  const changed = applyStamp(ROOT, STAMP);
+  console.log(`\n${changed} fichier(s) versionne(s) — stamp v=${STAMP}`);
 }
-
-// 3. modules ES : import depuis un fichier local
-for (const name of ['app.js', 'demo.js']) {
-  const p = path.join(ROOT, 'assets', name);
-  if (!fs.existsSync(p)) continue;
-  let t = fs.readFileSync(p, 'utf8');
-  const before = t;
-  t = t.replace(/(from|import)\s+'(\.\/[a-z0-9-]+\.js)(\?v=[0-9a-zA-Z._-]+)?'/g,
-    (m, kw, url) => `${kw} '${url}?v=${STAMP}'`);
-  if (t !== before) { fs.writeFileSync(p, t, 'utf8'); changed++; console.log(`  versionne : assets/${name}`); }
-}
-
-console.log(`\n${changed} fichier(s) versionne(s) — stamp v=${STAMP}`);

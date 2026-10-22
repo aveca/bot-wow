@@ -546,3 +546,67 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
    flottaison dans les deux langues. */
 .hero{padding-top:clamp(48px,5vw,80px)}
 :lang(fr) .hero-copy h1{font-size:clamp(36px,4.9vw,54px)}
+
+/* ============================================================ V11 — ANCRES
+   La nav est sticky (91 px sur desktop, 77 px sur mobile). Sans
+   scroll-margin-top, une ancre (#buy, #offre, #ownership...) amenait la
+   section SOUS la nav : le titre de la section etait masque. On reserve
+   la hauteur de la nav, plus une marge de lecture. */
+[id]{scroll-margin-top:112px}
+.anchor-alias{display:block;height:0;scroll-margin-top:112px}
+
+/* ============================================================ V11 — CTA DANS
+   L'ECRAN SUR PETIT ECRAN
+   Mesures sur la V10 publiee (EN, 360x800) :
+     - CTA principal a 932 px dans un viewport de 800 px ;
+     - bandeau d infos : 79 px sur 2 lignes ;
+     - nav sticky : 91 px toujours visibles ;
+     - h1 a 38 px (plancher du clamp) : 6 lignes, 237 px de haut ;
+     - le CTA venait apres le chapo ET les 3 blocs de beneficiaires.
+   Correctif compose de quatre mesures, sans masquer ni ecraser quoi que
+   ce soit :
+     1. bandeau et nav compacts (une ligne, moins de hauteur) ;
+     2. typographie responsive du titre jusqu a 420 px (chaque segment du
+        titre tient sur une ligne) ;
+     3. badge ramene a une ligne sur petit ecran ;
+     4. sur mobile, le CTA passe juste apres le titre. L'ORDRE DU DOM
+        reste intact (badge, titre, chapo, beneficiaires, CTA) : seul
+        l'ordre visuel change, pour que l'offerte et l'action soient
+        accessibles sans defiler. */
+
+/* --- 1. bandeau d infos : une seule ligne --- */
+@media (max-width:900px){
+  .topbar{font-size:11.5px}
+  .topbar .w{gap:12px;padding:5px 0}
+  .topbar .w span{white-space:nowrap}
+}
+
+/* --- 2. nav compacte sur mobile --- */
+@media (max-width:760px){
+  nav{padding-top:8px;padding-bottom:8px}
+  nav .w{padding:8px 0}
+  .logo{font-size:19px;gap:7px}
+  nav .logo svg{width:24px;height:24px}
+}
+
+/* --- 3+4. composition du hero sur petit ecran --- */
+@media (max-width:760px){
+  /* le CTA remonte juste apres le titre (ordre visuel uniquement) */
+  .hero-copy{display:flex;flex-direction:column;align-items:stretch}
+  .hero-copy > *{order:5}
+  .hero-copy .badge{order:1}
+  .hero-copy h1{order:2}
+  .hero-copy .hero-cta{order:3;margin-bottom:22px}
+  .hero-copy .lead{order:4}
+}
+
+@media (max-width:480px){
+  .hero{padding-top:28px}
+  .hero-copy h1{font-size:clamp(28px,8vw,34px);line-height:1.08;margin-bottom:18px}
+  :lang(fr) .hero-copy h1{font-size:clamp(27px,7.7vw,33px)}
+  .hero-copy .badge{font-size:11px;padding:6px 12px;margin-bottom:18px}
+  .hero-copy .lead{font-size:14.5px;line-height:1.6;margin-bottom:22px}
+  .benefits{gap:10px;margin-bottom:22px}
+  .benefit .b-body{font-size:13px}
+  .hero-cta .btn{min-height:48px}
+}

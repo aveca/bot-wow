@@ -15,12 +15,12 @@
 <meta property="og:description" content="Fishing assistant for WoW Classic: measured detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
 <meta property="og:url" content="https://bot-wow.com/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="./assets/favicon.svg?v=20261022-5f733944" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=20261022-781b1936" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/site.css?v=20261022-5f733944">
-<link rel="stylesheet" href="./assets/style.css?v=20261022-5f733944">
+<link rel="stylesheet" href="./assets/site.css?v=20261022-781b1936">
+<link rel="stylesheet" href="./assets/style.css?v=20261022-781b1936">
 </head>
 <body>
 
@@ -253,6 +253,11 @@
 </section>
 
 <!-- ======================================================== PRICE: ONE CLICK -->
+<!-- Ancre historique : 74 liens du site (pages FR/EN, docs, legal) pointent
+     vers #offre, nom d'origine de la section tarif. Sans cet alias, tous
+     ces liens etaient morts : ils ouvraient l'accueil sans jamais amener
+     a l'offre. -->
+<span id="offre" class="anchor-alias" aria-hidden="true"></span>
 <section class="pad price" id="buy">
   <div class="w">
     <header class="section-head">
@@ -376,8 +381,8 @@
   </div>
 </footer>
 
-<div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>lifetime licence</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy">Buy</a></div>
+<div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>lifetime licence</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Buy</a></div>
 
-<script type="module" src="./assets/app.js?v=20261022-5f733944"></script>
+<script type="module" src="./assets/app.js?v=20261022-781b1936"></script>
 </body>
 </html>

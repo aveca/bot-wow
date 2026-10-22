@@ -1,47 +1,80 @@
 /**
- * analytics.js — instrumentation minimale du parcours.
+ * analytics.js — collecte de parcours first-party.
  *
- * PRINCIPES
- *  - AUCUNE DONNEE PERSONNELLE : ni email, ni nom, ni identifiant de
- *    commande. Seulement des evenements nommes et des proprietes
- *    non identifiantes (un identifiant de CTA, un mode, un horizon).
- *  - SILENCIEUX PAR DEFAUT : sans point de collecte configure, rien ne
- *    sort du navigateur. Les evenements restent dans un tampon memoire
- *    (window.__botwowEvents) pour inspection et test, puis sont effaces.
- *  - TRANSPARENT : le point de collecte se declare explicitement, soit
- *    par <meta name="botwow-track-endpoint" content="https://...">, soit
- *    par window.BOTWOW_TRACK_ENDPOINT avant le chargement du module.
- *  - SANS DEPENDANCE : envoi par navigator.sendBeacon quand il existe,
- *    sinon fetch en mode "keepalive", sinon abandon silencieux.
+ * Les evenements sont envoyes au meme domaine que le site (/api/track,
+ * Cloudflare Pages Function) et persistes dans D1. Aucun service tiers,
+ * aucun identifiant publicitaire, aucune dependance.
  *
- * EVENEMENTS (nom, proprietes)
- *   cta_click      { cta: id du CTA, target: href, place: section }
- *   planner_mode   { mode: 'prudent' | 'equilibre' | 'exploration' }
- *   ownership_view { years: 1 | 2 | 3 }
- *   checkout_start { product: 'bot-wow-lifetime' }
- *   waitlist_join  { } (le succes est signale par le serveur, pas ici)
+ * SCHEMA (version 1)
+ *   { v: 1, event: nom, page: chemin, lang: 'en'|'fr', props: {...} }
  *
- * Ces evenements mesurent des INTENTIONNERS clics, pas des achats : un
- * achat se compte cote Worker (webhook Mollie), jamais ici.
+ * EVENEMENTS
+ *   page_view      { step }                       affichage de page
+ *   cta_click      { cta, step }                  clic sur un CTA
+ *   planner_mode   { mode }                       mode du planificateur
+ *   ownership_view { years }                      horizon du cout de possession
+ *   checkout_start { step }                       depart du checkout
+ *   checkout_error { step }                       echec du checkout
+ *
+ * REGLES
+ *   - aucune donnee personnelle : ni email, ni nom, ni identifiant de
+ *     commande, ni texte libre ;
+ *   - Do Not Track respecte : rien n est envoye ;
+ *   - l'interface n'est jamais bloquee par la collecte : les echecs sont
+ *     silencieux et sans nouvelle tentative ;
+ *   - tampon memoire borne (20 evenements) et vide a l'envoi.
  */
 (function () {
-  var ENDPOINT = '';
+  var SCHEMA = 1;
+  /* Point de collecte : MEME ORIGINE par defaut (first-party, aucun
+     identifiant publicitaire tiers). Surchargeable par
+     window.BOTWOW_TRACK_ENDPOINT pour un test ou un environnement
+     different — jamais un secret : c'est une URL publique. */
+  var ENDPOINT = (typeof window !== 'undefined' && window.BOTWOW_TRACK_ENDPOINT) || '/api/track';
+  var MAX_BUFFER = 20;
+
+  var buffer = [];
+  var enabled = true;
+
   try {
-    var meta = document.querySelector('meta[name="botwow-track-endpoint"]');
-    if (meta && meta.content) ENDPOINT = meta.content;
-  } catch (e) { /* meta absent : rien ne part */ }
-  if (!ENDPOINT && typeof window.BOTWOW_TRACK_ENDPOINT === 'string') {
-    ENDPOINT = window.BOTWOW_TRACK_ENDPOINT;
+    if (navigator.doNotTrack === '1' || window.doNotTrack === '1') enabled = false;
+  } catch (e) { /* API absente : on continue */ }
+
+  function lang() {
+    var l = (document.documentElement.lang || 'en').toLowerCase();
+    return l.indexOf('fr') === 0 ? 'fr' : 'en';
   }
 
-  var buffer = (window.__botwowEvents = window.__botwowEvents || []);
-  var MAX = 100;
+  function page() {
+    var p = location.pathname || '/';
+    if (p.length > 64) p = p.slice(0, 64);
+    return p;
+  }
 
-  function send(event, props) {
-    var payload = { event: event, props: props || {}, at: Date.now() };
-    buffer.push(payload);
-    if (buffer.length > MAX) buffer.splice(0, buffer.length - MAX);
-    if (!ENDPOINT) return; // aucun point de collecte : rien ne sort
+  /* Un evenement de test est demande explicitement (?telemetry_test=ref). */
+  function testRef() {
+    try {
+      var m = /[?&]telemetry_test=([a-z0-9_-]{1,40})/.exec(location.search);
+      return m ? m[1] : null;
+    } catch (e) { return null; }
+  }
+
+  var test = testRef();
+
+  function build(event, props) {
+    var payload = {
+      v: SCHEMA,
+      event: event,
+      page: page(),
+      lang: lang(),
+      props: props || {},
+    };
+    if (test) { payload.test = true; payload.ref = test; }
+    return payload;
+  }
+
+  function send(payload) {
+    if (!enabled) return;
     try {
       var body = JSON.stringify(payload);
       if (navigator.sendBeacon) {
@@ -49,19 +82,44 @@
       } else if (window.fetch) {
         window.fetch(ENDPOINT, {
           method: 'POST',
-          body,
+          body: body,
           keepalive: true,
           headers: { 'Content-Type': 'application/json' },
-          mode: 'cors',
+          mode: 'same-origin',
           credentials: 'omit',
         }).catch(function () {});
       }
-    } catch (e) { /* envoi impossible : on ignore, le tampon reste local */ }
+    } catch (e) { /* la collecte ne doit jamais casser l'interface */ }
   }
 
-  window.botwowTrack = send;
+  function track(event, props) {
+    if (!enabled) return;
+    var payload = build(event, props);
+    buffer.push(payload);
+    if (buffer.length > MAX_BUFFER) buffer.shift();
+    send(payload);
+  }
 
-  /* 1. Clics sur les elements marques (delegation : marche meme si le
+  /* Publie l'API pour l'application (et pour les tests). */
+  window.botwowTrack = track;
+  window.botwowTrackFlush = function () {
+    if (!enabled || !buffer.length) return;
+    try {
+      var body = JSON.stringify({ v: SCHEMA, batch: buffer });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }));
+      } else if (window.fetch) {
+        window.fetch(ENDPOINT, {
+          method: 'POST', body: body, keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          mode: 'same-origin', credentials: 'omit',
+        }).catch(function () {});
+      }
+    } catch (e) { /* ignore */ }
+    buffer = [];
+  };
+
+  /* 1. Clics sur les elements marques (delegation : fonctionne meme si le
         contenu est injecte plus tard par app.js). */
   document.addEventListener('click', function (ev) {
     var el = ev.target.closest ? ev.target.closest('[data-track]') : null;
@@ -71,32 +129,40 @@
     var props = {};
     var id = el.getAttribute('data-cta-id');
     if (id) props.cta = id;
-    var href = el.getAttribute('href');
-    if (href) props.target = href;
     var place = el.closest('[id]');
-    if (place && place.id) props.place = place.id;
-    send(name, props);
-  });
+    if (place && place.id) props.step = place.id;
+    track(name, props);
+  }, { passive: true });
 
-  /* 2. Changement de mode du planificateur (le hero). */
+  /* 2. Mode du planificateur. */
   document.addEventListener('click', function (ev) {
     var btn = ev.target.closest ? ev.target.closest('#plannerModes button[data-mode]') : null;
     if (!btn) return;
-    send('planner_mode', { mode: btn.getAttribute('data-mode') });
-  });
+    track('planner_mode', { mode: btn.getAttribute('data-mode') });
+  }, { passive: true });
 
   /* 3. Horizon du calculateur de cout de possession. */
   document.addEventListener('click', function (ev) {
     var btn = ev.target.closest ? ev.target.closest('.own-switch button[data-years]') : null;
     if (!btn) return;
-    send('ownership_view', { years: Number(btn.getAttribute('data-years')) });
-  });
+    track('ownership_view', { years: Number(btn.getAttribute('data-years')) });
+  }, { passive: true });
 
-  /* 4. Depart du checkout : l'utilisateur a saisi son email et valide. */
+  /* 4. Depart et echec du checkout. */
   document.addEventListener('submit', function (ev) {
     var form = ev.target;
     if (form && form.id === 'buyForm') {
-      send('checkout_start', { product: 'bot-wow-lifetime' });
+      track('checkout_start', { step: 'buy_form' });
     }
   }, true);
+
+  /* 5. Affichage de page (une fois, au chargement). */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { track('page_view', { step: 'load' }); });
+  } else {
+    track('page_view', { step: 'load' });
+  }
+
+  /* 6. Fin de page : on vide le tampon. */
+  window.addEventListener('pagehide', function () { window.botwowTrackFlush(); });
 })();
