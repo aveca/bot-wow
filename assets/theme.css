@@ -798,3 +798,287 @@ footer .foot-mail{color:var(--gold);font-family:var(--mono);font-size:13px}
    l'animation (l'observer d'app.js devenant sans effet, code laissé pour
    compat) ; la signature de mouvement = sweep du radar + hover micro. */
 .reveal{opacity:1;transform:none}
+/* ==========================================================================
+   COMBAT COMPONENTS — Design "Observation Station" v4
+   Spécifiquement conçu pour différencier BOT-WOW de la concurrence générique.
+   Aucune carte SaaS, aucun gradient décoratif, aucun ALL-CAPS eyebrow.
+   Chaque élément a une fonction instrumentée.
+   ========================================================================== */
+
+/* ------------------------------------------------ HERO SONAR — L'effet signature */
+.hero-sonar{position:relative;overflow:hidden}
+.hero-sonar::before{
+  content:"";position:absolute;inset:-50%;border-radius:50%;
+  border:2px solid var(--cyan-line);animation:sonar-pulse 4s linear infinite;
+  pointer-events:none;opacity:0.6;
+}
+.hero-sonar::after{
+  content:"";position:absolute;inset:-30%;border-radius:50%;
+  border:1px solid var(--cyan-line);animation:sonar-pulse 6s linear infinite;
+  animation-delay:2s;pointer-events:none;opacity:0.4;
+}
+@keyframes sonar-pulse{0%{transform:scale(0.4);opacity:0.8}100%{transform:scale(1.6);opacity:0}}
+
+/* ------------------------------------------------ METRIC CARD — Preuve instrumentée */
+.metric-card{
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,var(--plate) 0%, rgba(10,14,28,.55) 100%);
+  padding:20px 22px 16px;position:relative;overflow:hidden;
+}
+.metric-card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan-line),transparent 70%);
+}
+.metric-card .m-k{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  color:var(--mut2);text-transform:uppercase;display:block;margin-bottom:6px;
+}
+.metric-card .m-v{
+  font-family:var(--mono);font-weight:700;font-size:30px;color:var(--txt);
+  letter-spacing:-.02em;display:block;
+}
+.metric-card .m-v small{font-size:12px;color:var(--mut2);font-weight:400}
+.metric-card .m-note{display:block;color:var(--mut);font-size:12.5px;margin-top:4px}
+.metric-card .m-v.cy{color:var(--cyan)}.metric-card .m-v.am{color:var(--gold)}
+.metric-card .m-v.green{color:var(--green)}.metric-card .m-v.red{color:var(--red)}
+.metric-card.amber::before{background:linear-gradient(90deg,var(--gold-line),transparent 70%)}
+
+/* ------------------------------------------------ VS CARD — Comparaison frontale */
+.vs-card{border:1px solid var(--line);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,var(--plate) 0%, rgba(10,14,28,.55) 100%);
+  overflow:hidden;margin-bottom:14px;}
+.vs-card .v-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;border-bottom:1px solid var(--line);background:var(--plate2);
+}
+.vs-card .v-cap{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  color:var(--mut2);text-transform:uppercase;
+}
+.vs-card .v-badge{
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 10px;border-radius:999px;}
+.v-badge.ok{color:var(--green);border:1px solid var(--green-line);background:var(--green-dim)}
+.v-badge.no{color:var(--red);border:1px solid var(--red-line);background:var(--red-dim)}
+.v-badge.warn{color:var(--gold);border:1px solid var(--gold-line);background:var(--gold-dim)}
+.v-card-body{padding:14px 18px;}
+.v-card-body p{color:var(--mut);font-size:14px;margin:0;line-height:1.5}
+.v-card-body .v-desc{color:var(--mut2);font-size:13px;margin-top:4px;font-family:var(--mono)}
+
+/* ------------------------------------------------ VERDICT BANDEAU */
+.verdict{
+  border:1px solid var(--cyan-line);border-radius:var(--r);
+  background:linear-gradient(180deg,rgba(70,230,255,.08) 0%, var(--panel) 100%);
+  padding:24px 28px;margin-top:30px;}
+.verdict h2{
+  font-family:var(--mono);font-size:12px;letter-spacing:.18em;
+  color:var(--mut2);text-transform:uppercase;margin:0 0 16px;}
+.verdict .v-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--line);}
+.verdict .v-row:last-child{border-bottom:0}
+.verdict .v-item{font-family:var(--sans);font-size:14px;color:var(--mut)}
+.verdict .v-item b{color:var(--txt)}
+.verdict .v-val{font-family:var(--mono);font-weight:700}
+.verdict .v-val.win{color:var(--cyan)}.verdict .v-val.loss{color:var(--red)}
+.verdict .v-val.warn{color:var(--gold)}
+
+/* ------------------------------------------------ HONESTY BANNER */
+.honest-band{
+  border:1px solid var(--gold-line);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,rgba(255,181,69,.08) 0%, var(--panel) 100%);
+  padding:20px 24px;margin:26px 0;display:flex;gap:12px;align-items:flex-start;}
+.honest-band .hb-icon{
+  width:32px;height:32px;border-radius:8px;background:var(--gold-dim);
+  border:1px solid var(--gold-line);display:flex;align-items:center;
+  justify-content:center;color:var(--gold);font-weight:900;
+  font-family:var(--mono);font-size:13px;margin-right:12px;}
+.honest-band .hb-body{flex:1}
+.honest-band .hb-t{font-weight:700;color:var(--txt);font-size:14px;margin-bottom:4px}
+.honest-band .hb-d{color:var(--mut);font-size:13px;line-height:1.5}
+
+/* ------------------------------------------------ DOC LINKS ALT */
+.docstrip-alt{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:14px;margin-top:26px;}
+.docstrip-alt .dl-card{
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.55) 100%);
+  padding:20px 22px;transition:border-color .16s ease,transform .16s ease;}
+.docstrip-alt .dl-card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.docstrip-alt .dl-card .dc-k{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+  color:var(--mut2);text-transform:uppercase;display:block;margin-bottom:8px;}
+.docstrip-alt .dl-card .dc-t{font-weight:700;color:var(--txt);font-size:16px;margin-bottom:6px}
+.docstrip-alt .dl-card .dc-d{color:var(--mut);font-size:13.5px;margin-bottom:10px;line-height:1.5}
+.docstrip-alt .dl-card a{
+  color:var(--cyan);font-family:var(--mono);font-size:12px;font-weight:700;
+  text-decoration:none;letter-spacing:.06em;}
+.docstrip-alt .dl-card a:hover{text-decoration:underline;color:var(--cyan-line)}
+
+/* ------------------------------------------------ RESPONSIVE COMBAT */
+@media (max-width:1024px){
+  .vs-card{grid-template-columns:1fr}.metric-card .m-v{font-size:24px}}
+@media (max-width:760px){
+  .verdict .v-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .verdict .v-val{margin-top:4px}
+  .honest-band{flex-direction:column;align-items:flex-start}
+  .honest-band .hb-icon{margin-right:0;margin-bottom:8px}}
+/* ==========================================================================
+   PREMIUM COMPONENTS — "Observation Station" v5
+   Hero sonar, metrics grid, ledger, vs-quick, evidence, one-click checkout
+   ========================================================================== */
+
+/* ------------------------------------------------ HERO GRID & SONAR BG */
+.hero-grid{display:grid;grid-template-columns:1fr 420px;gap:40px;align-items:start}
+@media (max-width:1024px){.hero-grid{grid-template-columns:1fr;gap:30px}.radar-panel{order:-1}}
+.sonar-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;opacity:0.6}
+@media (prefers-reduced-motion:reduce){.sonar-bg{display:none}.sonar-sweep{animation:none}}
+
+/* ------------------------------------------------ RADAR PANEL */
+.radar-panel{position:relative;border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.7) 100%);overflow:hidden}
+.radar-panel.hero-sonar::before,.radar-panel.hero-sonar::after{content:"";position:absolute;inset:-40%;border-radius:50%;border:1px solid var(--cyan-line);animation:sonar-pulse 5s linear infinite;pointer-events:none;opacity:0.4}
+.radar-panel.hero-sonar::after{animation-delay:2.5s;inset:-25%;opacity:0.25}
+@keyframes sonar-pulse{0%{transform:scale(0.3);opacity:0.6}100%{transform:scale(1.8);opacity:0}}
+.radar-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--plate2)}
+.radar-title{display:flex;align-items:center;gap:10px;color:var(--txt);font-weight:700;font-size:14px}
+.radar-icon{width:20px;height:20px;color:var(--cyan);opacity:0.85}
+.live-pulse{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);padding:4px 10px;border-radius:999px;border:1px solid var(--gold-line);background:var(--gold-dim)}
+.pulse-ring{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pulse-ring 1.5s ease-out infinite}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(2.5);opacity:0}}
+.radar-body{position:relative;padding:20px}
+.radar-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 18px;border-top:1px solid var(--line);background:var(--bg2)}
+.radar-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.radar-stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut2);text-transform:uppercase}
+.radar-stat .v{font-family:var(--mono);font-weight:700;font-size:16px}
+
+/* ------------------------------------------------ SECTION HEAD */
+.section-head{text-align:center;max-width:760px;margin:0 auto 36px}
+.section-head .eyebrow{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;padding:4px 10px;border:1px solid var(--cyan-line);border-radius:999px;background:var(--cyan-dim)}
+.section-head .h2{font-size:clamp(28px,4.5vw,40px);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:0 0 10px}
+.section-head .sub{color:var(--mut);font-size:16px;line-height:1.6}
+
+/* ------------------------------------------------ METRICS GRID */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media (max-width:1024px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.metrics-grid{grid-template-columns:1fr}}
+.metric-card{position:relative;border:1px solid var(--line);border-radius:var(--r-sm);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.55) 100%);padding:22px 20px 18px;overflow:hidden;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.metric-card:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+.metric-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--cyan-line),transparent 70%)}
+.metric-card.amber::before{background:linear-gradient(90deg,var(--gold-line),transparent 70%)}
+.metric-card .m-k{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--mut2);text-transform:uppercase;margin-bottom:8px}
+.metric-card .m-v{font-family:var(--mono);font-weight:700;font-size:clamp(28px,4vw,36px);color:var(--txt);letter-spacing:-.02em;line-height:1;display:block}
+.metric-card .m-v small{font-size:12px;color:var(--mut2);font-weight:400;vertical-align:super}
+.metric-card .m-note{display:block;color:var(--mut);font-size:12.5px;margin-top:10px;line-height:1.4}
+.metric-card .m-v.cy{color:var(--cyan)}.metric-card .m-v.am{color:var(--gold)}.metric-card .m-v.green{color:var(--green)}.metric-card .m-v.red{color:var(--red)}
+.metric-spark{position:absolute;bottom:0;left:0;right:0;height:48px;pointer-events:none;opacity:0.6}
+.metric-spark svg{width:100%;height:100%;display:block}
+
+/* ------------------------------------------------ MODULE LEDGER */
+.ledger{display:flex;flex-direction:column;gap:14px}
+.ledger-row{display:grid;grid-template-columns:1fr 280px 140px;gap:18px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.45) 100%);padding:16px 20px;transition:border-color .16s ease}
+.ledger-row:hover{border-color:var(--line2)}
+.ledger-row.header{background:var(--plate2);font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--mut2);text-transform:uppercase;border-color:var(--line2)}
+.ledger-main{display:flex;flex-direction:column;gap:4px}
+.ledger-name{font-weight:700;font-size:15px;color:var(--txt)}
+.ledger-desc{color:var(--mut);font-size:13px;line-height:1.5}
+.ledger-tags{display:flex;flex-wrap:wrap;gap:8px}
+.ledger-tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid}
+.ledger-tag.shipped{color:var(--green);border-color:var(--green-line);background:var(--green-dim)}
+.ledger-tag.dev{color:var(--gold);border-color:var(--gold-line);background:var(--gold-dim)}
+.ledger-tag.plan{color:var(--violet);border-color:var(--violet-line);background:var(--violet-dim)}
+.ledger-tag.never{color:var(--red);border-color:var(--red-line);background:var(--red-dim)}
+.ledger-progress{display:flex;align-items:center;gap:10px}
+.ledger-bar{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ledger-bar > span{display:block;height:100%;border-radius:3px;transition:width .4s ease}
+.ledger-bar .p-shipped{background:var(--green)}.ledger-bar .p-dev{background:var(--gold)}.ledger-bar .p-plan{background:var(--violet)}.ledger-bar .p-never{background:var(--red)}
+.ledger-pct{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--mut);min-width:42px;text-align:right}
+.ledger-status{display:flex;align-items:center;justify-content:center}
+.ledger-status .st{font-size:10.5px;padding:4px 12px}
+@media (max-width:900px){.ledger-row{grid-template-columns:1fr 140px;grid-template-areas:"main status""tags progress"}.ledger-main{grid-area:main}.ledger-status{grid-area:status}.ledger-tags{grid-area:tags}.ledger-progress{grid-area:progress}.ledger-desc{display:none}}
+
+/* ------------------------------------------------ VS QUICK CARDS */
+.vs-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+@media (max-width:1024px){.vs-quick{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.vs-quick{grid-template-columns:1fr}}
+.vs-card{position:relative;border:1px solid var(--line);border-radius:var(--r-sm);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.55) 100%);overflow:hidden;transition:border-color .2s ease,transform .2s ease}
+.vs-card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.vs-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--line)}
+.vs-card.win::before{background:linear-gradient(90deg,var(--green),var(--green-line))}
+.vs-card.warn::before{background:linear-gradient(90deg,var(--gold),var(--gold-line))}
+.v-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--plate2)}
+.v-cap{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--mut2);text-transform:uppercase}
+.v-badge{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid}
+.v-badge.ok{color:var(--green);border-color:var(--green-line);background:var(--green-dim)}
+.v-badge.warn{color:var(--gold);border-color:var(--gold-line);background:var(--gold-dim)}
+.v-badge.loss{color:var(--red);border-color:var(--red-line);background:var(--red-dim)}
+.v-card-body{padding:14px 16px}
+.v-card-body p{color:var(--mut);font-size:13.5px;margin:0;line-height:1.5}
+.v-card-body .v-desc{display:block;color:var(--mut2);font-size:12px;margin-top:6px;font-family:var(--mono)}
+
+/* ------------------------------------------------ EVIDENCE STRIP */
+.evidence-strip{position:relative;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin:20px 0;background:var(--bg)}
+.evidence-strip img{display:block;width:100%;height:auto;max-height:320px;object-fit:cover;transition:transform .4s ease}
+.evidence-strip:hover img{transform:scale(1.02)}
+.evidence-caption{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(180deg,transparent 0%,rgba(5,7,15,.95) 100%)}
+.ev-k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;font-weight:700}
+.ev-v{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right}
+
+/* ------------------------------------------------ PRICE CARD ENHANCED */
+.price-card{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.6) 100%);padding:32px;max-width:520px;margin:0 auto;position:relative;overflow:hidden}
+.price-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-line))}
+.price-tag{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:16px;padding:4px 10px;border:1px solid var(--gold-line);border-radius:999px;background:var(--gold-dim);width:fit-content}
+.amt{font-size:clamp(40px,6vw,56px);font-weight:900;letter-spacing:-.03em;color:var(--txt);margin:8px 0 4px}
+.once{color:var(--mut);font-size:14px;margin:0 0 24px}
+.price-includes{list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:12px}
+.price-includes li{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg2);transition:border-color .16s ease,background .16s ease}
+.price-includes li:hover{border-color:var(--line2);background:var(--plate)}
+.price-includes .ico{width:20px;height:20px;color:var(--green);flex:none;margin-top:2px}
+.form-label{display:block;font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:8px}
+.input-group{display:flex;gap:12px}
+.input-group .pm-input{flex:1;min-width:0}
+.input-group .btn{flex:none;white-space:nowrap}
+@media (max-width:560px){.input-group{flex-direction:column}.input-group .btn{width:100%}}
+.btn-loading{display:none}
+.btn.loading .btn-text{display:none}
+.btn.loading .btn-loading{display:inline-flex}
+.spinner{width:20px;height:20px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ------------------------------------------------ DOC STRIP ALT */
+.docstrip-alt{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.dl-card{border:1px solid var(--line);border-radius:var(--r-sm);background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.55) 100%);padding:22px 24px;display:flex;flex-direction:column;gap:8px;transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease}
+.dl-card:hover{border-color:var(--line2);transform:translateY(-3px);box-shadow:var(--shadow-soft)}
+.dc-k{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--mut2);text-transform:uppercase}
+.dc-t{font-weight:700;font-size:17px;color:var(--txt)}
+.dc-d{color:var(--mut);font-size:13.5px;line-height:1.5;flex:1}
+.dl-card a{color:var(--cyan);font-family:var(--mono);font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;align-self:flex-start}
+.dl-card a:hover{text-decoration:underline;color:var(--cyan-line)}
+
+/* ------------------------------------------------ HERO COPY REFINEMENTS */
+.hero-copy{max-width:580px}
+.hero-copy .badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);padding:6px 12px;border:1px solid var(--cyan-line);border-radius:999px;background:var(--cyan-dim);margin-bottom:20px}
+.hero-copy .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:dot-pulse 1.5s ease-out infinite}
+@keyframes dot-pulse{0%{opacity:1;transform:scale(1)}100%{opacity:0.3;transform:scale(0.8)}}
+.hero-copy h1{font-size:clamp(34px,5.5vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1.05;margin:0 0 18px;color:var(--txt)}
+.hero-sub{font-size:17px;line-height:1.7;color:var(--mut);margin-bottom:28px;max-width:520px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:24px}
+.hero-trust{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--mut2)}
+.hero-trust .ico{width:16px;height:16px;color:var(--green);flex:none;margin-right:6px}
+
+/* ------------------------------------------------ BADGE SONAR ANIMATION */
+.badge[data-sonar]{position:relative}
+.badge[data-sonar]::before{content:"";position:absolute;inset:-8px;border-radius:999px;border:1px solid var(--cyan-line);opacity:0.4;animation:badge-sonar 3s ease-out infinite}
+@keyframes badge-sonar{0%{transform:scale(1);opacity:0.4}100%{transform:scale(1.8);opacity:0}}
+
+/* ------------------------------------------------ RESPONSIVE PREMIUM */
+@media (max-width:760px){
+  .hero-copy h1{font-size:30px}
+  .hero-sub{font-size:15.5px}
+  .radar-foot{grid-template-columns:repeat(2,1fr)}
+  .verdict .v-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .verdict .v-val{margin-top:4px}
+  .honest-band{flex-direction:column;align-items:flex-start}
+  .honest-band .hb-icon{margin-right:0;margin-bottom:8px}
+  .price-card{padding:24px}
+}

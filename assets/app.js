@@ -210,11 +210,76 @@ function wireReveal() {
   items.forEach((el) => io.observe(el));
 }
 
+/* -------------------------------------------------- module ledger */
+async function loadModuleLedger() {
+  const container = document.getElementById('moduleLedger');
+  if (!container) return;
+  try {
+    const res = await fetch(new URL('assets/modules.json', import.meta.url), { cache: 'no-cache' });
+    const data = await res.json();
+    const modules = data.modules || [];
+    const statusOrder = ['available', 'development', 'planned'];
+    const statusClass = { 'available': 'shipped', 'development': 'dev', 'planned': 'plan' };
+    const statusLabel = data.statuses || { 'available': { en: 'Available' }, 'development': { en: 'In development' }, 'planned': { en: 'Planned' } };
+    const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+    
+    // Sort by status order, then by id
+    modules.sort((a, b) => {
+      const ai = statusOrder.indexOf(a.status);
+      const bi = statusOrder.indexOf(b.status);
+      if (ai !== bi) return ai - bi;
+      return (a.id || '').localeCompare(b.id || '');
+    });
+
+    // Build rows
+    for (const mod of modules) {
+      const shippedCount = (mod.shipped?.[isFr ? 'fr' : 'en'] || []).length;
+      const pendingCount = (mod.pending?.[isFr ? 'fr' : 'en'] || []).length;
+      const total = shippedCount + pendingCount;
+      const progress = total > 0 ? Math.round((shippedCount / total) * 100) : 0;
+      
+      const row = document.createElement('div');
+      row.className = 'ledger-row';
+      const title = mod.title?.[isFr ? 'fr' : 'en'] || mod.id;
+      const desc = mod.summary?.[isFr ? 'fr' : 'en'] || '';
+      const status = mod.status || 'planned';
+      const sClass = statusClass[status] || 'dev';
+      const sLabel = statusLabel[status]?.[isFr ? 'fr' : 'en'] || status;
+      
+      row.innerHTML = `
+        <div class="ledger-main">
+          <span class="ledger-name">${title}</span>
+          <span class="ledger-desc">${desc}</span>
+          <div class="ledger-tags" aria-label="Features"></div>
+        </div>
+        <div class="ledger-progress">
+          <div class="ledger-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><span style="width:${progress}%"></span></div>
+          <span class="ledger-pct">${progress}%</span>
+        </div>
+        <div class="ledger-status"><span class="st st-${sClass}"><i></i>${sLabel}</span></div>
+      `;
+      container.appendChild(row);
+      // Add feature tags from shipped items
+      const tagsEl = row.querySelector('.ledger-tags');
+      const shipped = mod.shipped?.[isFr ? 'fr' : 'en'] || [];
+      shipped.slice(0, 4).forEach(f => {
+        const tag = document.createElement('span');
+        tag.className = 'ledger-tag';
+        tag.textContent = f.length > 40 ? f.slice(0, 37) + '…' : f;
+        tagsEl.appendChild(tag);
+      });
+    }
+  } catch (e) {
+    console.warn('Module ledger load failed:', e);
+  }
+}
+
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
   wireWaitlist();
   wireReveal();
+  loadModuleLedger();
   try {
     // Résolu depuis l'URL du MODULE (pas de la page) : la carte doit se
     // charger identiquement depuis /, /fr/ et /docs/... (bug FR repéré en QA

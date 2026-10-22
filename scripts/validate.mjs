@@ -67,7 +67,7 @@ const PUBLIC_PAGES = [
   "index.html", "demo.html", "success.html", "cancel.html", "404.html",
   "features.html", "fishing.html", "getting-started.html",
   "compatibility.html", "roadmap.html", "faq.html",
-  "modules.html",
+  "modules.html", "compare.html",
   "docs/index.html", "docs/install.html", "docs/changelog.html",
   "docs/known-issues.html", "docs/license.html",
   "docs/fr/index.html", "docs/fr/install.html", "docs/fr/changelog.html",
@@ -78,6 +78,7 @@ const PUBLIC_PAGES = [
   "fr/404.html", "fr/features.html", "fr/fishing.html",
   "fr/getting-started.html", "fr/compatibility.html", "fr/roadmap.html",
   "fr/faq.html", "fr/modules.html",
+  "fr/compare.html",
   "assets/favicon.svg", "robots.txt", "sitemap.xml",
 ];
 for (const file of PUBLIC_PAGES) {

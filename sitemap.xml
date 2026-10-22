@@ -33,6 +33,10 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/modules.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/modules.html"/>
   </url>
+  <url><loc>https://bot-wow.com/compare.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/compare.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/compare.html"/>
+  </url>
   <url><loc>https://bot-wow.com/faq.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
