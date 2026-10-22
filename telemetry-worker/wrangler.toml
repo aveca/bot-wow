@@ -1,0 +1,25 @@
+# botwow-telemetry — point de collecte first-party de la telemetrie de
+# parcours BOT-WOW.
+#
+# Ce Worker est distinct de `botwow-api` (paiement, e-mails, API de
+# licence) : il ne touche a aucune logique metier. Son seul role est de
+# valider puis persister des evenements de parcours dans une base D1
+# dediee.
+#
+# Route : https://bot-wow.com/api/track  (meme origine que le site ->
+#          first-party, aucun identifiant publicitaire tiers).
+# Secrait : TELEMETRY_SALT (sel de hachage de l'IP pour le rate limiting).
+#
+# Deploiement : wrangler deploy -c telemetry-worker/wrangler.toml
+
+name = "botwow-telemetry"
+main = "index.js"
+compatibility_date = "2026-01-01"
+
+[[d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "botwow-analytics"
+database_id = "935b0632-d712-4266-bece-028c70b545be"
+
+[observability]
+enabled = true

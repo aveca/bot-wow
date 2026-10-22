@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { computeStamp, applyStamp } from './versionne-assets.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.resolve(ROOT, process.argv[2] || '_site');
@@ -108,9 +109,20 @@ for (const d of DIRS) {
 }
 
 const listed = fs.readdirSync(out).sort();
+
+/* Versionnement automatique de l'artefact publie.
+   Le stamp est derive du CONTENU des assets : une feuille de style
+   modifiee produit donc une nouvelle cle de cache, automatiquement. Avant
+   V11, le stamp venait d'une execution locale du script de versionnage :
+   un oubli suffisait a publier un HTML pointant sur un CSS perime, et le
+   navigateur servait alors l'ancienne version. */
+const stamp = computeStamp(ROOT);
+applyStamp(out, stamp);
+
 console.log(`Artefact construit : ${path.relative(ROOT, out)}/`);
 console.log(`  ${count} entree(s) de premier niveau`);
 console.log(`  racine : ${listed.join(', ')}`);
+console.log(`  stamp des assets : ${stamp}`);
 
 /* Controle de securite : rien d'interdit ne doit se trouver dans
    l'artefact. Verifie, ne suppose pas. */

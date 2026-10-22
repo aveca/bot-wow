@@ -85,13 +85,71 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   for (const ev of ['planner_mode', 'ownership_view', 'checkout_start']) {
     check(`evenement "${ev}" emis par le module`, an.includes(`'${ev}'`));
   }
+  // checkout_error est emis par le parcours d'achat (app.js), qui appelle
+  // l'API du module de collecte.
+  check('evenement "checkout_error" emis lors d\'un echec de paiement',
+    app.includes("'checkout_error'") || an.includes("'checkout_error'"));
   const htmlAll = ['index.html', 'compare.html', 'fr/index.html', 'fr/compare.html'].map(read).join('\n');
   check('evenement "cta_click" present sur les CTA', htmlAll.includes('data-track="cta_click"'));
   check('instrumentation : aucune donnee personnelle collectee',
     !/send\([^)]*email/i.test(an) && !/props\.email/.test(an));
   check('instrumentation : silence par defaut (aucun point de collecte en dur)', !/https?:\/\/[a-z0-9.-]+\/api\//i.test(an));
   check('instrumentation : point de collecte configurable', /botwow-track-endpoint|BOTWOW_TRACK_ENDPOINT/.test(an));
-  check('instrumentation : evenements consultables en memoire', /__botwowEvents/.test(an));
+  // V11 : le point de collecte est le MEME ORIGINE, et le tampon memoire
+  // est borne (les evenements ne restent pas en memoire indefiniment).
+  check('instrumentation : collecte sur le meme domaine (first-party)', /'\/api\/track'/.test(an));
+  check('instrumentation : tampon memoire borne', /MAX_BUFFER\s*=\s*(\d+)/.test(an)
+    && Number(an.match(/MAX_BUFFER\s*=\s*(\d+)/)[1]) <= 32,
+    `(${an.match(/MAX_BUFFER\s*=\s*(\d+)/)?.[1]})`);
+  check('instrumentation : le tampon est purge (pas de tableau infini)', /buffer\.shift\(\)|buffer\.length\s*=\s*0/.test(an));
+  check('instrumentation : Do Not Track respecte', /doNotTrack/.test(an));
+  check('instrumentation : la collecte ne bloque jamais l\'interface',
+    /\.catch\(function \(\) \{\}\)|catch \(e\)/.test(an));
+}
+
+// 6b. V11 : la collecte est PERSISTANTE (endpoint + Worker + schema)
+{
+  const worker = read('telemetry-worker/index.js');
+  check('point de collecte : Worker present', worker.includes('handleTrack'));
+  check('point de collecte : schema versionne', /SCHEMA_VERSION\s*=\s*1/.test(worker));
+  check('point de collecte : liste fermee des evenements',
+    /cta_click/.test(worker) && /planner_mode/.test(worker) && /ownership_view/.test(worker)
+    && /checkout_start/.test(worker) && /checkout_error/.test(worker));
+  check('point de collecte : aucune donnee personnelle acceptee',
+    !/email/.test(worker.split('EVENT_SPEC')[0] + '') || !/props\.email/.test(worker));
+  check('point de collecte : corps limite', /MAX_BODY_BYTES\s*=\s*\d+/.test(worker));
+  check('point de collecte : limitation de debit', /RATE_LIMIT_PER_MIN/.test(worker) && /429/.test(worker));
+  check('point de collecte : retention et purge', /RETENTION_DAYS/.test(worker));
+  check('point de collecte : IP jamais stockee en clair', /sha256Hex/.test(worker) && !/ip_hash.*=.*ip\b/.test(worker));
+  check('point de collecte : degrade gracieux sans base', /stored:\s*false/.test(worker));
+  const schema = read('scripts/telemetry-schema.sql');
+  check('schema D1 : table des evenements', /CREATE TABLE IF NOT EXISTS events/.test(schema));
+  check('schema D1 : table du rate limiting', /CREATE TABLE IF NOT EXISTS rl/.test(schema));
+  // colonnes reelles : on ignore les commentaires SQL
+  const schemaCode = schema.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n');
+  check('schema D1 : aucune colonne de donnee personnelle',
+    !/\bemail\b|\buser_?name\b|\border_id\b/i.test(schemaCode),
+    `(${schemaCode.match(/\bemail\b|\buser_?name\b|\border_id\b/i)?.[0] || ''})`);
+  // le Worker ne doit jamais compter une conversion : il mesure l'intention
+  const specBlock = worker.split('EVENT_SPEC')[1] || '';
+  check('point de collecte : ne compte pas les conversions',
+    !/conversion|purchase|payment_succeeded/.test(specBlock)
+    && !/INSERT INTO (?!events|rl)/i.test(worker));
+}
+
+// 6c. V11 : les pages du parcours sont instrumentees
+{
+  const demo = read('assets/demo.js');
+  check('demo : la demo charge le module d\'instrumentation (sans duplication)',
+    /import '\.\/analytics\.js/.test(demo));
+  for (const f of ['modules.html', 'fr/modules.html', 'demo.html', 'fr/demo.html']) {
+    const t = read(f);
+    check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
+  }
+  for (const f of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html']) {
+    const t = read(f);
+    check(`${f} : la barre d'action mobile est instrumentee`, /data-cta-id="mbar-buy"/.test(t));
+  }
 }
 
 // 7. Le prix reste unique et verifie

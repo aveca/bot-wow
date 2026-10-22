@@ -9,11 +9,11 @@
 <link rel="canonical" href="https://bot-wow.com/demo.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html">
-<link rel="icon" href="./assets/favicon.svg?v=20261022-5f733944" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=20261022-781b1936" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/style.css?v=20261022-5f733944">
+<link rel="stylesheet" href="./assets/style.css?v=20261022-781b1936">
 <style>
   .demo-wrap{max-width:1180px;margin:0 auto;padding:34px 22px 90px}
   .sim-banner{display:flex;gap:12px;align-items:flex-start;background:#1b1408;border:1px solid #6b4a12;color:#ffd27d;padding:12px 16px;border-radius:10px;margin:18px 0 26px;font-size:14px;line-height:1.5}
@@ -44,6 +44,12 @@
   .risk-hi{color:#ef7a7a;border-color:#4a1d1d;background:#1f0d0d}
   .backlink{display:inline-flex;align-items:center;gap:8px;color:#8b8ba7;text-decoration:none;font-size:13px;margin-bottom:6px}
   .backlink:hover{color:#e8e8f5}
+  .demo-close{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    background:#0d0d14;border:1px solid #1e1e2a;border-radius:14px;padding:20px;margin-top:26px}
+  .demo-close h3{margin:0 0 4px;font-size:16px;letter-spacing:.02em}
+  .demo-close .dc-sub{color:#8b8ba7;font-size:13px;margin:0;line-height:1.55;max-width:56ch}
+  .demo-close-cta{display:flex;gap:12px;flex-wrap:wrap}
+  @media(max-width:560px){.demo-close-cta{width:100%}.demo-close-cta .btn{flex:1 1 100%}}
   .note{color:#6d6d88;font-size:12px;margin-top:14px;line-height:1.55}
   code{background:#15151f;border:1px solid #23232f;border-radius:5px;padding:1px 5px;font-size:12px}
 </style>
@@ -138,8 +144,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Sortie du parcours : la demo est une etape, pas une fin. -->
+  <div class="demo-close">
+    <div>
+      <h3>Convinced by the simulated map?</h3>
+      <p class="dc-sub">The licence runs the same rules on your own account, on your own spots.
+        €20 once, no renewal.</p>
+    </div>
+    <div class="demo-close-cta">
+      <a class="btn btn-gold" href="./#offre" data-track="cta_click" data-cta-id="demo-offer">See the offer — €20.00</a>
+      <a class="btn btn-ghost" href="./compare.html" data-track="cta_click" data-cta-id="demo-compare">Compare the offers</a>
+    </div>
+  </div>
 </main>
 
-<script type="module" src="./assets/demo.js?v=20261022-5f733944"></script>
+<script type="module" src="./assets/demo.js?v=20261022-781b1936"></script>
 </body>
 </html>
