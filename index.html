@@ -15,12 +15,13 @@
 <meta property="og:description" content="Fishing assistant for WoW Classic: measured detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
 <meta property="og:url" content="https://bot-wow.com/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="./assets/favicon.svg?v=20261022-3ac653d5" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=20261022-8422e7a8" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/site.css?v=20261022-3ac653d5">
-<link rel="stylesheet" href="./assets/style.css?v=20261022-3ac653d5">
+<link rel="stylesheet" href="./assets/site.css?v=20261022-8422e7a8">
+<link rel="stylesheet" href="./assets/style.css?v=20261022-8422e7a8">
+<link rel="stylesheet" href="./assets/variant-c.css?v=20261022-8422e7a8">
 </head>
 <body>
 
@@ -49,69 +50,52 @@
   </div>
 </nav>
 
-<!-- ============================================================ HERO — OBSERVATION STATION v8 -->
-<section class="hero" id="hero">
-  <div class="w hero-grid">
-    <div class="hero-copy">
-      <span class="badge"><span class="dot"></span> Live in the wild — v1.2.0 instrumented</span>
-      <h1>The WoW Classic<br>fishing bot that<br>learns its spots.</h1>
-      <p class="lead">
-        Measured float detection, <b>persistent spot memory</b> and optimised rounds that chain
-        fishing spots together — plus an honest module ledger showing exactly what ships,
-        what is in development, and what is planned.
-      </p>
+<!-- ============================================================ HERO — OBSERVATION STATION v13 -->
+<section class="hero variant-c" id="hero">
+  <div class="hero__wrapper">
+    <span class="badge">Live in the wild — v1.2.0 instrumented</span>
+    <h1 class="hero__title">
+      <span class="word word--1">The WoW</span>
+      <span class="word word--2">Classic</span>
+      <span class="word word--3">fishing bot</span>
+    </h1>
+    <p class="hero__lead">
+      Measured float detection, <b>persistent spot memory</b> and optimised rounds that chain
+      fishing spots together — plus an honest module ledger showing exactly what ships,
+      what is in development, and what is planned.
+    </p>
 
-      <!-- 3 blocs de bénéfices — chacun porte une preuve vérifiable -->
-      <div class="benefits">
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>308 ms median bite → click</b><span>· Measured session after session, per-cycle logs</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Planner parity 12/12</b><span>· Same rules in JavaScript and Python — run the test</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Classic 1.13 + private servers</b><span>· Our reference environment, tested there</span></div></div>
-      </div>
-
-      <div class="hero-cta">
-        <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Try the browser demo</a>
-        <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">See the offer</a>
-      </div>
-      <p class="hero-price">
-        <b>€20.00</b><span class="hp-sep">·</span><span>one-time, lifetime licence</span><span class="hp-sep">·</span><a href="#buy" data-track="cta_click" data-cta-id="hero-price">what is included</a>
-      </p>
+    <div class="hero__cta">
+      <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Try the browser demo</a>
+      <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">See the offer</a>
     </div>
 
-    <!-- ============================================================ FILM
-         Le produit reel, enregistre dans la demo navigateur. La video est
-         muette, se joue UNE fois, et s'arrete sur sa derniere image.
-         Sous prefers-reduced-motion : poster statique, lecture a la
-         demande. La carte est SIMULEE (le site l'annonce). -->
-    <div class="film" id="heroFilm">
-      <div class="film-frame">
-        <span class="film-tag">REAL PRODUCT · SIMULATED MAP</span>
-        <video class="film-video" poster="/assets/media/demo-film-poster.jpg"
-               muted playsinline preload="metadata" data-film
-               aria-label="Enregistrement de la demonstration navigateur : le planificateur recalcule une ronde sur une carte simulee">
-          <source src="/assets/media/demo-film.mp4" type="video/mp4">
-        </video>
-        <div class="film-bar">
-          <span><b>REAL PRODUCT</b> · 9 s, recorded in the browser demo</span>
-          <span>SIMULATED MAP</span>
-        </div>
-        <button class="film-replay" type="button" data-film-replay data-play-label="Play the film" hidden>Replay the film</button>
-      </div>
-      <div class="film-hud">
-        <ol class="film-steps">
-          <li><span class="n">1</span>Cast</li>
-          <li><span class="n">2</span>Detect</li>
-          <li><span class="n">3</span>Bite</li>
-          <li><span class="n">4</span>Click</li>
-          <li><span class="n">5</span>Remember</li>
-        </ol>
-        <p class="film-read">The bot reads the screen, watches the float, and clicks on the bite.</p>
-        <div class="film-foot">
-          <span class="film-lat"><b>308</b> ms<span>median bite → click</span></span>
-          <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="film-demo">Open this round in the demo →</a>
-        </div>
-      </div>
+    <div class="hero__price">
+      <div class="hero__price-value">€20.00</div>
+      <div class="hero__price-label">one-time, lifetime licence</div>
     </div>
 
+    <div class="hero__guarantee">
+      <svg class="hero__guarantee-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a3 3 0 013 3v2a3 3 0 01-3 3 3 3 0 01-3-3V5a3 3 0 013-3zm0 2a1 1 0 10-1 1v2a1 1 0 10-2 0V5a1 1 0 112 0z" fill="currentColor"/></svg>
+      <span class="hero__guarantee-text"><strong>No catch:</strong> if you are not satisfied, we refund.</span>
+    </div>
+
+    <div class="hero__divider"></div>
+
+    <div class="hero__proof">
+      <div class="proof-item">
+        <div class="proof-value">308ms</div>
+        <div class="proof-label">median bite → click</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-value">12/12</div>
+        <div class="proof-label">planner parity JS / Python</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-value">€20</div>
+        <div class="proof-label">one-time, lifetime</div>
+      </div>
+    </div>
   </div>
 
   <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
@@ -611,6 +595,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>lifetime licence</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Buy</a></div>
 
-<script type="module" src="./assets/app.js?v=20261022-3ac653d5"></script>
+<script type="module" src="./assets/app.js?v=20261022-8422e7a8"></script>
 </body>
 </html>
