@@ -1,5 +1,7 @@
 dist/
 worker/
+telemetry-worker/
+security-guard/
 tests/
 scripts/
 migrations/

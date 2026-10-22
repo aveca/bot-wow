@@ -15,12 +15,12 @@
 <meta property="og:description" content="Fishing assistant for WoW Classic: measured detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
 <meta property="og:url" content="https://bot-wow.com/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="./assets/favicon.svg?v=20261022-7eb6f20b" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=20261022-a70091d1" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/site.css?v=20261022-7eb6f20b">
-<link rel="stylesheet" href="./assets/style.css?v=20261022-7eb6f20b">
+<link rel="stylesheet" href="./assets/site.css?v=20261022-a70091d1">
+<link rel="stylesheet" href="./assets/style.css?v=20261022-a70091d1">
 </head>
 <body>
 
@@ -61,17 +61,20 @@
         what is in development, and what is planned.
       </p>
 
-      <!-- 3 blocs de bénéfices -->
+      <!-- 3 blocs de bénéfices — chacun porte une preuve vérifiable -->
       <div class="benefits">
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Calibrated on real captures</b><span>· Detection measured session after session</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Persistent spot memory</b><span>· Versioned, exportable maps</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>One lifetime price</b><span>· €20, no renewal, ever</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>308 ms median bite → click</b><span>· Measured session after session, per-cycle logs</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Planner parity 12/12</b><span>· Same rules in JavaScript and Python — run the test</span></div></div>
+        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Classic 1.13 + private servers</b><span>· Our reference environment, tested there</span></div></div>
       </div>
 
       <div class="hero-cta">
         <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Try the browser demo</a>
         <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">See the offer</a>
       </div>
+      <p class="hero-price">
+        <b>€20.00</b><span class="hp-sep">·</span><span>one-time, lifetime licence</span><span class="hp-sep">·</span><a href="#buy" data-track="cta_click" data-cta-id="hero-price">what is included</a>
+      </p>
     </div>
 
     <div class="radar-panel" id="heroRadar">
@@ -117,6 +120,118 @@
   </div>
 
   <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
+</section>
+
+<!-- ======================================================== PARCOURS : QUOI FAIRE ? -->
+<!-- Le selecteur ne vend que ce qui existe. Le 4e cas dit explicitement
+     que le produit n'est pas adapte : c'est ce qui rend les 3 autres credibles. -->
+<section class="pad journey-sec" id="journey">
+  <div class="w">
+    <header class="section-head">
+      <span class="eyebrow">Start here</span>
+      <h2 class="h2">What do you actually want to do?</h2>
+      <p class="lead">Four honest answers. Three end on something BOT-WOW really does today. The fourth tells you plainly that this is not the product you want.</p>
+    </header>
+
+    <div class="journey-tabs" role="tablist" aria-label="What do you want to do?">
+      <button class="journey-tab" type="button" role="tab" id="jtab-fish" aria-controls="jpanel-fish" aria-selected="true" data-intent="fish">Automate my fishing</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-demo" aria-controls="jpanel-demo" aria-selected="false" tabindex="-1" data-intent="demo">See it before paying</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-licence" aria-controls="jpanel-licence" aria-selected="false" tabindex="-1" data-intent="licence">Buy a lifetime licence</button>
+      <button class="journey-tab" type="button" role="tab" id="jtab-roles" aria-controls="jpanel-roles" aria-selected="false" tabindex="-1" data-intent="other-roles">Grind, gather, fight</button>
+    </div>
+
+    <div class="journey-panel" id="jpanel-fish" role="tabpanel" aria-labelledby="jtab-fish">
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">Fishing, from cast to catch</h3>
+          <p class="journey-lead">The one role BOT-WOW ships today: it casts, watches the float, clicks on the bite, and remembers every spot it fished.</p>
+          <ul class="journey-list">
+            <li>Float detection calibrated on real Classic 1.13 captures — <b>308 ms</b> median bite → click across logged sessions</li>
+            <li>Persistent spot memory: your map, versioned, exportable, deduplicated</li>
+            <li>Route planner with three modes — <b>12/12</b> parity between the JavaScript and the Python implementation</li>
+            <li>Windows background capture; F9 stops everything, at any time</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Needs</b><span>Windows 10/11, Python 3.11+, WoW Classic 1.13. Private servers are our reference environment.</span></div>
+          <div class="journey-fact"><b>Limits</b><span>Travel between spots is still being validated in game. No grinding, no gathering, no combat.</span></div>
+          <div class="journey-fact"><b>Start</b><span>Unzip the package, paste your licence key, press F9.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="journey-fish-buy">Get the licence — €20.00</a>
+            <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="journey-fish-demo">See the demo first</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel" id="jpanel-demo" role="tabpanel" aria-labelledby="jtab-demo" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">The browser demo — no account, no email</h3>
+          <p class="journey-lead">Two minutes, nothing to install. It runs the very same route planner as the bot, on a simulated map.</p>
+          <ul class="journey-list">
+            <li>Watch the planner compute a round: spots, travel, expected yield, unverified legs</li>
+            <li>Switch between cautious, balanced and exploration modes and see the round change</li>
+            <li>Click a spot to read its reliability, risk and history</li>
+            <li><b>Simulated data</b>, clearly labelled: a test fixture, not a production session</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Needs</b><span>A browser. Nothing else.</span></div>
+          <div class="journey-fact"><b>Limits</b><span>It is a map and a planner, not the bot: no detection, no clicking.</span></div>
+          <div class="journey-fact"><b>Start</b><span>Open the page and drag a mode.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="./demo.html" data-track="cta_click" data-cta-id="journey-demo-open">Open the browser demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel" id="jpanel-licence" role="tabpanel" aria-labelledby="jtab-licence" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">€20 once. Then it is yours.</h3>
+          <p class="journey-lead">One product, one price, no subscription and no renewal — the licence is tied to your machine, not to a date.</p>
+          <ul class="journey-list">
+            <li>The full fishing bot v1.2.0 and the updates of the 1.x branch</li>
+            <li>The addon and the packaged build, delivered with a SHA-256 manifest</li>
+            <li>Licence re-sent on request if you reinstall</li>
+            <li>Documentation, release notes and email support</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Delivery</b><span>Immediately by email: download link plus licence key, right after payment.</span></div>
+          <div class="journey-fact"><b>Refund</b><span>Within 14 days of purchase, as long as the licence was never activated on a machine. Full procedure in the refund policy.</span></div>
+          <div class="journey-fact"><b>Risk</b><span>Automation may violate a server's terms of service. Use an account you are prepared to lose.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="journey-licence-buy">See the offer</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-panel is-not" id="jpanel-roles" role="tabpanel" aria-labelledby="jtab-roles" hidden>
+      <div class="journey-grid">
+        <div>
+          <h3 class="journey-title">Not this product — better to say it now</h3>
+          <p class="journey-lead">BOT-WOW does one job: fishing. If you want mob grinding, herb mining, combat rotations or PvP, this is the wrong tool, and no discount would change that.</p>
+          <ul class="journey-list">
+            <li>Three further roles are in development. The module ledger lists each one with its real status and the tests behind it</li>
+            <li>Nothing is sold as "coming soon" without a status: shipped, in development, or planned</li>
+            <li>If you need those roles today, a multi-role bot is the honest choice for you</li>
+          </ul>
+        </div>
+        <div class="journey-facts">
+          <div class="journey-fact"><b>Needs</b><span>Nothing — just read this.</span></div>
+          <div class="journey-fact"><b>Limits</b><span>BOT-WOW ships one role, and will not become an all-in-one bot.</span></div>
+          <div class="journey-fact"><b>Start</b><span>Open the ledger to see the status of every role.</span></div>
+          <div class="journey-cta">
+            <a class="btn btn-ghost" href="./modules.html" data-track="cta_click" data-cta-id="journey-roles-ledger">Open the module ledger</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ======================================================== TELEMETRY : 4 MESURES REELLES -->
@@ -311,6 +426,42 @@
       </article>
     </div>
 
+    <!-- ======================================================== AVANT DE PAYER -->
+    <!-- Recapitulatif honnete : ce que vous recevez, ce que vous ne
+         recevez PAS, et les conditions. Un acheteur decide en connaissance
+         de cause, pas sous pression. -->
+    <div class="before-buy">
+      <div class="bb-col">
+        <h3 class="bb-h bb-in">What you get</h3>
+        <ul class="bb-list">
+          <li>The fishing bot v1.2.0 and the updates of the 1.x branch</li>
+          <li>The addon and the packaged build, with a SHA-256 manifest</li>
+          <li>Your own spot map: versioned, exportable, deduplicated</li>
+          <li>One machine activation, licence re-sent on request</li>
+          <li>Documentation, release notes, email support</li>
+        </ul>
+      </div>
+      <div class="bb-col">
+        <h3 class="bb-h bb-out">What you don't get</h3>
+        <ul class="bb-list">
+          <li>No grinding, gathering, combat or PvP role — one role only</li>
+          <li>No multi-account or multi-profile manager</li>
+          <li>No travel between spots yet: the mechanism exists, the arrival at a spot is still being validated in game</li>
+          <li>No other game version: Classic 1.13 is the only environment we test</li>
+          <li>No guarantee that a bot account is never sanctioned</li>
+        </ul>
+      </div>
+      <div class="bb-col">
+        <h3 class="bb-h">Delivery, updates, refund</h3>
+        <dl class="bb-dl">
+          <dt>Delivery</dt><dd>Immediately by email: download link and licence key, right after payment.</dd>
+          <dt>Updates</dt><dd>Included for the 1.x branch, shipped as versioned packages with release notes.</dd>
+          <dt>Refund</dt><dd>Within 14 days of purchase, as long as the licence was never activated on a machine. <a href="./legal/refund.html">Procedure</a>.</dd>
+          <dt>Risk</dt><dd>Automation may violate a server's terms of service. Use an account you are prepared to lose.</dd>
+        </dl>
+      </div>
+    </div>
+
     <div class="wl mt">
       <h3 style="font-size:17px">Payment not available for you yet?</h3>
       <p>Card payments via Mollie are being finalised. If the payment button fails, leave your email and we will write to you the moment it opens.</p>
@@ -383,6 +534,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>lifetime licence</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Buy</a></div>
 
-<script type="module" src="./assets/app.js?v=20261022-7eb6f20b"></script>
+<script type="module" src="./assets/app.js?v=20261022-a70091d1"></script>
 </body>
 </html>

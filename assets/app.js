@@ -5,8 +5,9 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=20261022-7eb6f20b';
-import './analytics.js?v=20261022-7eb6f20b';
+import { planRound } from './route-planner.js?v=20261022-a70091d1';
+import './analytics.js?v=20261022-a70091d1';
+import './journey.js?v=20261022-a70091d1';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee

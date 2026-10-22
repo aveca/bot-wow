@@ -36,7 +36,14 @@ const EVENT_SPEC = {
   ownership_view: { cta: null, mode: null, years: 'years', step: null },
   checkout_start: { cta: null, mode: null, years: null, step: 'step' },
   checkout_error: { cta: null, mode: null, years: null, step: 'step' },
+  journey_view: { cta: null, mode: null, years: null, step: 'step' },
 };
+
+/* ATTENTION : la conversion (paiement confirme) n'est PAS dans cette
+   liste. Elle n'est jamais acceptee depuis le navigateur : elle est ecrite
+   directement en base par le Worker de paiement, apres verification du
+   webhook Mollie. Un clic, une ouverture de checkout et un paiement
+   confirme sont donc trois evenements distincts, jamais confondus. */
 
 const RE_CTA = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 const RE_MODE = /^(prudent|equilibre|exploration)$/;

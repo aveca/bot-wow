@@ -2716,12 +2716,51 @@ async function handleMollieWebhook(request, env2) {
   // branche sur le flux du webhook).
   if (status === "paid") {
     await fulfillOrder(env2, payment, email, lang, eventId);
+    // MESURE DE CONVERSION (V11.2).
+    // Cette ligne n'est ecrite QUE par le serveur, apres verification du
+    // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
+    // paiement confirme restent donc trois evenements distincts, et un
+    // evenement "conversion" ne peut pas etre forge depuis le navigateur
+    // (le point de collecte public ne l'accepte pas).
+    // L'echec de cette mesure ne doit JAMAIS empecher la livraison de la
+    // licence : l'echec est attrape et journalise.
+    try {
+      await recordConversion(env2, payment, email, lang);
+    } catch (e) {
+      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+    }
   } else {
     await markOrderFailed(env2, payment, email, eventId);
   }
   return new Response("OK", { status: 200 });
 }
 __name(handleMollieWebhook, "handleMollieWebhook");
+/**
+ * Enregistre une CONVERSION confirmee dans la base de telemetrie.
+ *
+ * - Ecrit uniquement par le serveur, apres que le paiement a ete verifie
+ *   (montant, devise, produit, statut) via l'API Mollie ;
+ * - aucune donnee personnelle : ni e-mail, ni nom, ni montant detaille.
+ *   Seul un hash tronque de l'identifiant de paiement est conserve, pour
+ *   rapprocher un evenement d'une commande sans exposer l'identifiant ;
+ * - la base de telemetrie est une base D1 DEDIEE, distincte de la base des
+ *   commandes : elle ne contient ni e-mail, ni licence, ni jeton ;
+ * - si la base est absente ou en erreur, l'echec est silencieux : la
+ *   livraison de la licence ne doit jamais dependre de la mesure.
+ */
+async function recordConversion(env2, payment, email, lang) {
+  const db = env2.TELEMETRY_DB;
+  if (!db) return;
+  const amount = Math.round(parseFloat(payment.amount.value) * 100) / 100;
+  const paymentId = String(payment.id || "");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("botwow-conversion-v1|" + paymentId));
+  const ref = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+  await db.prepare(
+    "INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, value_eur, source) " +
+    "VALUES (?, 'conversion', '/', ?, NULL, NULL, NULL, 'paid', ?, 0, NULL, NULL, ?, ?)"
+  ).bind(Date.now(), lang === "fr" ? "fr" : "en", ref, amount, "mollie").run();
+  console.log("Conversion enregistree", ref, amount);
+}
 async function fulfillOrder(env2, payment, email, lang, eventId) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);

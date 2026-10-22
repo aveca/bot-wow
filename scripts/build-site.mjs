@@ -38,6 +38,8 @@ const DENY = [
   /(^|\/)\.wrangler(\/|$)/i,
   /(^|\/)backups?(\/|$)/i,
   /(^|\/)worker(\/|$)/i,
+  /(^|\/)telemetry-worker(\/|$)/i,
+  /(^|\/)security-guard(\/|$)/i,
   /(^|\/)migrations?(\/|$)/i,
   /(^|\/)scripts(\/|$)/i,
   /(^|\/)tests?(\/|$)/i,

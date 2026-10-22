@@ -130,11 +130,31 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('schema D1 : aucune colonne de donnee personnelle',
     !/\bemail\b|\buser_?name\b|\border_id\b/i.test(schemaCode),
     `(${schemaCode.match(/\bemail\b|\buser_?name\b|\border_id\b/i)?.[0] || ''})`);
-  // le Worker ne doit jamais compter une conversion : il mesure l'intention
-  const specBlock = worker.split('EVENT_SPEC')[1] || '';
+  // le Worker de collecte ne doit jamais compter une conversion : il
+  // mesure l'intention. On regarde la liste fermee elle-meme (le commentaire
+  // qui explique pourquoi la conversion en est absente ne doit pas计入).
+  const specBlock = (worker.match(/const EVENT_SPEC = \{[\s\S]*?\n\};/) || [''])[0];
   check('point de collecte : ne compte pas les conversions',
     !/conversion|purchase|payment_succeeded/.test(specBlock)
     && !/INSERT INTO (?!events|rl)/i.test(worker));
+  // La conversion est une mesure SERVEUR : le point de collecte public
+  // doit la refuser si un client tente de l'envoyer.
+  check('point de collecte public : refuse un evenement conversion',
+    !/conversion\s*:/.test(specBlock));
+  {
+    // ... et le Worker de paiement l'ecrit bien, apres verification.
+    const api = read('worker/index.js');
+    check('Worker de paiement : enregistre une conversion confirmee',
+      /recordConversion/.test(api) && /'conversion'/.test(api));
+    const iFulfil = api.indexOf('await fulfillOrder(env2');
+    const iConv = api.indexOf('await recordConversion(env2');
+    check('Worker de paiement : la conversion est ecrite apres fulfillment',
+      iFulfil > -1 && iConv > iFulfil, `(fulfill@${iFulfil}, conversion@${iConv})`);
+    check('Worker de paiement : la mesure ne bloque pas la licence',
+      /catch \(e\)[\s\S]{0,200}impossible/.test(api));
+    check('Worker de paiement : la conversion ne stocke aucune PII',
+      !/recordConversion[\s\S]{0,600}email\s*[,)]/.test(api.split('async function recordConversion')[1] || ''));
+  }
 }
 
 // 6c. V11 : les pages du parcours sont instrumentees

@@ -19,6 +19,15 @@ binding = "DB"
 database_name = "botwow-production"
 database_id = "e57f5874-a9f0-42bf-8dbc-10785ef083f5"
 
+# Base D1 DEDIEE a la telemetrie de parcours (V11.2). Distincte de la base
+# des commandes : elle ne contient ni e-mail, ni licence, ni jeton. Elle
+# sert a ecrire la MESURE DE CONVERSION (paiement confirme, verifie par le
+# webhook Mollie) — un evenement que le navigateur ne peut pas forger.
+[[d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "botwow-analytics"
+database_id = "935b0632-d712-4266-bece-028c70b545be"
+
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "5cca39707796468f83d2016350794f72"
