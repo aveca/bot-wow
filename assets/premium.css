@@ -632,6 +632,227 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
   .bb-col:last-child{border-bottom:none}
 }
 
+/* Badge : l'anneau qui grandissait jusqu'a 2x (806 px de large !) devient
+   un halo discret. Un mouvement decoratif ne doit pas dominer l'ecran. */
+.badge::after{
+  inset:-5px;border:1px solid rgba(95,180,216,.26);opacity:.55;
+  animation:badge-ring 4.6s ease-out infinite
+}
+@keyframes badge-ring{
+  0%{transform:scale(1);opacity:.5}
+  60%{opacity:0}
+  100%{transform:scale(1.1);opacity:0}
+}
+
+/* ============================================================ V12 — INDEX
+   EDITORIAL : « comment ca marche »
+   Trois cartes egales font catalogue. La section devient un index
+   technique numerote, avec filets : meme grammaire que l'etape de
+   session, et le rythme de la page cesse de se repeter. */
+.how-it-works .steps{
+  grid-template-columns:1fr;max-width:860px;margin:0 auto;
+  border-top:1px solid var(--line)
+}
+.how-it-works .step{
+  display:grid;grid-template-columns:96px 190px 1fr;gap:26px;align-items:baseline;
+  padding:24px 0;border:0;border-top:1px solid var(--line);border-radius:0;
+  background:none;backdrop-filter:none;box-shadow:none;
+  transition:border-color 240ms var(--ease-out)
+}
+.how-it-works .step:first-child{border-top:none}
+.how-it-works .step:hover{transform:none;border-color:var(--gold)}
+.how-it-works .step-num{
+  font-size:30px;line-height:1;color:var(--mut2);letter-spacing:-.02em;
+  transition:color 240ms var(--ease-out)
+}
+.how-it-works .step:hover .step-num{color:var(--gold)}
+.how-it-works .step h3{margin:0;font-size:17px;letter-spacing:-.01em}
+.how-it-works .step p{margin:0;font-size:14px;line-height:1.6;max-width:52ch}
+@media (max-width:760px){
+  .how-it-works .step{grid-template-columns:64px 1fr;gap:8px 16px;padding:18px 0}
+  .how-it-works .step-num{font-size:24px}
+  .how-it-works .step p{grid-column:2}
+}
+
+/* ============================================================ V12 — ETAPE DE SESSION
+   La demonstration devient le centre de gravite du hero : ce n'est plus
+   une vignette de capture, c'est l'ecran du jeu avec le cycle du bot
+   rejoue dessus.
+
+   Identite : un instrument de mesure. Reperes, libelles monospace,
+   l'or pour ce que le bot FAIT, le cyan pour ce que la machine VOIT.
+   Aucune animation decorative : chaque mouvement correspond a une etape
+   reelle du cycle (lancer, analyse, morsure, clic, memorisation). */
+.stage{
+  position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(13,15,23,.94),rgba(8,9,15,.97));
+  box-shadow:0 34px 90px -46px rgba(0,0,0,.95)
+}
+.stage-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,rgba(201,162,39,.05),transparent 60%)
+}
+.stage-title{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.04em;color:var(--mut)}
+.stage-title .radar-icon{width:15px;height:15px;color:var(--cyan)}
+.stage-k{
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mut2);display:block;margin-bottom:6px
+}
+
+/* --- l'ecran du jeu ---
+   Le ratio de la capture (1200x515) est respecte : on ne rogne pas l'ecran
+   du jeu, la UI reste lisible. */
+.stage-view{position:relative;aspect-ratio:12/5;overflow:hidden;background:#05070c}
+.stage-shot{display:block;width:100%;height:100%}
+.stage-shot img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.06) contrast(1.03)}
+.stage-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:8px 14px;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);
+  background:linear-gradient(180deg,transparent,rgba(3,4,8,.88));
+  font-family:var(--mono)
+}
+.stage-caption b{color:var(--gold);font-weight:800}
+
+/* --- calques de detection --- */
+.stage-ov{position:absolute;inset:0;pointer-events:none}
+.stage-scan{
+  position:absolute;top:-10%;bottom:-10%;left:-30%;width:26%;
+  background:linear-gradient(90deg,transparent,rgba(95,180,216,.18),transparent);
+  opacity:0
+}
+.stage-float{
+  position:absolute;left:27%;top:44%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
+  border-radius:50%;background:var(--gold);opacity:0;
+  box-shadow:0 0 0 3px rgba(201,162,39,.16),0 0 16px rgba(201,162,39,.6)
+}
+.stage-reticle{
+  position:absolute;left:27%;top:44%;width:58px;height:58px;margin:-29px 0 0 -29px;
+  border:1px solid rgba(95,180,216,.8);border-radius:3px;opacity:0
+}
+.stage-reticle::before,.stage-reticle::after{
+  content:"";position:absolute;background:linear-gradient(180deg,transparent,rgba(95,180,216,.75),transparent)
+}
+.stage-reticle::before{left:50%;top:-12px;bottom:-12px;width:1px}
+.stage-reticle::after{top:50%;left:-12px;right:-12px;height:1px;background:linear-gradient(90deg,transparent,rgba(95,180,216,.75),transparent)}
+.stage-reticle i{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;background:var(--cyan)
+}
+.stage-click{
+  position:absolute;left:27%;top:44%;width:24px;height:24px;margin:-12px 0 0 -12px;
+  border:1px solid var(--gold);border-radius:2px;opacity:0
+}
+
+/* --- etats du cycle --- */
+[data-phase="cast"] .stage-float{animation:stage-cast 900ms cubic-bezier(.3,.8,.4,1) forwards}
+[data-phase="detect"] .stage-scan{animation:stage-scan 1250ms cubic-bezier(.4,0,.2,1) forwards}
+[data-phase="detect"] .stage-reticle{animation:stage-lock 760ms cubic-bezier(.2,.8,.2,1) forwards}
+[data-phase="bite"] .stage-float{background:var(--red);box-shadow:0 0 0 4px rgba(224,108,94,.16),0 0 20px rgba(224,108,94,.7)}
+[data-phase="bite"] .stage-reticle{border-color:rgba(224,108,94,.9)}
+[data-phase="bite"] .stage-reticle i{background:var(--red);animation:stage-dip 320ms ease-in-out infinite alternate}
+[data-phase="click"] .stage-click{animation:stage-click 460ms cubic-bezier(.2,.8,.2,1) forwards}
+[data-phase="save"] .stage-float{animation:stage-save 700ms ease-out forwards}
+
+@keyframes stage-cast{
+  0%{opacity:0;transform:translate(140px,74px) scale(.25)}
+  100%{opacity:1;transform:translate(0,0) scale(1)}
+}
+@keyframes stage-scan{
+  0%{left:-30%;opacity:0}
+  12%{opacity:1}
+  100%{left:104%;opacity:0}
+}
+@keyframes stage-lock{
+  0%{opacity:0;transform:scale(2)}
+  55%{opacity:1}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes stage-dip{
+  from{transform:translateY(0)}
+  to{transform:translateY(9px)}
+}
+@keyframes stage-click{
+  0%{opacity:0;transform:scale(.35)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.7)}
+}
+@keyframes stage-save{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.5)}
+  100%{transform:scale(1)}
+}
+
+/* --- bandeau de mesure --- */
+.stage-hud{padding:13px 16px;border-bottom:1px solid var(--line)}
+.stage-steps{
+  display:flex;gap:5px;flex-wrap:wrap;list-style:none;margin:0 0 11px;padding:0
+}
+.stage-steps li{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mut2);opacity:.42;transition:opacity 260ms var(--ease-out),color 260ms var(--ease-out)
+}
+.stage-steps li .n{
+  width:16px;height:16px;border-radius:50%;border:1px solid currentColor;
+  display:grid;place-items:center;font-size:8.5px;letter-spacing:0
+}
+.stage-steps li[data-state="on"]{opacity:1;color:var(--gold)}
+.stage-steps li[data-state="on"] .n{background:var(--gold);color:#14110a;border-color:transparent}
+.stage-steps li[data-state="done"]{opacity:.75;color:var(--cyan)}
+.stage-read{margin:0 0 11px;font-size:13.5px;line-height:1.55;color:var(--mut);min-height:2.9em}
+.stage-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stage-lat{
+  display:inline-flex;align-items:baseline;gap:8px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.stage-lat b{font-size:19px;letter-spacing:-.02em;color:var(--gold);font-weight:800}
+.stage-replay{
+  appearance:none;cursor:pointer;font:inherit;font-family:var(--mono);
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mut);background:transparent;border:1px solid var(--line-bright);
+  border-radius:999px;padding:7px 14px;
+  transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out)
+}
+.stage-replay:hover{color:var(--gold);border-color:var(--gold);background:rgba(201,162,39,.08)}
+.stage-replay:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* --- carte et reglages --- */
+.stage-lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.stage-mapbox{padding:12px 14px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.stage-mapbox svg{width:100%;height:186px;display:block;border-radius:10px;background:rgba(6,9,14,.6)}
+.stage-side{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+/* Les trois modes tiennent sur une ligne : ils sont une seule commande. */
+.stage-side .radar-modes{gap:6px}
+.stage-side .radar-modes-label{width:100%;margin-bottom:2px}
+.stage-side .radar-modes button{padding:6px 11px;font-size:11.5px}
+/* Les mesures du planificateur passent en ligne pleine largeur : a
+   300 px de colonne, le libelle "unverified" etait coupe. */
+.stage-foot-stats{border-top:1px solid var(--line);border-right:none;padding:12px 16px;grid-template-columns:repeat(4,1fr)}
+.stage-spot{animation:stage-spot 900ms var(--ease-out) forwards}
+.stage-spot.is-out{animation:stage-spot-out 900ms var(--ease-out) forwards}
+@keyframes stage-spot{from{opacity:0}to{opacity:1}}
+@keyframes stage-spot-out{from{opacity:1}to{opacity:0}}
+
+/* --- le hero cede la place a l'etape ---
+   La colonne de texte garde sa largeur (540 px) : c'est elle qui porte le
+   CTA, et un titre trop etroit le repousse sous la ligne de flottaison.
+   Mesure : a 460 px, le chapo passait sur 6 lignes et le CTA tombait a
+   845 px dans un viewport de 900 px. */
+@media (min-width:1100px){
+  .hero .w{grid-template-columns:minmax(400px,540px) minmax(0,1fr);gap:40px;align-items:start}
+}
+@media (max-width:880px){
+  .stage-lower{grid-template-columns:1fr}
+  .stage-mapbox{border-right:none;border-bottom:1px solid var(--line)}
+}
+@media (max-width:560px){
+  .stage-view{aspect-ratio:16/10}
+  .stage-read{font-size:13px}
+  .stage-steps{gap:4px}
+  .stage-steps li{font-size:8.5px;letter-spacing:.1em}
+}
+
 /* ============================================================ V11.2 — SELECTEUR
    DE PARCOURS
    Le selecteur doit se lire comme un outil de decision, pas comme une

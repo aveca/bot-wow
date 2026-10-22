@@ -5,9 +5,10 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=20261022-a70091d1';
-import './analytics.js?v=20261022-a70091d1';
-import './journey.js?v=20261022-a70091d1';
+import { planRound } from './route-planner.js?v=20261022-a3886bd1';
+import './analytics.js?v=20261022-a3886bd1';
+import './journey.js?v=20261022-a3886bd1';
+import './session.js?v=20261022-a3886bd1';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -504,6 +505,9 @@ async function boot() {
     const res = await fetch(mapUrl, { cache: 'no-cache' });
     const map = await res.json();
     heroMapData = map;
+    // La carte est exposee au module d'etape (session.js) : c'est elle
+    // qui pose le marqueur du spot memorise, sur de VRAIES coordonnees.
+    window.botwowHeroMap = map;
     const round = planRound(map, { mode: 'equilibre' });
     drawHeroMap(map, round);
     updateHeroStats(round);
