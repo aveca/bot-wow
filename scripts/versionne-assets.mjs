@@ -56,7 +56,13 @@ export function assetFingerprint(root = ROOT) {
   })(base);
   for (const [rel, p] of files) {
     h.update(rel);
-    h.update(fs.readFileSync(p, 'utf8').replace(STAMP_RE, ''));
+    /* Les fins de ligne sont normalisees (CRLF -> LF) : git convertit les
+       fins de ligne selon la plate-forme (core.autocrlf), donc le meme
+       contenu committe n'a pas les memes octets sur Windows et sur Linux.
+       Sans cette normalisation, le stamp calcule par le build differedait
+       de celui du HTML versionne dans les sources, et le controle
+       "stamp a jour" echouait a tort. */
+    h.update(fs.readFileSync(p, 'utf8').replace(STAMP_RE, '').replace(/\r\n/g, '\n'));
   }
   return h.digest('hex').slice(0, 8);
 }
