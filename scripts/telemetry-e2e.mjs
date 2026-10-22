@@ -170,7 +170,10 @@ try {
     if (msg.method === 'Network.requestWillBeSent') {
       const r = msg.params.request;
       if (r.url.includes('/api/track')) {
-        requests.push({ url: r.url, method: r.method, headers: r.headers, body: r.postData || '' });
+        requests.push({
+          url: r.url, method: r.method, headers: r.headers,
+          body: r.postData || '', requestId: msg.params.requestId,
+        });
       }
     }
     if (msg.method === 'Network.responseReceived') {
@@ -214,6 +217,17 @@ try {
 
   // --- 3. requete envoyee ---
   ok('une requete vers /api/track est partie', requests.length > 0, `(${requests.length})`);
+
+  /* Le corps d'une requete envoyee par sendBeacon n'apparait pas toujours
+     dans Network.requestWillBeSent : on le redemande au protocole. */
+  for (const r of requests) {
+    if (r.body) continue;
+    try {
+      const pd = await cdp.send('Network.getRequestPostData', { requestId: r.requestId });
+      if (pd && pd.postData) r.body = pd.postData;
+    } catch { /* corps indisponible : le test le signalera */ }
+  }
+
   const req = requests[requests.length - 1];
   let payload = null;
   try { payload = JSON.parse(req.body); } catch { /* malformé */ }
@@ -250,6 +264,14 @@ try {
     console.log(`  info  ligne D1 #${row.id} event=${row.event} page=${row.page} lang=${row.lang} cta=${row.cta ?? '-'} test=${row.test}`);
     const events = rows.map((r) => r.event);
     ok('le parcours a produit plusieurs evenements', events.length >= 1, `(${events.join(', ')})`);
+    // le clic sur le CTA doit avoir produit un evenement cta_click identifie
+    const click = rows.find((r) => r.event === 'cta_click');
+    ok('le clic sur le CTA a produit un evenement cta_click', !!click,
+      `(${events.join(', ')})`);
+    if (click) {
+      console.log(`  info  ligne D1 #${click.id} event=cta_click cta=${click.cta} step=${click.step}`);
+      ok(`le CTA est identifie`, !!click.cta, `(${click.cta})`);
+    }
   }
 
   // --- 6. requetes malformees ---
