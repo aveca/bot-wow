@@ -1,0 +1,24 @@
+# Cloudflare Pages — redirections de securite.
+#
+# Ces chemins ne doivent JAMAIS etre servis : le code du Worker, les
+# dependances, les scripts de build, les tests et les migrations. Ils ne
+# sont pas dans l'artefact (scripts/build-site.mjs, liste blanche), mais
+# une entree de cache edge heritee pouvait encore les servir sur le
+# domaine apex.
+#
+# Cloudflare Pages applique les redirections meme quand un asset existe
+# ("Redirects are always followed, regardless of whether or not an asset
+# matches the incoming request") : la regle gagne donc sur le cache.
+#
+# Redirections statiques d'abord, puis dynamiques (splats).
+
+/package.json  /404.html  302
+/package-lock.json  /404.html  302
+/wrangler.toml  /404.html  302
+/worker/*  /404.html  302
+/scripts/*  /404.html  302
+/tests/*  /404.html  302
+/migrations/*  /404.html  302
+/node_modules/*  /404.html  302
+/dist/*  /404.html  302
+/.github/*  /404.html  302
