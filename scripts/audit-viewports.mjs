@@ -94,6 +94,25 @@ const PROBE = `(() => {
   const nav = pick('nav');
   const navBox = nav ? box(nav) : null;
   const heroPad = hero ? getComputedStyle(hero).paddingTop : null;
+
+  /* Elements du hero invisibles : en mouvement reduit, le contenu doit
+     rester lisible (les reveals sont neutralises, pas le contenu masque). */
+  const hidden = [];
+  for (const el of document.querySelectorAll('.hero h1, .hero .lead, .hero .badge, .hero-cta .btn, .hero .benefit, .radar-panel, .price, .section-head h2')) {
+    const cs = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    let invisible = cs.visibility === 'hidden' || cs.display === 'none'
+      || parseFloat(cs.opacity || '1') < 0.05
+      || r.width < 2 || r.height < 2;
+    // mise a l'echelle zero (reveal non declenche) : transform matrix(a, ...)
+    const tr = cs.transform || '';
+    if (!invisible && tr.indexOf('matrix(') === 0) {
+      const inner = tr.slice(7, -1).split(',');
+      if (parseFloat(inner[0]) === 0) invisible = true;
+    }
+    if (invisible) hidden.push(el.tagName + '.' + String(el.className || '').split(' ')[0] + '(op=' + cs.opacity + ',vis=' + cs.visibility + ',tr=' + tr.slice(0, 28) + ')');
+    if (hidden.length >= 6) break;
+  }
   const h1Style = h1 ? (() => {
     const cs = getComputedStyle(h1);
     const range = document.createRange();
@@ -129,6 +148,7 @@ const PROBE = `(() => {
     navBox,
     heroPad,
     h1Style,
+    hidden,
     ctaBox: box(cta),
     ctaAll,
     overflow,
@@ -192,9 +212,22 @@ async function main() {
         width: vp.w, height: vp.h, deviceScaleFactor: 1, mobile: vp.w < 700,
       });
 
+      /* Mode mouvement reduit : on l'emule et on verifie que le contenu
+         reste visible (les reveals doivent etre neutralises, pas le
+         contenu masque). */
+      if (process.env.AUDIT_REDUCED_MOTION === '1') {
+        await cdp.send('Emulation.setEmulatedMedia', {
+          features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+        });
+      }
+
       await cdp.send('Page.navigate', { url: TARGET });
       await sleep(2600);
       const probe = await cdp.send('Runtime.evaluate', { expression: PROBE, returnByValue: true });
+      if (!probe || !probe.result || probe.result.value === undefined) {
+        const err = probe?.exceptionDetails;
+        throw new Error(`sonde invalide : ${err ? (err.exception?.description || err.text) : JSON.stringify(probe).slice(0, 200)}`);
+      }
       const data = JSON.parse(probe.result.value);
 
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
@@ -211,6 +244,10 @@ async function main() {
       console.log(`\n--- ${vp.w}x${vp.h} ---`);
       console.log(`  h1 (${data.h1Count}) : ${data.h1Text}`);
       console.log(`  collecte presente : ${data.hasTrack ? 'OUI' : 'NON'}`);
+      if (process.env.AUDIT_REDUCED_MOTION === '1') {
+        const hidden = data.hidden || [];
+        console.log(`  mouvement reduit : ${hidden.length === 0 ? 'contenu visible' : `${hidden.length} element(s) invisible(s) : ${hidden.join(', ')}`}`);
+      }
       console.log(`  h1 top=${data.h1Box ? data.h1Box.top : '-'} height=${data.h1Box ? data.h1Box.height : '-'}`);
       console.log(`  h1 style : ${data.h1Style ? `font=${data.h1Style.fontSize} line=${data.h1Style.lineHeight} lignes=${data.h1Style.lines} largeur=${data.h1Style.width}` : '-'}`);
       console.log(`  hero height=${data.heroBox ? data.heroBox.height : '-'} padding-top=${data.heroPad} nav=${data.navBox ? data.navBox.height : '-'}`);
