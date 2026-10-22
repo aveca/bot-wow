@@ -48,10 +48,12 @@ const DENY = [
   /(^|\/)SECURITY/i,
 ];
 
-function denied(rel) {
+export function denied(rel) {
   const p = rel.replace(/\\/g, '/');
   return DENY.some((re) => re.test(p));
 }
+
+export { FILES, DIRS, DENY };
 
 function copyDir(src, dest, rel = '') {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -69,40 +71,60 @@ function copyDir(src, dest, rel = '') {
   }
 }
 
-fs.rmSync(OUT, { recursive: true, force: true });
-fs.mkdirSync(OUT, { recursive: true });
+/* Scan de securite : liste les fichiers interdits presents dans un
+   repertoire. Utilise comme filet final du build ET teste directement
+   (un fichier interdit dans assets/ est filtre a la copie, donc le
+   filet ne peut pas declencher depuis la copie : il protege contre
+   tout ce qui passerait par un autre chemin). */
+export function scanForbidden(dir) {
+  const bad = [];
+  (function walk(d, rel = '') {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (denied(r)) { bad.push(r); continue; }
+      if (e.isDirectory()) walk(path.join(d, e.name), r);
+    }
+  })(dir);
+  return bad;
+}
+
+export function build(outDir = OUT) {
+const out = path.resolve(outDir);
+fs.rmSync(out, { recursive: true, force: true });
+fs.mkdirSync(out, { recursive: true });
 
 let count = 0;
 for (const f of FILES) {
   const from = path.join(ROOT, f);
   if (!fs.existsSync(from)) { console.log(`  ignore (absent) : ${f}`); continue; }
-  fs.copyFileSync(from, path.join(OUT, f));
+  fs.copyFileSync(from, path.join(out, f));
   count++;
 }
 for (const d of DIRS) {
   const from = path.join(ROOT, d);
   if (!fs.existsSync(from)) { console.log(`  ignore (absent) : ${d}/`); continue; }
-  copyDir(from, path.join(OUT, d));
+  copyDir(from, path.join(out, d));
   count++;
 }
 
-const listed = fs.readdirSync(OUT).sort();
-console.log(`Artefact construit : ${path.relative(ROOT, OUT)}/`);
+const listed = fs.readdirSync(out).sort();
+console.log(`Artefact construit : ${path.relative(ROOT, out)}/`);
 console.log(`  ${count} entree(s) de premier niveau`);
 console.log(`  racine : ${listed.join(', ')}`);
 
 /* Controle de securite : rien d'interdit ne doit se trouver dans
    l'artefact. Verifie, ne suppose pas. */
-const bad = [];
-(function walk(dir, rel = '') {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const r = rel ? `${rel}/${e.name}` : e.name;
-    if (denied(r)) { bad.push(r); continue; }
-    if (e.isDirectory()) walk(path.join(dir, e.name), r);
-  }
-})(OUT);
+const bad = scanForbidden(out);
 if (bad.length) {
   console.error(`\nECHEC : ${bad.length} fichier(s) interdit(s) dans l'artefact : ${bad.join(', ')}`);
   process.exit(1);
 }
 console.log('  securite : aucun fichier interdit dans l\'artefact');
+return { out, count, bad };
+}
+
+/* Execute le build seulement en appel direct (le module reste importable
+   par les tests). */
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  build(process.argv[2] || OUT);
+}
