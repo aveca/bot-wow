@@ -1,0 +1,76 @@
+/* ============================================================ HERO — OBSERVATION STATION */
+.hero{position:relative;overflow:hidden;padding:clamp(70px,8vw,120px) 0 clamp(90px,10vw,140px);background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(70,230,255,.05), transparent 70%),var(--bg)}
+.hero-grid{display:grid;grid-template-columns:1fr 470px;gap:48px;align-items:center;position:relative;z-index:2}
+@media (max-width:1024px){.hero-grid{grid-template-columns:1fr;gap:36px}}
+
+.hero-copy{max-width:580px}
+.badge{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:26px;
+  padding:10px 16px;border:1px solid var(--cyan-line);border-radius:999px;
+  background:var(--cyan-dim);width:fit-content;position:relative;
+}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 14px var(--cyan);animation:dot-pulse 1.6s ease-out infinite}
+@keyframes dot-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}
+.badge::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:1px solid var(--cyan-line);opacity:0.35;animation:badge-ring 3s ease-out infinite}
+@keyframes badge-ring{0%{transform:scale(1);opacity:0.4}100%{transform:scale(1.9);opacity:0}}
+
+.hero-copy h1{margin-bottom:22px}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:var(--mut);line-height:1.75;margin-bottom:32px;max-width:540px}
+.hero-trust{display:flex;flex-wrap:wrap;gap:16px;color:var(--mut2);font-size:13px}
+.hero-trust .ico{width:16px;height:16px;color:var(--green);flex:none;margin-right:6px}
+
+/* ---------------------------------------------------- RADAR PANEL — signature visuelle */
+.radar-panel{position:relative;border:1px solid var(--line);border-radius:30px;
+  background:linear-gradient(180deg,rgba(10,14,28,.85) 0%,rgba(6,9,18,.7) 100%);
+  backdrop-filter:blur(14px);overflow:hidden;box-shadow:var(--shadow)}
+.radar-head{display:flex;justify-content:space-between;align-items:center;
+  padding:18px 22px;border-bottom:1px solid var(--line);background:rgba(15,20,34,.6)}
+.radar-title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:13px;color:var(--txt)}
+.radar-icon{width:20px;height:20px;color:var(--cyan);flex:none;opacity:0.9}
+.live-pulse{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+  padding:7px 14px;border-radius:999px;border:1px solid var(--gold-line);background:var(--gold-dim)}
+.live-pulse .pulse-ring{width:7px;height:7px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 12px var(--gold);animation:pulse-ring 1.5s ease-out infinite}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(2.6);opacity:0}}
+.radar-body{position:relative;padding:24px}
+.radar-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 22px;border-top:1px solid var(--line);background:var(--bg2)}
+.radar-stat{display:flex;flex-direction:column;align-items:center;gap:3px}
+.radar-stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--mut2);text-transform:uppercase}
+.radar-stat .v{font-family:var(--mono);font-weight:800;font-size:16px;color:var(--txt)}
+
+/* SONAR bg — cercles concentriques qui pulsent derrière le radar */
+.sonar-bg{position:absolute;inset:-25%;border-radius:50%;
+  border:1px solid rgba(70,230,255,.22);animation:sonar-pulse 8s linear infinite;
+  pointer-events:none;opacity:0.45}
+.sonar-bg::after{content:"";position:absolute;inset:-12%;border-radius:50%;
+  border:1px solid rgba(70,230,255,.14);animation:sonar-pulse 11s linear infinite;
+  animation-delay:4s;pointer-events:none;opacity:0.35}
+@keyframes sonar-pulse{0%{transform:scale(.6);opacity:0.5}100%{transform:scale(1.5);opacity:0}}
+
+/* ============================================================ METRICS GRID */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+@media (max-width:1024px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.metrics-grid{grid-template-columns:1fr}}
+.metric-card{
+  position:relative;border:1px solid var(--line);border-radius:22px;
+  background:linear-gradient(180deg,var(--plate) 0%,rgba(10,14,28,.55) 100%);
+  padding:28px 24px 22px;overflow:hidden;transition:all .35s ease;
+}
+.metric-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,var(--cyan-line),transparent 70%);opacity:0;transition:opacity .3s}
+.metric-card:hover{border-color:var(--line2);transform:translateY(-5px);
+  box-shadow:0 32px 90px rgba(0,0,0,.65);}
+.metric-card:hover::before{opacity:1}
+.metric-card .m-k{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.22em;
+  color:var(--mut2);text-transform:uppercase;margin-bottom:12px}
+.metric-card .m-v{font-family:var(--mono);font-weight:800;font-size:clamp(32px,5vw,48px);
+  color:var(--txt);letter-spacing:-.02em;line-height:1;display:block}
+.metric-card .m-v small{font-size:15px;color:var(--mut2);font-weight:400;vertical-align:super}
+.metric-card .m-note{display:block;color:var(--mut);font-size:13px;margin-top:12px;line-height:1.5}
+.metric-card .m-v.cy{color:var(--cyan)}.metric-card .m-v.am{color:var(--gold)}
+.metric-card .m-v.green{color:var(--green)}.metric-card .m-v.red{color:var(--red)}
+.metric-spark{position:absolute;bottom:0;left:0;right:0;height:60px;pointer-events:none;opacity:.45}
+.metric-spark svg{width:100%;height:100%;display:block}

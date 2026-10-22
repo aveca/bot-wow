@@ -7,3 +7,5 @@
    par les pages AVANT ce shim — theme.css prime ensuite sur le décor.
    ========================================================================== */
 @import url("theme.css");
+@import url("hero.css");
+@import url("compare.css");

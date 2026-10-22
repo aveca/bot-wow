@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOT-WOW — the WoW Classic fishing bot that learns its spots</title>
 <meta name="description" content="BOT-WOW / Casinobabe: a fishing assistant for WoW Classic (including private servers). Measured float detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
-<meta name="theme-color" content="#05070f">
+<meta name="theme-color" content="#02040a">
 <link rel="canonical" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/">
@@ -31,7 +31,10 @@
 
 <nav>
   <div class="w">
-    <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+    <a class="logo" href="./">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      BOT-WOW
+    </a>
     <div class="nav-links">
       <a href="./modules.html">Modules</a>
       <a href="./compare.html">Versus</a>
@@ -54,7 +57,7 @@
 <section class="hero" id="hero">
   <div class="w hero-grid">
     <div class="hero-copy">
-      <span class="badge" data-sonar><span class="dot"></span> Live in the wild — v1.2.0 instrumented build</span>
+      <span class="badge"><span class="dot"></span> Live in the wild — v1.2.0 instrumented</span>
       <h1>The WoW Classic<br>fishing bot that<br>learns its spots.</h1>
       <p class="hero-sub">
         Measured float detection, <b>persistent spot memory</b> and optimised<br>
@@ -72,7 +75,7 @@
       </div>
     </div>
 
-    <!-- RADAR / PLANNER — THE SIGNATURE ELEMENT -->
+    <!-- RADAR PANEL — THE SIGNATURE ELEMENT -->
     <div class="radar-panel hero-sonar" id="heroRadar">
       <div class="radar-head">
         <div class="radar-title">
@@ -93,22 +96,7 @@
     </div>
   </div>
 
-  <!-- SONAR BACKGROUND EFFECT -->
-  <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true">
-    <defs>
-      <radialGradient id="sonarGrad" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#46e6ff" stop-opacity="0.08"/>
-        <stop offset="60%" stop-color="#46e6ff" stop-opacity="0.02"/>
-        <stop offset="100%" stop-color="#46e6ff" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <circle class="sonar-ring" cx="400" cy="300" r="280" fill="url(#sonarGrad)" stroke="#46e6ff" stroke-opacity="0.15" stroke-width="1"/>
-    <circle class="sonar-ring" cx="400" cy="300" r="200" fill="none" stroke="#46e6ff" stroke-opacity="0.1" stroke-width="0.5" stroke-dasharray="8 8"/>
-    <circle class="sonar-ring" cx="400" cy="300" r="120" fill="none" stroke="#46e6ff" stroke-opacity="0.08" stroke-width="0.5" stroke-dasharray="4 12"/>
-    <circle class="sonar-sweep" cx="400" cy="300" r="280" fill="none" stroke="#46e6ff" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="0 1758" stroke-linecap="round">
-      <animateTransform attributeName="transform" type="rotate" from="0 400 300" to="360 400 300" dur="8s" repeatCount="indefinite"/>
-    </circle>
-  </svg>
+  <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
 </section>
 
 <!-- ======================================================== MEASURED: INSTRUMENTED PROOF -->
@@ -117,7 +105,7 @@
     <header class="section-head">
       <span class="eyebrow">Instrumented measurements</span>
       <h2 class="h2">Measured, not invented.</h2>
-      <p class="sub">Every figure below comes from our own instrumented runs and offline test suites. Estimated values are always labelled.</p>
+      <p class="sub">Every figure below comes from our own instrumented runs and offline test suites.</p>
     </header>
     <div class="metrics-grid">
       <article class="metric-card" data-value="308">
@@ -132,11 +120,11 @@
         <span class="m-note">route-planner-parity.test.mjs, every build</span>
         <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 20 L15 18 L25 20 L35 17 L45 19 L55 16 L65 18 L75 15 L85 17 L95 14 L105 16 L115 13" stroke="#22d36e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
       </article>
-      <article class="metric-card amber" data-value="124">
+      <article class="metric-card" data-value="124">
         <span class="m-k">offline Python checks</span>
         <span class="m-v am" data-unit="">124</span>
-        <span class="m-note">6 suites: fishing·safety·learning·observer·modules·vendor</span>
-        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 25 L15 22 L25 24 L35 20 L45 23 L55 19 L65 21 L75 17 L85 19 L95 16 L105 18 L115 14" stroke="#f5a623" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
+        <span class="m-note">6 suites: fishing · safety · learning · observer · modules · vendor</span>
+        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 25 L15 22 L25 24 L35 20 L45 23 L55 19 L65 21 L75 17 L85 19 L95 16 L105 18 L115 14" stroke="#ffb545" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
       </article>
       <article class="metric-card" data-value="94">
         <span class="m-k">offline harness checks</span>
@@ -177,7 +165,6 @@
       <p class="sub">Facts from public product pages of the leading multi-tool bot, read 2026-10-21, against what is implemented and tested in our repository.</p>
     </header>
 
-    <!-- QUICK WIN CARDS -->
     <div class="vs-quick">
       <article class="vs-card win">
         <div class="v-head"><span class="v-cap">External bot</span><span class="v-badge ok">WIN</span></div>
@@ -197,24 +184,14 @@
       </article>
     </div>
 
-    <!-- DETAILED TABLE -->
     <div class="cmptable">
       <table class="vs">
         <thead><tr><th>Capability</th><th class="us">BOT-WOW</th><th>PixelBuddy (public pages)</th></tr></thead>
         <tbody>
           <tr><td>External bot (pixels, no injection)</td><td class="us"><span class="yes">✔ measured</span></td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Addon client (data channel)</td><td class="us"><span class="yes">✔ implemented</span></td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Fishing — AI (trained model)</td><td class="us"><span class="no">✘</span> colour detection</td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Background mode (no focus)</td><td class="us"><span class="yes">✔ measured</span></td><td><span class="yes">✔</span> announced</td></tr>
           <tr><td>Persistent fishing-spot memory</td><td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
           <tr><td>Route planner (cost + optimiser)</td><td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
           <tr><td>Automatic movement between spots</td><td class="us"><span class="warn">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh + profiles)</td></tr>
-          <tr><td>Navigation profiles (manual)</td><td class="us"><span class="no">✘</span> automatic approach</td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Profile/rotation shop (free)</td><td class="us"><span class="no">✘</span> absent</td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Inventory & vendor</td><td class="us"><span class="warn">⚠ in development</span></td><td><span class="no">?</span> not documented</td></tr>
-          <tr><td>Grind / combat rotations</td><td class="us"><span class="warn">⚠ planned</span></td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Gathering / questing / battlegrounds</td><td class="us"><span class="warn">⚠ planned</span></td><td><span class="yes">✔</span> announced</td></tr>
-          <tr><td>Follower / scripting</td><td class="us"><span class="warn">⚠ planned</span></td><td><span class="yes">✔</span> announced</td></tr>
           <tr><td>Game scope</td><td class="us">Classic 1.13 <small>incl. private servers</small></td><td>Official WoW only <small>excludes private servers</small></td></tr>
           <tr><td>Free trial without an account</td><td class="us"><span class="yes">✔</span> browser demo (simulated)</td><td>48 h trial — €1.99</td></tr>
           <tr><td>Price model</td><td class="us"><b>€20 lifetime</b></td><td>subscription 30 / 90 days</td></tr>
@@ -223,7 +200,6 @@
       </table>
     </div>
 
-    <!-- VERDICT BANDEAU -->
     <div class="verdict">
       <h2><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" fill="currentColor" opacity="0.15"/><path d="M6 10l3 3 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> The verdict</h2>
       <div class="v-row"><span class="v-item">PixelBuddy <b>claims</b></span><span class="v-val loss">8 roles announced</span></div>
@@ -232,8 +208,6 @@
       <div class="v-row"><span class="v-item">BOT-WOW <b>price</b></span><span class="v-val win">€20 lifetime — no renewal</span></div>
       <div class="v-row"><span class="v-item">PixelBuddy <b>game scope</b></span><span class="v-val loss">Official WoW only</span></div>
       <div class="v-row"><span class="v-item">BOT-WOW <b>game scope</b></span><span class="v-val win">Classic 1.13 + private servers</span></div>
-      <div class="v-row"><span class="v-item">PixelBuddy <b>trial</b></span><span class="v-val loss">48 h — €1.99</span></div>
-      <div class="v-row"><span class="v-item">BOT-WOW <b>trial</b></span><span class="v-val win">Free demo — no account</span></div>
     </div>
 
     <div class="honest-band">
@@ -261,11 +235,10 @@
       <article class="price-card">
         <div class="price-tag">Lifetime licence</div>
 
-        <!-- REAL CAPTURE EVIDENCE -->
         <div class="evidence-strip">
           <picture>
             <source type="image/webp" srcset="./assets/evidence/fishing-real-capture.webp">
-            <img src="./assets/evidence/fishing-real-capture.jpg" alt="Real capture: Lushwater Oasis, 76 KB, from instrumented session" loading="lazy" width="480" height="270">
+            <img src="./assets/evidence/fishing-real-capture.jpg" alt="Real capture: Lushwater Oasis, 76 KB, instrumented session" loading="lazy" width="480" height="270">
           </picture>
           <div class="evidence-caption">
             <span class="ev-k">REAL CAPTURE</span>
@@ -284,7 +257,6 @@
           <li><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Documentation, release notes and email support</span></li>
         </ul>
 
-        <!-- ONE-CLICK CHECKOUT FORM -->
         <form id="buyForm" novalidate>
           <input type="hidden" name="locale" value="en">
           <label for="email" class="form-label">Your email (to receive the key and download link)</label>
@@ -304,7 +276,6 @@
       </article>
     </div>
 
-    <!-- WAITLIST FALLBACK -->
     <div class="wl mt">
       <h3 style="font-size:17px">Payment not available for you yet?</h3>
       <p>Card payments via Mollie are being finalised. If the payment button fails, leave your email and we will write to you the moment it opens.</p>
