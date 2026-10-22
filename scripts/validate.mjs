@@ -137,7 +137,7 @@ const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const hrefs = [...home.matchAll(/href="([^"#][^"]*)"/g)].map((m) => m[1]);
 for (const href of new Set(hrefs)) {
   if (/^(https?:|mailto:)/.test(href)) continue;
-  const target = href.split("#")[0].replace(/^\.\//, "");
+  const target = href.split("#")[0].split("?")[0].replace(/^\.\//, "");
   if (!target) continue;
   if (!fs.existsSync(path.join(root, target))) {
     failures.push(`lien interne mort dans index.html : ${href}`);
