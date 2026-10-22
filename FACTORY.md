@@ -3,7 +3,7 @@
 ## Last verified delivery
 
 - **Version:** V13.1 (hero editorial bold, variant C — EN + FR)
-- **Commit:** (pending)
+- **Commit:** `8dbf98f` (pushed to origin/main)
 - **Date:** 2026-10-22
 - **Production URLs:**
   - Cloudflare Pages: https://bot-wow.com/ (verified: V13 hero serving)
@@ -160,19 +160,18 @@ node scripts/audit-viewports.mjs <url> <label>  # Chrome CDP viewport audit
 
 1. **Mascot SVG unused in production** — `assets/mascot/idle.svg` created but not used in production hero (variant C doesn't use mascot). Could be integrated as decorative element.
 2. **Unused variant CSS files in production** — `variant-a.css`, `variant-b.css` published but only `variant-c.css` is actively used. Could be removed to reduce asset count.
-3. **README.md outdated** — Describes old MVP product (Bot-Wow lobby game), not the current Casinobabe fishing bot.
 
 ## Completed improvements (Factory V3)
 
 1. **French hero updated to variant C** (2026-10-22) — `fr/index.html` hero replaced with variant C structure, translated to French. Consistent with EN version. All tests pass.
+2. **README.md rewritten** (2026-10-22) — Updated to reflect current product (Casinobabe fishing bot), architecture, deployment, tests, design system, security constraints, and Factory V3 contribution process.
 
 ## Improvement backlog (prioritized)
 
-1. **Update README.md** (MEDIUM) — Rewrite to reflect current product (Casinobabe fishing bot).
-2. **Clean unused variant CSS** (LOW) — Remove variant-a.css and variant-b.css from production (only variant-c is used). Update versionne-assets.mjs ASSETS list.
-3. **Integrate mascot into variant C** (LOW) — Add mascot SVG as decorative element in the hero or elsewhere.
-4. **Add "what is included" link to hero price** (LOW) — Variant C hero price lacks the "what is included" link that EN original had.
-5. **Audit FR pages for remaining inconsistencies** (MEDIUM) — Check all fr/ pages for V12.2 remnants that should be updated to V13.
+1. **Clean unused variant CSS** (LOW) — Remove variant-a.css and variant-b.css from production (only variant-c is used). Update versionne-assets.mjs ASSETS list.
+2. **Integrate mascot into variant C** (LOW) — Add mascot SVG as decorative element in the hero or elsewhere.
+3. **Add "what is included" link to hero price** (LOW) — Variant C hero price lacks the "what is included" link that EN original had.
+4. **Audit FR pages for remaining inconsistencies** (MEDIUM) — Check all fr/ pages for V12.2 remnants that should be updated to V13.
 
 ## Persistent state mechanism
 
@@ -184,10 +183,8 @@ node scripts/audit-viewports.mjs <url> <label>  # Chrome CDP viewport audit
 
 ## Next priority task
 
-**Update French hero to variant C** — Translate the V13 hero (variant C) to French, matching the EN structure. This includes:
-- Translating all text
-- Using `../assets/` paths (FR pages are in `fr/` subdirectory)
-- Updating the hero section from old V12.2 structure to variant C
-- Running `npm run validate`, `npm test`
-- Auditing in Chrome CDP
-- Committing, pushing, deploying, verifying both targets
+**Clean unused variant CSS** — Remove variant-a.css and variant-b.css from production (only variant-c is used), and update versionne-assets.mjs ASSETS list accordingly. Then:
+1. Remove variant-a.css, variant-b.css from ASSETS list in scripts/versionne-assets.mjs
+2. Delete assets/variant-a.css, assets/variant-b.css
+3. Run npm run validate, npm test
+4. Build, deploy to both targets, verify production
