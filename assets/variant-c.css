@@ -1,0 +1,221 @@
+/* ============================================================ VARIANT C — EDITORIAL BOLD
+   Typographie expressive, composition magazine, aucune 3D.
+   Le hero est une affiche : le titre domine, la démo est une vignette
+   placée dans le contenu, pas au centre. Le prix est visible immédiatement. */
+
+/* ---------- Composition : colonne centrée, texte prend toute la largeur ---------- */
+.variant-c .hero {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  padding: 100px 20px 120px;
+  background:
+    linear-gradient(180deg, #05070c 0%, #080a10 40%, #05070c 100%);
+}
+
+.variant-c .hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(201,162,39,0.3) 50%, transparent 100%);
+}
+
+.variant-c .hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, transparent 0%, #05070c 100%);
+  pointer-events: none;
+}
+
+.variant-c .hero__wrapper {
+  max-width: 800px;
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  z-index: 10;
+}
+
+.variant-c .hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: 100px;
+  background: rgba(201,162,39,0.1);
+  border: 1px solid rgba(201,162,39,0.2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c9a227;
+}
+
+.variant-c .hero__badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c9a227;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.variant-c .hero__title {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  margin: 0 0 24px;
+  text-transform: uppercase;
+}
+
+.variant-c .hero__title .word { display: block; }
+
+.variant-c .hero__title .word--1 { color: var(--txt); }
+.variant-c .hero__title .word--2 { color: #c9a227; }
+.variant-c .hero__title .word--3 { color: #5fb4d8; }
+
+.variant-c .hero__lead {
+  font-size: clamp(20px, 2.5vw, 28px);
+  line-height: 1.5;
+  color: var(--mut);
+  max-width: 54ch;
+  margin: 0 0 32px;
+  font-weight: 400;
+}
+
+.variant-c .hero__cta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.variant-c .hero__cta .btn {
+  padding: 18px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 220px;
+  border-radius: 100px;
+}
+
+.variant-c .hero__price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(201,162,39,0.15);
+}
+
+.variant-c .hero__price-value {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900;
+  font-family: var(--mono);
+  color: #c9a227;
+  letter-spacing: -0.02em;
+}
+
+.variant-c .hero__price-label {
+  color: var(--mut);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.variant-c .hero__guarantee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 32px;
+  background: rgba(201,162,39,0.06);
+  border: 1px solid rgba(201,162,39,0.12);
+  border-radius: 100px;
+}
+
+.variant-c .hero__guarantee-icon {
+  width: 20px;
+  height: 20px;
+  color: #7bd88f;
+}
+
+.variant-c .hero__guarantee-text {
+  font-size: 14px;
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.variant-c .hero__guarantee-text strong {
+  color: #7bd88f;
+}
+
+.variant-c .hero__divider {
+  width: 100%;
+  max-width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,162,39,0.3), transparent);
+  margin: 48px auto 0;
+}
+
+.variant-c .hero__proof {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+}
+
+.variant-c .proof-item {
+  text-align: center;
+  max-width: 180px;
+}
+
+.variant-c .proof-value {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+  font-family: var(--mono);
+  color: var(--txt);
+  line-height: 1;
+}
+
+.variant-c .proof-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut2);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .variant-c .hero__title { font-size: clamp(36px, 10vw, 64px); }
+  .variant-c .hero__lead { font-size: 17px; }
+}
+
+@media (max-width: 480px) {
+  .variant-c .hero { padding: 60px 16px 80px; }
+}
