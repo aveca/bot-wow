@@ -126,7 +126,9 @@
   }
 
   function play() {
-    if (running) return;
+    /* Un rejeu manuel relance TOUJOURS le cycle : sinon le clic du
+       visiteur pendant le rejeu automatique est ignore, et le bouton
+       semble mort. clearTimers() neutralise le cycle en cours. */
     clearTimers();
     running = true;
     stage.classList.add('is-playing');
