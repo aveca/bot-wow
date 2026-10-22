@@ -5,7 +5,7 @@
 .vs-card{
   position:relative;border:1px solid var(--line);border-radius:18px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  overflow:hidden;transition:$list .3s var(--ease-out);
+  overflow:hidden;transition:color, background-color, border-color, box-shadow, opacity, transform .3s var(--ease-out);
 }
 .vs-card::before{content:"";position:absolute;inset:0;border-radius:18px;
   padding:1px;background:linear-gradient(135deg,var(--cyan-line),transparent 60%,var(--gold-line));
@@ -98,7 +98,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .amt{font-size:clamp(44px,7vw,56px);font-weight:900;letter-spacing:-.03em;color:var(--txt);margin:6px 0 6px}
 .once{color:var(--mut);font-size:15px;margin:0 0 26px}
 .price-includes{list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:12px}
-.price-includes li{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(6,7,10,.4);transition:$list .2s var(--ease-out)}
+.price-includes li{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(6,7,10,.4);transition:color, background-color, border-color, box-shadow, opacity, transform .2s var(--ease-out)}
 .price-includes li:hover{border-color:var(--line-bright);background:rgba(26,38,54,.6)}
 .price-includes .ico{width:19px;height:19px;color:var(--green);flex:none;margin-top:3px}
 .form-label{display:block;font-size:13px;color:var(--mut);font-weight:700;margin-bottom:10px}
@@ -120,7 +120,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
   display:grid;grid-template-columns:1fr 240px 120px;gap:16px;align-items:center;
   border:1px solid var(--line);border-radius:16px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  padding:16px 20px;transition:$list .3s var(--ease-out)
+  padding:16px 20px;transition:color, background-color, border-color, box-shadow, opacity, transform .3s var(--ease-out)
 }
 .ledger-row:hover{border-color:var(--line-bright);transform:translateY(-2px)}
 .ledger-main{display:flex;flex-direction:column;gap:4px}
@@ -134,7 +134,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .ledger-tag.never{color:var(--red);border-color:var(--red-line);background:rgba(214,122,122,.12)}
 .ledger-progress{display:flex;align-items:center;gap:10px}
 .ledger-bar{flex:1;height:6px;background:rgba(6,7,10,.6);border-radius:3px;overflow:hidden;border:1px solid var(--hairline)}
-.ledger-bar > span{display:block;height:100%;border-radius:2px;transition:width .5s ease}
+.ledger-bar > span{display:block;height:100%;border-radius:2px;transition:transform .5s var(--ease-out)}
 .ledger-bar .p-shipped{background:var(--green)}.ledger-bar .p-dev{background:var(--gold)}.ledger-bar .p-plan{background:var(--cyan)}.ledger-bar .p-never{background:var(--red)}
 .ledger-pct{font-family:var(--mono);font-weight:800;font-size:12px;color:var(--mut);min-width:40px;text-align:right}
 .ledger-status{display:flex;align-items:center;justify-content:center}
@@ -147,7 +147,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
   border:1px solid var(--line);border-radius:16px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
   padding:22px 24px;display:flex;flex-direction:column;gap:8px;
-  transition:border-color .16s ease,transform .16s ease
+  transition:border-color .16s var(--ease-out),transform .16s ease
 }
 .dl-card:hover{border-color:var(--line-bright);transform:translateY(-2px)}
 .dc-k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--mut2);text-transform:uppercase}
@@ -160,7 +160,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .formula{
   position:relative;border:1px solid var(--line);border-radius:20px;
   background:var(--glass);backdrop-filter:blur(14px) saturate(110%);
-  padding:26px 24px 24px;display:flex;flex-direction:column;gap:14px;transition:$list .3s var(--ease-out);
+  padding:26px 24px 24px;display:flex;flex-direction:column;gap:14px;transition:color, background-color, border-color, box-shadow, opacity, transform .3s var(--ease-out);
 }
 .formula:hover{border-color:var(--line-bright);transform:translateY(-3px)}
 .formula.ours{border-color:var(--gold-line);background:linear-gradient(180deg,rgba(201,162,39,.07) 0%,var(--glass) 45%)}

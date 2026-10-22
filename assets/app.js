@@ -5,8 +5,8 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=20261022-93b8bb51';
-import './analytics.js?v=20261022-93b8bb51';
+import { planRound } from './route-planner.js?v=20261022-984197bd';
+import './analytics.js?v=20261022-984197bd';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -305,6 +305,9 @@ async function loadModuleLedger() {
       const sClass = statusClass[status] || 'dev';
       const sLabel = statusLabel[status]?.[isFr ? 'fr' : 'en'] || status;
       
+      // Progression : on anime une echelle (transform composite), pas une
+      // largeur : aucun recalcul de layout pendant l'animation.
+      const pct = Math.max(3, Math.round(progress));
       row.innerHTML = `
         <div class="ledger-main">
           <span class="ledger-name">${title}</span>
@@ -312,8 +315,8 @@ async function loadModuleLedger() {
           <div class="ledger-tags" aria-label="Features"></div>
         </div>
         <div class="ledger-progress">
-          <div class="ledger-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><span style="width:${progress}%"></span></div>
-          <span class="ledger-pct">${progress}%</span>
+          <div class="ledger-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Progress"><span style="--p:${pct / 100}"></span></div>
+          <span class="ledger-pct">${pct}%</span>
         </div>
         <div class="ledger-status"><span class="st st-${sClass}"><i></i>${sLabel}</span></div>
       `;
@@ -462,6 +465,23 @@ function wireOwnershipValues() {
   set('ownSaving', fmtEUR(Math.max(0, theirsPack - OWNERSHIP.ours)));
 }
 
+/* -------------------------------------------------- comparateur en accordeon
+   Sur petit ecran, le comparateur (26 criteres) deployait 14 670 px. Les
+   groupes sont des <details> natifs : on ne laisse ouvert que le premier,
+   et l'utilisateur ouvre ce qui l'interesse. Sur grand ecran tout reste
+   deploye (les <details> portent l'attribut `open`). */
+function wireCompareAccordion() {
+  const groups = [...document.querySelectorAll('.cmp-group')];
+  if (!groups.length) return;
+  const mq = window.matchMedia('(max-width: 760px)');
+  const apply = () => {
+    if (mq.matches) groups.forEach((g, i) => { if (i > 0) g.removeAttribute('open'); });
+    else groups.forEach((g) => g.setAttribute('open', ''));
+  };
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+}
+
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
@@ -469,6 +489,7 @@ async function boot() {
   wireReveal();
   wireNavScroll();
   wireOwnership();
+  wireCompareAccordion();
   loadModuleLedger();
   try {
     // Résolu depuis l'URL du MODULE (pas de la page) : la carte doit se
