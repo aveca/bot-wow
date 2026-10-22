@@ -588,7 +588,9 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
 .hero-price b{font-size:20px;color:var(--txt);font-weight:800;letter-spacing:-.01em}
 .hero-price .hp-sep{opacity:.45}
 .hero-price a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,162,39,.35);padding-bottom:1px}
-.hero-price a:hover{border-bottom-color:var(--gold)}
+@media (hover:hover) and (pointer:fine){
+  .hero-price a:hover{border-bottom-color:var(--gold)}
+}
 
 /* Note de bas de comparateur : date d'observation et prudence. */
 .cmp-note{
@@ -660,12 +662,16 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
   transition:border-color 240ms var(--ease-out)
 }
 .how-it-works .step:first-child{border-top:none}
-.how-it-works .step:hover{transform:none;border-color:var(--gold)}
+@media (hover:hover) and (pointer:fine){
+  .how-it-works .step:hover{transform:none;border-color:var(--gold)}
+}
 .how-it-works .step-num{
   font-size:30px;line-height:1;color:var(--mut2);letter-spacing:-.02em;
   transition:color 240ms var(--ease-out)
 }
-.how-it-works .step:hover .step-num{color:var(--gold)}
+@media (hover:hover) and (pointer:fine){
+  .how-it-works .step:hover .step-num{color:var(--gold)}
+}
 .how-it-works .step h3{margin:0;font-size:17px;letter-spacing:-.01em}
 .how-it-works .step p{margin:0;font-size:14px;line-height:1.6;max-width:52ch}
 @media (max-width:760px){
@@ -814,7 +820,9 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
   border-radius:999px;padding:7px 14px;
   transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out)
 }
-.stage-replay:hover{color:var(--gold);border-color:var(--gold);background:rgba(201,162,39,.08)}
+@media (hover:hover) and (pointer:fine){
+  .stage-replay:hover{color:var(--gold);border-color:var(--gold);background:rgba(201,162,39,.08)}
+}
 .stage-replay:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* --- carte et reglages --- */
@@ -853,6 +861,90 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
   .stage-steps li{font-size:8.5px;letter-spacing:.1em}
 }
 
+/* ============================================================ V12.2 — FILM DU PRODUIT
+   Le hero montre le produit reel : un enregistrement de la demonstration
+   navigateur (carte, ronde, mesures), pas une illustration. Le poster
+   s'affiche immediatement, la video ne se joue qu'une fois, et sous
+   prefers-reduced-motion elle ne demarre pas du tout. */
+.film{
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:rgba(10,12,18,.74);
+  box-shadow:0 34px 90px -46px rgba(0,0,0,.95)
+}
+.film-frame{position:relative;aspect-ratio:1000/620;background:#05070c}
+.film-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.film-tag{
+  position:absolute;left:12px;top:12px;z-index:2;padding:5px 10px;border-radius:999px;
+  background:rgba(4,6,11,.82);border:1px solid rgba(95,180,216,.32);color:var(--cyan);
+  font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  backdrop-filter:blur(6px)
+}
+.film-bar{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;justify-content:space-between;gap:12px;
+  padding:10px 14px;background:linear-gradient(180deg,transparent,rgba(3,4,8,.92));
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut2)
+}
+.film-bar b{color:var(--gold)}
+.film-replay{
+  position:absolute;right:12px;top:12px;z-index:3;appearance:none;cursor:pointer;font:inherit;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:#14110a;background:var(--gold);border:none;border-radius:999px;padding:7px 13px;
+  transition:transform 160ms cubic-bezier(0.23,1,0.32,1),filter 160ms cubic-bezier(0.23,1,0.32,1)
+}
+@media (hover:hover) and (pointer:fine){
+  .film-replay:hover{filter:brightness(1.08)}
+}
+.film-replay:active{transform:scale(0.97)}
+.film-replay:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.film-hud{padding:14px 16px;border-top:1px solid var(--line)}
+.film-steps{display:flex;gap:5px;list-style:none;margin:0 0 10px;padding:0;flex-wrap:wrap}
+.film-steps li{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.film-steps li .n{
+  width:16px;height:16px;border-radius:50%;border:1px solid currentColor;
+  display:grid;place-items:center;font-size:8.5px;letter-spacing:0
+}
+.film-read{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--mut)}
+.film-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.film-lat{
+  display:inline-flex;align-items:baseline;gap:8px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.film-lat b{font-size:19px;letter-spacing:-.02em;color:var(--gold);font-weight:800}
+
+/* La demonstration interactive passe en pleine largeur : un plan de coupe
+   a deux colonnes (l'ecran du jeu + la mesure a cote), pas une vignette
+   haute qui pousse le reste de la page. */
+.cycle-sec{padding-top:0}
+.cycle-sec .stage{
+  display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
+  grid-template-areas:"view lower" "hud lower" "foot foot";border-radius:20px
+}
+.cycle-sec .stage-view{grid-area:view;aspect-ratio:16/9}
+.cycle-sec .stage-hud{grid-area:hud}
+.cycle-sec .stage-lower{grid-area:lower;border-top:none;border-left:1px solid var(--line)}
+.cycle-sec .radar-foot{grid-area:foot}
+/* Dans la colonne de droite, le lien vers la demo doit pouvoir passer a la
+   ligne : il etait coupe. */
+.cycle-sec .radar-next-link{display:inline-block;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+@media (max-width:980px){
+  .cycle-sec .stage{
+    grid-template-columns:1fr;
+    grid-template-areas:"view" "hud" "lower" "foot"
+  }
+  .cycle-sec .stage-view{aspect-ratio:16/10}
+  .cycle-sec .stage-lower{border-left:none;border-top:1px solid var(--line)}
+}
+@media (max-width:880px){
+  .cycle-sec .stage-lower{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .film-tag{font-size:8px;letter-spacing:.1em;padding:4px 8px}
+  .film-bar{font-size:8px;letter-spacing:.08em;padding:8px 10px}
+}
+
 /* ============================================================ V11.2 — SELECTEUR
    DE PARCOURS
    Le selecteur doit se lire comme un outil de decision, pas comme une
@@ -866,7 +958,9 @@ table.vs tr.vs-group:first-child td{padding-top:8px}
   border-radius:999px;padding:9px 18px;
   transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out);
 }
-.journey-tab:hover{color:var(--txt);border-color:var(--line-bright)}
+@media (hover:hover) and (pointer:fine){
+  .journey-tab:hover{color:var(--txt);border-color:var(--line-bright)}
+}
 .journey-tab[aria-selected="true"]{color:#1a1205;background:linear-gradient(100deg,var(--gold),var(--gold2));border-color:transparent}
 .journey-tab:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 

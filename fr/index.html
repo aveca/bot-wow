@@ -15,12 +15,12 @@
 <meta property="og:description" content="Assistant de pêche pour WoW Classic : détection mesurée, mémoire persistante des spots, rondes optimisées. Licence à vie 20 €.">
 <meta property="og:url" content="https://bot-wow.com/fr/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="../assets/favicon.svg?v=20261022-dc213b77" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=20261022-3ac653d5" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20261022-dc213b77">
-<link rel="stylesheet" href="../assets/style.css?v=20261022-dc213b77">
+<link rel="stylesheet" href="../assets/site.css?v=20261022-3ac653d5">
+<link rel="stylesheet" href="../assets/style.css?v=20261022-3ac653d5">
 </head>
 <body>
 
@@ -77,6 +77,56 @@
       </p>
     </div>
 
+    <!-- ============================================================ FILM
+         Le produit reel, enregistre dans la demo navigateur. La video est
+         muette, se joue UNE fois, et s'arrete sur sa derniere image.
+         Sous prefers-reduced-motion : poster statique, lecture a la
+         demande. La carte est SIMULEE (le site l'annonce). -->
+    <div class="film" id="heroFilm">
+      <div class="film-frame">
+        <span class="film-tag">VRAI PRODUIT · CARTE SIMULÉE</span>
+        <video class="film-video" poster="../assets/media/demo-film-poster.jpg"
+               muted playsinline preload="metadata" data-film
+               aria-label="Enregistrement de la demonstration navigateur : le planificateur recalcule une ronde sur une carte simulee">
+          <source src="../assets/media/demo-film.mp4" type="video/mp4">
+        </video>
+        <div class="film-bar">
+          <span><b>VRAI PRODUIT</b> · 9 s, enregistré dans la démo navigateur</span>
+          <span>CARTE SIMULÉE</span>
+        </div>
+        <button class="film-replay" type="button" data-film-replay data-play-label="Lire le film" hidden>Rejouer le film</button>
+      </div>
+      <div class="film-hud">
+        <ol class="film-steps">
+          <li><span class="n">1</span>Lancer</li>
+          <li><span class="n">2</span>Détecter</li>
+          <li><span class="n">3</span>Morsure</li>
+          <li><span class="n">4</span>Clic</li>
+          <li><span class="n">5</span>Mémoriser</li>
+        </ol>
+        <p class="film-read">Le bot lit l'écran, surveille le flotteur, et clique à la morsure.</p>
+        <div class="film-foot">
+          <span class="film-lat"><b>308</b> ms<span>médiane morsure → clic</span></span>
+          <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="film-demo">Ouvrir cette ronde dans la démo →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
+</section>
+<!-- ======================================================== DEMONSTRATION : LE CYCLE -->
+<!-- La demonstration interactive n'est pas sacrifiee au film : elle passe
+     en pleine largeur juste apres le hero. C'est elle qui montre la
+     DETECTION (le film montre la PLANIFICATION). -->
+<section class="pad cycle-sec" id="cycle">
+  <div class="w">
+    <header class="section-head">
+      <span class="eyebrow">Le produit, en action</span>
+      <h2 class="h2">Regardez le bot travailler — dans le navigateur</h2>
+      <p class="lead">L'enregistrement ci-dessous est la vraie démo : le même planificateur que le bot, qui recalcule une ronde sur une carte simulée. Rien n'est mis en scène.</p>
+    </header>
     <!-- ============================================================ ETAPE
          Le cycle reel du bot, rejoue sous les yeux du visiteur.
          La capture d'ecran est reelle ; la detection est une
@@ -146,9 +196,8 @@
       </div>
     </div>
   </div>
-
-  <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
 </section>
+
 
 <!-- ======================================================== PARCOURS : QUE FAIRE ? -->
 <!-- Le selecteur ne vend que ce qui existe. Le 4e cas dit explicitement
@@ -559,6 +608,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Acheter</a></div>
 
-<script type="module" src="../assets/app.js?v=20261022-dc213b77"></script>
+<script type="module" src="../assets/app.js?v=20261022-3ac653d5"></script>
 </body>
 </html>
