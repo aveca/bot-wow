@@ -15,12 +15,12 @@
 <meta property="og:description" content="Assistant de pêche pour WoW Classic : détection mesurée, mémoire persistante des spots, rondes optimisées. Licence à vie 20 €.">
 <meta property="og:url" content="https://bot-wow.com/fr/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="../assets/favicon.svg?v=20261022-a70091d1" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=20261022-a3886bd1" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20261022-a70091d1">
-<link rel="stylesheet" href="../assets/style.css?v=20261022-a70091d1">
+<link rel="stylesheet" href="../assets/site.css?v=20261022-a3886bd1">
+<link rel="stylesheet" href="../assets/style.css?v=20261022-a3886bd1">
 </head>
 <body>
 
@@ -77,40 +77,68 @@
       </p>
     </div>
 
-    <div class="radar-panel" id="heroRadar">
-      <div class="radar-head">
-        <div class="radar-title">
+    <!-- ============================================================ ETAPE
+         Le cycle reel du bot, rejoue sous les yeux du visiteur.
+         La capture d'ecran est reelle ; la detection est une
+         reconstitution schematique, annoncee comme telle. -->
+    <div class="stage" id="heroStage" data-phase="idle">
+      <div class="stage-head">
+        <span class="stage-title">
           <svg class="radar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"/><path d="M12 12l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <span>Lushwater Oasis — carte</span>
-        </div>
-        <span class="live-pulse" aria-label="Données simulées"><span class="pulse-ring"></span>SIMULÉ</span>
+          <span>Lushwater Oasis — un cycle de pêche</span>
+        </span>
+        <span class="live-pulse" aria-label="Détection simulée"><span class="pulse-ring"></span>SIMULÉ</span>
       </div>
-      <div class="visual">
-        <picture>
+
+      <div class="stage-view">
+        <picture class="stage-shot">
           <source type="image/webp" srcset="../assets/evidence/fishing-real-capture.webp">
-          <img src="../assets/evidence/fishing-real-capture.jpg" alt="Capture réelle : Lushwater Oasis, session instrumentée" loading="lazy" width="480" height="270">
+          <img src="../assets/evidence/fishing-real-capture.jpg" alt="Capture réelle — Lushwater Oasis, WoW Classic 1.13, l'addon BOT-WOW actif dans le jeu" width="1200" height="515" fetchpriority="high">
         </picture>
-        <div class="visual-caption">
-          <span class="v-k">CAPTURE RÉELLE</span>
-          <span class="v-v">Lushwater Oasis · 76 Ko · instrumentée</span>
+        <div class="stage-ov" aria-hidden="true">
+          <span class="stage-scan"></span>
+          <span class="stage-float"></span>
+          <span class="stage-reticle"><i></i></span>
+          <span class="stage-click"></span>
+        </div>
+        <span class="stage-caption"><b>CAPTURE RÉELLE</b> · Lushwater Oasis · Classic 1.13 · addon actif</span>
+      </div>
+
+      <div class="stage-hud">
+        <ol class="stage-steps">
+          <li data-step="cast" data-state="todo"><span class="n">1</span>Lancer</li>
+          <li data-step="detect" data-state="todo"><span class="n">2</span>Détecter</li>
+          <li data-step="bite" data-state="todo"><span class="n">3</span>Morsure</li>
+          <li data-step="click" data-state="todo"><span class="n">4</span>Clic</li>
+          <li data-step="save" data-state="todo"><span class="n">5</span>Mémoriser</li>
+        </ol>
+        <p class="stage-read" id="stageRead">Le bot lit l'écran, surveille le flotteur, et clique à la morsure.</p>
+        <div class="stage-foot">
+          <span class="stage-lat"><b id="stageLatency">308</b> ms<span>médiane morsure → clic</span></span>
+          <button class="stage-replay" id="stageReplay" type="button">Rejouer le cycle</button>
         </div>
       </div>
-      <div class="radar-body">
-        <div class="radar-map">
+
+      <div class="stage-lower">
+        <div class="stage-mapbox">
+          <span class="stage-k">mémoire des spots</span>
           <svg id="heroMap" viewBox="-70 -70 140 140" role="img" aria-label="Carte de démonstration : bancs, niveaux de risque, ronde calculée"></svg>
         </div>
+        <div class="stage-side">
+          <div class="radar-modes" id="plannerModes" role="group" aria-label="Mode du planificateur de rondes">
+            <span class="radar-modes-label">Mode de ronde</span>
+            <button type="button" data-mode="prudent" aria-pressed="false">Prudent</button>
+            <button type="button" data-mode="equilibre" aria-pressed="true">Équilibré</button>
+            <button type="button" data-mode="exploration" aria-pressed="false">Exploration</button>
+          </div>
+          <div class="radar-next">
+            <span class="radar-next-t">Même planificateur, mêmes règles — essayez-le</span>
+            <a class="radar-next-link" href="./demo.html" data-track="cta_click" data-cta-id="radar-demo">Ouvrir cette ronde dans la démo →</a>
+          </div>
+        </div>
       </div>
-      <div class="radar-modes" id="plannerModes" role="group" aria-label="Mode du planificateur de rondes">
-        <span class="radar-modes-label">Mode de ronde</span>
-        <button type="button" data-mode="prudent" aria-pressed="false">Prudent</button>
-        <button type="button" data-mode="equilibre" aria-pressed="true">Équilibré</button>
-        <button type="button" data-mode="exploration" aria-pressed="false">Exploration</button>
-      </div>
-      <div class="radar-next">
-        <span class="radar-next-t">Même planificateur, mêmes règles — essayez-le</span>
-        <a class="radar-next-link" href="./demo.html" data-track="cta_click" data-cta-id="radar-demo">Ouvrir cette ronde dans la démo →</a>
-      </div>
-      <div class="radar-foot">
+
+      <div class="radar-foot stage-foot-stats">
         <div class="radar-stat"><span class="k">bancs</span><span class="v cy" id="heroSpots">–</span></div>
         <div class="radar-stat"><span class="k">trajet</span><span class="v" id="heroTravel">–</span></div>
         <div class="radar-stat"><span class="k">attendu</span><span class="v am" id="heroExpected">–</span></div>
@@ -531,6 +559,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Acheter</a></div>
 
-<script type="module" src="../assets/app.js?v=20261022-a70091d1"></script>
+<script type="module" src="../assets/app.js?v=20261022-a3886bd1"></script>
 </body>
 </html>
