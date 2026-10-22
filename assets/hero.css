@@ -1,4 +1,4 @@
-/* ============================================================ HERO — OBSERVATION STATION v7 */
+﻿/* ============================================================ HERO — OBSERVATION STATION v7 */
 .hero{position:relative;overflow:hidden;padding:clamp(90px,11vw,150px) 0 clamp(110px,13vw,170px);
   background:
     radial-gradient(ellipse 90% 70% at 30% 10%, rgba(201,162,39,.08), transparent 45%),
@@ -74,7 +74,7 @@
 .metric-card{
   position:relative;border:1px solid var(--line);border-radius:18px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  padding:24px 20px 18px;transition:all .3s ease;
+  padding:24px 20px 18px;transition:$list .3s var(--ease-out);
 }
 .metric-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
   background:linear-gradient(90deg,var(--cyan-line),transparent 70%);opacity:0;transition:opacity .3s}
@@ -91,4 +91,105 @@
 .metric-card .m-v.green{color:var(--green)}
 .metric-card .m-v.red{color:var(--red)}
 .metric-spark{position:absolute;bottom:0;left:0;right:0;height:52px;pointer-events:none;opacity:.45}
-.metric-spark svg{width:100%;height:100%;display:block}
+.metric-spark svg{width:100%;height:100%;display:block}/* ============================================================ BENEFITS — v8 */
+.benefits{display:flex;flex-direction:column;gap:14px;margin-bottom:34px}
+.benefit{display:flex;align-items:flex-start;gap:14px}
+.benefit .b-icon{width:20px;height:20px;color:var(--gold);flex:none;margin-top:3px;filter:drop-shadow(0 0 8px rgba(201,162,39,.3))}
+.benefit .b-body{color:var(--mut);font-size:14px;line-height:1.6}
+.benefit .b-body b{color:var(--txt)}
+.benefit .b-body span{color:var(--mut2);font-size:12.5px;display:block;margin-top:2px}
+
+/* ============================================================ STEPS — v8 */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{display:flex;flex-direction:column;gap:12px;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--glass);backdrop-filter:blur(12px) saturate(110%);transition:$list .3s var(--ease-out)}
+.step:hover{border-color:var(--line-bright);transform:translateY(-3px)}
+.step-num{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.step h3{font-size:17px;margin:0 0 8px;color:var(--txt)}
+.step p{color:var(--mut);font-size:13.5px;line-height:1.6;margin:0}
+/* ============================================================ MOBILE — vraie version mobile
+   Objectif : aucun debordement horizontal, hero reordonne (visuel d'abord),
+   ledger empile proprement, CTA pleine largeur. */
+.radar-map svg{width:100%;height:100%;display:block}
+.visual img{width:100%;height:auto;display:block}
+
+@media (max-width:760px){
+  /* hero : le visuel passe au-dessus du texte, CTA pleine largeur */
+  .hero{padding-top:56px}
+  .hero-grid{gap:28px}
+  .hero-copy{max-width:none}
+  .hero-copy h1{font-size:clamp(30px,8.5vw,40px);line-height:1.05}
+  .hero-copy .lead{font-size:15px;line-height:1.65}
+  .hero-copy .lead br{display:none}
+  .benefits{gap:11px;margin-bottom:26px}
+  .benefit .b-body{font-size:13.5px}
+  .hero-cta{flex-direction:column;align-items:stretch}
+  .hero-cta .btn{width:100%}
+
+  /* visuel + radar */
+  .visual{border-radius:16px}
+  .visual img{max-height:200px;object-fit:cover}
+  .visual-caption{padding:10px 14px}
+  .visual-caption .v-v{font-size:10px}
+  .radar-panel{margin-top:12px;border-radius:16px}
+  .radar-head{padding:12px 14px}
+  .radar-body{padding:12px}
+  .radar-map{height:170px}
+  .radar-foot{grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 14px}
+  .radar-stat .k{font-size:8px;letter-spacing:.12em}
+  .radar-stat .v{font-size:12.5px}
+
+  /* steps empiles */
+  .steps{grid-template-columns:1fr;gap:12px}
+  .step{padding:18px}
+
+  /* ledger : colonnes empilees, progression lisible */
+  .ledger-row{grid-template-columns:1fr;grid-template-areas:"main" "status" "progress" "tags";gap:12px;padding:16px}
+  .ledger-main{grid-area:main}
+  .ledger-status{grid-area:status;justify-content:flex-start}
+  .ledger-progress{grid-area:progress}
+  .ledger-tags{grid-area:tags}
+  .ledger-desc{display:block}
+  .ledger-name{font-size:15px}
+
+  /* tableau comparatif : scroll horizontal engage */
+  .cmptable{border-radius:14px}
+  table.vs{min-width:0}
+
+  /* prix */
+  .price-card{padding:24px;border-radius:18px}
+  .price-includes li{padding:13px 14px}
+  .pay-badges{gap:8px}
+  .evidence-strip{border-radius:14px;margin:20px 0}
+  .evidence-strip img{max-height:200px}
+  .evidence-caption{padding:12px 16px}
+
+  /* verdict + bandeau : colonnes empilees */
+  .verdict{padding:22px 20px;border-radius:18px}
+  .verdict .v-row{flex-direction:column;align-items:flex-start;gap:4px}
+  .verdict .v-val{font-size:13px}
+  .honest-band{padding:18px;border-radius:14px;flex-direction:column;gap:10px}
+  .honest-band .hb-icon{margin:0}
+
+  /* docs */
+  .docstrip-alt{grid-template-columns:1fr}
+  .dl-card{padding:18px 20px}
+
+  /* sections : respiration mobile */
+  .pad{padding:56px 0}
+  .section-head{margin-bottom:32px}
+  .eyebrow{font-size:9px;padding:7px 12px;letter-spacing:.18em}
+  .honest-note{font-size:12.5px;line-height:1.7}
+}
+
+/* prevention globale du debordement */
+.ledger-row > *{min-width:0}
+.dl-card,.step,.metric-card,.vs-card,.price-card{min-width:0}
+.ledger-tag{white-space:nowrap}
+@media (max-width:760px){
+  /* CTA centres : largeur bornee, texte_WRAP (plus de debordement) */
+  .center .btn{width:100%;white-space:normal;text-align:center;padding-left:18px;padding-right:18px}
+  /* decor sonar : plus resserre sur mobile */
+  .sonar-bg{inset:-8%;opacity:0.25}
+  .sonar-bg::after{display:none}
+}

@@ -1,11 +1,11 @@
-/* ============================================================ VS QUICK — v7, épuré */
+﻿/* ============================================================ VS QUICK — v7, épuré */
 .vs-quick{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
 @media (max-width:1024px){.vs-quick{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.vs-quick{grid-template-columns:1fr}}
 .vs-card{
   position:relative;border:1px solid var(--line);border-radius:18px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  overflow:hidden;transition:all .3s ease;
+  overflow:hidden;transition:$list .3s var(--ease-out);
 }
 .vs-card::before{content:"";position:absolute;inset:0;border-radius:18px;
   padding:1px;background:linear-gradient(135deg,var(--cyan-line),transparent 60%,var(--gold-line));
@@ -98,7 +98,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .amt{font-size:clamp(44px,7vw,56px);font-weight:900;letter-spacing:-.03em;color:var(--txt);margin:6px 0 6px}
 .once{color:var(--mut);font-size:15px;margin:0 0 26px}
 .price-includes{list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:12px}
-.price-includes li{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(6,7,10,.4);transition:all .2s ease}
+.price-includes li{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(6,7,10,.4);transition:$list .2s var(--ease-out)}
 .price-includes li:hover{border-color:var(--line-bright);background:rgba(26,38,54,.6)}
 .price-includes .ico{width:19px;height:19px;color:var(--green);flex:none;margin-top:3px}
 .form-label{display:block;font-size:13px;color:var(--mut);font-weight:700;margin-bottom:10px}
@@ -120,7 +120,7 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
   display:grid;grid-template-columns:1fr 240px 120px;gap:16px;align-items:center;
   border:1px solid var(--line);border-radius:16px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  padding:16px 20px;transition:all .3s ease
+  padding:16px 20px;transition:$list .3s var(--ease-out)
 }
 .ledger-row:hover{border-color:var(--line-bright);transform:translateY(-2px)}
 .ledger-main{display:flex;flex-direction:column;gap:4px}
@@ -154,4 +154,51 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .dc-t{font-weight:800;font-size:17px;color:var(--txt)}
 .dc-d{color:var(--mut);font-size:13px;line-height:1.5;flex:1}
 .dl-card a{color:var(--cyan);font-family:var(--mono);font-size:11.5px;font-weight:800;text-decoration:none;letter-spacing:.06em;align-self:flex-start}
-.dl-card a:hover{text-decoration:underline;color:var(--cyan-line)}
+.dl-card a:hover{text-decoration:underline;color:var(--cyan-line)}/* ============================================================ FORMULES — v8 (choix de formule) */
+.formula-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:34px}
+@media (max-width:900px){.formula-grid{grid-template-columns:1fr}}
+.formula{
+  position:relative;border:1px solid var(--line);border-radius:20px;
+  background:var(--glass);backdrop-filter:blur(14px) saturate(110%);
+  padding:26px 24px 24px;display:flex;flex-direction:column;gap:14px;transition:$list .3s var(--ease-out);
+}
+.formula:hover{border-color:var(--line-bright);transform:translateY(-3px)}
+.formula.ours{border-color:var(--gold-line);background:linear-gradient(180deg,rgba(201,162,39,.07) 0%,var(--glass) 45%)}
+.formula.ours::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-line))}
+.formula-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.formula-name{font-family:var(--mono);font-size:10px;margin:0;letter-spacing:.24em;text-transform:uppercase;color:var(--mut2)}
+.formula.for-ours .formula-name{color:var(--gold)}
+.formula-tag{font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line-bright);color:var(--mut2);white-space:nowrap}
+.formula.for-ours .formula-tag{color:var(--gold);border-color:var(--gold-line);background:var(--gold-dim)}
+.formula-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.formula-price b{font-family:var(--mono);font-weight:800;font-size:clamp(26px,3.4vw,34px);color:var(--txt);letter-spacing:-.02em}
+.formula.for-ours .formula-price b{color:var(--gold)}
+.formula-price span{font-size:12.5px;color:var(--mut2)}
+.formula-note{color:var(--mut);font-size:13px;line-height:1.55;margin:0}
+.formula ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;flex:1}
+.formula li{display:flex;gap:10px;font-size:13px;color:var(--mut);line-height:1.5}
+.formula li .m{flex:none;width:16px;height:16px;font-family:var(--mono);font-weight:800;font-size:13px;line-height:16px;text-align:center}
+.formula li .m.yes{color:var(--green)}
+.formula li .m.no{color:var(--mut2)}
+.formula li .m.warn{color:var(--gold)}
+.formula li b{color:var(--txt);font-weight:700}
+.formula .btn{width:100%}
+
+/* ============================================================ TABLEAU RESPONSIVE — v8
+   Le tableau devient une pile de cartes sur mobile : chaque ligne devient
+   un bloc, chaque cellule porte son etiquette via data-label.
+   Fonctionne sans JavaScript (attributs statiques). */
+@media (max-width:760px){
+  .cmptable{border:none;background:transparent;border-radius:0}
+  table.vs,table.vs tbody,table.vs tr,table.vs td{display:block;width:100%}
+  table.vs thead{display:none}
+  table.vs tr{border:1px solid var(--line);border-radius:16px;background:var(--glass);padding:16px 18px;margin-bottom:12px}
+  table.vs td{border:0;padding:7px 0;display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:baseline}
+  table.vs td::before{
+    content:attr(data-label);font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--mut2);padding-top:3px;
+  }
+  table.vs td:first-child{display:block;padding:0 0 10px;font-weight:700;color:var(--txt);font-size:14px}
+  table.vs td:first-child::before{content:none}
+  table.vs td.us{background:none}
+}

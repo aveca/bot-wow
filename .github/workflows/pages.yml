@@ -26,20 +26,13 @@ jobs:
       # FIX 2026-10-21 : le deploiement uploadait TOUT le depot, ce qui
       # exposait publiquement worker/index.js, les migrations SQL, package.json
       # et les sources. L'artefact ne contient plus que le site statique.
-      - name: Prepare static artifact
-        run: |
-          mkdir -p _site
-          for f in index.html demo.html success.html cancel.html 404.html robots.txt sitemap.xml .nojekyll version.txt; do
-            [ -e "$f" ] && cp "$f" _site/
-          done
-          for d in assets docs legal fr; do
-            [ -d "$d" ] && cp -r "$d" _site/
-          done
-          for f in features.html fishing.html getting-started.html compatibility.html roadmap.html faq.html; do
-            [ -e "$f" ] && cp "$f" _site/
-          done
-          echo "--- contenu de l'artefact ---"
-          ls -1 _site
+      # FIX 2026-10-22 : l'assemblage est fait par scripts/build-site.mjs,
+      # le MEME script que le projet Cloudflare Pages (qui sert le domaine
+      # bot-wow.com) : une seule source de verite pour la liste des
+      # fichiers publies, et un controle de securite qui echoue le build
+      # si un fichier interdit se glisse dans l'artefact.
+      - name: Build static site
+        run: node scripts/build-site.mjs _site
 
       - uses: actions/upload-pages-artifact@v3
         with:

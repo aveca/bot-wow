@@ -27,11 +27,14 @@ id = "5cca39707796468f83d2016350794f72"
 binding = "R2_BINARIES"
 bucket_name = "botwow-binaries"
 
+[[domains]]
+domain = "api.bot-wow.com"
+
 [vars]
 ENVIRONMENT = "production"
 # Valeur de production observee (placeholder non configure) : elle est
 # reproduite a l'identique pour ne pas modifier le comportement du profil.
-MOLLIE_PROFILE_ID = "pfl_BOT_WOW_PROFILE_ID_TO_CONFIGURE"
+
 # Nom de l'objet R2 livre au client (le build produit
 # casinobabe-fishing-<version>.zip ; le Worker essaie aussi ce nom et
 # l'ancien "Casinobabe-v1.0.38.zip" par repli).

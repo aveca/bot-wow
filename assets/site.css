@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    BOT-WOW — feuille de style (v2, conversion-grade)
    Palette : near-black + or WoW + arcane cyan/violet
    ═══════════════════════════════════════════════════════════════ */
@@ -74,7 +74,7 @@ nav .w{display:flex;align-items:center;justify-content:space-between;padding:13p
 .nav-right{display:flex;align-items:center;gap:12px}
 .lang{display:flex;gap:1px;font-size:11.5px;flex-wrap:wrap}
 .lang button{background:none;border:1px solid transparent;color:var(--mut2);padding:4px 7px;border-radius:7px;
-  cursor:pointer;font-family:inherit;font-weight:600;transition:.15s}
+  cursor:pointer;font-family:inherit;font-weight:600;transition:color, background-color, border-color, opacity, transform .15s var(--ease-out)}
 .lang button.on,.lang button:hover{color:var(--gold);border-color:rgba(255,194,75,.3)}
 @media(max-width:900px){.nav-links{display:none}}
 @media(max-width:520px){.nav-right .btn{display:none}}
@@ -105,7 +105,7 @@ nav .w{display:flex;align-items:center;justify-content:space-between;padding:13p
 .mock-bar span{margin-left:8px;font-size:12px;color:var(--mut2)}
 .mock-tabs{display:flex;gap:4px;padding:10px 12px 0}
 .mock-tabs button{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--mut);
-  padding:8px;border-radius:9px 9px 0 0;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+  padding:8px;border-radius:9px 9px 0 0;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:color, background-color, border-color, opacity, transform .15s var(--ease-out)}
 .mock-tabs button.on{background:rgba(255,157,47,.12);border-color:rgba(255,157,47,.35);color:var(--gold)}
 .mock-body{padding:16px 18px 20px}
 .mrow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;
@@ -140,7 +140,7 @@ section.pad{padding:78px 0}
 .sub{text-align:center;color:var(--mut);max-width:620px;margin:0 auto 50px;font-size:16.5px}
 
 /* ── reveal on scroll (masqué seulement si JS actif → robuste sans JS) ── */
-.js .rev{opacity:0;transform:translateY(26px);transition:opacity .6s ease, transform .6s ease}
+.js .rev{opacity:0;transform:translateY(26px);transition:opacity .6s var(--ease-out), transform .6s var(--ease-out)}
 .js .rev.in{opacity:1;transform:none}
 
 /* ── comparatif simple (2 cartes) ── */
@@ -231,7 +231,7 @@ table.vs td.us .yes{filter:drop-shadow(0 0 6px rgba(47,224,138,.5))}
 .qa{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;background:var(--panel);overflow:hidden}
 .qa summary{padding:18px 22px;font-weight:600;font-size:15.5px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px}
 .qa summary::-webkit-details-marker{display:none}
-.qa summary::after{content:'+';color:var(--gold);font-size:22px;font-weight:400;transition:.2s}
+.qa summary::after{content:'+';color:var(--gold);font-size:22px;font-weight:400;transition:transform, color .2s var(--ease-out)}
 .qa[open] summary::after{transform:rotate(45deg)}
 .qa .ans{padding:0 22px 20px;color:var(--mut);font-size:14.5px}
 
@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--line);background:var(--bg2);padding:46px 0 30p
 footer .grid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:30px;margin-bottom:34px}
 footer .logo{margin-bottom:14px}
 footer p{color:var(--mut);max-width:320px;font-size:13.5px}
-footer h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut2);margin-bottom:14px}
+footer h3,footer h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut2);margin-bottom:14px}
 footer ul{list-style:none;display:flex;flex-direction:column;gap:9px}
 footer ul a{color:var(--mut);font-size:14px}footer ul a:hover{color:var(--txt)}
 .foot-mail{color:var(--gold)!important;font-weight:600}
@@ -257,7 +257,7 @@ footer ul a{color:var(--mut);font-size:14px}footer ul a:hover{color:var(--txt)}
 .toast-wrap{position:fixed;left:18px;bottom:18px;z-index:300;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .toast{display:flex;align-items:center;gap:12px;background:rgba(14,17,32,.96);border:1px solid var(--line2);
   border-radius:13px;padding:11px 15px 11px 12px;box-shadow:var(--shadow);min-width:250px;max-width:300px;
-  transform:translateX(-120%);transition:transform .45s cubic-bezier(.2,.8,.2,1);backdrop-filter:blur(8px)}
+  transform:translateX(-120%);transition:transform .45s var(--ease-drawer);backdrop-filter:blur(8px)}
 .toast.show{transform:none}
 .toast .tav{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:800;font-size:13px;color:#0a0c16;background:linear-gradient(135deg,var(--gold),var(--gold2))}
 .toast .tx{font-size:12.5px;line-height:1.35}
