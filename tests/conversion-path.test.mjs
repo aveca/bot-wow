@@ -102,5 +102,22 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : prix de 20 EUR present', /20,00\s?€/.test(t));
 }
 
+// 8. Le stamp des assets est a jour (regression observee en production :
+//    un stamp inchange laissait le navigateur servir l'ancien app.js)
+{
+  const { computeStamp, assetFingerprint } = await import('../scripts/versionne-assets.mjs');
+  const expected = computeStamp(REPO);
+  const files = ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html',
+    'assets/style.css', 'assets/app.js', 'assets/demo.js'];
+  const used = new Set();
+  for (const f of files) {
+    for (const m of read(f).matchAll(/\?v=([0-9a-zA-Z._-]+)/g)) used.add(m[1]);
+  }
+  check('tous les assets portent le meme stamp', used.size === 1, `(stamps : ${[...used].join(', ')})`);
+  check('le stamp correspond au contenu actuel des assets', used.has(expected),
+    `(attendu ${expected}, trouve ${[...used].join(', ')})`);
+  check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
