@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOT-WOW — the WoW Classic fishing bot that learns its spots</title>
 <meta name="description" content="BOT-WOW / Casinobabe: a fishing assistant for WoW Classic (including private servers). Measured float detection, persistent spot memory, optimised rounds. Lifetime licence €20.">
-<meta name="theme-color" content="#02040a">
+<meta name="theme-color" content="#0a0c12">
 <link rel="canonical" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/">
@@ -53,16 +53,16 @@
   </div>
 </nav>
 
-<!-- ============================================================ HERO : OBSERVATION STATION -->
+<!-- ============================================================ HERO — OBSERVATION STATION v7 -->
 <section class="hero" id="hero">
   <div class="w hero-grid">
     <div class="hero-copy">
       <span class="badge"><span class="dot"></span> Live in the wild — v1.2.0 instrumented</span>
       <h1>The WoW Classic<br>fishing bot that<br>learns its spots.</h1>
-      <p class="hero-sub">
+      <p class="lead">
         Measured float detection, <b>persistent spot memory</b> and optimised<br>
-        rounds that chain fishing spots together — and a module ledger that<br>
-        tells you exactly what else is shipped, in development or planned.
+        rounds that chain fishing spots together — plus an honest module ledger<br>
+        showing exactly what ships, what's in development, and what's planned.
       </p>
       <div class="hero-cta">
         <a class="btn btn-gold btn-lg" href="./demo.html">Try the browser demo</a>
@@ -75,8 +75,8 @@
       </div>
     </div>
 
-    <!-- RADAR PANEL — THE SIGNATURE ELEMENT -->
-    <div class="radar-panel hero-sonar" id="heroRadar">
+    <!-- RADAR PANEL — intégré à droite, réduit en poids visuel -->
+    <div class="radar-panel" id="heroRadar">
       <div class="radar-head">
         <div class="radar-title">
           <svg class="radar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"/><path d="M12 12l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -85,7 +85,9 @@
         <span class="live-pulse" aria-label="Simulated data"><span class="pulse-ring"></span>SIMULATED</span>
       </div>
       <div class="radar-body">
-        <svg id="heroMap" viewBox="-70 -70 140 140" role="img" aria-label="Demo map: fishing spots, risk levels, computed round"></svg>
+        <div class="radar-map-container">
+          <svg id="heroMap" viewBox="-70 -70 140 140" role="img" aria-label="Demo map: fishing spots, risk levels, computed round"></svg>
+        </div>
       </div>
       <div class="radar-foot">
         <div class="radar-stat"><span class="k">spots</span><span class="v cy" id="heroSpots">–</span></div>
@@ -105,32 +107,32 @@
     <header class="section-head">
       <span class="eyebrow">Instrumented measurements</span>
       <h2 class="h2">Measured, not invented.</h2>
-      <p class="sub">Every figure below comes from our own instrumented runs and offline test suites.</p>
+      <p class="lead">Every figure below comes from our own instrumented runs and offline test suites.</p>
     </header>
     <div class="metrics-grid">
       <article class="metric-card" data-value="308">
         <span class="m-k">median bite → click</span>
         <span class="m-v cy" data-unit="ms">308</span>
         <span class="m-note">Instrumented sessions, per-cycle logs</span>
-        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 35 L15 28 L25 32 L35 20 L45 25 L55 18 L65 22 L75 15 L85 19 L95 12 L105 10 L115 8" stroke="#46e6ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
+        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 35 L15 28 L25 32 L35 20 L45 25 L55 18 L65 22 L75 15 L85 19 L95 12 L105 10 L115 8" stroke="#5fb4d8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
       </article>
       <article class="metric-card" data-value="12">
         <span class="m-k">JS ↔ Python planner parity</span>
         <span class="m-v green" data-unit="/12">12</span>
         <span class="m-note">route-planner-parity.test.mjs, every build</span>
-        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 20 L15 18 L25 20 L35 17 L45 19 L55 16 L65 18 L75 15 L85 17 L95 14 L105 16 L115 13" stroke="#22d36e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
+        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 20 L15 18 L25 20 L35 17 L45 19 L55 16 L65 18 L75 15 L85 17 L95 14 L105 16 L115 13" stroke="#8dd3a8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
       </article>
       <article class="metric-card" data-value="124">
         <span class="m-k">offline Python checks</span>
         <span class="m-v am" data-unit="">124</span>
         <span class="m-note">6 suites: fishing · safety · learning · observer · modules · vendor</span>
-        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 25 L15 22 L25 24 L35 20 L45 23 L55 19 L65 21 L75 17 L85 19 L95 16 L105 18 L115 14" stroke="#ffb545" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
+        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 25 L15 22 L25 24 L35 20 L45 23 L55 19 L65 21 L75 17 L85 19 L95 16 L105 18 L115 14" stroke="#c9a227" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg></div>
       </article>
       <article class="metric-card" data-value="94">
         <span class="m-k">offline harness checks</span>
         <span class="m-v" data-unit="/94">94</span>
         <span class="m-note">tests/run-fishing-harness.mjs</span>
-        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 30 L15 27 L25 29 L35 25 L45 27 L55 23 L65 25 L75 21 L85 23 L95 20 L105 22 L115 18" stroke="#9db1cc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/></svg></div>
+        <div class="metric-spark" aria-hidden="true"><svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M5 30 L15 27 L25 29 L35 25 L45 27 L55 23 L65 25 L75 21 L85 23 L95 20 L105 22 L115 18" stroke="#a3adb8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/></svg></div>
       </article>
     </div>
     <p class="honest-note">These figures come from our own instrumented runs and offline test suites in this repository. No invented counters on this site.</p>
@@ -142,8 +144,8 @@
   <div class="w">
     <header class="section-head">
       <span class="eyebrow">Module ledger</span>
-      <h2 class="h2">One bot architecture. Honest roles, added one by one.</h2>
-      <p class="sub">Fishing carries the product today. The same screens, memory and planner foundation extend to the next roles — each lands as a tested module or stays visibly marked.</p>
+      <h2 class="h2">One architecture. Honest roles.</h2>
+      <p class="lead">Fishing carries the product today. Each next role lands as a tested module — or stays visibly marked as in development.</p>
     </header>
 
     <div class="ledger" id="moduleLedger">
@@ -162,7 +164,7 @@
     <header class="section-head">
       <span class="eyebrow">Honest comparison</span>
       <h2 class="h2">BOT-WOW vs. all-in-one bots</h2>
-      <p class="sub">Facts from public product pages of the leading multi-tool bot, read 2026-10-21, against what is implemented and tested in our repository.</p>
+      <p class="lead">Facts from public product pages, against what is implemented and tested in our repository.</p>
     </header>
 
     <div class="vs-quick">
@@ -172,41 +174,37 @@
       </article>
       <article class="vs-card win">
         <div class="v-head"><span class="v-cap">Spot memory</span><span class="v-badge ok">WIN</span></div>
-        <div class="v-card-body"><p>Persistent, versioned, exportable. <span class="v-desc">PixelBuddy: not documented</span></p></div>
+        <div class="v-card-body"><p>Persistent, versioned, exportable. <span class="v-desc">Not documented on competitor</span></p></div>
       </article>
       <article class="vs-card win">
         <div class="v-head"><span class="v-cap">Route planner</span><span class="v-badge ok">WIN</span></div>
-        <div class="v-card-body"><p>Cost-based optimiser, 12/12 parity. <span class="v-desc">PixelBuddy: not documented</span></p></div>
-      </article>
-      <article class="vs-card warn">
-        <div class="v-head"><span class="v-cap">Auto movement</span><span class="v-badge warn">IN DEV</span></div>
-        <div class="v-card-body"><p>Minimap odometer tested. <span class="v-desc">PixelBuddy: announced (mesh)</span></p></div>
+        <div class="v-card-body"><p>Cost-based optimiser, 12/12 parity. <span class="v-desc">Not documented on competitor</span></p></div>
       </article>
     </div>
 
     <div class="cmptable">
       <table class="vs">
-        <thead><tr><th>Capability</th><th class="us">BOT-WOW</th><th>PixelBuddy (public pages)</th></tr></thead>
+        <thead><tr><th>Capability</th><th class="us">BOT-WOW</th><th>Competitor (public pages)</th></tr></thead>
         <tbody>
           <tr><td>External bot (pixels, no injection)</td><td class="us"><span class="yes">✔ measured</span></td><td><span class="yes">✔</span> announced</td></tr>
           <tr><td>Persistent fishing-spot memory</td><td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
           <tr><td>Route planner (cost + optimiser)</td><td class="us"><span class="yes">✔ tested</span></td><td><span class="no">?</span> not documented</td></tr>
-          <tr><td>Automatic movement between spots</td><td class="us"><span class="warn">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh + profiles)</td></tr>
+          <tr><td>Automatic movement between spots</td><td class="us"><span class="warn">⚠ in development</span></td><td><span class="yes">✔</span> announced (mesh)</td></tr>
           <tr><td>Game scope</td><td class="us">Classic 1.13 <small>incl. private servers</small></td><td>Official WoW only <small>excludes private servers</small></td></tr>
           <tr><td>Free trial without an account</td><td class="us"><span class="yes">✔</span> browser demo (simulated)</td><td>48 h trial — €1.99</td></tr>
           <tr><td>Price model</td><td class="us"><b>€20 lifetime</b></td><td>subscription 30 / 90 days</td></tr>
-          <tr><td>Number of roles</td><td class="us">1 shipped + 3 in dev, all visible in <a href="./modules.html" style="color:var(--cyan)">module ledger</a></td><td>8 roles announced</td></tr>
+          <tr><td>Number of roles</td><td class="us">1 shipped + 3 in dev, visible in <a href="./modules.html" style="color:var(--cyan)">module ledger</a></td><td>8 roles announced</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="verdict">
       <h2><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" fill="currentColor" opacity="0.15"/><path d="M6 10l3 3 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> The verdict</h2>
-      <div class="v-row"><span class="v-item">PixelBuddy <b>claims</b></span><span class="v-val loss">8 roles announced</span></div>
+      <div class="v-row"><span class="v-item">Competitor <b>claims</b></span><span class="v-val loss">8 roles announced</span></div>
       <div class="v-row"><span class="v-item">BOT-WOW <b>ships</b></span><span class="v-val win">1 shipped + 3 in development</span></div>
-      <div class="v-row"><span class="v-item">PixelBuddy <b>price</b></span><span class="v-val loss">Subscription 30 / 90 days</span></div>
+      <div class="v-row"><span class="v-item">Competitor <b>price</b></span><span class="v-val loss">Subscription 30 / 90 days</span></div>
       <div class="v-row"><span class="v-item">BOT-WOW <b>price</b></span><span class="v-val win">€20 lifetime — no renewal</span></div>
-      <div class="v-row"><span class="v-item">PixelBuddy <b>game scope</b></span><span class="v-val loss">Official WoW only</span></div>
+      <div class="v-row"><span class="v-item">Competitor <b>game scope</b></span><span class="v-val loss">Official WoW only</span></div>
       <div class="v-row"><span class="v-item">BOT-WOW <b>game scope</b></span><span class="v-val win">Classic 1.13 + private servers</span></div>
     </div>
 
@@ -214,7 +212,7 @@
       <svg class="hb-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M12 7v6M12 15v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <div class="hb-body">
         <span class="hb-t">Why this comparison is honest</span>
-        <span class="hb-d">The PixelBuddy column only reports what their own public pages state. It is <strong>not</strong> an independent measurement of their software, and we have never tested it. Our own figures are measured ones, verified by offline test suites. Unverifiable items are marked <strong>"not documented"</strong> instead of guessed.</span>
+        <span class="hb-d">The competitor column only reports what their own public pages state. It is <strong>not</strong> an independent measurement, and we have never tested their software. Our own figures are measured ones, verified by offline test suites. Unverifiable items are marked <strong>"not documented"</strong> instead of guessed.</span>
       </div>
     </div>
 
@@ -228,7 +226,7 @@
     <header class="section-head">
       <span class="eyebrow">Pricing</span>
       <h2 class="h2">One price. Once. For life.</h2>
-      <p class="sub">No subscription, no hidden modules, no surprise renewal. You pay €20, it stays yours.</p>
+      <p class="lead">No subscription, no hidden modules, no surprise renewal. You pay €20, it stays yours.</p>
     </header>
 
     <div class="price-wrap">
@@ -293,7 +291,8 @@
   <div class="w">
     <header class="section-head">
       <span class="eyebrow">Documentation & trust</span>
-      <h2 class="h2">Everything to install it, and what to do if anything jams</h2>
+      <h2 class="h2">Everything to install it</h2>
+      <p class="lead">Guides, release notes, known issues, compatibility, licence recovery, support.</p>
     </header>
     <div class="docstrip-alt">
       <article class="dl-card"><span class="dc-k">01</span><span class="dc-t">Install guide</span><span class="dc-d">Prerequisites, addon copy, initial configuration, run and clean stop.</span><a href="./docs/install.html">Read the guide →</a></article>
@@ -301,7 +300,7 @@
       <article class="dl-card"><span class="dc-k">03</span><span class="dc-t">Known issues</span><span class="dc-d">Detection stalls, client edge cases, and the recovery procedure.</span><a href="./docs/known-issues.html">Consult →</a></article>
       <article class="dl-card"><span class="dc-k">04</span><span class="dc-t">Compatibility</span><span class="dc-d">What is tested: Classic 1.13 and private servers. What is not: Retail, Mac.</span><a href="./compatibility.html">Read the matrix →</a></article>
       <article class="dl-card"><span class="dc-k">05</span><span class="dc-t">Licence recovery</span><span class="dc-d">Find your key again and re-activate the licence on a new machine.</span><a href="./docs/license.html">Procedure →</a></article>
-      <article class="dl-card"><span class="dc-k">06</span><span class="dc-t">Support</span><span class="dc-d">A real, human-readable email address, with an announced response time.</span><a href="mailto:support@bot-wow.com">support@bot-wow.com →</a></article>
+      <article class="dl-card"><span class="dc-k">06</span><span class="dc-t">Support</span><span class="dc-d">A real, human-readable email address.</span><a href="mailto:support@bot-wow.com">support@bot-wow.com →</a></article>
     </div>
   </div>
 </section>
@@ -311,7 +310,7 @@
   <div class="w">
     <span class="eyebrow">Start here</span>
     <h2 class="h2">Try it for free, then own it</h2>
-    <p>The browser demo runs in two minutes with no install and no account. If it convinces you, one payment covers the licence for life.</p>
+    <p class="lead">The browser demo runs in two minutes with no install and no account. If it convinces you, one payment covers the licence for life.</p>
     <div class="hero-cta" style="justify-content:center">
       <a class="btn btn-gold btn-lg" href="#buy">Buy — €20.00</a>
       <a class="btn btn-ghost btn-lg" href="./demo.html">Try the demo</a>
@@ -325,7 +324,7 @@
     <div class="grid">
       <div>
         <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
-        <p>Fishing assistant for WoW Classic. Published by Casinobabe.<br>Not affiliated with, endorsed by, or connected to Blizzard Entertainment.<br>Automation tools can violate the game's terms of service; read the compatibility page before use.</p>
+        <p class="small">Fishing assistant for WoW Classic. Published by Casinobabe.<br>Not affiliated with, endorsed by, or connected to Blizzard Entertainment.<br>Automation tools can violate the game's terms of service; read the compatibility page before use.</p>
       </div>
       <div>
         <h4>Product</h4>
@@ -337,8 +336,8 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. BOT-WOW is not a Blizzard product and is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment. Use automation software responsibly and within the rules of the server you play on.</div>
-      <span class="mono">v1.2.0 · contents: <a href="./legal/terms.html">terms</a> · <a href="./legal/privacy.html">privacy</a> · <a href="./legal/refund.html">refunds</a></span>
+      <div class="disclaimer small">© 2026 Casinobabe — BOT-WOW. Not a Blizzard product. World of Warcraft is a trademark of Blizzard Entertainment.</div>
+      <span class="mono small">v1.2.0 · <a href="./legal/terms.html">terms</a> · <a href="./legal/privacy.html">privacy</a> · <a href="./legal/refund.html">refunds</a></span>
     </div>
   </div>
 </footer>
