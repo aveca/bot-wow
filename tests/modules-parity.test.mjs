@@ -66,7 +66,12 @@ try {
     fail('modules.json présent sur le site', JSON_PATH);
   } else {
     const onDisk = readFileSync(JSON_PATH, 'utf8');
-    if (regen === onDisk) {
+    /* Comparaison insensible aux fins de ligne : sur Windows, git
+       convertit LF -> CRLF au checkout (core.autocrlf), si bien que le
+       meme fichier commite differedait en octets. Le contenu reste
+       compare octet par octet. */
+    const norm = (s) => s.replace(/\r\n/g, '\n');
+    if (norm(regen) === norm(onDisk)) {
       pass('parité registre Python ↔ assets/modules.json (octets)');
     } else {
       fail('parité registre Python ↔ assets/modules.json',
