@@ -215,7 +215,7 @@ async function loadModuleLedger() {
   const container = document.getElementById('moduleLedger');
   if (!container) return;
   try {
-    const res = await fetch(new URL('assets/modules.json', import.meta.url), { cache: 'no-cache' });
+    const res = await fetch(new URL('modules.json', import.meta.url), { cache: 'no-cache' });
     const data = await res.json();
     const modules = data.modules || [];
     const statusOrder = ['available', 'development', 'planned'];
