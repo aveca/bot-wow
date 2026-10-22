@@ -48,7 +48,7 @@
     </div>
     <div class="nav-right">
       <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
-      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="#buy">Buy — €20.00</a>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="#buy" data-track="cta_click" data-cta-id="nav-buy">Buy — €20.00</a>
     </div>
   </div>
 </nav>
@@ -73,8 +73,8 @@
       </div>
 
       <div class="hero-cta">
-        <a class="btn btn-gold btn-lg" href="./demo.html">Try the browser demo</a>
-        <a class="btn btn-ghost btn-lg" href="#buy">See the offer</a>
+        <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Try the browser demo</a>
+        <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">See the offer</a>
       </div>
     </div>
 
@@ -108,6 +108,10 @@
         <button type="button" data-mode="prudent" aria-pressed="false">Cautious</button>
         <button type="button" data-mode="equilibre" aria-pressed="true">Balanced</button>
         <button type="button" data-mode="exploration" aria-pressed="false">Exploration</button>
+      </div>
+      <div class="radar-next">
+        <span class="radar-next-t">Same planner, same rules — run it yourself</span>
+        <a class="radar-next-link" href="./demo.html" data-track="cta_click" data-cta-id="radar-demo">Open this round in the demo →</a>
       </div>
       <div class="radar-foot">
         <div class="radar-stat"><span class="k">spots</span><span class="v cy" id="heroSpots">–</span></div>
@@ -151,6 +155,10 @@
       </div>
     </div>
     <p class="honest-note">Measured on our own instrumented runs and offline test suites. Estimated values are always labelled as estimates.</p>
+    <div class="cta-row">
+      <a class="btn btn-gold" href="./demo.html" data-track="cta_click" data-cta-id="telemetry-demo">Try the demo — 2 min, no account</a>
+      <a class="btn btn-ghost" href="./compare.html" data-track="cta_click" data-cta-id="telemetry-compare">Compare the offers</a>
+    </div>
   </div>
 </section>
 
@@ -179,6 +187,10 @@
         <h3>Optimise</h3>
         <p>The route planner chains spots by cost and distance. Verified 12 / 12 against the Python reference.</p>
       </div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-gold" href="./demo.html" data-track="cta_click" data-cta-id="steps-demo">See it run on a real map</a>
+      <a class="btn btn-ghost" href="#buy" data-track="cta_click" data-cta-id="steps-buy">Get the licence — €20</a>
     </div>
   </div>
 </section>
@@ -242,7 +254,7 @@
       </div>
     </div>
 
-    <p class="center mt"><a class="btn btn-gold" href="./compare.html">See the full comparison</a></p>
+    <p class="center mt"><a class="btn btn-gold" href="./compare.html" data-track="cta_click" data-cta-id="compare-cta">See the full comparison</a></p>
   </div>
 </section>
 
@@ -328,6 +340,22 @@
       <article class="dl-card"><span class="dc-k">05</span><span class="dc-t">Licence recovery</span><span class="dc-d">Find your key again and re-activate the licence on a new machine.</span><a href="./docs/license.html">Procedure →</a></article>
       <article class="dl-card"><span class="dc-k">06</span><span class="dc-t">Support</span><span class="dc-d">A real, human-readable email address.</span><a href="mailto:support@bot-wow.com">support@bot-wow.com →</a></article>
     </div>
+  </div>
+</section>
+
+<!-- ===================================================== FINAL CTA -->
+<section class="pad final" id="final">
+  <div class="w">
+    <header class="section-head">
+      <span class="eyebrow">Start here</span>
+      <h2 class="h2">Try it for free, then own it</h2>
+      <p class="lead">The browser demo runs in two minutes with no install and no account. If it convinces you, one payment covers the licence for life.</p>
+    </header>
+    <div class="cta-row">
+      <a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="final-buy">Buy — €20.00</a>
+      <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="final-demo">Try the demo</a>
+    </div>
+    <p class="honest-note">Demo data is simulated. The bot itself is for Windows and WoW Classic 1.13. Read the compatibility page before buying.</p>
   </div>
 </section>
 
