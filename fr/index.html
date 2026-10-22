@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css?v=20261022-8422e7a8">
 <link rel="stylesheet" href="../assets/style.css?v=20261022-8422e7a8">
+<link rel="stylesheet" href="../assets/variant-c.css?v=20261022-8422e7a8">
 </head>
 <body>
 
@@ -49,69 +50,52 @@
   </div>
 </nav>
 
-<!-- ============================================================ HÉRO — STATION D'OBSERVATION v8 -->
-<section class="hero" id="hero">
-  <div class="w hero-grid">
-    <div class="hero-copy">
-      <span class="badge"><span class="dot"></span> En service — build v1.2.0 instrumenté</span>
-      <h1>Le bot de pêche WoW Classic<br>qui apprend ses spots.</h1>
-      <p class="lead">
-        Détection mesurée du flotteur, <b>mémoire persistante des spots</b> et rondes
-        optimisées — plus un registre honnête qui montre ce qui livre, ce qui est en
-        développement et ce qui est planifié.
-      </p>
+<!-- ============================================================ HÉRO — STATION D'OBSERVATION v13 -->
+<section class="hero variant-c" id="hero">
+  <div class="hero__wrapper">
+    <span class="badge">En service — build v1.2.0 instrumenté</span>
+    <h1 class="hero__title">
+      <span class="word word--1">Le bot de pêche</span>
+      <span class="word word--2">WoW Classic</span>
+      <span class="word word--3">qui apprend</span>
+    </h1>
+    <p class="hero__lead">
+      Détection mesurée du flotteur, <b>mémoire persistante des spots</b> et rondes
+      optimisées — plus un registre honnête qui montre ce qui livre, ce qui est en
+      développement et ce qui est planifié.
+    </p>
 
-      <!-- 3 blocs de bénéfices — chacun porte une preuve vérifiable -->
-      <div class="benefits">
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>308 ms de médiane morsure → clic</b><span>· Mesuré session après session, journal par cycle</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Parité du planificateur 12/12</b><span>· Mêmes règles en JavaScript et en Python — lancez le test</span></div></div>
-        <div class="benefit"><svg class="b-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="b-body"><b>Classic 1.13 + serveurs privés</b><span>· Notre environnement de référence, testé là-bas</span></div></div>
-      </div>
-
-      <div class="hero-cta">
-        <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Essayer la démo navigateur</a>
-        <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">Voir l'offre</a>
-      </div>
-      <p class="hero-price">
-        <b>20,00 €</b><span class="hp-sep">·</span><span>licence à vie, paiement unique</span><span class="hp-sep">·</span><a href="#buy" data-track="cta_click" data-cta-id="hero-price">ce qui est inclus</a>
-      </p>
+    <div class="hero__cta">
+      <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="hero-demo">Essayer la démo navigateur</a>
+      <a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="hero-offer">Voir l'offre</a>
     </div>
 
-    <!-- ============================================================ FILM
-         Le produit reel, enregistre dans la demo navigateur. La video est
-         muette, se joue UNE fois, et s'arrete sur sa derniere image.
-         Sous prefers-reduced-motion : poster statique, lecture a la
-         demande. La carte est SIMULEE (le site l'annonce). -->
-    <div class="film" id="heroFilm">
-      <div class="film-frame">
-        <span class="film-tag">VRAI PRODUIT · CARTE SIMULÉE</span>
-        <video class="film-video" poster="../assets/media/demo-film-poster.jpg"
-               muted playsinline preload="metadata" data-film
-               aria-label="Enregistrement de la demonstration navigateur : le planificateur recalcule une ronde sur une carte simulee">
-          <source src="../assets/media/demo-film.mp4" type="video/mp4">
-        </video>
-        <div class="film-bar">
-          <span><b>VRAI PRODUIT</b> · 9 s, enregistré dans la démo navigateur</span>
-          <span>CARTE SIMULÉE</span>
-        </div>
-        <button class="film-replay" type="button" data-film-replay data-play-label="Lire le film" hidden>Rejouer le film</button>
-      </div>
-      <div class="film-hud">
-        <ol class="film-steps">
-          <li><span class="n">1</span>Lancer</li>
-          <li><span class="n">2</span>Détecter</li>
-          <li><span class="n">3</span>Morsure</li>
-          <li><span class="n">4</span>Clic</li>
-          <li><span class="n">5</span>Mémoriser</li>
-        </ol>
-        <p class="film-read">Le bot lit l'écran, surveille le flotteur, et clique à la morsure.</p>
-        <div class="film-foot">
-          <span class="film-lat"><b>308</b> ms<span>médiane morsure → clic</span></span>
-          <a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="film-demo">Ouvrir cette ronde dans la démo →</a>
-        </div>
-      </div>
+    <div class="hero__price">
+      <div class="hero__price-value">20,00 €</div>
+      <div class="hero__price-label">licence à vie, paiement unique</div>
     </div>
 
+    <div class="hero__guarantee">
+      <svg class="hero__guarantee-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a3 3 0 013 3v2a3 3 0 01-3 3 3 3 0 01-3-3V5a3 3 0 013-3zm0 2a1 1 0 10-1 1v2a1 1 0 10-2 0V5a1 1 0 112 0z" fill="currentColor"/></svg>
+      <span class="hero__guarantee-text"><strong>Sans piège :</strong> si vous n'êtes pas satisfait, nous remboursons.</span>
+    </div>
+
+    <div class="hero__divider"></div>
+
+    <div class="hero__proof">
+      <div class="proof-item">
+        <div class="proof-value">308ms</div>
+        <div class="proof-label">médiane morsure → clic</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-value">12/12</div>
+        <div class="proof-label">parité planificateur JS / Python</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-value">20 €</div>
+        <div class="proof-label">à vie, paiement unique</div>
+      </div>
+    </div>
   </div>
 
   <svg class="sonar-bg" viewBox="0 0 800 600" aria-hidden="true"></svg>
