@@ -157,6 +157,20 @@ async function openBrowser() {
 console.log('=== TELEMETRIE : test de bout en bout (production) ===');
 console.log('site :', SITE);
 
+/* La fenetre de limitation de debit est d'une minute par IP. Un run
+   precedent (ou une phase d'abus) peut la saturer : on attend alors
+   qu'elle se libere, plutot que de conclure a une panne. */
+{
+  const probe = await fetch(SITE.replace(/\/$/, '') + '/api/track', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ v: 1, event: 'page_view', page: '/', lang: 'en', props: { step: 'probe' } }),
+  });
+  if (probe.status === 429) {
+    console.log('  info  fenetre de limitation de debit saturee : attente de la liberation (~65 s)');
+    await sleep(65000);
+  }
+}
+
 const ref = 'e2e' + Date.now().toString(36);
 let browser = null;
 const requests = [];
@@ -215,6 +229,39 @@ try {
   ok('un CTA est cliquable', clickedId !== 'aucun', `(${clickedId})`);
   await sleep(2000);
 
+  // --- 2b. selecteur de parcours : un clic doit produire un journey_view ---
+  {
+    const tab = await cdp.send('Runtime.evaluate', {
+      expression: `(() => {
+        const t = document.querySelector('.journey-tabs [role="tab"]:not([aria-selected="true"])');
+        if (!t) return 'absent';
+        t.scrollIntoView();
+        t.click();
+        return t.getAttribute('data-intent') || 'sans-intent';
+      })()`,
+      returnByValue: true,
+    });
+    const intent = tab.result.value;
+    if (intent === 'absent') {
+      console.log('  info  selecteur de parcours absent de cette page (non teste)');
+    } else {
+      ok('le selecteur de parcours est cliquable', intent !== 'absent', `(${intent})`);
+      await sleep(1500);
+      const rows = await d1Query(
+        `SELECT id, event, step, page, lang, test FROM events WHERE ref = '${ref}' AND event = 'journey_view' ORDER BY id`
+      );
+      ok('le parcours affiche est enregistre en base', rows.length > 0, `(${rows.length} ligne(s))`);
+      if (rows.length) {
+        // la premiere ligne est l'onglet initial : on cherche celui qui
+        // correspond au clic.
+        const match = rows.find((r) => r.step === intent);
+        ok('le parcours enregistre correspond au clic', !!match,
+          `(attendu ${intent}, trouve ${rows.map((r) => r.step).join(', ')})`);
+        if (match) console.log(`  info  ligne D1 #${match.id} event=journey_view step=${match.step}`);
+      }
+    }
+  }
+
   // --- 3. requete envoyee ---
   ok('une requete vers /api/track est partie', requests.length > 0, `(${requests.length})`);
 
@@ -237,7 +284,7 @@ try {
     ok('la requete porte la reference de test', payload.ref === ref, `(${payload.ref})`);
     ok('la requete est marquee comme test', payload.test === true, `(${payload.test})`);
     ok('la requete porte un evenement de la liste fermee',
-      ['page_view', 'cta_click', 'planner_mode', 'ownership_view', 'checkout_start', 'checkout_error'].includes(payload.event),
+      ['page_view', 'cta_click', 'planner_mode', 'ownership_view', 'checkout_start', 'checkout_error', 'journey_view'].includes(payload.event),
       `(${payload.event})`);
     ok('la requete ne contient aucune donnee personnelle',
       !JSON.stringify(payload).includes('@') && !('email' in (payload.props || {})),
