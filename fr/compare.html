@@ -14,12 +14,12 @@
 <meta property="og:title" content="BOT-WOW vs. PixelBuddy — quel bot de pêche vous convient">
 <meta property="og:description" content="Comparaison honnête : ce qui est implémenté et testé vs. ce qui est annoncé. Prix, limites et conditions côte à côte.">
 <meta property="og:url" content="https://bot-wow.com/fr/compare.html">
-<link rel="icon" href="../assets/favicon.svg?v=20261022-93b8bb51" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=20261022-984197bd" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20261022-93b8bb51">
-<link rel="stylesheet" href="../assets/style.css?v=20261022-93b8bb51">
+<link rel="stylesheet" href="../assets/site.css?v=20261022-984197bd">
+<link rel="stylesheet" href="../assets/style.css?v=20261022-984197bd">
 </head>
 <body>
 
@@ -156,172 +156,219 @@
     </div>
 
     <div class="cmptable">
-      <table class="vs">
-        <thead><tr>
+      <details class="cmp-group" open>
+        <summary><span class="cmp-group-title">Pêche & détection</span><span class="cmp-group-count">5 criteria</span></summary>
+        <div class="cmp-group-body">
+          <table class="vs">
+            <thead><tr>
           <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th><th>Source PB</th>
         </tr></thead>
-        <tbody>
-          <tr>
+            <tbody>
+              <tr>
             <td data-label="Capacité">Bot externe (pixels, sans injection)</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔ mesuré</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Addon client (canal de données)</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔ implémenté</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Pêche par IA (modèle entraîné)</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> détection par couleur</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Mode arrière-plan (sans focus)</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔ mesuré</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Mémoire persistante des spots</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔ testé</span></td>
             <td data-label="PixelBuddy"><span class="no">?</span> non documenté</td>
             <td data-label="Source">—</td>
-          </tr>
-          <tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details class="cmp-group">
+        <summary><span class="cmp-group-title">Planification & déplacement</span><span class="cmp-group-count">3 criteria</span></summary>
+        <div class="cmp-group-body">
+          <table class="vs">
+            <thead><tr>
+          <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th><th>Source PB</th>
+        </tr></thead>
+            <tbody>
+              <tr>
             <td data-label="Capacité">Planificateur de rondes (coût + optimiseur)</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔ testé</span></td>
             <td data-label="PixelBuddy"><span class="no">?</span> non documenté</td>
             <td data-label="Source">—</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Déplacement automatique entre spots</td>
             <td class="us" data-label="BOT-WOW"><span class="warn">⚠ en développement</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé (mesh + profils)</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Navigation par profils (manuelle)</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> approche automatique</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">captures éditeur</td>
-          </tr>
-          <tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details class="cmp-group">
+        <summary><span class="cmp-group-title">Rôles & périmètre de jeu</span><span class="cmp-group-count">8 criteria</span></summary>
+        <div class="cmp-group-body">
+          <table class="vs">
+            <thead><tr>
+          <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th><th>Source PB</th>
+        </tr></thead>
+            <tbody>
+              <tr>
             <td data-label="Capacité">Boutique de profils/rotations (gratuite)</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> absent</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Inventaire &amp; vendeur</td>
             <td class="us" data-label="BOT-WOW"><span class="warn">⚠ en développement</span></td>
             <td data-label="PixelBuddy"><span class="no">?</span> non documenté</td>
             <td data-label="Source">—</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Grind / rotations de combat</td>
             <td class="us" data-label="BOT-WOW"><span class="warn">⚠ planifié</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Grind / collecte / quêtes / champs de bataille</td>
             <td class="us" data-label="BOT-WOW"><span class="warn">⚠ planifié</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Follower / scripting</td>
             <td class="us" data-label="BOT-WOW"><span class="warn">⚠ planifié</span></td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Périmètre de jeu</td>
             <td class="us" data-label="BOT-WOW">Classic 1.13 + serveurs privés</td>
             <td data-label="PixelBuddy">WoW officiel uniquement</td>
             <td data-label="Source">FAQ</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Serveurs privés</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔</span> cible principale</td>
             <td data-label="PixelBuddy"><span class="no">✘</span> exclus</td>
             <td data-label="Source">FAQ</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Vanille / Classic / Live</td>
             <td class="us" data-label="BOT-WOW">Classic 1.13 testé</td>
             <td data-label="PixelBuddy">toutes versions</td>
             <td data-label="Source">FAQ</td>
-          </tr>
-          <tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details class="cmp-group">
+        <summary><span class="cmp-group-title">Plateforme & installation</span><span class="cmp-group-count">4 criteria</span></summary>
+        <div class="cmp-group-body">
+          <table class="vs">
+            <thead><tr>
+          <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th><th>Source PB</th>
+        </tr></thead>
+            <tbody>
+              <tr>
             <td data-label="Capacité">Langues d'interface</td>
             <td class="us" data-label="BOT-WOW">français, anglais</td>
             <td data-label="PixelBuddy">16 langues</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Pilotage smartphone</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> absent</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Assistant d'installation</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔</span> guide + fichier config</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> annoncé</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Licence verrouillée à une machine</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔</span> implémenté (simulé)</td>
             <td data-label="PixelBuddy">[I] clé + activation</td>
             <td data-label="Source">—</td>
-          </tr>
-          <tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details class="cmp-group">
+        <summary><span class="cmp-group-title">Prix & conditions</span><span class="cmp-group-count">6 criteria</span></summary>
+        <div class="cmp-group-body">
+          <table class="vs">
+            <thead><tr>
+          <th>Capacité</th><th class="us">BOT-WOW</th><th>PixelBuddy (pages publiques)</th><th>Source PB</th>
+        </tr></thead>
+            <tbody>
+              <tr>
             <td data-label="Capacité">Essai payant 48 h</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔</span> démo gratuite (simulée)</td>
             <td data-label="PixelBuddy">1,99 € (2 sessions max)</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Abonnement</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> licence à vie 20 €</td>
             <td data-label="PixelBuddy">19,99 € / 30 jours</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Vigilance anti-bannissement</td>
             <td class="us" data-label="BOT-WOW"><span class="yes">✔</span> averti sur le site</td>
             <td data-label="PixelBuddy"><span class="yes">✔</span> averti sur leur FAQ</td>
             <td data-label="Source">FAQ</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Mémoire / injection</td>
             <td class="us" data-label="BOT-WOW"><span class="no">✘</span> refusé</td>
             <td data-label="PixelBuddy">non documenté</td>
             <td data-label="Source">—</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Modèle de prix</td>
             <td class="us" data-label="BOT-WOW"><b>20 € à vie</b></td>
             <td data-label="PixelBuddy">19,99 € / 30 jours, renouvelable</td>
             <td data-label="Source">page produit</td>
-          </tr>
-          <tr>
+          
+        <tr>
             <td data-label="Capacité">Nombre de rôles</td>
             <td class="us" data-label="BOT-WOW">1 livré + 3 en développement</td>
             <td data-label="PixelBuddy">8 rôles annoncés</td>
             <td data-label="Source">page produit</td>
-          </tr>
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
-
-    <div class="ownership" id="ownership" data-years="1">
+<div class="ownership" id="ownership" data-years="1">
       <div class="ownership-head">
         <h3>Ce que ça coûte dans la durée</h3>
         <div class="own-switch" role="group" aria-label="Horizon de temps">
@@ -425,7 +472,6 @@
     </div>
 
     <p class="center mt"><a class="btn btn-ghost" href="./demo.html" data-track="cta_click" data-cta-id="compare-demo">Essayer d'abord la démo navigateur</a></p>
-    <p class="center mt"><a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="compare-buy">Acheter — 20,00 €</a></p>
   </div>
 </section>
 
@@ -454,6 +500,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy">Acheter</a></div>
 
-<script type="module" src="../assets/app.js?v=20261022-93b8bb51"></script>
+<script type="module" src="../assets/app.js?v=20261022-984197bd"></script>
 </body>
 </html>

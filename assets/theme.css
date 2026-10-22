@@ -82,7 +82,7 @@ p{margin:0 0 18px;color:var(--mut)}
   min-height:52px;padding:0 28px;border-radius:var(--r);
   border:1px solid var(--line-bright);background:var(--glass);
   color:var(--txt);font-family:var(--sans);font-weight:700;font-size:15px;
-  cursor:pointer;transition:$list .25s var(--ease-out);backdrop-filter:blur(10px);
+  cursor:pointer;transition:color, background-color, border-color, box-shadow, opacity, transform .25s var(--ease-out);backdrop-filter:blur(10px);
 }
 .btn:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--gold-glow)}
 .btn:active{transform:translateY(0)}

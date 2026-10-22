@@ -367,3 +367,169 @@ footer li a:hover{transform:translateX(2px)}
   .radar-next{padding:12px 14px}
   .radar-next-t{font-size:11.5px}
 }
+
+/* ============================================================ V10.1 — CONSOLE INSTRUMENT
+   La capture reelle et le radar forment UNE seule console (au lieu de deux
+   cartes empilees qui repoussaient le hero a 2014 px). La capture devient
+   un bandeau de contexte au-dessus de la carte. */
+.radar-panel .visual{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;border-bottom:1px solid var(--line);
+  background:rgba(6,7,11,.35);
+}
+.radar-panel .visual picture{
+  display:block;flex:none;width:96px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--line);
+}
+.radar-panel .visual img{
+  display:block;width:100%;height:auto;max-height:46px;object-fit:cover;
+  transition:none;
+}
+.radar-panel .visual-caption{
+  position:static;background:none;padding:0;display:flex;flex-direction:column;gap:4px;
+  min-width:0;
+}
+.radar-panel .visual-caption .v-k{font-size:9px}
+.radar-panel .visual-caption .v-v{font-size:11px;text-align:left}
+.radar-map{height:220px}
+
+/* ============================================================ V10.1 — ECHELLE TYPOGRAPHIQUE
+   h3 unifie : le saut h2 (44) -> h3 (17) etait trop large, et les
+   .step h3 / .dc-t restaient a 17 px par specificite. */
+h3,
+.step h3,
+.dl-card .dc-t,
+.formula .formula-name,
+.modrow h3{
+  font-size:19px;
+  line-height:1.3;
+  letter-spacing:-.01em;
+}
+@media (min-width:1024px){
+  h3,.step h3,.dl-card .dc-t,.formula .formula-name,.modrow h3{font-size:20px}
+}
+
+/* ============================================================ V10.1 — RAYONS UNIFIES
+   999 (pilule) / 14 (carte) / 10 (petit element) : trois valeurs, pas six. */
+:root{
+  --r-pill:999px;
+  --r-card:14px;
+  --r-sm:10px;
+}
+.metric-card,.step,.formula,.dl-card,.vs-card,.ledger-row,.modrow,.price-card,
+.radar-panel,.evidence-strip,.telemetry,.ownership,.cmptable{
+  border-radius:var(--r-card);
+}
+.price-includes li,.benefit,.docstrip-alt > *{border-radius:var(--r-sm)}
+.st,.v-badge,.ledger-tag,.formula-tag,.eyebrow,.badge,.price-tag,.live-pulse,
+.radar-modes button,.own-switch button,.own-switch button,.langs a{
+  border-radius:var(--r-pill);
+}
+
+/* ============================================================ V10.1 — PERFORMANCE
+   Les barres de progression animaient `width` (layout a chaque frame).
+   `transform: scaleX()` est compose : pas de layout thrash. */
+.ledger-bar{position:relative;overflow:hidden}
+.ledger-bar > span{
+  display:block;height:100%;width:100%;transform-origin:left center;
+  transform:scaleX(0);transition:transform 700ms var(--ease-out);
+}
+.ledger-row.is-in .ledger-bar > span{transform:scaleX(var(--p,1))}
+.ledger-bar{--p:1}
+@media (prefers-reduced-motion:reduce){
+  .ledger-bar > span{transition:none;transform:scaleX(var(--p,1))}
+}
+
+/* ============================================================ V10.1 — HERO DANS UN ECRAN
+   Le CTA principal doit etre visible sans defiler. On resserre le
+   rythme vertical du hero et le titre. */
+.hero{padding-top:clamp(64px,7vw,120px)}
+.hero-copy h1{font-size:clamp(38px,5.2vw,58px);line-height:1.04;margin-bottom:22px}
+.hero-copy .lead{margin-bottom:26px}
+.hero-copy .badge{margin-bottom:24px}
+.benefits{gap:12px;margin-bottom:26px}
+.hero-trust{gap:14px}
+
+/* ============================================================ V10.1 — BARRES DU LEDGER
+   Etat initial visible : la reduction d'echelle n'est appliquee que
+   lorsque le systeme de revelation est actif (classe `js`). Sans
+   JavaScript, ou en mouvement reduit, la barre reste lisible. */
+.ledger-bar > span{transform:scaleX(var(--p,1))}
+.js .ledger-row.reveal:not(.is-in) .ledger-bar > span{transform:scaleX(0)}
+.js .ledger-row.reveal:not(.is-in) .ledger-bar > span{transition:none}
+
+/* ============================================================ V10.1 — NAV BASSE
+   97 px de hauteur pour une barre de navigation : on resserre. */
+nav{padding-top:12px;padding-bottom:12px}
+@media (max-width:760px){nav{padding-top:10px;padding-bottom:10px}}
+
+/* ============================================================ V10.1 — MARGE DE SECURITE
+   Le CTA principal ne doit pas dependre de la hauteur exacte de police. */
+.hero{padding-top:clamp(56px,6vw,96px)}
+nav .btn{min-height:44px}
+
+/* ============================================================ V10.1 — SVG ICONES BORNEES
+   Un SVG inline depourvu d attribut width/height s etire a la largeur de
+   son conteneur : le titre du verdict occupait 906 px de haut (SVG 906 px).
+   On borne les icones placees dans le flux de texte. Les elements qui ont
+   deja leur propre taille (logo, cartes, map) sont prioritaires :
+   une regle de classe bat une regle d element. */
+h2 > svg, h3 > svg, p > svg, span > svg, a > svg, button > svg,
+li > svg, strong > svg, b > svg, em > svg, small > svg{
+  width:1em;height:1em;flex:none;vertical-align:-0.15em;
+}
+
+/* ============================================================ V10.1 — COMPARATEUR GROUPES
+   Sous-en-tetes de theme : le tableau cesse d etre un mur de 26 lignes
+   et devient balayable par intention. */
+table.vs tr.vs-group td{
+  padding:20px 20px 8px;border-bottom:none;background:transparent;
+}
+table.vs tr.vs-group span{
+  font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--gold);
+}
+table.vs tr.vs-group:first-child td{padding-top:8px}
+@media (max-width:760px){
+  table.vs tr.vs-group{display:block;border-radius:16px;background:rgba(201,162,39,.06);margin:14px 0 4px}
+  table.vs tr.vs-group td{display:block;padding:12px 16px 4px}
+  table.vs tr.vs-group td::before{content:none}
+}
+
+/* ============================================================ V10.1 — COMPARATEUR EN ACCORDEON
+   Un <details> par theme : natif, accessible, sans JavaScript. Sur mobile
+   seul le premier theme reste deploye au chargement (voir app.js), ce qui
+   ramene la page de 14 670 px a une longueurasonable. */
+.cmp-group{border-top:1px solid var(--line)}
+.cmp-group:first-of-type{border-top:none}
+.cmp-group > summary{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 20px;cursor:pointer;list-style:none;
+  transition:background-color 180ms var(--ease-out),color 180ms var(--ease-out);
+}
+.cmp-group > summary::-webkit-details-marker{display:none}
+.cmp-group > summary:hover{background:rgba(201,162,39,.05)}
+.cmp-group > summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.cmp-group-title{
+  font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--gold);
+}
+.cmp-group-count{
+  font-family:var(--mono);font-size:10px;color:var(--mut2);
+  display:inline-flex;align-items:center;gap:8px;flex:none;
+}
+.cmp-group-count::after{
+  content:"";width:7px;height:7px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform 220ms var(--ease-out);
+}
+.cmp-group[open] > summary .cmp-group-count::after{transform:rotate(225deg) translate(-1px,-1px)}
+.cmp-group-body{overflow-x:auto}
+.cmp-group table.vs{width:100%}
+.cmp-group table.vs thead th{background:rgba(6,7,11,.45)}
+.cmp-group:not(:first-of-type) table.vs thead{display:none}
+.cmp-group table.vs tbody tr:first-child td{padding-top:14px}
+.cmp-group:last-child{border-bottom:1px solid var(--line)}
+@media (max-width:760px){
+  .cmp-group > summary{padding:14px 16px}
+  .cmp-group-count{font-size:9px}
+}

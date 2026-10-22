@@ -69,7 +69,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const t = read('compare.html');
   check('compare : CTA de la formule BOT-WOW', /data-cta-id="formula-ours-buy"/.test(t));
-  check('compare : CTA de paiement final', /data-cta-id="compare-buy"/.test(t));
+  check('compare : CTA de paiement present dans la formule', /data-cta-id="formula-ours-buy"/.test(t));
   check('compare : calculateur de cout present', /id="ownership"/.test(t));
   check('compare : source et date des prix citees', /pixelwowbot\.com/.test(t) && /2026-10-22/.test(t));
   check('compare : aucun prix de concurrent invente (30 / 90 jours absent)', !/30 \/ 90/.test(t));

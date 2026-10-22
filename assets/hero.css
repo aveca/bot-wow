@@ -74,7 +74,7 @@
 .metric-card{
   position:relative;border:1px solid var(--line);border-radius:18px;
   background:var(--glass);backdrop-filter:blur(12px) saturate(110%);
-  padding:24px 20px 18px;transition:$list .3s var(--ease-out);
+  padding:24px 20px 18px;transition:color, background-color, border-color, box-shadow, opacity, transform .3s var(--ease-out);
 }
 .metric-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
   background:linear-gradient(90deg,var(--cyan-line),transparent 70%);opacity:0;transition:opacity .3s}
@@ -102,7 +102,7 @@
 /* ============================================================ STEPS — v8 */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
 @media (max-width:760px){.steps{grid-template-columns:1fr}}
-.step{display:flex;flex-direction:column;gap:12px;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--glass);backdrop-filter:blur(12px) saturate(110%);transition:$list .3s var(--ease-out)}
+.step{display:flex;flex-direction:column;gap:12px;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--glass);backdrop-filter:blur(12px) saturate(110%);transition:color, background-color, border-color, box-shadow, opacity, transform .3s var(--ease-out)}
 .step:hover{border-color:var(--line-bright);transform:translateY(-3px)}
 .step-num{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
 .step h3{font-size:17px;margin:0 0 8px;color:var(--txt)}

@@ -35,14 +35,27 @@ function walk(dir, out = []) {
   return out;
 }
 
-/* Empreinte des assets, stamp retire : stable quel que soit le stamp
-   courant, et change des que le CONTENU change. */
+/* Empreinte de TOUS les assets publies (arborescence assets/ complete),
+   stamp retire avant hachage : stable quel que soit le stamp courant, et
+   change des que le CONTENU d'un asset change. Couvre donc aussi les
+   feuilles de style : un changement de CSS seul doit produire une
+   nouvelle cle de cache. */
 export function assetFingerprint(root = ROOT) {
   const h = crypto.createHash('sha256');
-  for (const a of ASSETS) {
-    const p = path.join(root, 'assets', a);
-    if (!fs.existsSync(p)) continue;
-    h.update(a);
+  const base = path.join(root, 'assets');
+  const files = [];
+  (function walk(dir, rel = '') {
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p, r);
+      else if (e.isFile()) files.push([r, p]);
+    }
+  })(base);
+  for (const [rel, p] of files) {
+    h.update(rel);
     h.update(fs.readFileSync(p, 'utf8').replace(STAMP_RE, ''));
   }
   return h.digest('hex').slice(0, 8);
