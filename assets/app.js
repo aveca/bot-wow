@@ -7,6 +7,11 @@
 */
 import { planRound } from './route-planner.js';
 
+// La classe `js` est posee des le chargement du module : sans JavaScript,
+// le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
+// AVANT toute peinture pour eviter un flash de contenu non anime.
+document.documentElement.classList.add('js');
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /* ----------------------------------------------------------------- carte */
@@ -64,8 +69,29 @@ function drawHeroMap(map, round) {
     }));
   });
 
+  // Balayage sonar : un secteur qui tourne en continu (groupe SVG anime
+  // en CSS via `transform`, donc compose sans repaint). C'est l'instrument
+  // qui donne au radar sa fonction de lecture, pas un simple cercle.
+  const sweepId = 'sweepGrad' + Math.random().toString(36).slice(2, 8);
+  const defs = svgEl('defs');
+  const grad = svgEl('linearGradient', {
+    id: sweepId, gradientUnits: 'userSpaceOnUse', x1: 0, y1: 0, x2: 28, y2: 0,
+  });
+  grad.appendChild(svgEl('stop', { offset: '0%', 'stop-color': '#5fb4d8', 'stop-opacity': '0.55' }));
+  grad.appendChild(svgEl('stop', { offset: '100%', 'stop-color': '#5fb4d8', 'stop-opacity': '0' }));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+  const sweepG = svgEl('g', { class: 'sweep' });
+  sweepG.appendChild(svgEl('path', {
+    d: 'M0,0 L0,-52 A52,52 0 0,1 27.2,37.3 Z', fill: `url(#${sweepId})`, opacity: '0.22',
+  }));
+  sweepG.appendChild(svgEl('line', {
+    x1: 0, y1: 0, x2: 0, y2: -52, stroke: '#5fb4d8', 'stroke-width': '0.7', opacity: '0.6',
+  }));
+  svg.appendChild(sweepG);
+
   // balayage sonar
-  const ping = svgEl('circle', { cx: 0, cy: 0, r: 6, fill: 'none', stroke: '#46e6ff', 'stroke-width': 0.7, class: 'ping' });
+  const ping = svgEl('circle', { cx: 0, cy: 0, r: 6, fill: 'none', stroke: '#5fb4d8', 'stroke-width': 0.7, class: 'ping' });
   svg.appendChild(ping);
 
   // bancs
@@ -190,24 +216,56 @@ function wireBuyForm() {
   });
 }
 
-/* ------------------------------------------------------ révélations */
+/* ------------------------------------------------------ révélations
+   Chorégraphie d'apparition au scroll (V9).
+   - la classe `js` n'est posée QUE si JavaScript est actif : sans JS,
+     aucun élément n'est masqué (la page reste lisible) ;
+   - un seul observer, avec un décalage progressif par groupe (les enfants
+     d'un même conteneur révèlent en cascade) ;
+   - `prefers-reduced-motion` : on ne masque rien du tout. */
+const REVEAL_SELECTOR = [
+  '.section-head', '.metric-card', '.step', '.formula', '.ledger-row', '.price-card',
+  '.honest-band', '.verdict', '.cmptable', '.evidence-strip', '.band',
+  '.docstrip-alt > *', '.telemetry',
+].join(',');
+
 function wireReveal() {
-  const items = document.querySelectorAll('.reveal');
-  if (!items.length) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce || !('IntersectionObserver' in window)) {
-    items.forEach((el) => el.classList.add('in'));
+  if (reduce) return; // rien n'est masqué : le contenu est visible d'emblée
+
+  const targets = [...document.querySelectorAll(REVEAL_SELECTOR)];
+  if (!targets.length) return;
+
+  // Index de décalage par conteneur parent : les éléments d'un même
+  // groupe révèlent en cascade, les groupes restent indépendants.
+  const perParent = new Map();
+  for (const el of targets) {
+    const p = el.parentElement;
+    const i = perParent.get(p) || 0;
+    perParent.set(p, i + 1);
+    el.style.setProperty('--reveal-i', String(Math.min(i, 3)));
+    el.classList.add('reveal');
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach((el) => el.classList.add('is-in'));
     return;
   }
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('in');
-        io.unobserve(entry.target);
-      }
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-in');
+      io.unobserve(entry.target);
     });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-  items.forEach((el) => io.observe(el));
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+  targets.forEach((el) => io.observe(el));
+
+  // Filet de securite : si un element n'a pas ete revele (conteneur masque,
+  // navigateur etrange, onglet en arriere-plan), on le revele quand meme.
+  // Le contenu ne doit JAMAIS rester invisible a cause d'une animation.
+  setTimeout(() => {
+    targets.forEach((el) => { if (!el.classList.contains('is-in')) el.classList.add('is-in'); });
+  }, 3000);
 }
 
 /* -------------------------------------------------- module ledger */
@@ -274,11 +332,142 @@ async function loadModuleLedger() {
   }
 }
 
+/* ------------------------------------------------------ etat de scroll nav
+   La navigation se densifie des que la page a defile : un seul seuil,
+   un seul etat, une seule transition. */
+function wireNavScroll() {
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ticking = false;
+  const update = () => {
+    nav.classList.toggle('is-scrolled', window.scrollY > 12);
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  }, { passive: true });
+  update();
+  if (reduce) nav.classList.remove('is-scrolled');
+}
+
+/* -------------------------------------------------- planificateur du hero
+   L'aha moment : le visiteur fait tourner le VRAI planificateur (memes
+   regles que le bot local, parite verifiee par tests/route-planner-parity)
+   sur la VRAIE carte simulee, et voit la ronde se recalculer.
+   SEE : la carte et ses bancs.  DECIDE : le mode.  GO : les CTA. */
+let heroMapData = null;
+
+function updateHeroStats(round) {
+  const m = round.metrics || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('heroSpots', m.spots ?? '–');
+  set('heroTravel', (m.travelSec ?? 0) + ' s');
+  set('heroExpected', m.expectedCatchesPerHour != null ? m.expectedCatchesPerHour + '/h' : (m.expectedCatches ?? '–'));
+  set('heroUnv', m.unverifiedLegs ?? 0);
+}
+
+function wireHeroPlanner() {
+  const group = document.getElementById('plannerModes');
+  if (!group) return;
+  if (!heroMapData) { group.hidden = true; return; }
+  group.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button[data-mode]');
+    if (!btn) return;
+    const mode = btn.dataset.mode;
+    const already = btn.getAttribute('aria-pressed') === 'true';
+    if (already) return;
+    group.querySelectorAll('button[data-mode]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
+    const round = planRound(heroMapData, { mode });
+    drawHeroMap(heroMapData, round);
+    updateHeroStats(round);
+  });
+}
+
+/* -------------------------------------------------- cout de possession
+   Comparaison de depense reelle, a partir de prix PUBLIES et cites.
+   BOT-WOW : 20,00 EUR une fois.
+   PixelBuddy : 19,99 EUR / 30 jours (Farming Pack) et a partir de
+   6,99 EUR / 30 jours (a la carte, un role).
+   Source : pixelwowbot.com/#pricing, lu le 2026-10-22.
+   L'hypothese de renouvellement est ecrite noir sur blanc : on ne cache
+   pas que leur tarif est un abonnement. */
+const OWNERSHIP = {
+  ours: 20,          // EUR, une fois
+  packMonthly: 19.99, // EUR / 30 jours, renouvellement
+  carteMonthly: 6.99, // EUR / 30 jours, a la carte (role unique)
+};
+
+function fmtEUR(n) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+function wireOwnership() {
+  const box = document.getElementById('ownership');
+  if (!box) return;
+  const years = Number(box.dataset.years || 1);
+  const months = years * 12;
+  const theirsPack = OWNERSHIP.packMonthly * months;
+  const theirsCarte = OWNERSHIP.carteMonthly * months;
+  const max = Math.max(OWNERSHIP.ours, theirsPack, theirsCarte);
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('ownOurs', fmtEUR(OWNERSHIP.ours));
+  set('ownPack', fmtEUR(theirsPack));
+  set('ownCarte', fmtEUR(theirsCarte));
+  const bars = [
+    ['ownOursBar', OWNERSHIP.ours], ['ownPackBar', theirsPack], ['ownCarteBar', theirsCarte],
+  ];
+  for (const [id, v] of bars) {
+    const el = document.getElementById(id);
+    if (el) el.style.width = Math.max(3, Math.round((v / max) * 100)) + '%';
+  }
+  set('ownSaving', fmtEUR(Math.max(0, theirsPack - OWNERSHIP.ours)));
+
+  const group = box.querySelector('.own-switch');
+  if (!group) return;
+  group.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button[data-years]');
+    if (!btn) return;
+    box.dataset.years = btn.dataset.years;
+    group.querySelectorAll('button[data-years]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
+    wireOwnershipValues();
+  });
+}
+
+function wireOwnershipValues() {
+  const box = document.getElementById('ownership');
+  if (!box) return;
+  const years = Number(box.dataset.years || 1);
+  const months = years * 12;
+  const theirsPack = OWNERSHIP.packMonthly * months;
+  const theirsCarte = OWNERSHIP.carteMonthly * months;
+  const max = Math.max(OWNERSHIP.ours, theirsPack, theirsCarte);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('ownOurs', fmtEUR(OWNERSHIP.ours));
+  set('ownPack', fmtEUR(theirsPack));
+  set('ownCarte', fmtEUR(theirsCarte));
+  const bars = [['ownOursBar', OWNERSHIP.ours], ['ownPackBar', theirsPack], ['ownCarteBar', theirsCarte]];
+  for (const [id, v] of bars) {
+    const el = document.getElementById(id);
+    if (el) el.style.width = Math.max(3, Math.round((v / max) * 100)) + '%';
+  }
+  set('ownSaving', fmtEUR(Math.max(0, theirsPack - OWNERSHIP.ours)));
+}
+
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
   wireWaitlist();
   wireReveal();
+  wireNavScroll();
+  wireOwnership();
   loadModuleLedger();
   try {
     // Résolu depuis l'URL du MODULE (pas de la page) : la carte doit se
@@ -287,14 +476,11 @@ async function boot() {
     const mapUrl = new URL('demo-map.json', import.meta.url);
     const res = await fetch(mapUrl, { cache: 'no-cache' });
     const map = await res.json();
+    heroMapData = map;
     const round = planRound(map, { mode: 'equilibre' });
     drawHeroMap(map, round);
-    const m = round.metrics || {};
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('heroSpots', m.spots ?? '–');
-    set('heroTravel', (m.travelSec ?? 0) + ' s');
-    set('heroExpected', m.expectedCatches ?? '–');
-    set('heroUnv', m.unverifiedLegs ?? 0);
+    updateHeroStats(round);
+    wireHeroPlanner();
   } catch (e) {
     // Le hero reste lisible même sans la carte : on ne casse pas la page.
     const svg = document.getElementById('heroMap');

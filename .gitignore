@@ -3,3 +3,15 @@ dist/
 
 # Dependances
 node_modules/
+
+# Artefact du site statique (scripts/build-site.mjs) : genere, jamais versionne.
+_site/
+
+# Etat local du deploiement Cloudflare (wrangler).
+.wrangler/
+
+# Sauvegardes locales.
+backups/
+
+# Copie temporaire du Worker utilisee par le harness de test.
+tests/.worker-under-test.mjs

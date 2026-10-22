@@ -2506,7 +2506,37 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var MOLLIE_API_BASE = "https://api.mollie.com/v2";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+// Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
+// Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
+// remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
+// de paiement par heure et par IP. Chaque appel cree un vrai objet de
+// paiement Mollie : c'est a la fois un cout et un vecteur d'abus.
+// References voisines dans le meme Worker :
+//   BITCOIN_CHECKOUT_RATE_LIMIT = 3 / 5 min
+//   RATE_LIMITS.subscribe        = 10 / heure
+//   RATE_LIMITS.download         = 20 / heure
+// Reponse en cas de depassement : 429 + Retry-After (voir handleCheckout).
 var CHECKOUT_RATE_LIMIT = { max: 5, windowMs: 3e5 };
+// Mapping langue du site -> locale Mollie.
+// Source : liste officielle des `locale` acceptes par l'API Mollie
+// (POST /customers et POST /payments) :
+//   ca_ES cs_CZ da_DK de_AT de_CH de_DE de_LU el_GR en_BE en_GB en_NL en_US
+//   es_ES fi_FI fr_BE fr_FR fr_LU hu_HU is_IS it_IT lt_LT lv_LV nb_NO nl_BE
+//   nl_NL pl_PL pt_PT sk_SK sl_SI sv_SE tr_TR
+// Les codes courts ("en", "fr"...) ne sont PAS acceptes par l'API : il faut
+// une locale ISO 15897 "xx_XX". `ru` n'a pas de page hebergee Mollie : on
+// retombe sur en_US plutot que d'envoyer une valeur invalide (422).
+var MOLLIE_LOCALES = {
+  fr: "fr_FR",
+  en: "en_US",
+  de: "de_DE",
+  es: "es_ES",
+  pt: "pt_PT"
+};
+var MOLLIE_LOCALE_FALLBACK = "en_US";
+function toMollieLocale(lang) {
+  return MOLLIE_LOCALES[String(lang || "").toLowerCase()] || MOLLIE_LOCALE_FALLBACK;
+}
 // FIX 2026-10-21 : le TARIF est fixe COTE SERVEUR.
 // Avant, le montant venait du navigateur (`body.amount || 2e3`) : un client
 // pouvait demander un montant arbitraire (y compris 1,00 EUR) et c'etait le
@@ -2577,7 +2607,7 @@ async function handleCheckout(request, env2) {
   } catch (error) {
     console.error("Checkout error:", error);
     if (error instanceof Response) return error;
-    return jsonResponse2({ ok: false, error: "checkout_failed" }, 500);
+    return jsonResponse2({ ok: false, error: "checkout_failed", detail: error && error.message }, 500);
   }
 }
 __name(handleCheckout, "handleCheckout");
@@ -2787,7 +2817,7 @@ async function getOrCreateMollieCustomer(env2, email, locale) {
   if (cached) return cached;
   const response = await mollieFetch(env2, "POST", "/customers", {
     email,
-    locale,
+    locale: toMollieLocale(locale),
     metadata: { source: "bot-wow" }
   });
   const customer = response;
@@ -2807,8 +2837,8 @@ async function createMolliePayment(env2, params) {
     cancelUrl: params.cancelUrl,
     webhookUrl: params.webhookUrl,
     metadata: params.metadata,
-    method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24", "applepay", "googlepay"],
-    locale: params.metadata.lang || "fr"
+    method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24"],
+    locale: toMollieLocale(params.metadata.lang)
   };
   return mollieFetch(env2, "POST", "/payments", body, true);
 }
@@ -2836,7 +2866,7 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   if (!response.ok) {
     const error = await response.text();
     console.error(`Mollie API error (${response.status}):`, error);
-    throw new Error(`Mollie API error: ${response.status}`);
+    throw new Error(`Mollie API error: ${response.status} - ${error}`);
   }
   return response.json();
 }
