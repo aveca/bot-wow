@@ -284,7 +284,7 @@ try {
     ok('la requete porte la reference de test', payload.ref === ref, `(${payload.ref})`);
     ok('la requete est marquee comme test', payload.test === true, `(${payload.test})`);
     ok('la requete porte un evenement de la liste fermee',
-      ['page_view', 'cta_click', 'planner_mode', 'ownership_view', 'checkout_start', 'checkout_error', 'journey_view'].includes(payload.event),
+      ['page_view', 'cta_click', 'planner_mode', 'ownership_view', 'checkout_start', 'checkout_error', 'journey_view', 'checkout_requested', 'offer_view', 'demo_open'].includes(payload.event),
       `(${payload.event})`);
     ok('la requete ne contient aucune donnee personnelle',
       !JSON.stringify(payload).includes('@') && !('email' in (payload.props || {})),
