@@ -34,6 +34,19 @@ function check(name, ok, detail = '') {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 }
 
+function applyMigration(db, sql) {
+  // D1 applies each migration atomically. Emulate that implicit transaction
+  // locally so PRAGMA defer_foreign_keys has the same scope as production.
+  db.exec('BEGIN');
+  try {
+    db.exec(sql);
+    db.exec('COMMIT');
+  } catch (error) {
+    try { db.exec('ROLLBACK'); } catch { /* transaction already rolled back */ }
+    throw error;
+  }
+}
+
 const MIGRATION = readFileSync(
   join(REPO, 'migrations', 'production', '0004_reconcile_order_ids.sql'), 'utf8'
 );
@@ -62,7 +75,7 @@ check('avant migration : licenses.order_id est INTEGER',
 /* --- application --------------------------------------------------------- */
 let migrationError = null;
 try {
-  db.exec(MIGRATION);
+  applyMigration(db, MIGRATION);
 } catch (e) { migrationError = e; }
 check('la migration 0004 s-applique sans erreur', !migrationError,
   migrationError ? `(${migrationError.message.slice(0, 120)})` : '');
@@ -136,7 +149,7 @@ check('apres migration : l\'unicite des evenements de webhook est appliquee', un
 
 /* --- idempotence : rejouer la migration ne doit rien casser --------------- */
 let replayError = null;
-try { db.exec(MIGRATION); } catch (e) { replayError = e; }
+try { applyMigration(db, MIGRATION); } catch (e) { replayError = e; }
 check('migration rejouee : aucune erreur', !replayError,
   replayError ? `(${replayError.message.slice(0, 120)})` : '');
 const doublePrefix = db.prepare("SELECT COUNT(*) c FROM orders WHERE id LIKE 'ord_legacy_ord_legacy_%'").get().c;
@@ -163,7 +176,7 @@ console.log('=== APRES MIGRATION : le vrai Worker doit livrer ===');
 const iso2 = createIsolatedDatabase({ foreignKeys: true });
 applyProdSchema(iso2.db);
 seedProdFixture(iso2.db, { now: FIXED_NOW });
-iso2.db.exec(MIGRATION);
+applyMigration(iso2.db, MIGRATION);
 iso2.db.exec('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, event TEXT NOT NULL, page TEXT NOT NULL, lang TEXT NOT NULL, cta TEXT, mode TEXT, years INTEGER, step TEXT, ref TEXT, test INTEGER NOT NULL DEFAULT 0, ip_hash TEXT, ua TEXT, value_eur REAL, source TEXT)');
 iso2.db.exec('CREATE TABLE IF NOT EXISTS rl (bucket TEXT NOT NULL, window INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (bucket, window))');
 
