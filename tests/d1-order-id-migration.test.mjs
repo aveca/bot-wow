@@ -63,11 +63,13 @@ seedProdFixture(db, { now: FIXED_NOW });
 const before = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
+  downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
 check('avant migration : 14 commandes', before.orders === 14, `(${before.orders})`);
 check('avant migration : 5 licences', before.licenses === 5, `(${before.licenses})`);
+check('avant migration : 5 jetons de téléchargement', before.downloads === 5, `(${before.downloads})`);
 check('avant migration : orders.id est INTEGER', typeof db.prepare('SELECT id FROM orders LIMIT 1').get().id === 'number');
 check('avant migration : licenses.order_id est INTEGER',
   typeof db.prepare('SELECT order_id FROM licenses LIMIT 1').get().order_id === 'number');
@@ -90,6 +92,7 @@ if (migrationError) {
 const after = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
+  downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
@@ -97,6 +100,11 @@ check('apres migration : 14 commandes conservees', after.orders === before.order
   `(${before.orders} -> ${after.orders})`);
 check('apres migration : 5 licences conservees', after.licenses === before.licenses,
   `(${before.licenses} -> ${after.licenses})`);
+check('apres migration : 5 jetons de téléchargement conservés', after.downloads === before.downloads,
+  `(${before.downloads} -> ${after.downloads})`);
+const downloadOrphans = db.prepare('SELECT COUNT(*) c FROM downloads d LEFT JOIN licenses l ON l.id = d.license_id WHERE l.id IS NULL').get().c;
+check('apres migration : aucun téléchargement orphelin', downloadOrphans === 0, `(${downloadOrphans})`);
+check('apres migration : les cinq jetons retrouvent leur licence', db.prepare('SELECT COUNT(*) c FROM downloads d JOIN licenses l ON l.id = d.license_id').get().c === 5);
 check('apres migration : 11 inscriptions conservees', after.emails === before.emails,
   `(${before.emails} -> ${after.emails})`);
 check('apres migration : 5 evenements de webhook conserves', after.events === before.events,
