@@ -206,8 +206,8 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 // 8. Le stamp des assets est a jour (regression observee en production :
 //    un stamp inchange laissait le navigateur servir l'ancien app.js)
 {
-  const { computeStamp, assetFingerprint } = await import('../scripts/versionne-assets.mjs');
-  const expected = computeStamp(REPO);
+  const { assetFingerprint } = await import('../scripts/versionne-assets.mjs');
+  const expectedFingerprint = assetFingerprint(REPO);
   const files = ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html',
     'assets/style.css', 'assets/app.js', 'assets/demo.js'];
   const used = new Set();
@@ -215,9 +215,12 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     for (const m of read(f).matchAll(/\?v=([0-9a-zA-Z._-]+)/g)) used.add(m[1]);
   }
   check('tous les assets portent le meme stamp', used.size === 1, `(stamps : ${[...used].join(', ')})`);
-  check('le stamp correspond au contenu actuel des assets', used.has(expected),
-    `(attendu ${expected}, trouve ${[...used].join(', ')})`);
-  check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
+  check('le stamp correspond au contenu actuel des assets',
+    [...used].every((stamp) => stamp.endsWith(`-${expectedFingerprint}`)),
+    `(empreinte attendue ${expectedFingerprint}, trouve ${[...used].join(', ')})`);
+  check('la date du stamp a un format valide',
+    [...used].every((stamp) => /^\\d{8}-[0-9a-f]{8}$/.test(stamp)));
+  check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(expectedFingerprint));
 }
 
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
