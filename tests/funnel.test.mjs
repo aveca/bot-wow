@@ -49,8 +49,10 @@ let paymentState = {
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
   if (u.startsWith('https://api.mollie.com/v2/')) {
-    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
+    const requestBody = opts.body ? JSON.parse(opts.body) : null;
+    mollieCalls.push({ url: u, method: opts.method || 'GET', body: requestBody });
     if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
+      if (requestBody?.metadata) paymentState = { ...paymentState, metadata: requestBody.metadata };
       return new Response(JSON.stringify({ id: 'tr_test', _links: { checkout: { href: 'https://www.mollie.com/payscreen/tr_test' } } }),
         { status: 201, headers: { 'Content-Type': 'application/json' } });
     }
@@ -128,10 +130,15 @@ function makeEnv(state) {
       };
     },
   };
+  state.kvReads ||= [];
+  state.kvWrites ||= [];
   return {
     DB: db,
     TELEMETRY_DB: telemetry,
-    RATE_LIMIT: { get: async () => null, put: async () => {} },
+    RATE_LIMIT: {
+      get: async (key) => { state.kvReads.push(key); return null; },
+      put: async (key, value, options) => { state.kvWrites.push({ key, value, options }); },
+    },
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
@@ -183,11 +190,14 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
   });
   check('checkout accepte journey_id', res.status === 200);
   const paymentCall = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
-  check('journey_id stocke dans KV (mollie_payment)', !!paymentCall && JSON.stringify(paymentCall.body).includes('journey_id'), `(body=${JSON.stringify(paymentCall && paymentCall.body)})`);
+  check('journey_id transmis dans les métadonnées Mollie', !!paymentCall && paymentCall.body?.metadata?.journey_id === 'j_test_123', `(body=${JSON.stringify(paymentCall && paymentCall.body)})`);
+  check('corrélation sans lecture/écriture KV dédiée au paiement',
+    !state.kvWrites.some((x) => String(x.key).startsWith('mollie_payment:')) &&
+    !state.kvReads.some((x) => String(x).startsWith('mollie_payment:')));
   const payment = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_test' }, env });
   check('webhook paye repond 200', payment.status === 200);
   const telemetry = state.telemetry || [];
-  const journeyEvents = telemetry.filter((r) => r.args && String(r.args).includes('journey_id'));
+  const journeyEvents = telemetry.filter((r) => r.args && r.args.some((a) => String(a).includes('j_test_123')));
   check('evenements portes le journey_id', journeyEvents.length >= 1);
 }
 
