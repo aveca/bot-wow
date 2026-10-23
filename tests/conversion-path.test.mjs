@@ -50,6 +50,29 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check(`${label} : aucun CTA vers un domaine tiers`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
+// 3b. La promesse de remboursement doit rester conforme aux conditions publiees.
+{
+  const en = read('index.html');
+  const fr = read('fr/index.html');
+  const refundEn = read('legal/refund.html');
+  const refundFr = read('legal/fr/refund.html');
+
+  check('accueil EN : remboursement qualifie et lie a la politique',
+    en.includes('<strong>14-day refund policy:</strong>')
+      && en.includes('eligibility depends on activation status and the published conditions')
+      && en.includes('href="./legal/refund.html"')
+      && !en.includes('if you are not satisfied, we refund'));
+  check('accueil FR : remboursement qualifie et lie a la politique',
+    fr.includes('<strong>Remboursement sous 14 jours :</strong>')
+      && fr.includes('l’éligibilité dépend de l’activation et des conditions publiées')
+      && fr.includes('href="../legal/fr/refund.html"')
+      && !fr.includes("si vous n'êtes pas satisfait, nous remboursons"));
+  check('politique EN : delai et condition d’activation explicites',
+    /within 14 days of purchase/i.test(refundEn) && /has not been activated on a machine/i.test(refundEn));
+  check('politique FR : delai et condition d’activation explicites',
+    /dans les 14 jours/i.test(refundFr) && /n'a pas été activé sur une machine/i.test(refundFr));
+}
+
 // 4. Parcours hero -> demonstration -> comparaison -> achat (accueil EN)
 {
   const t = read('index.html');
@@ -183,8 +206,8 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 // 8. Le stamp des assets est a jour (regression observee en production :
 //    un stamp inchange laissait le navigateur servir l'ancien app.js)
 {
-  const { computeStamp, assetFingerprint } = await import('../scripts/versionne-assets.mjs');
-  const expected = computeStamp(REPO);
+  const { assetFingerprint } = await import('../scripts/versionne-assets.mjs');
+  const expectedFingerprint = assetFingerprint(REPO);
   const files = ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html',
     'assets/style.css', 'assets/app.js', 'assets/demo.js'];
   const used = new Set();
@@ -192,9 +215,12 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     for (const m of read(f).matchAll(/\?v=([0-9a-zA-Z._-]+)/g)) used.add(m[1]);
   }
   check('tous les assets portent le meme stamp', used.size === 1, `(stamps : ${[...used].join(', ')})`);
-  check('le stamp correspond au contenu actuel des assets', used.has(expected),
-    `(attendu ${expected}, trouve ${[...used].join(', ')})`);
-  check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
+  check('le stamp correspond au contenu actuel des assets',
+    [...used].every((stamp) => stamp.endsWith(`-${expectedFingerprint}`)),
+    `(empreinte attendue ${expectedFingerprint}, trouve ${[...used].join(', ')})`);
+  check('la date du stamp a un format valide',
+    [...used].every((stamp) => /^\d{8}-[0-9a-f]{8}$/.test(stamp)));
+  check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(expectedFingerprint));
 }
 
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
