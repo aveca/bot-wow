@@ -36,6 +36,9 @@ const EVENT_SPEC = {
   ownership_view: { cta: null, mode: null, years: 'years', step: null },
   checkout_start: { cta: null, mode: null, years: null, step: 'step' },
   checkout_error: { cta: null, mode: null, years: null, step: 'step' },
+  checkout_requested: { cta: null, mode: null, years: null, step: 'step' },
+  offer_view: { cta: null, mode: null, years: null, step: 'step' },
+  demo_open: { cta: null, mode: null, years: null, step: 'step' },
   journey_view: { cta: null, mode: null, years: null, step: 'step' },
 };
 
