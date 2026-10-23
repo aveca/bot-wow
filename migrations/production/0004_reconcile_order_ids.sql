@@ -21,18 +21,19 @@
 -- -----------------------------
 --  1. PRAGMA defer_foreign_keys = ON permet de reconstruire les tables
 --     référencées dans la transaction D1 sans désactiver les contraintes.
---  2. AUCUNE donnee supprimeee : les 14 commandes et 5 licences historiques
---     sont converties, pas reecrites. Les anciens identifiants entiers
---     deviennent `ord_legacy_<valeur>` et les references de licences suivent.
+--  2. AUCUNE donnee supprimee : les commandes, licences et jetons de
+--     telechargement historiques sont conserves. Les anciens identifiants
+--     entiers deviennent `ord_legacy_<valeur>` et les references suivent.
+--  3. `downloads` est temporairement copie hors de sa FK ON DELETE CASCADE
+--     avant la reconstruction de `licenses`, puis restauree et re-referencee.
 --  3. La conversion est IDEMPOTENTE : seules les valeurs encore numeriques
 --     sont converties (test `GLOB '[0-9]*'`), donc rejouer la migration ne
 --     double pas le prefixe.
 --  4. Tout est enveloppe dans une transaction : en cas d'erreur, rien n'est
 --     applique (rollback automatique).
 --
--- tables couvertes : orders, licenses, activations, downloads (references
--- vers orders/licenses) + la table `deliveries` attendue par le Worker et
--- absente de la base de production.
+-- tables reconstruites : orders, licenses et downloads (FK ON DELETE CASCADE).
+-- Les tables de support sont ajoutées uniquement lorsqu'elles sont absentes.
 
 -- Cloudflare D1 runs migrations in an implicit transaction. Foreign-key
 -- enforcement cannot be toggled with PRAGMA foreign_keys inside that
@@ -77,9 +78,33 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
 
 -- ---------------------------------------------------------------------------
--- 2. Table `licenses` : order_id INTEGER -> TEXT, et les 5 references
---    historiques pointent desormais sur les identifiants reconciliés.
---    `ord_legacy_<n>` correspond exactement a l'ancien `n` en base.
+-- 2. Preserve download tokens BEFORE rebuilding licenses.
+--    Production's downloads.license_id references licenses(id) ON DELETE
+--    CASCADE; dropping licenses would therefore delete downloads immediately,
+--    even with deferred foreign-key checks. Copy rows to a temporary table
+--    without a foreign key, then drop the child table before the parent.
+--    Ignore a historical optional downloads.id column: the live schema uses
+--    token as the primary key and the Worker does not depend on downloads.id.
+-- ---------------------------------------------------------------------------
+CREATE TABLE downloads_reconciled (
+  token       TEXT PRIMARY KEY,
+  license_id  INTEGER NOT NULL,
+  expires_at  INTEGER NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 0,
+  max_count   INTEGER NOT NULL DEFAULT 10,
+  created_at  INTEGER NOT NULL
+);
+
+INSERT INTO downloads_reconciled
+  (token, license_id, expires_at, count, max_count, created_at)
+SELECT token, license_id, expires_at, count, max_count, created_at
+FROM downloads;
+
+DROP TABLE downloads;
+
+-- ---------------------------------------------------------------------------
+-- 3. Table `licenses` : order_id INTEGER -> TEXT, et les références
+--    historiques pointent désormais sur les identifiants réconciliés.
 -- ---------------------------------------------------------------------------
 -- Match the actual production licenses schema. The current D1 table has no
 -- licenses.token or licenses.expires_at columns (download tokens and expiry
@@ -116,7 +141,27 @@ CREATE INDEX IF NOT EXISTS idx_licenses_order ON licenses(order_id);
 CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
 
 -- ---------------------------------------------------------------------------
--- 3. Support tables required by the Worker. CREATE IF NOT EXISTS makes
+-- 4. Restore all download tokens against the rebuilt licenses table.
+-- ---------------------------------------------------------------------------
+CREATE TABLE downloads (
+  token       TEXT PRIMARY KEY,
+  license_id  INTEGER NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
+  expires_at  INTEGER NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 0,
+  max_count   INTEGER NOT NULL DEFAULT 10,
+  created_at  INTEGER NOT NULL
+);
+
+INSERT INTO downloads
+  (token, license_id, expires_at, count, max_count, created_at)
+SELECT token, license_id, expires_at, count, max_count, created_at
+FROM downloads_reconciled;
+
+DROP TABLE downloads_reconciled;
+CREATE INDEX IF NOT EXISTS idx_downloads_license ON downloads(license_id);
+
+-- ---------------------------------------------------------------------------
+-- 5. Support tables required by the Worker. CREATE IF NOT EXISTS makes
 --    these additions available on a clean database while leaving existing
 --    production tables intact. Their declarations match the observed schema.
 -- ---------------------------------------------------------------------------
@@ -149,7 +194,7 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 );
 
 -- ---------------------------------------------------------------------------
--- 4. Index d'unicite des evenements de webhook : c'est LUI qui porte
+-- 6. Index d'unicite des evenements de webhook : c'est LUI qui porte
 --    l'idempotence (le code insere `payment:<id>` et attend un echec UNIQUE
 --    au rejeu). Il est cree APRES la reconciliation des commandes.
 -- ---------------------------------------------------------------------------
