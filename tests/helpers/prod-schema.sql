@@ -16,12 +16,12 @@
 
 CREATE TABLE orders (
   id           INTEGER PRIMARY KEY,            -- alias de rowid : 1..N
-  provider     TEXT NOT NULL,
-  provider_id  TEXT,
+  provider     TEXT NOT NULL DEFAULT 'mollie',
+  provider_id  TEXT UNIQUE,
   email        TEXT NOT NULL,
   amount       INTEGER NOT NULL DEFAULT 0,
   currency     TEXT NOT NULL DEFAULT 'eur',
-  status       TEXT NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'free',
   metadata     TEXT,
   created_at   INTEGER NOT NULL,
   updated_at   INTEGER NOT NULL
@@ -32,7 +32,7 @@ CREATE TABLE orders (
 CREATE TABLE licenses (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   key             TEXT NOT NULL UNIQUE,
-  order_id        INTEGER NOT NULL REFERENCES orders(id),
+  order_id        INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   email           TEXT NOT NULL,
   lang            TEXT NOT NULL DEFAULT 'fr',
   status          TEXT NOT NULL DEFAULT 'active',
@@ -43,7 +43,7 @@ CREATE TABLE licenses (
 
 CREATE TABLE activations (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  license_id   INTEGER NOT NULL REFERENCES licenses(id),
+  license_id   INTEGER NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
   machine_id   TEXT NOT NULL,
   ip           TEXT,
   user_agent   TEXT,
@@ -55,6 +55,8 @@ CREATE TABLE activations (
 -- lui qui assure l'idempotence des activations machine/licence.
 CREATE UNIQUE INDEX idx_activations_license_machine
   ON activations(license_id, machine_id);
+CREATE INDEX idx_activations_last_seen ON activations(last_seen_at);
+CREATE INDEX idx_activations_license_id ON activations(license_id);
 
 CREATE TABLE downloads (
   token       TEXT PRIMARY KEY,
@@ -64,6 +66,9 @@ CREATE TABLE downloads (
   max_count   INTEGER NOT NULL DEFAULT 10,
   created_at  INTEGER NOT NULL
 );
+CREATE INDEX idx_downloads_license ON downloads(license_id);
+CREATE INDEX idx_downloads_license_id ON downloads(license_id);
+CREATE INDEX idx_downloads_expires_at ON downloads(expires_at);
 
 CREATE TABLE webhook_events (
   id           TEXT PRIMARY KEY,

@@ -1,58 +1,81 @@
--- Migration 0004 : reconciliation des identifiants de commande (TEXT).
+-- Migration 0004: convert order identifiers to TEXT and reconcile live D1.
 --
--- PROBLEME REEL, MESURE SUR UN VRAI MOTEUR SQL
--- --------------------------------------------
--- La base `botwow-production` a ete creee a la main avec :
---   orders.id         INTEGER PRIMARY KEY  (alias de rowid)
---   licenses.order_id INTEGER REFERENCES orders(id)
--- alors que le Worker insere des identifiants TEXTE
--- (`ord_tr_...` pour Mollie, `ord_bitcoin_manual_BTC-...` pour Bitcoin).
--- Consequence mesuree par tests/d1-order-id-regression.test.mjs :
---   * webhook Mollie paye  -> "datatype mismatch", aucune licence creee,
---     et le verrou d'idempotence DEJA pose interdit tout rejeu utile ;
---   * checkout Bitcoin     -> 500 "checkout_failed", aucune commande creee.
+-- IMPORTANT: production has cascading foreign keys:
+--   licenses.order_id -> orders.id ON DELETE CASCADE
+--   activations.license_id -> licenses.id ON DELETE CASCADE
+--   downloads.license_id -> licenses.id ON DELETE CASCADE
+-- Dropping a parent table before preserving AND removing every dependent table
+-- can delete license/activation/download rows. Snapshot all dependent data to
+-- tables without foreign keys, remove children first, then rebuild parents and
+-- restore every row with its original primary key.
 --
--- La migration 0002 ne peut pas corriger cela : elle declare un schema TEXT
--- mais utilise `CREATE TABLE IF NOT EXISTS`, qui NE convertit PAS une table
--- deja presente. Il faut donc reconstruire les tables ET convertir les
--- donnees existantes.
---
--- REGLES DE SECURITE APPLIQUEES
--- -----------------------------
---  1. PRAGMA defer_foreign_keys = ON permet de reconstruire les tables
---     référencées dans la transaction D1 sans désactiver les contraintes.
---  2. AUCUNE donnee supprimee : les commandes, licences et jetons de
---     telechargement historiques sont conserves. Les anciens identifiants
---     entiers deviennent `ord_legacy_<valeur>` et les references suivent.
---  3. `downloads` est temporairement copie hors de sa FK ON DELETE CASCADE
---     avant la reconstruction de `licenses`, puis restauree et re-referencee.
---  3. La conversion est IDEMPOTENTE : seules les valeurs encore numeriques
---     sont converties (test `GLOB '[0-9]*'`), donc rejouer la migration ne
---     double pas le prefixe.
---  4. Tout est enveloppe dans une transaction : en cas d'erreur, rien n'est
---     applique (rollback automatique).
---
--- tables reconstruites : orders, licenses et downloads (FK ON DELETE CASCADE).
--- Les tables de support sont ajoutées uniquement lorsqu'elles sont absentes.
-
--- Cloudflare D1 runs migrations in an implicit transaction. Foreign-key
--- enforcement cannot be toggled with PRAGMA foreign_keys inside that
--- transaction; defer constraint checks until the table rebuild is complete.
+-- D1 applies each migration transactionally. Do not toggle PRAGMA foreign_keys
+-- inside that implicit transaction; defer checks until all tables are rebuilt.
 PRAGMA defer_foreign_keys = ON;
 
--- ---------------------------------------------------------------------------
--- 1. Table `orders` : id INTEGER -> TEXT.
---    Les identifiants historiques (1..14) deviennent `ord_legacy_1`...
---    Les identifiants deja TEXT (`ord_...`) sont laisses intacts.
--- ---------------------------------------------------------------------------
+-- 1. Snapshot every dependent row before any destructive DDL.
+CREATE TABLE licenses_preserved (
+  id              INTEGER PRIMARY KEY,
+  key             TEXT NOT NULL UNIQUE,
+  order_id        TEXT NOT NULL,
+  email           TEXT NOT NULL,
+  lang            TEXT NOT NULL DEFAULT 'fr',
+  status          TEXT NOT NULL DEFAULT 'active',
+  max_activations INTEGER NOT NULL DEFAULT 2,
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL
+);
+
+INSERT INTO licenses_preserved
+  (id, key, order_id, email, lang, status, max_activations, created_at, updated_at)
+SELECT
+  id, key,
+  CASE
+    WHEN CAST(order_id AS TEXT) GLOB '[0-9]*' THEN 'ord_legacy_' || CAST(order_id AS TEXT)
+    ELSE CAST(order_id AS TEXT)
+  END,
+  email, lang, status, max_activations, created_at, updated_at
+FROM licenses;
+
+CREATE TABLE activations_preserved (
+  id            INTEGER PRIMARY KEY,
+  license_id    INTEGER NOT NULL,
+  machine_id    TEXT NOT NULL,
+  ip            TEXT,
+  user_agent    TEXT,
+  activated_at  INTEGER NOT NULL,
+  last_seen_at  INTEGER
+);
+
+INSERT INTO activations_preserved
+  (id, license_id, machine_id, ip, user_agent, activated_at, last_seen_at)
+SELECT id, license_id, machine_id, ip, user_agent, activated_at, last_seen_at
+FROM activations;
+
+CREATE TABLE downloads_preserved (
+  token       TEXT PRIMARY KEY,
+  license_id  INTEGER NOT NULL,
+  expires_at  INTEGER NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 0,
+  max_count   INTEGER NOT NULL DEFAULT 10,
+  created_at  INTEGER NOT NULL
+);
+
+INSERT INTO downloads_preserved
+  (token, license_id, expires_at, count, max_count, created_at)
+SELECT token, license_id, expires_at, count, max_count, created_at
+FROM downloads;
+
+-- 2. Build the replacement orders table while the original is still readable.
+-- Preserve provider uniqueness and all business columns.
 CREATE TABLE orders_reconciled (
   id           TEXT PRIMARY KEY,
-  provider     TEXT NOT NULL,
-  provider_id  TEXT,
+  provider     TEXT NOT NULL DEFAULT 'mollie',
+  provider_id  TEXT UNIQUE,
   email        TEXT NOT NULL,
   amount       INTEGER NOT NULL DEFAULT 0,
   currency     TEXT NOT NULL DEFAULT 'eur',
-  status       TEXT NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'free',
   metadata     TEXT,
   created_at   INTEGER NOT NULL,
   updated_at   INTEGER NOT NULL
@@ -63,57 +86,30 @@ INSERT INTO orders_reconciled
 SELECT
   CASE
     WHEN CAST(id AS TEXT) GLOB '[0-9]*' THEN 'ord_legacy_' || CAST(id AS TEXT)
-    ELSE id
-  END AS id,
+    ELSE CAST(id AS TEXT)
+  END,
   provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at
 FROM orders;
 
+-- Drop child tables before their parents to prevent ON DELETE CASCADE data loss.
+DROP TABLE downloads;
+DROP TABLE activations;
+DROP TABLE licenses;
 DROP TABLE orders;
 ALTER TABLE orders_reconciled RENAME TO orders;
 
--- Index identiques a ceux que le Worker utilise (filtres d'administration).
 CREATE INDEX IF NOT EXISTS idx_orders_provider ON orders(provider, provider_id);
+CREATE INDEX IF NOT EXISTS idx_orders_provider_id ON orders(provider_id);
 CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
--- ---------------------------------------------------------------------------
--- 2. Preserve download tokens BEFORE rebuilding licenses.
---    Production's downloads.license_id references licenses(id) ON DELETE
---    CASCADE; dropping licenses would therefore delete downloads immediately,
---    even with deferred foreign-key checks. Copy rows to a temporary table
---    without a foreign key, then drop the child table before the parent.
---    Ignore a historical optional downloads.id column: the live schema uses
---    token as the primary key and the Worker does not depend on downloads.id.
--- ---------------------------------------------------------------------------
-CREATE TABLE downloads_reconciled (
-  token       TEXT PRIMARY KEY,
-  license_id  INTEGER NOT NULL,
-  expires_at  INTEGER NOT NULL,
-  count       INTEGER NOT NULL DEFAULT 0,
-  max_count   INTEGER NOT NULL DEFAULT 10,
-  created_at  INTEGER NOT NULL
-);
-
-INSERT INTO downloads_reconciled
-  (token, license_id, expires_at, count, max_count, created_at)
-SELECT token, license_id, expires_at, count, max_count, created_at
-FROM downloads;
-
-DROP TABLE downloads;
-
--- ---------------------------------------------------------------------------
--- 3. Table `licenses` : order_id INTEGER -> TEXT, et les références
---    historiques pointent désormais sur les identifiants réconciliés.
--- ---------------------------------------------------------------------------
--- Match the actual production licenses schema. The current D1 table has no
--- licenses.token or licenses.expires_at columns (download tokens and expiry
--- live in downloads); copying those nonexistent columns makes migration 0004
--- fail against production despite the synthetic fixture previously passing.
-CREATE TABLE licenses_reconciled (
+-- 3. Restore licenses with TEXT order references; preserve license IDs and keys.
+CREATE TABLE licenses (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   key             TEXT NOT NULL UNIQUE,
-  order_id        TEXT NOT NULL REFERENCES orders(id),
+  order_id        TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   email           TEXT NOT NULL,
   lang            TEXT NOT NULL DEFAULT 'fr',
   status          TEXT NOT NULL DEFAULT 'active',
@@ -122,27 +118,43 @@ CREATE TABLE licenses_reconciled (
   updated_at      INTEGER NOT NULL
 );
 
-INSERT INTO licenses_reconciled
+INSERT INTO licenses
   (id, key, order_id, email, lang, status, max_activations, created_at, updated_at)
-SELECT
-  id, key,
-  CASE
-    WHEN CAST(order_id AS TEXT) GLOB '[0-9]*' THEN 'ord_legacy_' || CAST(order_id AS TEXT)
-    ELSE CAST(order_id AS TEXT)
-  END AS order_id,
-  email, lang, status, max_activations, created_at, updated_at
-FROM licenses;
+SELECT id, key, order_id, email, lang, status, max_activations, created_at, updated_at
+FROM licenses_preserved;
 
-DROP TABLE licenses;
-ALTER TABLE licenses_reconciled RENAME TO licenses;
+DROP TABLE licenses_preserved;
 
 CREATE INDEX IF NOT EXISTS idx_licenses_email ON licenses(email);
+CREATE INDEX IF NOT EXISTS idx_licenses_key ON licenses(key);
 CREATE INDEX IF NOT EXISTS idx_licenses_order ON licenses(order_id);
+CREATE INDEX IF NOT EXISTS idx_licenses_order_id ON licenses(order_id);
 CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
 
--- ---------------------------------------------------------------------------
--- 4. Restore all download tokens against the rebuilt licenses table.
--- ---------------------------------------------------------------------------
+-- 4. Restore activations with original IDs and cascading license relation.
+CREATE TABLE activations (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  license_id    INTEGER NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
+  machine_id    TEXT NOT NULL,
+  ip            TEXT,
+  user_agent    TEXT,
+  activated_at  INTEGER NOT NULL,
+  last_seen_at  INTEGER
+);
+
+INSERT INTO activations
+  (id, license_id, machine_id, ip, user_agent, activated_at, last_seen_at)
+SELECT id, license_id, machine_id, ip, user_agent, activated_at, last_seen_at
+FROM activations_preserved;
+
+DROP TABLE activations_preserved;
+
+CREATE INDEX IF NOT EXISTS idx_activations_last_seen ON activations(last_seen_at);
+CREATE INDEX IF NOT EXISTS idx_activations_license_id ON activations(license_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_activations_license_machine
+  ON activations(license_id, machine_id);
+
+-- 5. Restore download tokens before transaction commit and relink to licenses.
 CREATE TABLE downloads (
   token       TEXT PRIMARY KEY,
   license_id  INTEGER NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
@@ -155,16 +167,16 @@ CREATE TABLE downloads (
 INSERT INTO downloads
   (token, license_id, expires_at, count, max_count, created_at)
 SELECT token, license_id, expires_at, count, max_count, created_at
-FROM downloads_reconciled;
+FROM downloads_preserved;
 
-DROP TABLE downloads_reconciled;
+DROP TABLE downloads_preserved;
+
 CREATE INDEX IF NOT EXISTS idx_downloads_license ON downloads(license_id);
+CREATE INDEX IF NOT EXISTS idx_downloads_license_id ON downloads(license_id);
+CREATE INDEX IF NOT EXISTS idx_downloads_expires_at ON downloads(expires_at);
 
--- ---------------------------------------------------------------------------
--- 5. Support tables required by the Worker. CREATE IF NOT EXISTS makes
---    these additions available on a clean database while leaving existing
---    production tables intact. Their declarations match the observed schema.
--- ---------------------------------------------------------------------------
+-- 6. Support tables are already present in live production. IF NOT EXISTS adds
+-- them on a clean database and leaves existing live versions intact.
 CREATE TABLE IF NOT EXISTS deliveries (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   email       TEXT NOT NULL,
@@ -178,12 +190,12 @@ CREATE TABLE IF NOT EXISTS deliveries (
 );
 CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status, created_at);
 
--- Keep the live production schema when creating this table on a new database.
 CREATE TABLE IF NOT EXISTS rate_limit (
   id      INTEGER PRIMARY KEY AUTOINCREMENT,
   bucket  TEXT NOT NULL,
   ts      INTEGER NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_rate_limit_bucket_ts ON rate_limit(bucket, ts);
 
 CREATE TABLE IF NOT EXISTS admin_sessions (
   id          TEXT PRIMARY KEY,
@@ -192,25 +204,9 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
   ip          TEXT,
   user_agent  TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at);
 
--- ---------------------------------------------------------------------------
--- 6. Index d'unicite des evenements de webhook : c'est LUI qui porte
---    l'idempotence (le code insere `payment:<id>` et attend un echec UNIQUE
---    au rejeu). Il est cree APRES la reconciliation des commandes.
--- ---------------------------------------------------------------------------
 CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_id ON webhook_events(id);
 
--- Force deferred foreign-key validation before the migration completes.
+-- Reset deferred-check mode before D1 commits this migration batch.
 PRAGMA defer_foreign_keys = OFF;
-
--- ---------------------------------------------------------------------------
--- VERIFICATION APRES APPLICATION (a executer en lecture seule) :
---   SELECT COUNT(*) FROM orders;                     -- doit etre inchange (14)
---   SELECT COUNT(*) FROM licenses;                   -- doit etre inchange (5)
---   SELECT l.id, l.key, l.order_id, o.id
---     FROM licenses l LEFT JOIN orders o ON o.id = l.order_id;
---   -- chaque licence doit retrouver sa commande (aucun order_id NULL
---   --  autre qu'une commande reellement supprimee).
---   SELECT id FROM orders WHERE id GLOB '[0-9]*';     -- doit etre VIDE
---   SELECT order_id FROM licenses WHERE order_id GLOB '[0-9]*'; -- VIDE
--- ---------------------------------------------------------------------------
