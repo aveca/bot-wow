@@ -59,17 +59,25 @@ const db = iso.db;
 applyProdSchema(db);
 seedProdFixture(db, { now: FIXED_NOW });
 
+// The live DB currently has zero activations, but add one synthetic child row
+// so the migration test proves ON DELETE CASCADE cannot silently erase them.
+db.prepare(
+  'INSERT INTO activations (license_id, machine_id, ip, user_agent, activated_at, last_seen_at) VALUES (?,?,?,?,?,?)'
+).run(1, 'synthetic-machine-preserve-cascade', '192.0.2.1', 'migration-test', FIXED_NOW, FIXED_NOW);
+
 /* --- etat AVANT ---------------------------------------------------------- */
 const before = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
   downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
+  activations: db.prepare('SELECT COUNT(*) c FROM activations').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
 check('avant migration : 14 commandes', before.orders === 14, `(${before.orders})`);
 check('avant migration : 5 licences', before.licenses === 5, `(${before.licenses})`);
 check('avant migration : 5 jetons de téléchargement', before.downloads === 5, `(${before.downloads})`);
+check('avant migration : activation synthetic pour tester ON DELETE CASCADE', before.activations === 1, `(${before.activations})`);
 check('avant migration : orders.id est INTEGER', typeof db.prepare('SELECT id FROM orders LIMIT 1').get().id === 'number');
 check('avant migration : licenses.order_id est INTEGER',
   typeof db.prepare('SELECT order_id FROM licenses LIMIT 1').get().order_id === 'number');
@@ -93,6 +101,7 @@ const after = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
   downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
+  activations: db.prepare('SELECT COUNT(*) c FROM activations').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
@@ -102,6 +111,13 @@ check('apres migration : 5 licences conservees', after.licenses === before.licen
   `(${before.licenses} -> ${after.licenses})`);
 check('apres migration : 5 jetons de téléchargement conservés', after.downloads === before.downloads,
   `(${before.downloads} -> ${after.downloads})`);
+check('apres migration : activations conservees malgré ON DELETE CASCADE', after.activations === before.activations,
+  `(${before.activations} -> ${after.activations})`);
+const activationPreserved = db.prepare(
+  'SELECT id, license_id, machine_id FROM activations WHERE machine_id = ?'
+).get('synthetic-machine-preserve-cascade');
+check('apres migration : activation synthetic conservee avec sa licence', !!activationPreserved &&
+  activationPreserved.license_id === 1, JSON.stringify(activationPreserved || {}));
 const downloadOrphans = db.prepare('SELECT COUNT(*) c FROM downloads d LEFT JOIN licenses l ON l.id = d.license_id WHERE l.id IS NULL').get().c;
 check('apres migration : aucun téléchargement orphelin', downloadOrphans === 0, `(${downloadOrphans})`);
 check('apres migration : les cinq jetons retrouvent leur licence', db.prepare('SELECT COUNT(*) c FROM downloads d JOIN licenses l ON l.id = d.license_id').get().c === 5);
@@ -149,6 +165,10 @@ for (const t of ['deliveries', 'rate_limit', 'admin_sessions']) {
 
 const uniqWebhook = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get('idx_webhook_events_id');
 check('apres migration : index UNIQUE idx_webhook_events_id present', !!uniqWebhook);
+const activationIndex = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get('idx_activations_license_machine');
+check('apres migration : index UNIQUE idx_activations_license_machine present', !!activationIndex);
+const fkProblems = db.prepare('PRAGMA foreign_key_check').all();
+check('apres migration : aucune violation de clé étrangère', fkProblems.length === 0, JSON.stringify(fkProblems.slice(0, 3)));
 let uniqueEnforced = false;
 try {
   db.prepare("INSERT INTO webhook_events (id, provider, processed_at) VALUES (?,?,?)").run('payment:tr_SYN01', 'mollie', 1);
