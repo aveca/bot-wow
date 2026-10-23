@@ -56,34 +56,59 @@ Variables (non secrètes, dans `wrangler.toml`) : `ENVIRONMENT = "production"`,
 | Base | Rôle | Répertoire | Contenu |
 |---|---|---|---|
 | `botwow-production` | commandes, licences, téléchargements, webhooks | `migrations/production/` | `0001` e-mails · `0002` licences · `0003` intégrité de paiement · `0004` réconciliation des identifiants |
-| `botwow-analytics` | télémétrie de parcours **uniquement** | `migrations/analytics/` | `0001` table `events` · `0002` table `rl` |
+| `botwow-analytics` | télémétrie de parcours **uniquement** | `migrations/analytics/` | `0001` table `events` · `0002` table `rl` · `0003` `journey_id` nullable + index |
 
 Vérification en lecture seule (aucune écriture) :
 
 ```bash
-wrangler d1 migrations list botwow-production   # 0001..0004 (metier)
-wrangler d1 migrations list botwow-analytics    # 0001..0002 (telemetrie)
+wrangler d1 migrations list botwow-production --remote   # état distant réel, migrations métier
+wrangler d1 migrations list botwow-analytics --remote    # état distant réel, migrations télémétrie
 ```
 
-### Procédure d'application (après SAUVEGARDE)
+### Procédure d'application (après sauvegarde vérifiée et revue de l'état distant)
 
 ```bash
-# 1. Sauvegarde AVANT toute migration
-wrangler d1 export botwow-production --output backup-$(date +%Y%m%d-%H%M%S).sql
+# 1. Sauvegardes DISTANTES avant toute migration
+wrangler d1 export botwow-production --remote --output backup-production-$(date +%Y%m%d-%H%M%S).sql
+wrangler d1 export botwow-analytics --remote --output backup-analytics-$(date +%Y%m%d-%H%M%S).sql
 
-# 2. Base de production (metier et paiement) — 4 migrations, idempotentes
-wrangler d1 execute botwow-production --file=migrations/production/0001_botwow_emails.sql
-wrangler d1 execute botwow-production --file=migrations/production/0002_botwow_licenses.sql
-wrangler d1 execute botwow-production --file=migrations/production/0003_botwow_payment_integrity.sql
-wrangler d1 execute botwow-production --file=migrations/production/0004_reconcile_order_ids.sql
+# 2. Lire l'historique distant avant de décider quoi appliquer
+wrangler d1 migrations list botwow-production --remote
+wrangler d1 migrations list botwow-analytics --remote
 
-# 3. Base de telemetrie (SEPAREE) — 2 migrations
-wrangler d1 execute botwow-analytics --file=migrations/analytics/0001_telemetry_events.sql
-wrangler d1 execute botwow-analytics --file=migrations/analytics/0002_telemetry_rl.sql
+# 3. Base métier/paiement : STOP si l'historique distant est inattendu.
+#    L'application peut inclure production/0004, qui reconstruit les tables.
+#    Respecter tous les garde-fous de l'issue #13 avant toute écriture :
+#    https://github.com/aveca/bot-wow/issues/13
+#    Ne pas lancer une application groupée tant que la sauvegarde n'est pas
+#    vérifiée et que les migrations en attente n'ont pas été revues.
 
-# 4. Restauration en cas de probleme
-wrangler d1 execute botwow-production --file=backup-20260101-000000.sql
+# 4. Base télémétrie : migration 0003 ajoute events.journey_id.
+#    Si 0001 et 0002 sont suivies comme appliquées et 0003 est la seule en attente,
+#    appliquer la migration suivie avec :
+wrangler d1 migrations apply botwow-analytics --remote
+#    Si 0001/0002 apparaissent en attente alors que les tables existent, STOP
+#    et réconcilier l'historique avant toute écriture.
 ```
+
+**Important :** utiliser `migrations apply` maintient l'historique `d1_migrations`.
+Ne pas exécuter directement `0003_telemetry_journey_id.sql` avec `d1 execute --file` :
+elle contient `ALTER TABLE events ADD COLUMN journey_id` et n'est pas réexécutable.
+Ne jamais appliquer une migration métier à `botwow-analytics`, ni une migration de
+télémétrie à `botwow-production`.
+
+### 3.2 Migration de corrélation Analytics (`analytics/0003`)
+
+Depuis le commit `602a0fdab8e4ac98426d0f868cbff6d3dcd579b5`, le client envoie un
+identifiant de parcours anonyme et le Worker de télémétrie tente de l'enregistrer
+dans `events.journey_id`. Si la colonne manque, le Worker réessaie l'insertion
+sans cette colonne : les événements peuvent donc continuer à être collectés, mais
+la corrélation du parcours est perdue. La migration `0003_telemetry_journey_id.sql`
+ajoute la colonne nullable et son index sans reconstruire les événements existants.
+
+Après application, vérifier en lecture seule que `journey_id` existe et que
+les événements récents avec un identifiant sont enregistrés. Ne jamais écrire
+d'adresse e-mail, de clé de licence ou d'identifiant de commande dans cette colonne.
 
 **Restauration testée** : la migration `0003` répare les données historiques
 (commandes sans identifiant, licences pointant sur l'ancien `rowid`) et la
