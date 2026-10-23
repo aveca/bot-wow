@@ -219,7 +219,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     [...used].every((stamp) => stamp.endsWith(`-${expectedFingerprint}`)),
     `(empreinte attendue ${expectedFingerprint}, trouve ${[...used].join(', ')})`);
   check('la date du stamp a un format valide',
-    [...used].every((stamp) => /^\\d{8}-[0-9a-f]{8}$/.test(stamp)));
+    [...used].every((stamp) => /^\d{8}-[0-9a-f]{8}$/.test(stamp)));
   check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(expectedFingerprint));
 }
 
