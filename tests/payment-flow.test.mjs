@@ -107,7 +107,9 @@ function makeEnv(state) {
   };
   const kv = {
     get: async () => null,
-    put: async () => {},
+    put: async () => {
+      if (state.failKvPuts) throw new Error('KV daily put limit exceeded');
+    },
   };
   /* Base de TELEMETRIE (dediee) : elle ne recoit QUE la mesure de
      conversion ecrite par le serveur. */
@@ -197,6 +199,9 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
+  // Régression P0 : le quota KV peut être épuisé, mais Mollie doit quand même
+  // pouvoir renvoyer l'URL de paiement une fois le paiement créé.
+  state.failKvPuts = true;
   mollieCalls = [];
   const res = await callWorker('/api/checkout', {
     method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env,
