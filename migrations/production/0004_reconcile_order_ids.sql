@@ -19,8 +19,8 @@
 --
 -- REGLES DE SECURITE APPLIQUEES
 -- -----------------------------
---  1. PRAGMA foreign_keys = OFF en dehors de toute transaction (obligatoire
---     pour recréer une table referencee).
+--  1. PRAGMA defer_foreign_keys = ON permet de reconstruire les tables
+--     référencées dans la transaction D1 sans désactiver les contraintes.
 --  2. AUCUNE donnee supprimeee : les 14 commandes et 5 licences historiques
 --     sont converties, pas reecrites. Les anciens identifiants entiers
 --     deviennent `ord_legacy_<valeur>` et les references de licences suivent.
@@ -34,9 +34,10 @@
 -- vers orders/licenses) + la table `deliveries` attendue par le Worker et
 -- absente de la base de production.
 
-PRAGMA foreign_keys = OFF;
-
-BEGIN;
+-- Cloudflare D1 runs migrations in an implicit transaction. Foreign-key
+-- enforcement cannot be toggled with PRAGMA foreign_keys inside that
+-- transaction; defer constraint checks until the table rebuild is complete.
+PRAGMA defer_foreign_keys = ON;
 
 -- ---------------------------------------------------------------------------
 -- 1. Table `orders` : id INTEGER -> TEXT.
@@ -80,30 +81,31 @@ CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
 --    historiques pointent desormais sur les identifiants reconciliés.
 --    `ord_legacy_<n>` correspond exactement a l'ancien `n` en base.
 -- ---------------------------------------------------------------------------
+-- Match the actual production licenses schema. The current D1 table has no
+-- licenses.token or licenses.expires_at columns (download tokens and expiry
+-- live in downloads); copying those nonexistent columns makes migration 0004
+-- fail against production despite the synthetic fixture previously passing.
 CREATE TABLE licenses_reconciled (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   key             TEXT NOT NULL UNIQUE,
-  order_id        TEXT REFERENCES orders(id),
+  order_id        TEXT NOT NULL REFERENCES orders(id),
   email           TEXT NOT NULL,
   lang            TEXT NOT NULL DEFAULT 'fr',
   status          TEXT NOT NULL DEFAULT 'active',
-  token           TEXT UNIQUE,
-  max_activations INTEGER NOT NULL DEFAULT 1,
-  expires_at      INTEGER,
+  max_activations INTEGER NOT NULL DEFAULT 2,
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
 );
 
 INSERT INTO licenses_reconciled
-  (id, key, order_id, email, lang, status, token, max_activations, expires_at, created_at, updated_at)
+  (id, key, order_id, email, lang, status, max_activations, created_at, updated_at)
 SELECT
   id, key,
   CASE
-    WHEN order_id IS NULL THEN NULL
     WHEN CAST(order_id AS TEXT) GLOB '[0-9]*' THEN 'ord_legacy_' || CAST(order_id AS TEXT)
-    ELSE order_id
+    ELSE CAST(order_id AS TEXT)
   END AS order_id,
-  email, lang, status, token, max_activations, expires_at, created_at, updated_at
+  email, lang, status, max_activations, created_at, updated_at
 FROM licenses;
 
 DROP TABLE licenses;
@@ -152,9 +154,8 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 -- ---------------------------------------------------------------------------
 CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_id ON webhook_events(id);
 
-COMMIT;
-
-PRAGMA foreign_keys = ON;
+-- Force deferred foreign-key validation before the migration completes.
+PRAGMA defer_foreign_keys = OFF;
 
 -- ---------------------------------------------------------------------------
 -- VERIFICATION APRES APPLICATION (a executer en lecture seule) :
