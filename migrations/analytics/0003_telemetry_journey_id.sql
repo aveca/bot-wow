@@ -7,10 +7,9 @@
 -- d1_migrations. Cette modification est additive : elle conserve les lignes
 -- existantes et les index actuels. Ne pas reconstruire la table events.
 --
--- Vérification préalable réalisée sur la base distante :
--- journey_id absent de events; 614 lignes existantes.
--- N'appliquer que via le mécanisme de migrations une fois l'état de la base
--- et le suivi des migrations confirmés.
+-- Wrangler/D1 enregistre les migrations appliquées dans d1_migrations.
+-- Ne relancer pas manuellement cette instruction après son application :
+-- ALTER TABLE ADD COLUMN n'est pas idempotent en cas de ré-exécution.
 
 ALTER TABLE events ADD COLUMN journey_id TEXT;
 
