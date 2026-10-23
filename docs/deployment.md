@@ -97,7 +97,7 @@ elle contient `ALTER TABLE events ADD COLUMN journey_id` et n'est pas réexécut
 Ne jamais appliquer une migration métier à `botwow-analytics`, ni une migration de
 télémétrie à `botwow-production`.
 
-### 3.2 Migration de corrélation Analytics (`analytics/0003`)
+### Migration de corrélation Analytics (`analytics/0003`)
 
 Depuis le commit `602a0fdab8e4ac98426d0f868cbff6d3dcd579b5`, le client envoie un
 identifiant de parcours anonyme et le Worker de télémétrie tente de l'enregistrer
@@ -110,8 +110,8 @@ Après application, vérifier en lecture seule que `journey_id` existe et que
 les événements récents avec un identifiant sont enregistrés. Ne jamais écrire
 d'adresse e-mail, de clé de licence ou d'identifiant de commande dans cette colonne.
 
-**Restauration testée** : la migration `0003` répare les données historiques
-(commandes sans identifiant, licences pointant sur l'ancien `rowid`) et la
+**Restauration testée** : la migration métier `production/0003_botwow_payment_integrity.sql`
+répare les données historiques (commandes sans identifiant, licences pointant sur l'ancien `rowid`) et la
 jointure `orders ↔ licenses` redevient exploitable.
 Vérification automatisée : `npm run test:migrations`.
 
