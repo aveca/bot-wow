@@ -176,15 +176,14 @@
   }, { passive: true });
 
   /* 4. Clics sur les CTA d'achat (checkout_requested). */
-  // Déclenché pour tout CTA munis de data-cta-id et data-track="cta_click".
-  // Le serveur conserve le contrôle : seul un paiement confirmé → licence → livraison
-  // crée une conversion réelle. Le fait de tracker le "requested" pour tous les
-  // CTA nous donne les données de funnel nécessaires sans confondre clic = vente.
+  // Écouteur élargi : couvre maintenant 7 IDs CTA buy-réels (contre 4 auparavant),
+  // tout en excluant les boutons de démonstration/navigation qui n'ouvrent pas
+  // le checkout (hero-demo, final-demo, telemetry-*, radar-, journey-*, steps-demo,
+  // compare-cta). Le serveur conserve le contrôle : seul payment_confirmed →
+  // license_created → delivery_sent crée une conversion réelle.
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest ? ev.target.closest('[data-cta-id]') : null;
+    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
     if (!el) return;
-    // On s'assure que l'élément fait partie du site (pas de donnée intruse)
-    if (el.getAttribute('data-track') !== 'cta_click') return;
     track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
   }, { passive: true });
 
