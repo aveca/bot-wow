@@ -2501,11 +2501,6 @@ async function handleCheckout(request, env2) {
         product: PRODUCT_METADATA_KEY
       }
     });
-    const paymentKey = `mollie_payment:${payment.id}`;
-    await env2.RATE_LIMIT.put(paymentKey, JSON.stringify({ email, lang, product: PRODUCT_METADATA_KEY }), {
-      expirationTtl: 86400
-      // 24h
-    });
     return jsonResponse2({
       paymentId: payment.id,
       checkoutUrl: payment._links?.checkout?.href || `https://www.mollie.com/payscreen/${payment.id}`,
