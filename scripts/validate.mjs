@@ -165,7 +165,7 @@ if (offerCommercial && !/\bid="buy"/.test(offerCommercial)) {
   failures.push("index.html : section d'offre mal extraite");
 }
 
-const commercial = [heroCommercial, offerCommercial].join('\\n');
+const commercial = [heroCommercial, offerCommercial].join('\n');
 const forbidden = [/\bzero ban\b/i, /\bzéro ban\b/i, /24\/7/i, /garanti/i,
   /sans risque/i, /\bBG\b/, /Retail/i, /tous les niveaux/i, /\+\+ *joueurs/i,
   /zéro risque/i];
