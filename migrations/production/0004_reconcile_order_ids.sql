@@ -116,10 +116,9 @@ CREATE INDEX IF NOT EXISTS idx_licenses_order ON licenses(order_id);
 CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
 
 -- ---------------------------------------------------------------------------
--- 3. Tables attendues par le Worker mais absentes de la base de production.
---    Sans `deliveries`, un echec d'envoi ne peut pas etre consigne ni rejoue.
---    Sans `rate_limit` et `admin_sessions`, les routes concernees dependent
---    de creation implicite (comportement different selon les versions D1).
+-- 3. Support tables required by the Worker. CREATE IF NOT EXISTS makes
+--    these additions available on a clean database while leaving existing
+--    production tables intact. Their declarations match the observed schema.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS deliveries (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -134,17 +133,19 @@ CREATE TABLE IF NOT EXISTS deliveries (
 );
 CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status, created_at);
 
+-- Keep the live production schema when creating this table on a new database.
 CREATE TABLE IF NOT EXISTS rate_limit (
-  bucket      TEXT NOT NULL,
-  window      INTEGER NOT NULL,
-  count       INTEGER NOT NULL,
-  PRIMARY KEY (bucket, window)
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  bucket  TEXT NOT NULL,
+  ts      INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS admin_sessions (
   id          TEXT PRIMARY KEY,
   created_at  INTEGER NOT NULL,
-  expires_at  INTEGER NOT NULL
+  expires_at  INTEGER NOT NULL,
+  ip          TEXT,
+  user_agent  TEXT
 );
 
 -- ---------------------------------------------------------------------------
