@@ -151,8 +151,8 @@ for (const href of new Set(hrefs)) {
 // la section `id="buy"` (avec un alias historique `id="offre"` séparé).
 // Les sélecteurs exacts précédents ne trouvaient donc pas le hero et
 // laissaient les garde-fous commerciaux partiellement inopérants.
-const heroMatch = home.match(/<section\\b(?=[^>]*\\bclass="[^"]*\\bhero\\b[^"]*")[^>]*>[\\s\\S]*?<\\/section>/i);
-const offerMatch = home.match(/<section\\b(?=[^>]*\\bid="buy")[^>]*>[\\s\\S]*?<\\/section>/i);
+const heroMatch = home.match(/<section\b(?=[^>]*\bclass="[^"]*\bhero\b[^"]*")[^>]*>[\s\S]*?<\/section>/i);
+const offerMatch = home.match(/<section\b(?=[^>]*\bid="buy")[^>]*>[\s\S]*?<\/section>/i);
 const heroCommercial = heroMatch?.[0] || "";
 const offerCommercial = offerMatch?.[0] || "";
 
@@ -161,11 +161,11 @@ if (heroCommercial && !heroCommercial.includes('class="hero')) {
   failures.push("index.html : section hero mal extraite");
 }
 if (!offerCommercial) failures.push("index.html : section commerciale id=buy introuvable");
-if (offerCommercial && !/\\bid="buy"/.test(offerCommercial)) {
+if (offerCommercial && !/\bid="buy"/.test(offerCommercial)) {
   failures.push("index.html : section d'offre mal extraite");
 }
 
-const commercial = [heroCommercial, offerCommercial].join('\n');
+const commercial = [heroCommercial, offerCommercial].join('\\n');
 const forbidden = [/\bzero ban\b/i, /\bzéro ban\b/i, /24\/7/i, /garanti/i,
   /sans risque/i, /\bBG\b/, /Retail/i, /tous les niveaux/i, /\+\+ *joueurs/i,
   /zéro risque/i];
