@@ -18,6 +18,13 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "botwow-production"
 database_id = "e57f5874-a9f0-42bf-8dbc-10785ef083f5"
+# FIX 2026-10-23 : les migrations metier/paiement et les migrations de
+# telemetrie partageaient le meme repertoire `migrations/`. Consequence :
+# `wrangler d1 migrations list botwow-analytics` proposait d'appliquer les
+# migrations METIER (orders, licences, emails) a la base de TELEMETRIE, qui
+# ne doit contenir que `events` et `rl`. Chaque base a desormais son propre
+# repertoire, declare explicitement ci-dessous.
+migrations_dir = "migrations/production"
 
 # Base D1 DEDIEE a la telemetrie de parcours (V11.2). Distincte de la base
 # des commandes : elle ne contient ni e-mail, ni licence, ni jeton. Elle
@@ -27,6 +34,9 @@ database_id = "e57f5874-a9f0-42bf-8dbc-10785ef083f5"
 binding = "TELEMETRY_DB"
 database_name = "botwow-analytics"
 database_id = "935b0632-d712-4266-bece-028c70b545be"
+# Telemetrie UNIQUEMENT : events + rl (aucune table de paiement).
+migrations_dir = "migrations/analytics"
+
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
@@ -36,8 +46,16 @@ id = "5cca39707796468f83d2016350794f72"
 binding = "R2_BINARIES"
 bucket_name = "botwow-binaries"
 
-[[domains]]
-domain = "api.bot-wow.com"
+# FIX 2026-10-23 : l'ancienne declaration `domains` (double crochet, cle
+# "domains") n'etait PAS reconnue par Wrangler — chaque commande emettait
+# « Unexpected fields found in top-level field: domains ». La forme DOCUMENTEE
+# pour exposer un Worker sur un domaine personnalise est `[[routes]]` +
+# `custom_domain = true`. Le domaine cible est inchange : api.bot-wow.com
+# continue de pointer vers ce script.
+[[routes]]
+pattern = "api.bot-wow.com"
+custom_domain = true
+
 
 [vars]
 ENVIRONMENT = "production"

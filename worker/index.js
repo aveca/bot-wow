@@ -2191,104 +2191,12 @@ async function handleClaim(request, env2) {
   // l'offre unique payante (20 EUR) et constituait une livraison sans
   // paiement. Il est desactive : seule la boutique (/api/checkout) delivre.
   return jsonResponse({ ok: false, error: "claim_disabled" }, 410, {});
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonResponse({ ok: false, error: "invalid_json" }, 400);
-  }
-  const email = body.email?.toLowerCase().trim();
-  const lang = validateLang(body.lang || DEFAULT_LANG);
-  if (!email || !validateEmail(email)) {
-    return jsonResponse({ ok: false, error: "invalid_email" }, 400);
-  }
-  try {
-    const result = await env2.DB.batch([
-      // Check existing active license for this email
-      env2.DB.prepare(`
-        SELECT l.id, l.key, l.lang, l.status, d.token, d.expires_at
-        FROM licenses l
-        LEFT JOIN downloads d ON d.license_id = l.id
-        WHERE l.email = ? AND l.status = 'active'
-        ORDER BY l.id DESC LIMIT 1
-      `).bind(email),
-      // Get max order id for new order
-      env2.DB.prepare("SELECT COALESCE(MAX(id), 0) as max_id FROM orders").bind()
-    ]);
-    const existingLicense = result[0].results[0];
-    const maxOrderId = result[1].results[0]?.max_id || 0;
-    let licenseId;
-    let licenseKey;
-    let downloadToken;
-    let isNew = false;
-    if (existingLicense) {
-      licenseId = existingLicense.id;
-      licenseKey = existingLicense.key;
-      const now = Date.now();
-      if (!existingLicense.token || (existingLicense.expires_at ?? 0) < now) {
-        downloadToken = generateToken();
-        await env2.DB.prepare(`
-          INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-          VALUES (?, ?, ?, 0, ?, ?)
-        `).bind(
-          downloadToken,
-          licenseId,
-          now + DOWNLOAD_EXPIRY_DAYS * 864e5,
-          DOWNLOAD_MAX_COUNT,
-          now
-        ).run();
-      } else {
-        downloadToken = existingLicense.token;
-      }
-    } else {
-      const newOrderId = maxOrderId + 1;
-      const now = Date.now();
-      const freeProviderId = `free_${generateToken(8)}`;
-      await env2.DB.batch([
-        env2.DB.prepare(`
-          INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-          VALUES (?, 'free', ?, ?, 0, 'eur', 'free', ?, ?, ?)
-        `).bind(newOrderId, freeProviderId, email, JSON.stringify({ lang, product: "bot-wow-lifetime" }), now, now)
-        // License will be inserted below with returned ID
-      ]);
-      licenseKey = generateLicenseKey();
-      downloadToken = generateToken();
-      const licenseResult = await env2.DB.prepare(`
-        INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-      `).bind(licenseKey, newOrderId, email, lang, DEFAULT_MAX_ACTIVATIONS, now, now).run();
-      licenseId = licenseResult.meta.last_row_id;
-      isNew = true;
-      await env2.DB.prepare(`
-        INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-        VALUES (?, ?, ?, 0, ?, ?)
-      `).bind(
-        downloadToken,
-        licenseId,
-        now + DOWNLOAD_EXPIRY_DAYS * 864e5,
-        DOWNLOAD_MAX_COUNT,
-        now
-      ).run();
-    }
-    const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-    sendDeliveryEmail(env2, email, licenseKey, downloadUrl, lang).catch((err) => {
-      console.error("Failed to send delivery email:", err);
-    });
-    if (isNew) {
-      sendAdminNotification(env2, email, licenseKey).catch((err) => {
-        console.error("Failed to send admin notification:", err);
-      });
-    }
-    return jsonResponse({
-      ok: true,
-      key: licenseKey,
-      downloadUrl,
-      message: "Licence cr\xE9\xE9e. Email envoy\xE9."
-    });
-  } catch (error) {
-    console.error("Claim error:", error);
-    return jsonResponse({ ok: false, error: "server_error" }, 500);
-  }
+  // NOTE 2026-10-23 : le corps historique de cette fonction (creation
+  // d'une licence gratuite, generation d'identifiant par MAX(id)+1) a ete
+  // SUPPRIME. Il etait inatteignable depuis le 410 ci-dessus, et sa
+  // generation numerique d'identifiant de commande est desormais
+  // incompatible avec le schema TEXT de migrations/production/0004.
+  // Seule la boutique (/api/checkout) et le parcours Bitcoin delivrent.
 }
 __name(handleClaim, "handleClaim");
 async function handleActivate(request, env2) {

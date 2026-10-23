@@ -18,7 +18,11 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
-const MIG = join(REPO, 'migrations');
+// FIX 2026-10-23 : les migrations sont separees par base. Le test doit
+// verifier les deux cotes : le jeu metier (production) et le jeu telemetrie
+// (analytics), et refuser tout melange.
+const MIG_PROD = join(REPO, 'migrations', 'production');
+const MIG_ANALYTICS = join(REPO, 'migrations', 'analytics');
 
 let failures = 0;
 function check(name, ok, detail = '') {
@@ -28,18 +32,40 @@ function check(name, ok, detail = '') {
 
 console.log('=== MIGRATIONS D1 (base neuve + reparation 0003) ===');
 
-const files = readdirSync(MIG).filter((f) => f.endsWith('.sql')).sort();
-check('des migrations sont presentes', files.length >= 3, `(${files.length})`);
+const files = readdirSync(MIG_PROD).filter((f) => f.endsWith('.sql')).sort();
+check('des migrations de production sont presentes', files.length >= 4, `(${files.length})`);
+
 
 const db = new DatabaseSync(':memory:');
 for (const f of files) {
   try {
-    db.exec(readFileSync(join(MIG, f), 'utf8'));
+    db.exec(readFileSync(join(MIG_PROD, f), 'utf8'));
     console.log(`  applique : ${f}`);
   } catch (e) {
     check(`migration ${f}`, false, String(e.message).slice(0, 160));
   }
 }
+
+// --- la base de telemetrie doit rester independante du paiement ---------
+const analyticsFiles = readdirSync(MIG_ANALYTICS).filter((f) => f.endsWith('.sql')).sort();
+check('des migrations de telemetrie sont presentes', analyticsFiles.length >= 2, `(${analyticsFiles.length})`);
+const dbAnalytics = new DatabaseSync(':memory:');
+for (const f of analyticsFiles) {
+  try {
+    dbAnalytics.exec(readFileSync(join(MIG_ANALYTICS, f), 'utf8'));
+    console.log(`  applique (analytics) : ${f}`);
+  } catch (e) {
+    check(`migration telemetrie ${f}`, false, String(e.message).slice(0, 160));
+  }
+}
+const analyticsTables = new Set(
+  dbAnalytics.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((r) => r.name)
+);
+for (const t of ['events', 'rl']) check(`telemetrie : table ${t}`, analyticsTables.has(t));
+for (const t of ['orders', 'licenses', 'activations', 'downloads', 'webhook_events', 'mollie_customers', 'botwow_emails']) {
+  check(`telemetrie : AUCUNE table de paiement (${t})`, !analyticsTables.has(t));
+}
+dbAnalytics.close();
 
 const tables = new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((r) => r.name));
 for (const t of ['botwow_emails', 'orders', 'licenses', 'activations', 'downloads',
@@ -63,7 +89,7 @@ const before = db.prepare('SELECT id FROM orders').get().id;
 check('la commande legacy n\'a pas d\'identifiant (defaut historique)', before === null, `(${before})`);
 
 // application de la migration de reparation
-db.exec(readFileSync(join(MIG, '0003_botwow_payment_integrity.sql'), 'utf8'));
+db.exec(readFileSync(join(MIG_PROD, '0003_botwow_payment_integrity.sql'), 'utf8'));
 
 const after = db.prepare('SELECT id FROM orders').get().id;
 check('la commande legacy recoit un identifiant TEXT', typeof after === 'string' && after.startsWith('ord_'), `(${after})`);

@@ -5,11 +5,11 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=9585b518';
-import './analytics.js?v=9585b518';
-import './journey.js?v=9585b518';
-import './session.js?v=9585b518';
-import './film.js?v=9585b518';
+import { planRound } from './route-planner.js?v=94966ae3';
+import './analytics.js?v=94966ae3';
+import './journey.js?v=94966ae3';
+import './session.js?v=94966ae3';
+import './film.js?v=94966ae3';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -497,6 +497,44 @@ function wireCompareAccordion() {
   if (mq.addEventListener) mq.addEventListener('change', apply);
 }
 
+/* --------------------------------------------- barre d'action desktop */
+/* La barre collante (.mbar) est permanente sur mobile. Sur desktop, elle
+   n'apparait qu'une fois le hero quitte : la section d'achat est situee
+   apres plusieurs ecrans de contenu, et sans ce rappel un visiteur engage
+   dans la lecture devrait remonter toute la page pour payer.
+
+   Honnetete : la barre affiche le prix REEL (20,00 EUR) et rien d'autre —
+   pas de remise, pas de compte a rebours, pas de fausse rarete. */
+function wireActionBar() {
+  const bar = document.querySelector('.mbar');
+  if (!bar) return;
+  const hero = document.querySelector('.hero');
+  // Mobile : la barre est toujours visible (CSS), aucune classe requise.
+  if (window.matchMedia('(max-width: 760px)').matches) {
+    bar.classList.add('is-on');
+    return;
+  }
+  if (!hero || !('IntersectionObserver' in window)) {
+    // Sans observateur : on garde la barre visible des que l'on quitte le
+    // haut de la page (repli sur le scroll, jamais l'inverse).
+    const onScroll = () => {
+      if (window.scrollY > (hero ? hero.offsetHeight : 600)) bar.classList.add('is-on');
+      else bar.classList.remove('is-on');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      // Le hero n'est plus (ou peu) visible -> la barre apparait.
+      if (e.isIntersecting && e.intersectionRatio > 0.15) bar.classList.remove('is-on');
+      else bar.classList.add('is-on');
+    }
+  }, { threshold: [0, 0.15, 0.5] });
+  io.observe(hero);
+}
+
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
@@ -505,6 +543,7 @@ async function boot() {
   wireNavScroll();
   wireOwnership();
   wireCompareAccordion();
+  wireActionBar();
   loadModuleLedger();
   try {
     // Résolu depuis l'URL du MODULE (pas de la page) : la carte doit se

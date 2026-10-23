@@ -18,3 +18,7 @@ tests/.worker-under-test.mjs
 
 # Captures d'ecran de verification (audit-viewports) : ne pas versionner.
 captures/
+
+# Captures et releves de QA visuelle (scripts/qa-*-cdp.mjs) : artefacts
+# locaux de verification, regeneres a la demande, jamais versionnes.
+.qa-captures/

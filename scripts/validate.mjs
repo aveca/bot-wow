@@ -161,16 +161,68 @@ for (const re of forbidden) {
 if (!home.includes("20,00 €")) failures.push("index.html : le prix de l'offre doit etre affiche (20,00 EUR)");
 
 // --- Migrations D1 : le schema doit etre reproductible --------------------
-for (const file of ["migrations/0001_botwow_emails.sql", "migrations/0002_botwow_licenses.sql"]) {
+// FIX 2026-10-23 : les migrations sont separees par base de donnees.
+//   migrations/production : metier et paiement (botwow-production)
+//   migrations/analytics  : telemetrie uniquement (botwow-analytics)
+// Melanger les deux dans un meme repertoire faisait proposer a wrangler
+// l'application des migrations metier sur la base de telemetrie.
+const PROD_MIGRATIONS = [
+  "migrations/production/0001_botwow_emails.sql",
+  "migrations/production/0002_botwow_licenses.sql",
+  "migrations/production/0003_botwow_payment_integrity.sql",
+  "migrations/production/0004_reconcile_order_ids.sql",
+];
+for (const file of PROD_MIGRATIONS) {
   if (!fs.existsSync(path.join(root, file))) failures.push(`missing: ${file}`);
 }
-if (fs.existsSync(path.join(root, "migrations/0002_botwow_licenses.sql"))) {
-  const mig = fs.readFileSync(path.join(root, "migrations/0002_botwow_licenses.sql"), "utf8");
+if (fs.existsSync(path.join(root, "migrations/production/0002_botwow_licenses.sql"))) {
+  const mig = fs.readFileSync(path.join(root, "migrations/production/0002_botwow_licenses.sql"), "utf8");
+
   for (const t of ["orders", "licenses", "activations", "downloads", "webhook_events", "mollie_customers"]) {
     if (!new RegExp(`CREATE TABLE IF NOT EXISTS ${t}\\b`, "i").test(mig)) {
       failures.push(`migration 0002 missing table: ${t}`);
     }
   }
+}
+
+// --- Separation des migrations par base ---------------------------------
+// La base de telemetrie ne doit JAMAIS recevoir de table de paiement.
+const ANALYTICS_TABLES = ["events", "rl"];
+const FORBIDDEN_IN_ANALYTICS = ["orders", "licenses", "activations", "downloads", "webhook_events", "mollie_customers", "deliveries", "admin_sessions", "botwow_emails"];
+const analyticsDir = path.join(root, "migrations", "analytics");
+if (!fs.existsSync(analyticsDir)) {
+  failures.push("missing: migrations/analytics (migrations de telemetrie)");
+} else {
+  const analyticsFiles = fs.readdirSync(analyticsDir).filter((f) => f.endsWith(".sql"));
+  if (analyticsFiles.length === 0) failures.push("migrations/analytics est vide");
+  for (const f of analyticsFiles) {
+    const content = fs.readFileSync(path.join(analyticsDir, f), "utf8");
+    for (const t of FORBIDDEN_IN_ANALYTICS) {
+      if (new RegExp(`CREATE TABLE(\\s+IF NOT EXISTS)?\\s+${t}\\b`, "i").test(content)) {
+        failures.push(`migrations/analytics/${f} : table de paiement interdite (${t})`);
+      }
+    }
+  }
+  // Aucune table de paiement n'a ete trouvee (verification faite juste au
+  // dessus). On passe a la verification d'ensemble des tables de telemetrie.
+  // Les tables de telemetrie sont reparties sur PLUSIEURS fichiers
+  // (0001 events, 0002 rl) : on verifie leur presence dans l'ENSEMBLE.
+  const analyticsAll = analyticsFiles
+    .map((f) => fs.readFileSync(path.join(analyticsDir, f), "utf8"))
+    .join("\n");
+  for (const t of ANALYTICS_TABLES) {
+    if (!new RegExp(`CREATE TABLE(\\s+IF NOT EXISTS)?\\s+${t}\\b`, "i").test(analyticsAll)) {
+      failures.push(`migrations/analytics : table de telemetrie attendue manquante (${t})`);
+    }
+  }
+}
+// Chaque base doit declarer son propre migrations_dir dans wrangler.toml.
+if (fs.existsSync(path.join(root, "wrangler.toml"))) {
+  const cfg = fs.readFileSync(path.join(root, "wrangler.toml"), "utf8");
+  const m = cfg.match(/\[\[d1_databases\]\][\s\S]*?migrations_dir\s*=\s*"([^"]+)"/g) || [];
+  if (m.length < 2) failures.push("wrangler.toml : chaque base D1 doit declarer migrations_dir");
+  if (!cfg.includes("migrations/production")) failures.push("wrangler.toml : migrations_dir production manquant");
+  if (!cfg.includes("migrations/analytics")) failures.push("wrangler.toml : migrations_dir analytics manquant");
 }
 
 if (failures.length) {
