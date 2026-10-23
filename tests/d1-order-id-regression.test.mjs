@@ -139,7 +139,8 @@ console.log('=== D1 : identifiants de commande (Worker reel, SQL reel) ===');
   check('schema de production : 14 commandes synthetiques', await count(iso.db, 'orders') === 14);
   check('schema de production : 5 licences synthetiques', await count(iso.db, 'licenses') === 5);
   check('schema de production : 0 activation', await count(iso.db, 'activations') === 0);
-  check('schema de production : 0 livraison (table deliveries absente)', !tableExists(iso.db, 'deliveries'));
+  check('schema de production : table deliveries presente', tableExists(iso.db, 'deliveries'));
+  check('schema de production : 0 livraisons en attente', await count(iso.db, 'deliveries') === 0);
   iso.close();
 }
 

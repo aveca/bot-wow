@@ -32,6 +32,17 @@ function check(name, ok, detail = '') {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 }
 
+function applyMigration(db, sql) {
+  db.exec('BEGIN');
+  try {
+    db.exec(sql);
+    db.exec('COMMIT');
+  } catch (error) {
+    try { db.exec('ROLLBACK'); } catch { /* transaction already rolled back */ }
+    throw error;
+  }
+}
+
 console.log('=== VALIDATION D1 : identifiants de commande (base isolee) ===');
 
 /* --- 1. separation des migrations par base -------------------------------- */
@@ -62,7 +73,7 @@ const before = {
 };
 
 let migError = null;
-try { iso.db.exec(MIGRATION); } catch (e) { migError = e; }
+try { applyMigration(iso.db, MIGRATION); } catch (e) { migError = e; }
 check('migration 0004 : application sans erreur sur base isolee', !migError,
   migError ? `(${migError.message.slice(0, 100)})` : '');
 
@@ -94,7 +105,7 @@ if (!migError) {
 
   /* Idempotence reelle : rejouer ne double pas le prefixe. */
   let replayError = null;
-  try { iso.db.exec(MIGRATION); } catch (e) { replayError = e; }
+  try { applyMigration(iso.db, MIGRATION); } catch (e) { replayError = e; }
   check('migration 0004 rejouee : aucune erreur', !replayError);
   const doubled = iso.db.prepare("SELECT COUNT(*) c FROM orders WHERE id LIKE 'ord_legacy_ord_legacy_%'").get().c;
   check('migration 0004 rejouee : aucun prefixe double', doubled === 0, `(${doubled})`);
