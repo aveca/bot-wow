@@ -2486,7 +2486,8 @@ async function handleCheckout(request, env2) {
     console.warn("Checkout: montant demande par le client refuse", body.amount, "attendu", amount);
     return jsonResponse2({ ok: false, error: "invalid_amount" }, 400);
   }
-  const journeyId = body.journey_id || null;
+  const rawJourneyId = body.journey_id;
+  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
@@ -2499,13 +2500,9 @@ async function handleCheckout(request, env2) {
       metadata: {
         email,
         lang,
-        product: PRODUCT_METADATA_KEY
+        product: PRODUCT_METADATA_KEY,
+        journey_id: journeyId || ""
       }
-    });
-    const paymentKey = `mollie_payment:${payment.id}`;
-    await env2.RATE_LIMIT.put(paymentKey, JSON.stringify({ email, lang, product: PRODUCT_METADATA_KEY, journey_id: journeyId }), {
-      expirationTtl: 86400
-      // 24h
     });
     // Evenement serveur : commande de paiement creee (cote serveur, montant
     // verifie). Ne confirme pas un paiement reussi : seule la notification
@@ -2626,17 +2623,10 @@ async function handleMollieWebhook(request, env2) {
     console.error("Webhook: insertion de l'evenement impossible", msg);
     return new Response("Server Error", { status: 500 });
   }
-  // Recuperer l'identifiant de parcours stocke lors du checkout.
-  let journeyId = null;
-  try {
-    const stored = await env2.RATE_LIMIT.get(paymentKey);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      journeyId = parsed.journey_id || null;
-    }
-  } catch {
-    // KV indisponible : on continue sans journey_id.
-  }
+  // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
+  // On le récupère ici sans lecture KV supplémentaire.
+  const rawJourneyId = payment.metadata?.journey_id;
+  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
   // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
   // doit revoquer la licence liee (le signal existait mais n'etait jamais
   // branche sur le flux du webhook).
@@ -2660,7 +2650,7 @@ async function handleMollieWebhook(request, env2) {
       console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
     }
   } else {
-    await markOrderFailed(env2, payment, email, eventId, journeyId);
+    await markOrderFailed(env2, payment, email, eventId, journeyId, lang);
   }
   return new Response("OK", { status: 200 });
 }
@@ -2785,7 +2775,7 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId) {
   await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: payment.id });
 }
 __name(fulfillOrder, "fulfillOrder");
-async function markOrderFailed(env2, payment, email, eventId, journeyId) {
+async function markOrderFailed(env2, payment, email, eventId, journeyId, lang) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
   await env2.DB.prepare(`
