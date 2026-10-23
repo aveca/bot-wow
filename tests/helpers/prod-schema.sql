@@ -27,16 +27,16 @@ CREATE TABLE orders (
   updated_at   INTEGER NOT NULL
 );
 
+-- Live production has no licenses.token or licenses.expires_at; the
+-- download token/expiration are stored in downloads.
 CREATE TABLE licenses (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   key             TEXT NOT NULL UNIQUE,
-  order_id        INTEGER REFERENCES orders(id),
+  order_id        INTEGER NOT NULL REFERENCES orders(id),
   email           TEXT NOT NULL,
   lang            TEXT NOT NULL DEFAULT 'fr',
   status          TEXT NOT NULL DEFAULT 'active',
-  token           TEXT UNIQUE,
-  max_activations INTEGER NOT NULL DEFAULT 1,
-  expires_at      INTEGER,
+  max_activations INTEGER NOT NULL DEFAULT 2,
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
 );
@@ -48,7 +48,7 @@ CREATE TABLE activations (
   ip           TEXT,
   user_agent   TEXT,
   activated_at INTEGER NOT NULL,
-  last_seen_at INTEGER NOT NULL
+  last_seen_at INTEGER
 );
 
 -- UNIQUE index present en production (cree a la main, hors migration) : c'est
@@ -57,12 +57,11 @@ CREATE UNIQUE INDEX idx_activations_license_machine
   ON activations(license_id, machine_id);
 
 CREATE TABLE downloads (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  token       TEXT NOT NULL UNIQUE,
-  license_id  INTEGER NOT NULL REFERENCES licenses(id),
+  token       TEXT PRIMARY KEY,
+  license_id  INTEGER NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
   expires_at  INTEGER NOT NULL,
   count       INTEGER NOT NULL DEFAULT 0,
-  max_count   INTEGER NOT NULL DEFAULT 3,
+  max_count   INTEGER NOT NULL DEFAULT 10,
   created_at  INTEGER NOT NULL
 );
 
@@ -74,8 +73,8 @@ CREATE TABLE webhook_events (
 
 CREATE TABLE mollie_customers (
   id         TEXT PRIMARY KEY,
-  email      TEXT NOT NULL,
-  locale     TEXT NOT NULL DEFAULT 'fr',
+  email      TEXT UNIQUE NOT NULL,
+  locale     TEXT DEFAULT 'fr',
   metadata   TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -91,7 +90,10 @@ CREATE TABLE botwow_emails (
   unsubscribed_at       INTEGER,
   status                TEXT NOT NULL DEFAULT 'subscribed',
   ip                    TEXT,
-  user_agent            TEXT
+  user_agent            TEXT,
+  confirm_token         TEXT,
+  unsubscribe_token     TEXT,
+  confirmed_at          INTEGER
 );
 
 -- Les tables `deliveries`, `rate_limit` et `admin_sessions` existent dans le
