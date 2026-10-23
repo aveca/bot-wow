@@ -182,6 +182,18 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     `(liens : ${refundLinks.join(', ')})`);
 }
 
+// 6e. Les liens Conditions et Confidentialite de l'accueil FR restent localises.
+{
+  const fr = read('fr/index.html');
+  const legalLinks = [...fr.matchAll(/href="([^"]*legal\/(?:fr\/)?(?:terms|privacy)\.html)"/g)]
+    .map(([, href]) => href);
+  check('accueil FR : conditions et confidentialite pointent vers les pages FR',
+    legalLinks.length === 4
+      && legalLinks.filter((href) => href === '../legal/fr/terms.html').length === 2
+      && legalLinks.filter((href) => href === '../legal/fr/privacy.html').length === 2,
+    `(liens : ${legalLinks.join(', ')})`);
+}
+
 // 7. Le prix reste unique et verifie
 {
   const t = read('index.html');
