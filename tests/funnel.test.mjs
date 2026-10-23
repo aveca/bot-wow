@@ -183,13 +183,14 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
+  const paymentCallsBefore = mollieCalls.length;
   const res = await callWorker('/api/checkout', {
     method: 'POST',
     body: { email: 'j@t.fr', lang: 'fr', journey_id: 'j_test_123' },
     env,
   });
   check('checkout accepte journey_id', res.status === 200);
-  const paymentCall = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
+  const paymentCall = mollieCalls.slice(paymentCallsBefore).find((c) => c.url.endsWith('/payments') && c.method === 'POST');
   check('journey_id transmis dans les métadonnées Mollie', !!paymentCall && paymentCall.body?.metadata?.journey_id === 'j_test_123', `(body=${JSON.stringify(paymentCall && paymentCall.body)})`);
   check('corrélation sans lecture/écriture KV dédiée au paiement',
     !state.kvWrites.some((x) => String(x.key).startsWith('mollie_payment:')) &&
