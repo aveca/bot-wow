@@ -80,6 +80,36 @@ CREATE TABLE mollie_customers (
   updated_at INTEGER NOT NULL
 );
 
+-- These tables already exist in the currently observed production database.
+-- Their live schemas are intentionally represented here, including the
+-- historical rate_limit shape (id, bucket, ts), not the alternative schema
+-- a later CREATE TABLE IF NOT EXISTS might declare for a fresh database.
+CREATE TABLE admin_sessions (
+  id         TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  ip         TEXT,
+  user_agent TEXT
+);
+
+CREATE TABLE deliveries (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  email      TEXT NOT NULL,
+  subject    TEXT,
+  body       TEXT,
+  kind       TEXT NOT NULL DEFAULT 'delivery',
+  status     TEXT NOT NULL DEFAULT 'pending',
+  error      TEXT,
+  created_at INTEGER NOT NULL,
+  sent_at    INTEGER
+);
+
+CREATE TABLE rate_limit (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  bucket  TEXT NOT NULL,
+  ts      INTEGER NOT NULL
+);
+
 CREATE TABLE botwow_emails (
   id                    INTEGER PRIMARY KEY AUTOINCREMENT,
   email                 TEXT NOT NULL UNIQUE,
@@ -96,7 +126,6 @@ CREATE TABLE botwow_emails (
   confirmed_at          INTEGER
 );
 
--- Les tables `deliveries`, `rate_limit` et `admin_sessions` existent dans le
--- code du Worker (journal de livraison, limitation de debit, sessions admin)
--- mais PAS encore dans la base de production : leur creation fait partie de
--- la migration de reconciliation (voir migrations/production/0004).
+-- This fixture mirrors the live D1 schema observed on 2026-10-23,
+-- including tables that migration 0004 must leave intact when they already
+-- exist. The migration uses CREATE TABLE IF NOT EXISTS for fresh databases.
