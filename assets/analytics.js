@@ -10,15 +10,21 @@
  *
  * EVENEMENTS
  *   page_view      { step }                       affichage de page
+ *   offer_view     { step }                       affichage de l'offre/prix
+ *   demo_open      { step }                       ouverture de la demonstration
  *   cta_click      { cta, step }                  clic sur un CTA
  *   planner_mode   { mode }                       mode du planificateur
  *   ownership_view { years }                      horizon du cout de possession
- *   checkout_start { step }                       depart du checkout
+ *   checkout_start { step }                       depart du checkout (soumission formulaire)
+ *   checkout_requested { step }                   clic sur un CTA d'achat
  *   checkout_error { step }                       echec du checkout
+ *   journey_view   { cta, step }                  changement de section
  *
  * REGLES
  *   - aucune donnee personnelle : ni email, ni nom, ni identifiant de
  *     commande, ni texte libre ;
+ *   - un identifiant de parcours anonyme (journey_id) relie les evenements
+ *     d'une meme session sans exposer de donnee personnelle ;
  *   - Do Not Track respecte : rien n est envoye ;
  *   - l'interface n'est jamais bloquee par la collecte : les echecs sont
  *     silencieux et sans nouvelle tentative ;
@@ -39,6 +45,19 @@
   try {
     if (navigator.doNotTrack === '1' || window.doNotTrack === '1') enabled = false;
   } catch (e) { /* API absente : on continue */ }
+
+  /* Identifiant de parcours anonyme : genere une fois par session,
+     stocke en sessionStorage. Ne contient aucune donnee personnelle. */
+  function journeyId() {
+    var key = 'botwow_journey_id';
+    var stored = sessionStorage.getItem(key);
+    if (stored) return stored;
+    var id = 'j_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    try { sessionStorage.setItem(key, id); } catch (e) { /* stockage indisponible */ }
+    return id;
+  }
+
+  var JID = journeyId();
 
   function lang() {
     var l = (document.documentElement.lang || 'en').toLowerCase();
@@ -70,6 +89,13 @@
       props: props || {},
     };
     if (test) { payload.test = true; payload.ref = test; }
+    // L'identifiant de parcours est inclus dans chaque evenement pour
+    // permettre la corrélation cote serveur sans donnee personnelle.
+    if (props && typeof props === 'object') {
+      props.journey_id = JID;
+    } else {
+      props = { journey_id: JID };
+    }
     return payload;
   }
 
@@ -102,6 +128,7 @@
 
   /* Publie l'API pour l'application (et pour les tests). */
   window.botwowTrack = track;
+  window.botwowJourneyId = JID;
   window.botwowTrackFlush = function () {
     if (!enabled || !buffer.length) return;
     try {
@@ -148,7 +175,19 @@
     track('ownership_view', { years: Number(btn.getAttribute('data-years')) });
   }, { passive: true });
 
-  /* 4. Depart et echec du checkout. */
+  /* 4. Clics sur les CTA d'achat (checkout_requested). */
+  // Écouteur élargi : couvre maintenant 7 IDs CTA buy-réels (contre 4 auparavant),
+  // tout en excluant les boutons de démonstration/navigation qui n'ouvrent pas
+  // le checkout (hero-demo, final-demo, telemetry-*, radar-, journey-*, steps-demo,
+  // compare-cta). Le serveur conserve le contrôle : seul payment_confirmed →
+  // license_created → delivery_sent crée une conversion réelle.
+  document.addEventListener('click', function (ev) {
+    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
+    if (!el) return;
+    track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
+  }, { passive: true });
+
+  /* 5. Depart et echec du checkout (soumission du formulaire). */
   document.addEventListener('submit', function (ev) {
     var form = ev.target;
     if (form && form.id === 'buyForm') {
@@ -156,13 +195,35 @@
     }
   }, true);
 
-  /* 5. Affichage de page (une fois, au chargement). */
+  /* 6. Affichage de page (une fois, au chargement). */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () { track('page_view', { step: 'load' }); });
   } else {
     track('page_view', { step: 'load' });
   }
 
-  /* 6. Fin de page : on vide le tampon. */
+  /* Ouverture de la demonstration. */
+  if (location.pathname === '/demo.html' || location.pathname === '/fr/demo.html') {
+    track('demo_open', { step: 'demo_open' });
+  }
+
+  /* 7. Fin de page : on vide le tampon. */
   window.addEventListener('pagehide', function () { window.botwowTrackFlush(); });
+
+  /* 8. Affichage de la section offre (offre_view) : quand la section
+        #pricing entre dans le viewport. */
+  (function () {
+    var pricing = document.querySelector('#pricing');
+    if (!pricing || !window.IntersectionObserver) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          track('offer_view', { step: 'pricing' });
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.1 });
+    observer.observe(pricing);
+  })();
+
 })();
