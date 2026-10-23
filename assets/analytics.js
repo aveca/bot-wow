@@ -176,9 +176,15 @@
   }, { passive: true });
 
   /* 4. Clics sur les CTA d'achat (checkout_requested). */
+  // Déclenché pour tout CTA munis de data-cta-id et data-track="cta_click".
+  // Le serveur conserve le contrôle : seul un paiement confirmé → licence → livraison
+  // crée une conversion réelle. Le fait de tracker le "requested" pour tous les
+  // CTA nous donne les données de funnel nécessaires sans confondre clic = vente.
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"]') : null;
+    var el = ev.target.closest ? ev.target.closest('[data-cta-id]') : null;
     if (!el) return;
+    // On s'assure que l'élément fait partie du site (pas de donnée intruse)
+    if (el.getAttribute('data-track') !== 'cta_click') return;
     track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
   }, { passive: true });
 
