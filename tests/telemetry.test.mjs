@@ -92,6 +92,29 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
   check('l IP est hashee', typeof row[10] === 'string' && row[10].length === 16, `(${row[10]})`);
 }
 
+/* --- 1b. evenements commerciaux emis par le client --- */
+{
+  const { db, state } = makeDb();
+  CURRENT_ENV = { ...BASE_ENV, TELEMETRY_DB: db };
+  const cases = [
+    ['checkout_requested', 'hero-offer'],
+    ['offer_view', 'pricing'],
+    ['demo_open', 'demo_open'],
+  ];
+  for (const [event, step] of cases) {
+    const res = await handleTrack(req(JSON.stringify({
+      v: 1, event, page: '/', lang: 'en',
+      props: { step, journey_id: 'j_test_123' },
+    })), CURRENT_ENV);
+    const body = await res.json();
+    const row = state.inserts[state.inserts.length - 1] || [];
+    check(`accepte et stocke ${event}`, res.status === 202 && body.stored === true,
+      `(status ${res.status}, corps ${JSON.stringify(body)})`);
+    check(`stocke le nom ${event}`, row[1] === event, `(${row[1]})`);
+    check(`conserve journey_id pour ${event}`, row[12] === 'j_test_123', `(${row[12]})`);
+  }
+}
+
 /* --- 2. evenement de test : marque et rattache a une reference --- */
 {
   const { db, state } = makeDb();
