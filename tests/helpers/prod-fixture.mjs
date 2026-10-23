@@ -104,6 +104,14 @@ export function seedProdFixture(db, { now = Date.now() } = {}) {
     insLicense.run(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[7]);
   }
 
+  // Match the five production download tokens and their license relations.
+  const insDownload = db.prepare(
+    'INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at) VALUES (?,?,?,?,?,?)'
+  );
+  for (const [licenseId, ageDays] of [[1, 20], [2, 18], [3, 15], [4, 8], [5, 5]]) {
+    insDownload.run(`dl_syn${licenseId}`, licenseId, t(0) + 30 * 864e5, 0, 10, t(ageDays));
+  }
+
   const insEmail = db.prepare(
     'INSERT INTO botwow_emails (id, email, source, consent_marketing, consent_transactional, subscribed_at, status) VALUES (?,?,?,?,?,?,?)'
   );
