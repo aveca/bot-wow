@@ -22,7 +22,7 @@
  *   - Do Not Track respecte : rien n est envoye ;
  *   - l'interface n'est jamais bloquee par la collecte : les echecs sont
  *     silencieux et sans nouvelle tentative ;
- *   - tampon memoire borne (20 evenements) et vide a l'envoi.
+ *   - tampon memoire borne ; les evenements restent individuels, jamais rejoues en lot.
  */
 (function () {
   var SCHEMA = 1;
@@ -74,12 +74,26 @@
   }
 
   function send(payload) {
-    if (!enabled) return;
+    if (!enabled) return true;
+    var body;
     try {
-      var body = JSON.stringify(payload);
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }));
-      } else if (window.fetch) {
+      body = JSON.stringify(payload);
+    } catch (e) {
+      return false;
+    }
+
+    // sendBeacon est prioritaire, mais un refus de mise en file doit
+    // retomber sur fetch. Chaque requete contient un seul evenement :
+    // le Worker /api/track n'accepte pas de payload { batch: [...] }.
+    try {
+      if (navigator.sendBeacon &&
+          navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }))) {
+        return true;
+      }
+    } catch (e) { /* fallback fetch ci-dessous */ }
+
+    try {
+      if (window.fetch) {
         window.fetch(ENDPOINT, {
           method: 'POST',
           body: body,
@@ -88,35 +102,36 @@
           mode: 'same-origin',
           credentials: 'omit',
         }).catch(function () {});
+        return true;
       }
     } catch (e) { /* la collecte ne doit jamais casser l'interface */ }
+
+    return false;
   }
 
   function track(event, props) {
     if (!enabled) return;
     var payload = build(event, props);
-    buffer.push(payload);
-    if (buffer.length > MAX_BUFFER) buffer.shift();
-    send(payload);
+    if (!send(payload)) {
+      buffer.push(payload);
+      if (buffer.length > MAX_BUFFER) buffer.shift();
+    }
   }
 
   /* Publie l'API pour l'application (et pour les tests). */
   window.botwowTrack = track;
   window.botwowTrackFlush = function () {
     if (!enabled || !buffer.length) return;
-    try {
-      var body = JSON.stringify({ v: SCHEMA, batch: buffer });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }));
-      } else if (window.fetch) {
-        window.fetch(ENDPOINT, {
-          method: 'POST', body: body, keepalive: true,
-          headers: { 'Content-Type': 'application/json' },
-          mode: 'same-origin', credentials: 'omit',
-        }).catch(function () {});
+    var pending = buffer.slice();
+    buffer.length = 0;
+    // Rejouer les evenements en attente un par un : jamais de lot que
+    // le Worker ne sait pas valider. Les echecs restent bornes en memoire.
+    pending.forEach(function (payload) {
+      if (!send(payload)) {
+        buffer.push(payload);
+        if (buffer.length > MAX_BUFFER) buffer.shift();
       }
-    } catch (e) { /* ignore */ }
-    buffer = [];
+    });
   };
 
   /* 1. Clics sur les elements marques (delegation : fonctionne meme si le
