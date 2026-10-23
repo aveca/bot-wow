@@ -48,13 +48,14 @@ function orderRows(t) {
 
 /** Licences synthétiques : 5 lignes pointant sur des order_id ENTIERS. */
 function licenseRows(t) {
+  // Tokens and expiry belong to downloads in the live production schema.
   return [
-    [1, 'BOTWOW-AAAAA-BBBBB-CCCCC-DDDDD-EEEEE', 1, 'client1@example.com', 'fr', 'active', 'tok_syn1', 2, t(20)],
-    [2, 'BOTWOW-FFFFF-GGGGG-HHHHH-IIIII-JJJJJ', 3, 'client3@example.com', 'en', 'active', 'tok_syn3', 2, t(15)],
-    [3, 'BOTWOW-KKKKK-LLLLL-MMMMM-NNNNN-OOOOO', 6, 'client6@example.com', 'fr', 'active', 'tok_syn6', 2, t(8)],
-    [4, 'BOTWOW-PPPPP-QQQQQ-RRRRR-SSSSS-TTTTT', 8, 'client8@example.com', 'en', 'active', 'tok_syn8', 2, t(6)],
+    [1, 'BOTWOW-AAAAA-BBBBB-CCCCC-DDDDD-EEEEE', 1, 'client1@example.com', 'fr', 'active', 2, t(20)],
+    [2, 'BOTWOW-FFFFF-GGGGG-HHHHH-IIIII-JJJJJ', 3, 'client3@example.com', 'en', 'active', 2, t(15)],
+    [3, 'BOTWOW-KKKKK-LLLLL-MMMMM-NNNNN-OOOOO', 6, 'client6@example.com', 'fr', 'active', 2, t(8)],
+    [4, 'BOTWOW-PPPPP-QQQQQ-RRRRR-SSSSS-TTTTT', 8, 'client8@example.com', 'en', 'active', 2, t(6)],
     // commande Bitcoin (id 9) livrée manuellement par l'administration
-    [5, 'BOTWOW-UUUUU-VVVVV-WWWWW-XXXXX-YYYYY', 9, 'client9@example.com', 'fr', 'active', 'tok_syn9', 2, t(5)],
+    [5, 'BOTWOW-UUUUU-VVVVV-WWWWW-XXXXX-YYYYY', 9, 'client9@example.com', 'fr', 'active', 2, t(5)],
   ];
 }
 
@@ -97,10 +98,10 @@ export function seedProdFixture(db, { now = Date.now() } = {}) {
   }
 
   const insLicense = db.prepare(
-    'INSERT INTO licenses (id, key, order_id, email, lang, status, token, max_activations, expires_at, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    'INSERT INTO licenses (id, key, order_id, email, lang, status, max_activations, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)'
   );
   for (const r of licenseRows(t)) {
-    insLicense.run(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], null, r[8], r[8]);
+    insLicense.run(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[7]);
   }
 
   const insEmail = db.prepare(
