@@ -50,6 +50,7 @@ const RE_MODE = /^(prudent|equilibre|exploration)$/;
 const RE_STEP = /^[a-z0-9][a-z0-9_-]{0,31}$/;
 const RE_PAGE = /^\/[a-zA-Z0-9\-_/.]{0,63}$/;
 const RE_REF = /^[a-z0-9][a-z0-9_-]{0,39}$/;
+const RE_JOURNEY = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 
 function json(status, body) {
   return new Response(JSON.stringify(body), {
@@ -108,6 +109,7 @@ export function validateEvent(payload) {
   const row = {
     event: payload.event, page: payload.page, lang,
     cta: null, mode: null, years: null, step: null, ref: null, test: 0,
+    journey_id: null,
   };
 
   if (spec.cta) {
@@ -130,6 +132,15 @@ export function validateEvent(payload) {
     if (step === undefined || step === null) row.step = 'unknown';
     else if (typeof step === 'string' && RE_STEP.test(step)) row.step = step;
     else return null;
+  }
+
+  // Identifiant de parcours anonyme : relie les evenements d'une meme
+  // session sans exposer de donnee personnelle. Absent si la colonne
+  // n'existe pas encore en production (migration 0003 non appliquee).
+  const journeyId = props.journey_id;
+  if (journeyId !== undefined && journeyId !== null) {
+    if (typeof journeyId !== 'string' || !RE_JOURNEY.test(journeyId)) return null;
+    row.journey_id = journeyId;
   }
 
   // Evenement de test : reference obligatoire, marque comme tel pour ne
@@ -213,14 +224,26 @@ export async function handleTrack(request, env) {
 
   try {
     await db.prepare(
-      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua) ' +
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id) ' +
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       Date.now(), row.event, row.page, row.lang, row.cta, row.mode, row.years,
-      row.step, row.ref, row.test, ipHash, uaFamily(request)
+      row.step, row.ref, row.test, ipHash, uaFamily(request), row.journey_id
     ).run();
   } catch {
-    return json(202, { ok: true, stored: false });
+    // La colonne journey_id n'existe pas encore (migration 0003 non appliquee).
+    // On rejoue sans elle : la collecte fonctionne, moins le lien de parcours.
+    try {
+      await db.prepare(
+        'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(
+        Date.now(), row.event, row.page, row.lang, row.cta, row.mode, row.years,
+        row.step, row.ref, row.test, ipHash, uaFamily(request)
+      ).run();
+    } catch {
+      return json(202, { ok: true, stored: false });
+    }
   }
 
   return json(202, { ok: true, stored: true });

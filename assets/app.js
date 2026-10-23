@@ -5,11 +5,11 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=f6872e87';
-import './analytics.js?v=f6872e87';
-import './journey.js?v=f6872e87';
-import './session.js?v=f6872e87';
-import './film.js?v=f6872e87';
+import { planRound } from './route-planner.js?v=ebcd9f24';
+import './analytics.js?v=ebcd9f24';
+import './journey.js?v=ebcd9f24';
+import './session.js?v=ebcd9f24';
+import './film.js?v=ebcd9f24';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -140,6 +140,9 @@ async function startCheckout(email) {
   const original = btn.textContent;
   btn.textContent = T.pending;
   const payload = { email, lang: isFr ? 'fr' : 'en' };
+  if (window.botwowJourneyId) {
+    payload.journey_id = window.botwowJourneyId;
+  }
   let data = null;
   let lastError = null;
   for (const base of [API_BASE, '']) {

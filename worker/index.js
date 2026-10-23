@@ -2486,6 +2486,7 @@ async function handleCheckout(request, env2) {
     console.warn("Checkout: montant demande par le client refuse", body.amount, "attendu", amount);
     return jsonResponse2({ ok: false, error: "invalid_amount" }, 400);
   }
+  const journeyId = body.journey_id || null;
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
@@ -2502,10 +2503,14 @@ async function handleCheckout(request, env2) {
       }
     });
     const paymentKey = `mollie_payment:${payment.id}`;
-    await env2.RATE_LIMIT.put(paymentKey, JSON.stringify({ email, lang, product: PRODUCT_METADATA_KEY }), {
+    await env2.RATE_LIMIT.put(paymentKey, JSON.stringify({ email, lang, product: PRODUCT_METADATA_KEY, journey_id: journeyId }), {
       expirationTtl: 86400
       // 24h
     });
+    // Evenement serveur : commande de paiement creee (cote serveur, montant
+    // verifie). Ne confirme pas un paiement reussi : seule la notification
+    // webhook Mollie peut confirmer.
+    await emitFunnelEvent(env2, 'checkout_created', journeyId, '/api/checkout', lang, { step: 'checkout_created' });
     return jsonResponse2({
       paymentId: payment.id,
       checkoutUrl: payment._links?.checkout?.href || `https://www.mollie.com/payscreen/${payment.id}`,
@@ -2515,6 +2520,8 @@ async function handleCheckout(request, env2) {
   } catch (error) {
     console.error("Checkout error:", error);
     if (error instanceof Response) return error;
+    // Evenement serveur : echec de creation du paiement.
+    await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/checkout', lang, { step: 'checkout_failed' });
     return jsonResponse2({ ok: false, error: "checkout_failed", detail: error && error.message }, 500);
   }
 }
@@ -2619,11 +2626,26 @@ async function handleMollieWebhook(request, env2) {
     console.error("Webhook: insertion de l'evenement impossible", msg);
     return new Response("Server Error", { status: 500 });
   }
+  // Recuperer l'identifiant de parcours stocke lors du checkout.
+  let journeyId = null;
+  try {
+    const stored = await env2.RATE_LIMIT.get(paymentKey);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      journeyId = parsed.journey_id || null;
+    }
+  } catch {
+    // KV indisponible : on continue sans journey_id.
+  }
   // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
   // doit revoquer la licence liee (le signal existait mais n'etait jamais
   // branche sur le flux du webhook).
   if (status === "paid") {
-    await fulfillOrder(env2, payment, email, lang, eventId);
+    await fulfillOrder(env2, payment, email, lang, eventId, journeyId);
+    // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
+    // Ecris APRÈS fulfillOrder pour ne rien ecrire si la livraison echoue
+    // (schema de production avec orders.id INTEGER -> datatype mismatch).
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentId });
     // MESURE DE CONVERSION (V11.2).
     // Cette ligne n'est ecrite QUE par le serveur, apres verification du
     // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
@@ -2638,7 +2660,7 @@ async function handleMollieWebhook(request, env2) {
       console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
     }
   } else {
-    await markOrderFailed(env2, payment, email, eventId);
+    await markOrderFailed(env2, payment, email, eventId, journeyId);
   }
   return new Response("OK", { status: 200 });
 }
@@ -2669,7 +2691,55 @@ async function recordConversion(env2, payment, email, lang) {
   ).bind(Date.now(), lang === "fr" ? "fr" : "en", ref, amount, "mollie").run();
   console.log("Conversion enregistree", ref, amount);
 }
-async function fulfillOrder(env2, payment, email, lang, eventId) {
+
+/**
+ * Ecrit un evenement d'entonnoir (funnel) dans la base de telemetrie.
+ * N'est jamais bloquant : toute echec est silencieux. Le champ journey_id
+ * lie les evenements d'une meme session sans exposer de donnee personnelle.
+ * Si la colonne journey_id n'existe pas encore (migration 0003 non appliquee),
+ * l'insertion est rejouee sans elle.
+ */
+async function emitFunnelEvent(env2, event, journey_id, page, lang, extra) {
+  const db = env2.TELEMETRY_DB;
+  if (!db) return;
+  const insertFull = (
+    'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id) ' +
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  const insertLite = (
+    'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua) ' +
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  const bindFull = [
+    Date.now(), event, page || '/', lang || 'fr',
+    extra && extra.cta ? extra.cta : null,
+    null, null,
+    extra && extra.step ? extra.step : null,
+    extra && extra.ref ? extra.ref : null,
+    0, null, 'server',
+    journey_id || null,
+  ];
+  const bindLite = [
+    Date.now(), event, page || '/', lang || 'fr',
+    extra && extra.cta ? extra.cta : null,
+    null, null,
+    extra && extra.step ? extra.step : null,
+    extra && extra.ref ? extra.ref : null,
+    0, null, 'server',
+  ];
+  try {
+    await db.prepare(insertFull).bind(...bindFull).run();
+  } catch {
+    try {
+      await db.prepare(insertLite).bind(...bindLite).run();
+    } catch {
+      // La collecte d'entonnoir est meilleure effort : on n'arrete jamais
+      // le parcours de paiement pour une erreur de telemetrie.
+    }
+  }
+}
+
+async function fulfillOrder(env2, payment, email, lang, eventId, journeyId) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
   // FIX 2026-10-21 : la commande porte un identifiant TEXT explicite.
@@ -2708,12 +2778,14 @@ async function fulfillOrder(env2, payment, email, lang, eventId) {
     now
   ).run();
   const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang);
+  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId);
   await sendAdminNotification2(env2, email, licenseKey, amount);
   console.log(`Order fulfilled: ${payment.id} -> ${email} (${licenseKey})`);
+  // Evenement serveur : licence creee et liee a la commande payee.
+  await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: payment.id });
 }
 __name(fulfillOrder, "fulfillOrder");
-async function markOrderFailed(env2, payment, email, eventId) {
+async function markOrderFailed(env2, payment, email, eventId, journeyId) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
   await env2.DB.prepare(`
@@ -2730,6 +2802,8 @@ async function markOrderFailed(env2, payment, email, eventId) {
     now
   ).run();
   console.log(`Order failed: ${payment.id} -> ${email}`);
+  // Evenement serveur : echec de paiement confirme par Mollie.
+  await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/mollie-webhook', lang, { step: 'checkout_failed', ref: payment.id });
 }
 __name(markOrderFailed, "markOrderFailed");
 async function revokeLicense(env2, payment, email, eventId) {
@@ -2908,7 +2982,7 @@ function getClientIp2(request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
 __name(getClientIp2, "getClientIp");
-async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang) {
+async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId) {
   // FIX 2026-10-21 : la livraison etait un simple console.log -> le client
   // ne recevait JAMAIS sa cle. On envoie reellement l'e-mail si une cle
   // d'envoi est configuree (Resend), sinon on conserve la commande et la
@@ -2952,6 +3026,11 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang) {
     } catch (e) {
       console.error("[EMAIL] consignation impossible:", e && e.message);
     }
+    // Evenement serveur : echec de livraison e-mail.
+    await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed' });
+  } else {
+    // Evenement serveur : licence livree par e-mail.
+    await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_sent' });
   }
   return status;
 }
@@ -3058,6 +3137,8 @@ async function handleBitcoinCheckout(request, env2) {
       lang
     }));
     const mailtoLink = `mailto:${env2.CONTACT_EMAIL}?subject=${mailtoSubject}&body=${mailtoBody}`;
+    // Evenement serveur : commande Bitcoin creee.
+    await emitFunnelEvent(env2, 'checkout_created', body.journey_id || null, '/api/bitcoin/checkout', lang, { step: 'checkout_created', ref: orderReference });
     return jsonResponse3({
       ok: true,
       orderId,

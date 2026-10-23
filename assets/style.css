@@ -6,9 +6,9 @@
    assets/site.css (widgets : modale de paiement, HUD démo…) reste chargé
    par les pages AVANT ce shim — theme.css prime ensuite sur le décor.
    ========================================================================== */
-@import url("theme.css?v=f6872e87");
-@import url("hero.css?v=f6872e87");
-@import url("compare.css?v=f6872e87");
-@import url("components.css?v=f6872e87");
-@import url("motion.css?v=f6872e87");
-@import url("premium.css?v=f6872e87");
+@import url("theme.css?v=ebcd9f24");
+@import url("hero.css?v=ebcd9f24");
+@import url("compare.css?v=ebcd9f24");
+@import url("components.css?v=ebcd9f24");
+@import url("motion.css?v=ebcd9f24");
+@import url("premium.css?v=ebcd9f24");
