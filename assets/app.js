@@ -5,11 +5,11 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=20261022-8422e7a8';
-import './analytics.js?v=20261022-8422e7a8';
-import './journey.js?v=20261022-8422e7a8';
-import './session.js?v=20261022-8422e7a8';
-import './film.js?v=20261022-8422e7a8';
+import { planRound } from './route-planner.js?v=9585b518';
+import './analytics.js?v=9585b518';
+import './journey.js?v=9585b518';
+import './session.js?v=9585b518';
+import './film.js?v=9585b518';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -127,12 +127,12 @@ async function startCheckout(email) {
   const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
   const T = isFr
     ? { pending: 'Redirection…',
-        fail: 'Le paiement n’a pas pu être lancé (%1) — réessayez, ou rejoignez la liste d’attente ci-dessous, ou écrivez à support@bot-wow.com.',
-        waitOk: 'Merci ! Vous êtes inscrit·e. Nous vous écrirons dès que le paiement sera ouvert.',
-        waitErr: 'Inscription impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' }
+        fail: 'Le paiement n’a pas pu être lancé (%1) — réessayez, ou écrivez à support@bot-wow.com : la licence peut être délivrée à la main.',
+        waitOk: 'Merci ! Votre demande est enregistrée. Le support vous répond et peut délivrer la licence manuellement.',
+        waitErr: 'Envoi impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' }
     : { pending: 'Redirecting…',
-        fail: 'Payment could not be started (%1) — try again, join the waitlist below, or email support@bot-wow.com.',
-        waitOk: 'Thank you! You are on the list. We will email you as soon as payment goes live.',
+        fail: 'Payment could not be started (%1) — try again, or email support@bot-wow.com and we will issue the licence manually.',
+        waitOk: 'Thank you! Your request is registered. Support answers and can issue the licence manually.',
         waitErr: 'Could not register (%1) — try again or email support@bot-wow.com.' };
   err.textContent = '';
   ok.textContent = '';
@@ -169,9 +169,12 @@ async function startCheckout(email) {
   window.location.href = data.checkoutUrl;
 }
 
-/* ---------------------------------------------------- liste d'attente */
-// Si le paiement n'est pas encore ouvert (secret Mollie absent), le visiteur
-// peut laisser son e-mail : le meme canal /api/subscribe alimente la file.
+/* ------------------------------------------------- canal de repli support */
+/* Le paiement carte FONCTIONNE (montant et devise fixes cote serveur). Ce
+   formulaire n'est donc pas une "liste d'attente d'ouverture du paiement" :
+   c'est un canal de repli reel. Si le checkout echoue, ou si le visiteur
+   veut payer autrement (rail manuel, facture), son adresse part dans la
+   meme file /api/subscribe et le support repond. */
 async function wireWaitlist() {
   for (const form of document.querySelectorAll('form[data-waitlist]')) {
     form.addEventListener('submit', async (ev) => {
@@ -201,8 +204,8 @@ async function wireWaitlist() {
       if (btn) btn.disabled = false;
       if (out) {
         out.textContent = sent
-          ? (isFr ? 'Merci ! Votre adresse est enregistrée.' : 'Thank you! Your address is registered.')
-          : (isFr ? 'Inscription impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' : 'Could not register (%1) — try again or email support@bot-wow.com.').replace('%1', lastError);
+          ? (isFr ? 'Merci ! Votre demande est enregistrée — le support vous répond.' : 'Thank you! Your request is registered — support will answer you.')
+          : (isFr ? 'Envoi impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' : 'Could not register (%1) — try again or email support@bot-wow.com.').replace('%1', lastError);
       }
     });
   }
@@ -211,13 +214,18 @@ async function wireWaitlist() {
 function wireBuyForm() {
   const form = document.getElementById('buyForm');
   if (!form) return;
+  // La langue declaree par <html lang> pilote les messages : la page EN ne
+  // doit jamais afficher un message en francais (corrige 2026-10-23).
+  const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const input = document.getElementById('email');
     const value = (input.value || '').trim();
     const err = document.getElementById('buyErr');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) {
-      err.textContent = 'Merci d’indiquer une adresse e-mail valide.';
+      err.textContent = isFr
+        ? 'Merci d’indiquer une adresse e-mail valide.'
+        : 'Please enter a valid email address.';
       return;
     }
     startCheckout(value);

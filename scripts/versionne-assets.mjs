@@ -7,10 +7,18 @@
  * d'avant (import analytics.js absent), et le module d'instrumentation
  * n'etait donc jamais charge.
  *
- * Le stamp est donc CALCULE : date du jour + empreinte du contenu des
- * assets (stamp lui-meme retire avant hachage, pour eviter la boucle
- * "le stamp change le contenu qui change le stamp"). Toute modif d'un
- * asset produit donc une nouvelle cle de cache, automatiquement.
+ * Le stamp est donc CALCULE : empreinte du contenu des assets (stamp
+ * lui-meme retire avant hachage, pour eviter la boucle "le stamp change le
+ * contenu qui change le stamp"). Toute modif d'un asset produit donc une
+ * nouvelle cle de cache, automatiquement.
+ *
+ * CORRECTION 2026-10-23 : le stamp contenait aussi la DATE DU JOUR. Le
+ *HTML source committé portait donc un stamp périmé dès le lendemain, et le
+ * contrôle « le stamp correspond au contenu actuel des assets » échouait
+ * tous les jours sur un checkout propre (npm test rouge sans aucune
+ * modification du dépôt). La date n'apportait rien : l'empreinte change
+ * déjà dès qu'un octet d'asset change. Stamp = empreinte seule, donc
+ * déterministe, reproductible et identique sur Windows et Linux.
  *
  * Usage : node scripts/versionne-assets.mjs [stamp force]
  */
@@ -67,9 +75,13 @@ export function assetFingerprint(root = ROOT) {
   return h.digest('hex').slice(0, 8);
 }
 
+/* Stamp = empreinte du contenu, SANS date : deterministe et reproductible.
+   Un asset modifie change l'empreinte, donc la cle de cache. Un jour qui
+   passe sans aucune modification ne change rien : le stamp committe reste
+   valide, et le controle « stamp a jour » ne devient pas un test qui rougit
+   tout seul au premier jour suivant. */
 export function computeStamp(root = ROOT) {
-  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  return `${day}-${assetFingerprint(root)}`;
+  return assetFingerprint(root);
 }
 
 // Stamp force ou automatique.

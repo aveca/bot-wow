@@ -15,13 +15,13 @@
 <meta property="og:description" content="Assistant de pêche pour WoW Classic : détection mesurée, mémoire persistante des spots, rondes optimisées. Licence à vie 20 €.">
 <meta property="og:url" content="https://bot-wow.com/fr/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="../assets/favicon.svg?v=20261022-8422e7a8" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=9585b518" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=20261022-8422e7a8">
-<link rel="stylesheet" href="../assets/style.css?v=20261022-8422e7a8">
-<link rel="stylesheet" href="../assets/variant-c.css?v=20261022-8422e7a8">
+<link rel="stylesheet" href="../assets/site.css?v=9585b518">
+<link rel="stylesheet" href="../assets/style.css?v=9585b518">
+<link rel="stylesheet" href="../assets/variant-c.css?v=9585b518">
 </head>
 <body>
 
@@ -520,12 +520,16 @@
       </div>
     </div>
 
+    <!-- Repli honnete : le paiement carte FONCTIONNE (montant et devise fixes
+         cote serveur, licence delivree par le webhook). Ce bloc ne doit donc
+         PAS annoncer "le paiement arrive" : il offre une porte de sortie REELLE
+         si le checkout echoue ou si vous voulez un autre rail de paiement. -->
     <div class="wl mt">
-      <h3 style="font-size:17px">Le paiement n'est pas encore disponible pour vous ?</h3>
-      <p>Le paiement par carte via Mollie est en cours de finalisation. Si le bouton de paiement échoue, laissez votre e-mail : nous vous écrirons dès l'ouverture.</p>
+      <h3 style="font-size:17px">Le paiement échoue, ou vous préférez un autre moyen ?</h3>
+      <p>Le paiement par carte fonctionne via Mollie, et le montant est fixé côté serveur — le navigateur n'envoie que votre e-mail. Si le bouton échoue, ou si vous préférez payer autrement, laissez votre e-mail : le support répond et délivre la licence à la main.</p>
       <form data-waitlist novalidate>
-        <input type="email" placeholder="vous@exemple.com" autocomplete="email" aria-label="E-mail pour la liste d'attente">
-        <button class="btn btn-ghost" type="submit">Tenez-moi informé</button>
+        <input type="email" placeholder="vous@exemple.com" autocomplete="email" aria-label="E-mail pour le support">
+        <button class="btn btn-ghost" type="submit">Contacter le support</button>
         <p class="wl-state" style="flex-basis:100%"></p>
       </form>
     </div>
@@ -592,6 +596,6 @@
 
 <div class="mbar"><div class="mp" style="color:var(--txt)">20,00 € <small>licence à vie</small></div><a class="btn btn-gold" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-buy">Acheter</a></div>
 
-<script type="module" src="../assets/app.js?v=20261022-8422e7a8"></script>
+<script type="module" src="../assets/app.js?v=9585b518"></script>
 </body>
 </html>

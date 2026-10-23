@@ -1,10 +1,24 @@
 /* ============================================================ VARIANT C — EDITORIAL BOLD
    Typographie expressive, composition magazine, aucune 3D.
    Le hero est une affiche : le titre domine, la démo est une vignette
-   placée dans le contenu, pas au centre. Le prix est visible immédiatement. */
+   placée dans le contenu, pas au centre. Le prix est visible immédiatement.
+
+   CORRECTION 2026-10-23 — SELECTEURS MORTS. Le markup pose les DEUX classes
+   sur le MÊME élément : `<section class="hero variant-c">`. Les règles
+   ci-dessous étaient écrites `.variant-c .hero` (DESCENDANT) : elles
+   n'ont JAMAIS matché. Mesuré au navigateur sur la page publiée : avec
+   `.variant-c .hero` pour seule feuille de style active, le hero gardait
+   padding 0 / 0 et min-height 0. Conséquence réelle : `min-height:100vh`,
+   le centrage grid, `text-align:center` et les filets dorés (::before /
+   ::after) étaient inertes, et le hero était mis en page par les règles
+   de l'ANCIEN hero (hero.css / premium.css, pensées pour `.hero-copy` et
+   `.hero-grid`). Le hero mesurait 1614 px de haut et son propre CTA
+   tombait SOUS la ligne de flottaison en desktop (911 px > 900 px) —
+   l'inverse de l'objectif V13. Tout devient donc `.hero.variant-c`
+   (le même élément), ce qui match réellement. */
 
 /* ---------- Composition : colonne centrée, texte prend toute la largeur ---------- */
-.variant-c .hero {
+.hero.variant-c {
   position: relative;
   min-height: 100vh;
   display: grid;
@@ -12,12 +26,16 @@
   align-items: center;
   justify-items: center;
   text-align: center;
-  padding: 100px 20px 120px;
+  /* Rythme resseré : le contenu du hero (badge, titre, chapo, CTA, prix,
+     garantie) doit tenir dans le premier écran. Les valeurs héritées de
+     l'ancien hero (100 px / 120 px) poussaient le CTA sous la ligne de
+     flottaison. */
+  padding: clamp(56px, 7vw, 96px) 20px clamp(60px, 9vw, 110px);
   background:
     linear-gradient(180deg, #05070c 0%, #080a10 40%, #05070c 100%);
 }
 
-.variant-c .hero::before {
+.hero.variant-c::before {
   content: '';
   position: absolute;
   top: 0;
@@ -28,7 +46,7 @@
   background: linear-gradient(180deg, transparent 0%, rgba(201,162,39,0.3) 50%, transparent 100%);
 }
 
-.variant-c .hero::after {
+.hero.variant-c::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -46,9 +64,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  /* Un SEUL espacement vertical dans le hero : le gap. Chaque enfant
+     portait en plus sa propre marge (h1 24 px, chapo 32 px, CTA 16 px,
+     prix 40 + 40, filet 48, preuves 48) : l'espacement s'additionnait et
+     le hero atteignait 1614 px. Le gap porte maintenant tout le rythme,
+     avec une échelle responsive. */
+  gap: clamp(16px, 2.2vw, 26px);
   z-index: 10;
 }
+
+/* Les enfants du hero n'ont plus de marge propre : le gap du wrapper
+   suffit. Une marge résiduelle recréerait exactement le gonflement
+   mesuré (346 px entre le bas du titre et le CTA en desktop). */
+.hero.variant-c .hero__title,
+.hero.variant-c .hero__lead,
+.hero.variant-c .hero__cta,
+.hero.variant-c .hero__guarantee,
+.hero.variant-c .hero__divider,
+.hero.variant-c .hero__proof { margin: 0; }
 
 .variant-c .hero__badge {
   display: inline-flex;
@@ -96,11 +129,13 @@
 .variant-c .hero__title .word--3 { color: #5fb4d8; }
 
 .variant-c .hero__lead {
-  font-size: clamp(20px, 2.5vw, 28px);
-  line-height: 1.5;
+  /* 28 px pour un chapo, c'était une taille de titre : 5 lignes, 210 px de
+     haut, qui poussaient le CTA hors de l'écran. Un chapo se lit à 19 px. */
+  font-size: clamp(16px, 1.55vw, 19px);
+  line-height: 1.6;
   color: var(--mut);
-  max-width: 54ch;
-  margin: 0 0 32px;
+  max-width: 62ch;
+  margin: 0;
   font-weight: 400;
 }
 
@@ -125,8 +160,10 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-top: 40px;
-  padding-top: 40px;
+  /* La marge est supprimée (le gap du wrapper la remplace) mais le filet
+     garde un peu d'air au-dessus : 80 px d'espace mort (40 + 40) avant. */
+  margin-top: 0;
+  padding-top: clamp(20px, 3vw, 32px);
   border-top: 1px solid rgba(201,162,39,0.15);
 }
 
@@ -214,8 +251,12 @@
 @media (max-width: 768px) {
   .variant-c .hero__title { font-size: clamp(36px, 10vw, 64px); }
   .variant-c .hero__lead { font-size: 17px; }
+  /* Les trois preuves passent sur UNE ligne : empilées avec 48 px d'écart
+     elles ajoutaient ~216 px de hauteur au hero sur mobile. */
+  .variant-c .hero__proof { gap: clamp(14px, 4vw, 28px); }
+  .variant-c .proof-item { max-width: 33%; }
 }
 
 @media (max-width: 480px) {
-  .variant-c .hero { padding: 60px 16px 80px; }
+  .hero.variant-c { padding: 44px 14px 56px; }
 }

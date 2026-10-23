@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Page d'accueil (EN default, FR sous /fr/) -->
   <url><loc>https://bot-wow.com/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
   </url>
+
+  <!-- Pages principales (bilingues) -->
   <url><loc>https://bot-wow.com/features.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
@@ -41,22 +44,74 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
   </url>
-  <url><loc>https://bot-wow.com/docs/index.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/install.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/changelog.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/known-issues.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/license.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/fr/index.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/fr/install.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/fr/changelog.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/fr/known-issues.html</loc></url>
-  <url><loc>https://bot-wow.com/docs/fr/license.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/terms.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/privacy.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/refund.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/fr/terms.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/fr/privacy.html</loc></url>
-  <url><loc>https://bot-wow.com/legal/fr/refund.html</loc></url>
-  <url><loc>https://bot-wow.com/success.html</loc></url>
-  <url><loc>https://bot-wow.com/cancel.html</loc></url>
+
+  <!-- Documentation (bilingue, EN sous docs/, FR sous docs/fr/) -->
+  <url><loc>https://bot-wow.com/docs/index.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/index.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/index.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/install.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/install.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/changelog.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/changelog.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/changelog.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/known-issues.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/known-issues.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/known-issues.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/license.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/license.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/license.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/fr/index.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/index.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/index.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/fr/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/install.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/install.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/fr/changelog.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/changelog.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/changelog.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/fr/known-issues.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/known-issues.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/known-issues.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/docs/fr/license.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/license.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/docs/fr/license.html"/>
+  </url>
+
+  <!-- Pages légales (bilingues) -->
+  <url><loc>https://bot-wow.com/legal/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/fr/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/fr/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/fr/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+  </url>
+
+  <!-- Résultat de paiement : volontairement EXCLU (noindex, follow) -->
 </urlset>
