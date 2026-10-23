@@ -134,3 +134,41 @@ CREATE TABLE botwow_emails (
 -- This fixture mirrors the live D1 schema observed on 2026-10-23,
 -- including tables that migration 0004 must leave intact when they already
 -- exist. The migration uses CREATE TABLE IF NOT EXISTS for fresh databases.
+
+
+-- Live production administration views that must survive the table rebuild.
+CREATE VIEW v_admin_orders AS
+SELECT
+  o.id,
+  o.provider,
+  o.provider_id,
+  o.email,
+  o.amount,
+  o.currency,
+  o.status,
+  o.created_at,
+  l.key AS license_key,
+  l.lang AS license_lang,
+  l.status AS license_status,
+  l.max_activations,
+  (SELECT COUNT(*) FROM activations a WHERE a.license_id = l.id) AS activation_count,
+  (SELECT COUNT(*) FROM downloads d WHERE d.license_id = l.id) AS download_count,
+  (SELECT MAX(d.count) FROM downloads d WHERE d.license_id = l.id) AS max_downloads_used
+FROM orders o
+LEFT JOIN licenses l ON l.order_id = o.id
+ORDER BY o.created_at DESC;
+
+CREATE VIEW v_active_licenses AS
+SELECT
+  l.id,
+  l.key,
+  l.email,
+  l.lang,
+  l.max_activations,
+  l.created_at,
+  (SELECT COUNT(*) FROM activations a WHERE a.license_id = l.id) AS activations_used,
+  (SELECT COUNT(*) FROM downloads d WHERE d.license_id = l.id) AS download_links,
+  (SELECT SUM(d.count) FROM downloads d WHERE d.license_id = l.id) AS total_downloads
+FROM licenses l
+WHERE l.status = 'active'
+ORDER BY l.created_at DESC;

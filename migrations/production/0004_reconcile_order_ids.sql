@@ -91,6 +91,12 @@ SELECT
   provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at
 FROM orders;
 
+-- These production views reference the tables being rebuilt. Drop them before
+-- DDL so the API's schema validator never observes a temporarily missing table;
+-- they are recreated with the same definitions after all tables are restored.
+DROP VIEW IF EXISTS v_admin_orders;
+DROP VIEW IF EXISTS v_active_licenses;
+
 -- Drop child tables before their parents to prevent ON DELETE CASCADE data loss.
 DROP TABLE downloads;
 DROP TABLE activations;
@@ -207,6 +213,44 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_id ON webhook_events(id);
+
+-- 7. Restore the two production administration views that reference the
+-- rebuilt tables. IF NOT EXISTS also allows this migration on fresh databases.
+CREATE VIEW IF NOT EXISTS v_admin_orders AS
+SELECT
+  o.id,
+  o.provider,
+  o.provider_id,
+  o.email,
+  o.amount,
+  o.currency,
+  o.status,
+  o.created_at,
+  l.key AS license_key,
+  l.lang AS license_lang,
+  l.status AS license_status,
+  l.max_activations,
+  (SELECT COUNT(*) FROM activations a WHERE a.license_id = l.id) AS activation_count,
+  (SELECT COUNT(*) FROM downloads d WHERE d.license_id = l.id) AS download_count,
+  (SELECT MAX(d.count) FROM downloads d WHERE d.license_id = l.id) AS max_downloads_used
+FROM orders o
+LEFT JOIN licenses l ON l.order_id = o.id
+ORDER BY o.created_at DESC;
+
+CREATE VIEW IF NOT EXISTS v_active_licenses AS
+SELECT
+  l.id,
+  l.key,
+  l.email,
+  l.lang,
+  l.max_activations,
+  l.created_at,
+  (SELECT COUNT(*) FROM activations a WHERE a.license_id = l.id) AS activations_used,
+  (SELECT COUNT(*) FROM downloads d WHERE d.license_id = l.id) AS download_links,
+  (SELECT SUM(d.count) FROM downloads d WHERE d.license_id = l.id) AS total_downloads
+FROM licenses l
+WHERE l.status = 'active'
+ORDER BY l.created_at DESC;
 
 -- Reset deferred-check mode before D1 commits this migration batch.
 PRAGMA defer_foreign_keys = OFF;

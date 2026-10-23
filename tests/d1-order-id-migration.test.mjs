@@ -163,6 +163,15 @@ for (const t of ['deliveries', 'rate_limit', 'admin_sessions']) {
   check(`apres migration : la table ${t} existe`, !!r);
 }
 
+const adminOrdersView = db.prepare("SELECT name FROM sqlite_master WHERE type='view' AND name=?").get('v_admin_orders');
+const activeLicensesView = db.prepare("SELECT name FROM sqlite_master WHERE type='view' AND name=?").get('v_active_licenses');
+check('apres migration : vue v_admin_orders restauree', !!adminOrdersView);
+check('apres migration : vue v_active_licenses restauree', !!activeLicensesView);
+const adminViewRows = db.prepare('SELECT COUNT(*) c FROM v_admin_orders').get().c;
+const activeViewRows = db.prepare('SELECT COUNT(*) c FROM v_active_licenses').get().c;
+check('apres migration : v_admin_orders fonctionne sur le schema rebati', adminViewRows === 14, `(${adminViewRows})`);
+check('apres migration : v_active_licenses fonctionne sur le schema rebati', activeViewRows === 5, `(${activeViewRows})`);
+
 const uniqWebhook = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get('idx_webhook_events_id');
 check('apres migration : index UNIQUE idx_webhook_events_id present', !!uniqWebhook);
 const activationIndex = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get('idx_activations_license_machine');
