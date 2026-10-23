@@ -172,6 +172,16 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   }
 }
 
+// 6d. Les liens de remboursement de la page FR restent localises.
+{
+  const fr = read('fr/index.html');
+  const refundLinks = [...fr.matchAll(/href="([^"]*legal\/(?:fr\/)?refund\.html)"/g)]
+    .map(([, href]) => href);
+  check('accueil FR : tous les liens de remboursement pointent vers la politique FR',
+    refundLinks.length >= 3 && refundLinks.every((href) => href === '../legal/fr/refund.html'),
+    `(liens : ${refundLinks.join(', ')})`);
+}
+
 // 7. Le prix reste unique et verifie
 {
   const t = read('index.html');
