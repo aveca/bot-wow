@@ -1,4 +1,5 @@
 name = "botwow-api"
+account_id = "abf2b92cf718313567b4b38eb9dda17f"
 # FIX 2026-10-21 : le domaine api.bot-wow.com est rattache au script
 # `botwow-api` (verifie via l'API Cloudflare : le domaine personnalise pointe
 # vers ce script). Le nom `bot-wow` deployait un script INUTILISE en
