@@ -34,6 +34,19 @@ function check(name, ok, detail = '') {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 }
 
+function applyMigration(db, sql) {
+  // D1 applies each migration atomically. Emulate that implicit transaction
+  // locally so PRAGMA defer_foreign_keys has the same scope as production.
+  db.exec('BEGIN');
+  try {
+    db.exec(sql);
+    db.exec('COMMIT');
+  } catch (error) {
+    try { db.exec('ROLLBACK'); } catch { /* transaction already rolled back */ }
+    throw error;
+  }
+}
+
 const MIGRATION = readFileSync(
   join(REPO, 'migrations', 'production', '0004_reconcile_order_ids.sql'), 'utf8'
 );
@@ -50,11 +63,13 @@ seedProdFixture(db, { now: FIXED_NOW });
 const before = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
+  downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
 check('avant migration : 14 commandes', before.orders === 14, `(${before.orders})`);
 check('avant migration : 5 licences', before.licenses === 5, `(${before.licenses})`);
+check('avant migration : 5 jetons de téléchargement', before.downloads === 5, `(${before.downloads})`);
 check('avant migration : orders.id est INTEGER', typeof db.prepare('SELECT id FROM orders LIMIT 1').get().id === 'number');
 check('avant migration : licenses.order_id est INTEGER',
   typeof db.prepare('SELECT order_id FROM licenses LIMIT 1').get().order_id === 'number');
@@ -62,7 +77,7 @@ check('avant migration : licenses.order_id est INTEGER',
 /* --- application --------------------------------------------------------- */
 let migrationError = null;
 try {
-  db.exec(MIGRATION);
+  applyMigration(db, MIGRATION);
 } catch (e) { migrationError = e; }
 check('la migration 0004 s-applique sans erreur', !migrationError,
   migrationError ? `(${migrationError.message.slice(0, 120)})` : '');
@@ -77,6 +92,7 @@ if (migrationError) {
 const after = {
   orders: db.prepare('SELECT COUNT(*) c FROM orders').get().c,
   licenses: db.prepare('SELECT COUNT(*) c FROM licenses').get().c,
+  downloads: db.prepare('SELECT COUNT(*) c FROM downloads').get().c,
   emails: db.prepare('SELECT COUNT(*) c FROM botwow_emails').get().c,
   events: db.prepare('SELECT COUNT(*) c FROM webhook_events').get().c,
 };
@@ -84,6 +100,11 @@ check('apres migration : 14 commandes conservees', after.orders === before.order
   `(${before.orders} -> ${after.orders})`);
 check('apres migration : 5 licences conservees', after.licenses === before.licenses,
   `(${before.licenses} -> ${after.licenses})`);
+check('apres migration : 5 jetons de téléchargement conservés', after.downloads === before.downloads,
+  `(${before.downloads} -> ${after.downloads})`);
+const downloadOrphans = db.prepare('SELECT COUNT(*) c FROM downloads d LEFT JOIN licenses l ON l.id = d.license_id WHERE l.id IS NULL').get().c;
+check('apres migration : aucun téléchargement orphelin', downloadOrphans === 0, `(${downloadOrphans})`);
+check('apres migration : les cinq jetons retrouvent leur licence', db.prepare('SELECT COUNT(*) c FROM downloads d JOIN licenses l ON l.id = d.license_id').get().c === 5);
 check('apres migration : 11 inscriptions conservees', after.emails === before.emails,
   `(${before.emails} -> ${after.emails})`);
 check('apres migration : 5 evenements de webhook conserves', after.events === before.events,
@@ -136,7 +157,7 @@ check('apres migration : l\'unicite des evenements de webhook est appliquee', un
 
 /* --- idempotence : rejouer la migration ne doit rien casser --------------- */
 let replayError = null;
-try { db.exec(MIGRATION); } catch (e) { replayError = e; }
+try { applyMigration(db, MIGRATION); } catch (e) { replayError = e; }
 check('migration rejouee : aucune erreur', !replayError,
   replayError ? `(${replayError.message.slice(0, 120)})` : '');
 const doublePrefix = db.prepare("SELECT COUNT(*) c FROM orders WHERE id LIKE 'ord_legacy_ord_legacy_%'").get().c;
@@ -163,7 +184,7 @@ console.log('=== APRES MIGRATION : le vrai Worker doit livrer ===');
 const iso2 = createIsolatedDatabase({ foreignKeys: true });
 applyProdSchema(iso2.db);
 seedProdFixture(iso2.db, { now: FIXED_NOW });
-iso2.db.exec(MIGRATION);
+applyMigration(iso2.db, MIGRATION);
 iso2.db.exec('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, event TEXT NOT NULL, page TEXT NOT NULL, lang TEXT NOT NULL, cta TEXT, mode TEXT, years INTEGER, step TEXT, ref TEXT, test INTEGER NOT NULL DEFAULT 0, ip_hash TEXT, ua TEXT, value_eur REAL, source TEXT)');
 iso2.db.exec('CREATE TABLE IF NOT EXISTS rl (bucket TEXT NOT NULL, window INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (bucket, window))');
 
