@@ -110,7 +110,7 @@ Après application, vérifier en lecture seule que `journey_id` existe et que
 les événements récents avec un identifiant sont enregistrés. Ne jamais écrire
 d'adresse e-mail, de clé de licence ou d'identifiant de commande dans cette colonne.
 
-**Restauration testée** : la migration métier `production/0003_botwow_payment_integrity.sql`
+**Migration métier testée** : `production/0003_botwow_payment_integrity.sql`
 répare les données historiques (commandes sans identifiant, licences pointant sur l'ancien `rowid`) et la
 jointure `orders ↔ licenses` redevient exploitable.
 Vérification automatisée : `npm run test:migrations`.
