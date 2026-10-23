@@ -114,11 +114,15 @@
 }
 
 .variant-c .hero__title {
-  font-size: clamp(48px, 8vw, 96px);
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  margin: 0 0 24px;
+  /* 96 px écrasait la composition : trois lignes de 96 px laissent le chapo et
+     les CTA sous la ligne de flottaison (mesuré à 1440x900). Une taille
+     d'affichage se juge sur ce qu'elle laisse voir, pas sur ce qu'elle prend.
+     76 px garde l'autorité et rend le chapo + les deux CTA visibles. */
+  font-size: clamp(38px, 5.9vw, 76px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 0 0 20px;
   text-transform: uppercase;
 }
 

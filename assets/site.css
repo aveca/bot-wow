@@ -401,6 +401,11 @@ footer ul a{color:var(--mut);font-size:14px}footer ul a:hover{color:var(--txt)}
 .callout.red{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.06)}
 .callout.green{border-color:rgba(47,224,138,.3);background:rgba(47,224,138,.06)}
 
+/* Icônes dessinées (remplacement des glyphes emoji ⚠ ✅ 🛡 💡 ❓ ✕ 📜 ↩).
+   Taille en em : l'icône suit le corps du texte. Un seul jeu, un seul trait,
+   currentColor pour hériter de la couleur de l'encadré. */
+.callout .mk{width:1.15em;height:1.15em;flex:none;margin-top:.12em}
+
 /* liste de diffusion (paiement indisponible) */
 .wl{max-width:560px;margin:auto;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:26px}
 .wl p{color:var(--mut);font-size:14px;margin:6px 0 16px}
