@@ -20,5 +20,8 @@
     "validate:d1-order-ids": "node --experimental-sqlite scripts/validate-d1-order-ids.mjs",
     "audit:css": "node scripts/audit-classes.mjs && node scripts/audit-tokens.mjs",
     "package": "node scripts/build-package.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
   }
 }

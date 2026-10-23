@@ -181,6 +181,12 @@ table.vs tbody tr:hover td{background:rgba(255,255,255,.02)}
 .formula li .m.yes{color:var(--green)}
 .formula li .m.no{color:var(--mut2)}
 .formula li .m.warn{color:var(--gold)}
+
+/* Jeu d'icônes dessiné (remplace les glyphes Unicode ✓ ✘ ✔ ⚠ 🔒).
+   Une seule taille de trait, un seul viewBox, currentColor : les icônes
+   s'alignent sur la grille typographique et suivent la couleur du contexte. */
+.mk{width:1em;height:1em;flex:none;display:inline-block;vertical-align:-0.14em;
+  /* 1em = la taille du texte courant : l'icône grandit avec le libellé. */}
 .formula li b{color:var(--txt);font-weight:700}
 .formula .btn{width:100%}
 

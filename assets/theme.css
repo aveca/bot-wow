@@ -72,7 +72,16 @@ h1{font-size:clamp(40px,6vw,64px);line-height:1.02}
 h2{font-size:clamp(28px,4vw,40px);line-height:1.12}
 h3{font-size:clamp(17px,2.2vw,21px);line-height:1.3;margin:0 0 10px}
 p{margin:0 0 18px;color:var(--mut)}
-.lead{font-size:clamp(15px,2vw,18px);color:var(--mut);line-height:1.7}
+.lead{font-size:clamp(15px,2vw,18px);color:var(--mut);line-height:1.7;max-width:68ch}
+
+/* Mesure de lecture : le corps de texte ne depasse jamais 75ch environ.
+   Le conteneur `.w` fait 1180px, ce qui donne des lignes de 90 a 105
+   caracteres en 15px : l'oeil perd le debut de ligne a chaque retour.
+   On bride donc les blocs de texte courant, pas les grilles ni les cartes. */
+.prose,.m-desc,.m-main p,.panel p,.modrow p,.honest-note,.callout,.step p,
+.dl-card p,.vs-card p,.ledger-row p,.formula li,.faq-a,.answer,.note,.sub{
+  max-width:70ch;
+}
 .mono{font-family:var(--mono)}
 .small{font-size:13px;color:var(--mut2)}
 
