@@ -37,7 +37,7 @@ function makeEnv(state) {
         bind: (...args) => ({
           run: async () => {
             state.calls.push({ sql: key, args });
-            if (/UPDATE downloads SET count = count \\+ 1 WHERE token = \\? AND count < max_count/i.test(key)) {
+            if (key.includes("UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count")) {
               const row = state.downloadRow;
               const canReserve = Boolean(row && row.token === args[0] && row.count < row.max_count);
               if (canReserve) row.count += 1;
