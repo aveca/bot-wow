@@ -15,15 +15,31 @@ async function captureScreenshot(page, testInfo, name) {
   // Full-page screenshots do not scroll the viewport; reveal-on-scroll elements
   // can otherwise remain at opacity:0 and make a healthy page look broken.
   await page.evaluate(async () => {
+    // Override the site's smooth scroll for deterministic screenshot setup.
+    document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+    document.body.style.setProperty('scroll-behavior', 'auto', 'important');
     const step = Math.max(320, Math.floor(window.innerHeight * 0.72));
-    const total = document.documentElement.scrollHeight;
+    const total = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
     for (let y = 0; y < total; y += step) {
       window.scrollTo(0, y);
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await new Promise((resolve) => setTimeout(resolve, 70));
     }
     window.scrollTo(0, 0);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await document.fonts.ready;
-    await new Promise((resolve) => setTimeout(resolve, 220));
+    await new Promise((resolve) => setTimeout(resolve, 180));
+  });
+  await page.waitForFunction(() => window.scrollY === 0, { timeout: 1500 });
+  // Keep a true viewport capture for above-the-fold review and a full-page
+  // capture for continuity; fixed/sticky controls are easier to judge in the viewport.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.js .reveal')].every((el) => el.classList.contains('is-in')),
+    { timeout: 5000 }
+  );
+  await page.screenshot({
+    path: path.join(artifactDir, name + '-viewport-' + testInfo.project.name + '.png'),
+    fullPage: false,
+    animations: 'disabled'
   });
   await page.screenshot({
     path: path.join(artifactDir, name + '-' + testInfo.project.name + '.png'),
