@@ -74,9 +74,21 @@ function riskColor(spot) {
   return '#5ad07a';
 }
 
+function localizeObstacle(name) {
+  const value = String(name);
+  if (IS_FR) return value;
+  // The simulated map currently exports French obstacle labels. Translate
+  // known labels for English visitors while preserving unknown future labels.
+  const translations = { loup: 'wolf' };
+  return translations[value.trim().toLocaleLowerCase('fr')] || value;
+}
+
 function riskLabel(leg) {
   if (!leg.verified) return { txt: T.legUnverified, cls: 'risk-mid' };
-  if ((leg.obstacles || []).length) return { txt: T.legRisk + leg.obstacles.join(', '), cls: 'risk-hi' };
+  if ((leg.obstacles || []).length) {
+    const obstacles = leg.obstacles.map(localizeObstacle).join(', ');
+    return { txt: T.legRisk + obstacles, cls: 'risk-hi' };
+  }
   if (leg.successRate < 0.8) return { txt: T.legRel + Math.round(leg.successRate * 100) + ' %', cls: 'risk-mid' };
   return { txt: T.legMastered, cls: 'risk-ok' };
 }
