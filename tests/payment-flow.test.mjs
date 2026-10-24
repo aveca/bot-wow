@@ -37,6 +37,12 @@ function makeEnv(state) {
         bind: (...args) => ({
           run: async () => {
             state.calls.push({ sql: key, args });
+            if (key.includes("UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count")) {
+              const row = state.downloadRow;
+              const canReserve = Boolean(row && row.token === args[0] && row.count < row.max_count);
+              if (canReserve) row.count += 1;
+              return { meta: { changes: canReserve ? 1 : 0, last_row_id: state.orders.length } };
+            }
             if (/INSERT INTO webhook_events/i.test(key)) {
               if (state.events.has(args[0])) {
                 throw new Error('UNIQUE constraint failed: webhook_events.id');
@@ -88,6 +94,7 @@ function makeEnv(state) {
               return state.orderRows?.[id] || rows.find((r) => r.id === id || r.provider_id === id) || null;
             }
             // revokeLicense : licenses JOIN orders -> licence active liee.
+            if (/FROM downloads d JOIN licenses l/i.test(key)) return state.downloadRow || null;
             if (/JOIN orders o ON o.id = l.order_id/i.test(key)) {
               const lic = (state.licenses || [])[0];
               if (!lic || state.licenseRevoked) return null;
@@ -406,6 +413,104 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
 }
 
 
+
+
+/* 13. Le telechargement ne sert jamais un ancien paquet de repli et ne
+      consomme pas le quota si l'artefact configure est absent. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      // Simule uniquement l'ancien objet historique présent dans R2.
+      return key === 'Casinobabe-v1.0.38.zip' ? { body: 'old-package' } : null;
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('un artefact v1.2.0 absent renvoie 503 plutot que le paquet ancien',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    `(status=${res.status} error=${data.error})`);
+  check('seule la cle R2 configuree est consultee',
+    state.r2Keys.length === 1 && state.r2Keys[0] === 'casinobabe-fishing-1.2.0.zip',
+    `(${JSON.stringify(state.r2Keys)})`);
+  check('un artefact absent ne consomme pas le quota de telechargement',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 14. Une cle configuree vers l'archive historique est refusee avant toute lecture R2. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'Casinobabe-v1.0.38.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      return { body: 'old-package' };
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('une cle R2 historique est refusee avec 503',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    `(status=${res.status} error=${data.error})`);
+  check('aucun objet historique nest meme lu',
+    state.r2Keys.length === 0, `(${JSON.stringify(state.r2Keys)})`);
+  check('la cle historique ne consomme pas le quota',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 15. Le nom telecharge correspond exactement a l'objet versionne servi. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  check('le telechargement du paquet configure repond 200', res.status === 200, `(status=${res.status})`);
+  check('le nom du fichier correspond a la cle R2 servie',
+    res.headers.get('content-disposition') === 'attachment; filename="casinobabe-fishing-1.2.0.zip"',
+    `(${res.headers.get('content-disposition')})`);
+  check('le quota est consomme seulement apres la disponibilite de l artefact',
+    state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 16. Deux telechargements simultanes ne peuvent pas depasser max_count. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'single-slot-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 1 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const [first, second] = await Promise.all([
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+  ]);
+  const statuses = [first.status, second.status].sort((a, b) => a - b);
+  check('deux requetes simultanees donnent un seul telechargement autorise',
+    statuses[0] === 200 && statuses[1] === 429, `(statuses=${JSON.stringify(statuses)})`);
+  check('le compteur ne depasse jamais max_count',
+    state.downloadRow.count === 1, `(count=${state.downloadRow.count})`);
+}
 
 console.log('');
 console.log(failures === 0 ? 'PARCOURS DE PAIEMENT : OK' : `PARCOURS DE PAIEMENT : ${failures} ECHEC(S)`);
