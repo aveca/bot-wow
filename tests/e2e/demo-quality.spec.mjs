@@ -75,7 +75,7 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   await expect(page.locator('#m-spots')).not.toHaveText('–', { timeout: 10000 });
   await expect(page.locator('#oasis .node')).not.toHaveCount(0);
   const timelineColumns = await page.locator('#steps').evaluate((element) =>
-    getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).filter(Boolean).length
+    getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length
   );
   expect(timelineColumns).toBe(1);
   await captureScreenshot(page, testInfo, 'demo-en');
