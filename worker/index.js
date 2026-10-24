@@ -2305,7 +2305,7 @@ async function handleDownload(request, env2) {
     }
     // Serve only the configured release. Never silently deliver an older archive.
     const objectKey = typeof env2.R2_OBJECT_KEY === "string" ? env2.R2_OBJECT_KEY.trim() : "";
-    if (!objectKey || !/^[A-Za-z0-9._-]+\.zip$/.test(objectKey)) {
+    if (!objectKey || !/^casinobabe-fishing-\d+\.\d+\.\d+\.zip$/.test(objectKey)) {
       console.error("Download artifact key is missing or invalid");
       return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
