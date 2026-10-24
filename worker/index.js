@@ -2315,8 +2315,13 @@ async function handleDownload(request, env2) {
       return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
 
-    // Missing artifacts must not consume a customer's download allowance.
-    await env2.DB.prepare("UPDATE downloads SET count = count + 1 WHERE token = ?").bind(token).run();
+    // Reserve one download atomically. Concurrent requests cannot exceed max_count.
+    const reservation = await env2.DB.prepare(
+      "UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count"
+    ).bind(token).run();
+    if (!reservation?.meta?.changes) {
+      return jsonResponse({ ok: false, error: "limit_reached" }, 429);
+    }
 
     const safeFilename = objectKey.replace(/["\\\r\n]/g, "_");
     const headers = new Headers({
