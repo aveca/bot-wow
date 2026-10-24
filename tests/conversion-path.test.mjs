@@ -8,7 +8,7 @@
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
  *  4. le formulaire d'achat est present, avec email + validation ;
- *  5. la liste d'attente reste proposee en repli ;
+ *  5. le repli de checkout offre un contact support direct ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
  */
@@ -62,7 +62,19 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
   check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
   check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
-  check('accueil : liste d\'attente proposee en repli', /data-waitlist/.test(t));
+  check('accueil : contact support direct propose en repli', /href="mailto:support@bot-wow\.com"/.test(t));
+}
+
+// 4b. Repli support : lien direct, sans formulaire qui n'avertit pas l'equipe.
+{
+  const en = read('index.html');
+  const fr = read('fr/index.html');
+  check('repli EN : lien mailto direct', /href="mailto:support@bot-wow\.com"/.test(en));
+  check('repli EN : aucun formulaire de repli non notifiant', !/data-waitlist/.test(en));
+  check('repli EN : aucune promesse de réponse manuelle non vérifiée', !/support answers and issues the licence manually/i.test(en));
+  check('repli FR : lien mailto direct', /href="mailto:support@bot-wow\.com"/.test(fr));
+  check('repli FR : aucun formulaire de repli non notifiant', !/data-waitlist/.test(fr));
+  check('repli FR : aucune promesse de réponse manuelle non vérifiée', !/le support répond et délivre la licence à la main/i.test(fr));
 }
 
 // 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
