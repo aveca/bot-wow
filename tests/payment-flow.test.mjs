@@ -430,12 +430,12 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const data = await res.json();
   check('un artefact v1.2.0 absent renvoie 503 plutot que le paquet ancien',
     res.status === 503 && data.error === 'artifact_unavailable',
-    \`(status=\${res.status} error=\${data.error})\`);
+    `(status=${res.status} error=${data.error})`);
   check('seule la cle R2 configuree est consultee',
     state.r2Keys.length === 1 && state.r2Keys[0] === 'casinobabe-fishing-1.2.0.zip',
-    \`(\${JSON.stringify(state.r2Keys)})\`);
+    `(${JSON.stringify(state.r2Keys)})`);
   check('un artefact absent ne consomme pas le quota de telechargement',
-    !state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
 }
 
 /* 14. Une cle configuree vers l'archive historique est refusee avant toute lecture R2. */
@@ -457,11 +457,11 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const data = await res.json();
   check('une cle R2 historique est refusee avec 503',
     res.status === 503 && data.error === 'artifact_unavailable',
-    \`(status=\${res.status} error=\${data.error})\`);
+    `(status=${res.status} error=${data.error})`);
   check('aucun objet historique nest meme lu',
-    state.r2Keys.length === 0, \`(\${JSON.stringify(state.r2Keys)})\`);
+    state.r2Keys.length === 0, `(${JSON.stringify(state.r2Keys)})`);
   check('la cle historique ne consomme pas le quota',
-    !state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
 }
 
 /* 15. Le nom telecharge correspond exactement a l'objet versionne servi. */
@@ -476,12 +476,12 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
   };
   const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
-  check('le telechargement du paquet configure repond 200', res.status === 200, \`(status=\${res.status})\`);
+  check('le telechargement du paquet configure repond 200', res.status === 200, `(status=${res.status})`);
   check('le nom du fichier correspond a la cle R2 servie',
     res.headers.get('content-disposition') === 'attachment; filename="casinobabe-fishing-1.2.0.zip"',
-    \`(\${res.headers.get('content-disposition')})\`);
+    `(${res.headers.get('content-disposition')})`);
   check('le quota est consomme seulement apres la disponibilite de l artefact',
-    state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+    state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
 }
 
 console.log('');
