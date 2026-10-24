@@ -12,7 +12,19 @@ function collectPageErrors(page) {
 
 async function captureScreenshot(page, testInfo, name) {
   fs.mkdirSync(artifactDir, { recursive: true });
-  await page.evaluate(() => document.fonts.ready.then(() => true));
+  // Full-page screenshots do not scroll the viewport; reveal-on-scroll elements
+  // can otherwise remain at opacity:0 and make a healthy page look broken.
+  await page.evaluate(async () => {
+    const step = Math.max(320, Math.floor(window.innerHeight * 0.72));
+    const total = document.documentElement.scrollHeight;
+    for (let y = 0; y < total; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    }
+    window.scrollTo(0, 0);
+    await document.fonts.ready;
+    await new Promise((resolve) => setTimeout(resolve, 220));
+  });
   await page.screenshot({
     path: path.join(artifactDir, name + '-' + testInfo.project.name + '.png'),
     fullPage: true,
@@ -62,6 +74,10 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
 
   await expect(page.locator('#m-spots')).not.toHaveText('–', { timeout: 10000 });
   await expect(page.locator('#oasis .node')).not.toHaveCount(0);
+  const timelineColumns = await page.locator('#steps').evaluate((element) =>
+    getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).filter(Boolean).length
+  );
+  expect(timelineColumns).toBe(1);
   await captureScreenshot(page, testInfo, 'demo-en');
   await expectNoHorizontalOverflow(page);
 
