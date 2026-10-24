@@ -45,6 +45,48 @@
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
   </url>
 
+  <!-- Variantes FR explicites : chaque URL alternate a son entrée loc et ses liens réciproques. -->
+  <url><loc>https://bot-wow.com/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/fishing.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/fishing.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/fishing.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/demo.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/getting-started.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/getting-started.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/getting-started.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/compatibility.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/compatibility.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/compatibility.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/roadmap.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/roadmap.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/roadmap.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/modules.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/modules.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/modules.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/compare.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/compare.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/compare.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/fr/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+  </url>
+
   <!-- Documentation (bilingue, EN sous docs/, FR sous docs/fr/) -->
   <url><loc>https://bot-wow.com/docs/index.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/index.html"/>
