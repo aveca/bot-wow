@@ -62,7 +62,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
   check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
   check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
-  check('accueil : liste d\'attente proposee en repli', /data-waitlist/.test(t));
+  check('accueil : contact support direct propose en repli', /href="mailto:support@bot-wow\\.com"/.test(t));
 }
 
 // 4b. Repli support : ne jamais promettre une notification que /api/subscribe n'effectue pas.
@@ -79,6 +79,18 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('app.js : succès EN invite à écrire directement au support', /Your email was recorded[\s\S]{0,220}support@bot-wow\.com[\s\S]{0,100}does not notify support automatically/i.test(app));
   check('app.js : succès FR invite à écrire directement au support', /Votre adresse a été enregistrée[\s\S]{0,220}support@bot-wow\.com[\s\S]{0,100}ne notifie pas automatiquement le support/i.test(app));
   check('app.js : aucune promesse résiduelle de réponse automatique', !/support will answer you|le support vous répond/i.test(app));
+}
+
+// 4b. Repli support : lien direct, sans formulaire qui n'avertit pas l'equipe.
+{
+  const en = read('index.html');
+  const fr = read('fr/index.html');
+  check('repli EN : lien mailto direct', /href="mailto:support@bot-wow\\.com"/.test(en));
+  check('repli EN : aucun formulaire de repli non notifiant', !/data-waitlist/.test(en));
+  check('repli EN : aucune promesse de réponse manuelle non vérifiée', !/support answers and issues the licence manually/i.test(en));
+  check('repli FR : lien mailto direct', /href="mailto:support@bot-wow\\.com"/.test(fr));
+  check('repli FR : aucun formulaire de repli non notifiant', !/data-waitlist/.test(fr));
+  check('repli FR : aucune promesse de réponse manuelle non vérifiée', !/le support répond et délivre la licence à la main/i.test(fr));
 }
 
 // 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
