@@ -43,8 +43,8 @@ for (const hf of htmlFiles) {
   const rel = path.relative(root, hf);
   // Include embedded style blocks; otherwise valid page-specific selectors
   // appear to be missing simply because they do not live in a separate file.
-  for (const block of html.matchAll(/<style\\b[^>]*>([\\s\\S]*?)<\\/style>/gi)) {
-    for (const m of block[1].matchAll(/\\.(-?[_a-zA-Z][\\w-]*)/g)) defined.add(m[1]);
+  for (const block of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) {
+    for (const m of block[1].matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) defined.add(m[1]);
   }
   for (const m of html.matchAll(/class="([^"]+)"/g)) {
     for (const c of m[1].split(/\s+/)) {
