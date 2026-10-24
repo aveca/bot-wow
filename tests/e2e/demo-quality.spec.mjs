@@ -29,12 +29,13 @@ async function captureScreenshot(page, testInfo, name) {
     await document.fonts.ready;
     await new Promise((resolve) => setTimeout(resolve, 180));
   });
-  await page.waitForFunction(() => window.scrollY === 0, { timeout: 1500 });
+  await page.waitForFunction(() => window.scrollY === 0, null, { timeout: 1500 });
   // Keep a true viewport capture for above-the-fold review and a full-page
   // capture for continuity; fixed/sticky controls are easier to judge in the viewport.
   await page.waitForFunction(() =>
     [...document.querySelectorAll('.js .reveal')].every((el) => el.classList.contains('is-in')),
-    { timeout: 5000 }
+    null,
+    { timeout: 6000 }
   );
   await page.screenshot({
     path: path.join(artifactDir, name + '-viewport-' + testInfo.project.name + '.png'),
