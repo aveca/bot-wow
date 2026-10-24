@@ -19,7 +19,8 @@
     "test:d1-order-ids": "node --experimental-sqlite tests/d1-order-id-regression.test.mjs && node --experimental-sqlite tests/d1-order-id-migration.test.mjs",
     "validate:d1-order-ids": "node --experimental-sqlite scripts/validate-d1-order-ids.mjs",
     "audit:css": "node scripts/audit-classes.mjs && node scripts/audit-tokens.mjs",
-    "package": "node scripts/build-package.cjs"
+    "package": "node scripts/build-package.cjs",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1"
