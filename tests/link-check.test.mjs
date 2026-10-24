@@ -132,5 +132,27 @@ for (const home of ['index.html', 'fr/index.html']) {
   check('les liens "#offre" sont presents et ciblees', links.length > 0, `(${links.length} liens)`);
 }
 
+/* Sitemap: toutes les variantes hreflang doivent être des URL listées,
+   et chaque paire linguistique doit se référencer dans les deux sens. */
+{
+  const sitemap = fs.readFileSync(path.join(REPO, 'sitemap.xml'), 'utf8');
+  const entries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1]);
+  const parsed = entries.map((block) => {
+    const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
+    const alternates = [...block.matchAll(/<xhtml:link\b[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"[^>]*\/?>/g)]
+      .map((m) => ({ lang: m[1], href: m[2] }));
+    return { loc, alternates };
+  });
+  const locs = new Set(parsed.map((entry) => entry.loc).filter(Boolean));
+  check('sitemap: chaque hreflang pointe vers une URL déclarée', parsed.every((entry) =>
+    entry.loc && entry.alternates.length >= 2 && entry.alternates.every((alt) => locs.has(alt.href))));
+  check('sitemap: variantes linguistiques réciproques', parsed.every((entry) =>
+    entry.alternates.every((alt) => {
+      const target = parsed.find((candidate) => candidate.loc === alt.href);
+      return target && target.alternates.some((back) => back.href === entry.loc);
+    })));
+  check('sitemap: aucune URL loc dupliquée', locs.size === parsed.length);
+}
+
 console.log(failures === 0 ? '\nLIENS INTERNES : OK' : `\nLIENS INTERNES : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
