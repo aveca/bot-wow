@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Fichiers servis au navigateur, versionnes.
-const ASSETS = ['style.css', 'site.css', 'app.js', 'demo.js', 'route-planner.js', 'analytics.js', 'favicon.svg', 'variant-a.css', 'variant-b.css', 'variant-c.css'];
+const ASSETS = ['style.css', 'site.css', 'app.js', 'demo.js', 'route-planner.js', 'analytics.js', 'favicon.svg', 'variant-a.css', 'variant-b.css', 'variant-c.css', 'demo.css'];
 const STAMP_RE = /\?v=[0-9a-zA-Z._-]+/g;
 
 function walk(dir, out = []) {
