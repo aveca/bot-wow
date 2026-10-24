@@ -2316,9 +2316,7 @@ async function handleDownload(request, env2) {
     }
 
     // Missing artifacts must not consume a customer's download allowance.
-    await env2.DB.prepare(\`
-      UPDATE downloads SET count = count + 1 WHERE token = ?
-    \`).bind(token).run();
+    await env2.DB.prepare("UPDATE downloads SET count = count + 1 WHERE token = ?").bind(token).run();
 
     const safeFilename = objectKey.replace(/["\\\r\n]/g, "_");
     const headers = new Headers({
