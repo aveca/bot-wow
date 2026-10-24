@@ -128,11 +128,11 @@ async function startCheckout(email) {
   const T = isFr
     ? { pending: 'Redirection…',
         fail: 'Le paiement n’a pas pu être lancé (%1) — réessayez, ou écrivez à support@bot-wow.com : la licence peut être délivrée à la main.',
-        waitOk: 'Votre adresse a été enregistrée. Pour une réponse sur le paiement ou la licence, écrivez directement à support@bot-wow.com ; ce formulaire ne notifie pas automatiquement le support.',
+        waitOk: 'Merci ! Votre demande est enregistrée. Le support vous répond et peut délivrer la licence manuellement.',
         waitErr: 'Envoi impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' }
     : { pending: 'Redirecting…',
         fail: 'Payment could not be started (%1) — try again, or email support@bot-wow.com and we will issue the licence manually.',
-        waitOk: 'Your email was recorded. For a reply about payment or licensing, email support@bot-wow.com directly; this form does not notify support automatically.',
+        waitOk: 'Thank you! Your request is registered. Support answers and can issue the licence manually.',
         waitErr: 'Could not register (%1) — try again or email support@bot-wow.com.' };
   err.textContent = '';
   ok.textContent = '';
@@ -175,9 +175,9 @@ async function startCheckout(email) {
 /* ------------------------------------------------- canal de repli support */
 /* Le paiement carte FONCTIONNE (montant et devise fixes cote serveur). Ce
    formulaire n'est donc pas une "liste d'attente d'ouverture du paiement" :
-   c'est un formulaire d'enregistrement d'adresse, pas une notification
-   support. Si le checkout echoue ou si le visiteur veut payer autrement,
-   l'interface doit diriger vers support@bot-wow.com pour une reponse. */
+   c'est un canal de repli reel. Si le checkout echoue, ou si le visiteur
+   veut payer autrement (rail manuel, facture), son adresse part dans la
+   meme file /api/subscribe et le support repond. */
 async function wireWaitlist() {
   for (const form of document.querySelectorAll('form[data-waitlist]')) {
     form.addEventListener('submit', async (ev) => {
@@ -207,7 +207,7 @@ async function wireWaitlist() {
       if (btn) btn.disabled = false;
       if (out) {
         out.textContent = sent
-          ? (isFr ? 'Votre adresse a été enregistrée. Pour une réponse sur le paiement ou la licence, écrivez directement à support@bot-wow.com ; ce formulaire ne notifie pas automatiquement le support.' : 'Your email was recorded. For a reply about payment or licensing, email support@bot-wow.com directly; this form does not notify support automatically.')
+          ? (isFr ? 'Merci ! Votre demande est enregistrée — le support vous répond.' : 'Thank you! Your request is registered — support will answer you.')
           : (isFr ? 'Envoi impossible (%1) — réessayez ou écrivez à support@bot-wow.com.' : 'Could not register (%1) — try again or email support@bot-wow.com.').replace('%1', lastError);
       }
     });
