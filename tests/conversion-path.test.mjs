@@ -69,10 +69,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('index.html');
   const fr = read('fr/index.html');
-  check('repli EN : lien mailto direct', /href="mailto:support@bot-wow\\.com"/.test(en));
+  check('repli EN : lien mailto direct', /href="mailto:support@bot-wow\.com"/.test(en));
   check('repli EN : aucun formulaire de repli non notifiant', !/data-waitlist/.test(en));
   check('repli EN : aucune promesse de réponse manuelle non vérifiée', !/support answers and issues the licence manually/i.test(en));
-  check('repli FR : lien mailto direct', /href="mailto:support@bot-wow\\.com"/.test(fr));
+  check('repli FR : lien mailto direct', /href="mailto:support@bot-wow\.com"/.test(fr));
   check('repli FR : aucun formulaire de repli non notifiant', !/data-waitlist/.test(fr));
   check('repli FR : aucune promesse de réponse manuelle non vérifiée', !/le support répond et délivre la licence à la main/i.test(fr));
 }
