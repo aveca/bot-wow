@@ -8,7 +8,7 @@
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
  *  4. le formulaire d'achat est present, avec email + validation ;
- *  5. la liste d'attente reste proposee en repli ;
+ *  5. le repli de checkout offre un contact support direct ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
  */
