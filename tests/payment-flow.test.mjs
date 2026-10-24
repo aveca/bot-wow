@@ -88,6 +88,7 @@ function makeEnv(state) {
               return state.orderRows?.[id] || rows.find((r) => r.id === id || r.provider_id === id) || null;
             }
             // revokeLicense : licenses JOIN orders -> licence active liee.
+            if (/FROM downloads d JOIN licenses l/i.test(key)) return state.downloadRow || null;
             if (/JOIN orders o ON o.id = l.order_id/i.test(key)) {
               const lic = (state.licenses || [])[0];
               if (!lic || state.licenseRevoked) return null;
@@ -406,6 +407,56 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
 }
 
 
+
+
+/* 13. Le telechargement ne sert jamais un ancien paquet de repli et ne
+      consomme pas le quota si l'artefact configure est absent. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      // Simule uniquement l'ancien objet historique présent dans R2.
+      return key === 'Casinobabe-v1.0.38.zip' ? { body: 'old-package' } : null;
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('un artefact v1.2.0 absent renvoie 503 plutot que le paquet ancien',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    \`(status=\${res.status} error=\${data.error})\`);
+  check('seule la cle R2 configuree est consultee',
+    state.r2Keys.length === 1 && state.r2Keys[0] === 'casinobabe-fishing-1.2.0.zip',
+    \`(\${JSON.stringify(state.r2Keys)})\`);
+  check('un artefact absent ne consomme pas le quota de telechargement',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+}
+
+/* 14. Le nom telecharge correspond exactement a l'objet versionne servi. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  check('le telechargement du paquet configure repond 200', res.status === 200, \`(status=\${res.status})\`);
+  check('le nom du fichier correspond a la cle R2 servie',
+    res.headers.get('content-disposition') === 'attachment; filename="casinobabe-fishing-1.2.0.zip"',
+    \`(\${res.headers.get('content-disposition')})\`);
+  check('le quota est consomme seulement apres la disponibilite de l artefact',
+    state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+}
 
 console.log('');
 console.log(failures === 0 ? 'PARCOURS DE PAIEMENT : OK' : `PARCOURS DE PAIEMENT : ${failures} ECHEC(S)`);
