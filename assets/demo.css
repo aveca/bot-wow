@@ -38,6 +38,7 @@
 .note b{color:var(--txt)}
 .panel code{padding:1px 5px;border:1px solid var(--line);border-radius:5px;background:rgba(0,0,0,.2);color:var(--gold);font-size:.92em}
 .steps{display:grid;gap:0;margin:8px 0 0;padding:0;list-style:none}
+.demo-wrap .steps{grid-template-columns:minmax(0,1fr)}
 .steps li{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);color:var(--mut);font-size:12px;line-height:1.5}
 .steps li:last-child{border-bottom:0;padding-bottom:0}
 .steps .n{flex:none;min-width:20px;color:var(--mut2);font:600 11px/1.5 var(--mono);font-variant-numeric:tabular-nums}
