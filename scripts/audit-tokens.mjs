@@ -36,12 +36,11 @@ for (const source of sources) {
 const rows = [];
 for (const source of sources) {
   const used = new Map();
-  for (const m of source.content.matchAll(/var\((--[\w-]+)/g)) {
-    used.set(m[1], (used.get(m[1]) || 0) + 1);
+  // A fallback in var(--token, fallback) is safe even if the token has no global definition.
+  for (const m of source.content.matchAll(/var\((--[\w-]+)(\s*,[^)]*)?\)/g)) {
+    if (!defined.has(m[1]) && !m[2]) used.set(m[1], (used.get(m[1]) || 0) + 1);
   }
-  for (const [token, count] of used) {
-    if (!defined.has(token)) rows.push({ file: source.file, token, count });
-  }
+  for (const [token, count] of used) rows.push({ file: source.file, token, count });
 }
 rows.sort((a, b) => b.count - a.count);
 console.log(`Stylesheets analyzed: ${cssFiles.length}; inline style blocks: ${sources.length - cssFiles.length}`);
