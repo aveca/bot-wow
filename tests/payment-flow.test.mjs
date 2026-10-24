@@ -438,7 +438,33 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     !state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
 }
 
-/* 14. Le nom telecharge correspond exactement a l'objet versionne servi. */
+/* 14. Une cle configuree vers l'archive historique est refusee avant toute lecture R2. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'Casinobabe-v1.0.38.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      return { body: 'old-package' };
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('une cle R2 historique est refusee avec 503',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    \`(status=\${res.status} error=\${data.error})\`);
+  check('aucun objet historique nest meme lu',
+    state.r2Keys.length === 0, \`(\${JSON.stringify(state.r2Keys)})\`);
+  check('la cle historique ne consomme pas le quota',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \\+ 1/i.test(c.sql || '')));
+}
+
+/* 15. Le nom telecharge correspond exactement a l'objet versionne servi. */
 {
   const state = {
     calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
