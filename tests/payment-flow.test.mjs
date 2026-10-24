@@ -37,6 +37,12 @@ function makeEnv(state) {
         bind: (...args) => ({
           run: async () => {
             state.calls.push({ sql: key, args });
+            if (/UPDATE downloads SET count = count \\+ 1 WHERE token = \\? AND count < max_count/i.test(key)) {
+              const row = state.downloadRow;
+              const canReserve = Boolean(row && row.token === args[0] && row.count < row.max_count);
+              if (canReserve) row.count += 1;
+              return { meta: { changes: canReserve ? 1 : 0, last_row_id: state.orders.length } };
+            }
             if (/INSERT INTO webhook_events/i.test(key)) {
               if (state.events.has(args[0])) {
                 throw new Error('UNIQUE constraint failed: webhook_events.id');
@@ -482,6 +488,28 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     `(${res.headers.get('content-disposition')})`);
   check('le quota est consomme seulement apres la disponibilite de l artefact',
     state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 16. Deux telechargements simultanes ne peuvent pas depasser max_count. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'single-slot-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 1 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const [first, second] = await Promise.all([
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+  ]);
+  const statuses = [first.status, second.status].sort((a, b) => a - b);
+  check('deux requetes simultanees donnent un seul telechargement autorise',
+    statuses[0] === 200 && statuses[1] === 429, `(statuses=${JSON.stringify(statuses)})`);
+  check('le compteur ne depasse jamais max_count',
+    state.downloadRow.count === 1, `(count=${state.downloadRow.count})`);
 }
 
 console.log('');
