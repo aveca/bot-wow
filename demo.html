@@ -3,100 +3,71 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Demonstration of the Casinobabe fishing bot: spot discovery, an oasis map, optimised rounds. Simulated data.">
+<meta name="description" content="Explore BOT-WOW’s route planner on a simulated fishing map. Positions are synthetic; automatic in-game movement is not demonstrated.">
 <meta name="theme-color" content="#08080d">
-<title>Demo — the Casinobabe fishing bot</title>
+<title>BOT-WOW — Interactive route planner demo</title>
 <link rel="canonical" href="https://bot-wow.com/demo.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html">
-<link rel="icon" href="./assets/favicon.svg?v=37234215" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=f941dd16" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/style.css?v=37234215">
-<style>
-  .demo-wrap{max-width:1180px;margin:0 auto;padding:34px 22px 90px}
-  .sim-banner{display:flex;gap:12px;align-items:flex-start;background:#1b1408;border:1px solid #6b4a12;color:#ffd27d;padding:12px 16px;border-radius:10px;margin:18px 0 26px;font-size:14px;line-height:1.5}
-  .sim-banner b{color:#ffe6b0}
-  .grid-demo{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:26px;align-items:start}
-  @media(max-width:900px){.grid-demo{grid-template-columns:1fr}}
-  .panel{background:#0d0d14;border:1px solid #1e1e2a;border-radius:14px;padding:18px}
-  .panel h3{margin:0 0 4px;font-size:15px;letter-spacing:.02em}
-  .panel .sub{color:#8b8ba7;font-size:13px;margin:0 0 14px}
-  #oasis{width:100%;height:auto;display:block;border-radius:10px;background:#08130c}
-  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
-  .ctl{display:flex;align-items:center;gap:7px;background:#14141d;border:1px solid #262636;border-radius:9px;padding:8px 11px;font-size:13px;color:#c9c9dd}
-  .ctl label{color:#8b8ba7;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-  .ctl select,.ctl input{background:#0b0b12;border:1px solid #262636;color:#e8e8f5;border-radius:6px;padding:5px 7px;font:inherit;font-size:13px}
-  .ctl input[type=range]{width:120px;padding:0}
-  table.metrics{width:100%;border-collapse:collapse;font-size:13px}
-  table.metrics td{padding:7px 0;border-bottom:1px solid #1c1c28}
-  table.metrics td:last-child{text-align:right;color:#e8e8f5;font-variant-numeric:tabular-nums}
-  table.metrics td:first-child{color:#8b8ba7}
-  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:#8b8ba7}
-  .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
-  .steps{margin:12px 0 0;padding:0;list-style:none;font-size:13px}
-  .steps li{padding:7px 0;border-bottom:1px solid #1c1c28;display:flex;gap:10px;align-items:baseline}
-  .steps .n{color:#6d6d88;font-variant-numeric:tabular-nums;min-width:18px}
-  .steps .risk{margin-left:auto;font-size:11px;padding:2px 7px;border-radius:20px;border:1px solid}
-  .risk-ok{color:#7bd88f;border-color:#1d4a2a;background:#0d1f14}
-  .risk-mid{color:#e6c65a;border-color:#4a3d15;background:#1f1a0d}
-  .risk-hi{color:#ef7a7a;border-color:#4a1d1d;background:#1f0d0d}
-  .backlink{display:inline-flex;align-items:center;gap:8px;color:#8b8ba7;text-decoration:none;font-size:13px;margin-bottom:6px}
-  .backlink:hover{color:#e8e8f5}
-  .demo-close{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-    background:#0d0d14;border:1px solid #1e1e2a;border-radius:14px;padding:20px;margin-top:26px}
-  .demo-close h3{margin:0 0 4px;font-size:16px;letter-spacing:.02em}
-  .demo-close .dc-sub{color:#8b8ba7;font-size:13px;margin:0;line-height:1.55;max-width:56ch}
-  .demo-close-cta{display:flex;gap:12px;flex-wrap:wrap}
-  @media(max-width:560px){.demo-close-cta{width:100%}.demo-close-cta .btn{flex:1 1 100%}}
-  .note{color:#6d6d88;font-size:12px;margin-top:14px;line-height:1.55}
-  code{background:#15151f;border:1px solid #23232f;border-radius:5px;padding:1px 5px;font-size:12px}
-</style>
+<link rel="stylesheet" href="./assets/site.css?v=f941dd16">
+<link rel="stylesheet" href="./assets/style.css?v=f941dd16">
+<link rel="stylesheet" href="./assets/demo.css?v=f941dd16">
+
 </head>
 <body>
-<header class="site-head">
-  <div class="wrap head-in">
-    <a class="brand" href="./">BOT<span>·</span>WOW</a>
-    <nav class="site-nav"><a href="./#features">Features</a><a href="./fishing.html">How it works</a><a href="./#offre">Pricing</a></nav>
+<nav aria-label="Main navigation">
+  <div class="w">
+    <a class="logo" href="./" aria-label="BOT-WOW home">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      BOT-WOW
+    </a>
+    <div class="nav-links">
+      <a href="./modules.html">Modules</a>
+      <a href="./compare.html">Versus</a>
+      <a href="./demo.html" aria-current="page">Demo</a>
+      <a href="./features.html">Features</a>
+      <a href="./faq.html">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./demo.html" lang="en" aria-current="page">EN</a><a href="./fr/demo.html" lang="fr">FR</a></div>
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="nav-buy">Buy — €20.00</a>
+    </div>
   </div>
-</header>
+</nav>
 
 <main class="demo-wrap">
   <a class="backlink" href="./">← Back to home</a>
-  <h1 style="margin:.2em 0 .3em;font-size:30px">Demo — the fishing bot</h1>
-  <p style="color:#8b8ba7;max-width:760px;margin:0 0 8px;line-height:1.6">
-    The bot <b>detects and memorises fishing spots</b>, builds the oasis map,
-    computes an <b>optimised round</b> and walks from one fishing spot to the next.
-    This is the map and round-computation demonstration.
-  </p>
-
-  <div class="sim-banner">
-    <span><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg></span>
-    <div><b>SIMULATED DATA.</b> This map is a test fixture: the positions are synthetic and
-    do not correspond to any real game session. The computation rules (risk weighting,
-    availability, expected yield) are exactly the ones of the local program — an automated
-    parity check compares both implementations at each build.</div>
-  </div>
-
+  <section class="demo-intro" aria-labelledby="demo-title">
+    <p class="demo-kicker">ROUTE PLANNER · INTERACTIVE DEMO</p>
+    <h1 class="demo-title" id="demo-title">Explore the route planner.</h1>
+    <p class="demo-lead">Adjust the risk preference and number of fishing spots; the proposed round and its estimates recalculate immediately. Inspect the planning logic before you buy.</p>
+  </section>
+  <aside class="sim-banner" role="note" aria-label="Demo limitations">
+    <svg class="sim-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg>
+    <div><strong>SIMULATED DATA · NO LIVE GAMEPLAY</strong><p>Spot positions and catch rates are synthetic. This demo shows route computation, not a live WoW session: it does not control the game client or demonstrate automatic movement between spots, which is still under in-game validation.</p></div>
+  </aside>
   <div class="grid-demo">
-    <div class="panel">
-      <h3>Oasis map</h3>
-      <p class="sub">Memorised spots, risk level, and the computed round.</p>
-      <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Demonstration oasis map"></svg>
+    <div class="panel panel--map" aria-labelledby="map-title">
+        <h2 id="map-title">Oasis map</h2>
+        <p class="sub">Simulated spots, risk levels and the computed round.</p>
+        <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Interactive simulated fishing oasis map"></svg>
       <div class="legend">
-        <span><i style="background:#5ad07a"></i>safe spot (high reliability)</span>
-        <span><i style="background:#e6c65a"></i>medium spot</span>
-        <span><i style="background:#ef7a7a"></i>risky spot (mobs / low yield)</span>
-        <span><i style="background:#ef7a7a;border-radius:2px"></i>mob spotted</span>
-        <span><i style="background:#6ea8ff"></i>computed round</span>
+        <span><i class="legend-dot legend-dot--safe"></i>High-reliability spot</span>
+        <span><i class="legend-dot legend-dot--medium"></i>Medium spot</span>
+        <span><i class="legend-dot legend-dot--risk"></i>Risky spot (mobs / low yield)</span>
+        <span><i class="legend-dot legend-dot--mob"></i>Mob spotted</span>
+        <span><i class="legend-dot legend-dot--route"></i>Computed round</span>
       </div>
     </div>
 
-    <div>
-      <div class="panel" style="margin-bottom:16px">
-        <h3>Params</h3>
-        <p class="sub">Change one value: the round is recomputed immediately.</p>
+    <div class="demo-side">
+      <div class="panel panel--controls">
+        <h2>Round settings</h2>
+        <p class="sub">Change a value and the planner recomputes the proposal.</p>
         <div class="controls">
           <div class="ctl"><label for="mode">Mode</label>
             <select id="mode">
@@ -107,58 +78,61 @@
           </div>
           <div class="ctl"><label for="maxspots">Max spots</label>
             <input type="range" id="maxspots" min="1" max="6" value="6">
-            <span id="maxspotsv">6</span>
+            <output id="maxspotsv" for="maxspots">6</output>
           </div>
         </div>
-        <table class="metrics">
-          <tr><td>Spots in the round</td><td id="m-spots">–</td></tr>
-          <tr><td>Travel time</td><td id="m-travel">–</td></tr>
-          <tr><td>Fishing time</td><td id="m-fish">–</td></tr>
-          <tr><td><b>Expected</b> catches (estimate)</td><td id="m-exp">–</td></tr>
-          <tr><td>Expected yield</td><td id="m-h">–</td></tr>
-          <tr><td>Unmeasured legs</td><td id="m-unv">–</td></tr>
+        <table class="metrics" aria-label="Estimates computed from simulated data">
+          <caption class="demo-sr-only">Estimates computed from simulated data</caption>
+          <tbody aria-live="polite">
+            <tr><th scope="row">Spots in the round</th><td id="m-spots">–</td></tr>
+            <tr><th scope="row">Estimated travel time</th><td id="m-travel">–</td></tr>
+            <tr><th scope="row">Estimated fishing time</th><td id="m-fish">–</td></tr>
+            <tr><th scope="row">Expected catches (estimate)</th><td id="m-exp">–</td></tr>
+            <tr><th scope="row">Expected yield</th><td id="m-h">–</td></tr>
+            <tr><th scope="row">Unmeasured legs</th><td id="m-unv">–</td></tr>
+          </tbody>
         </table>
-        <p class="note">
-          "Expected catches" are an <b>estimate</b> based on the simulated history of the
-          spots, not a measurement. A path whose walkability has never been verified is
-          only offered in <code>exploration</code> mode, and it is flagged when it is.
-        </p>
+        <p class="note">Expected catches are estimates from simulated history, not in-game measurements. Unmeasured legs remain flagged and are only proposed in exploration mode.</p>
       </div>
 
       <div class="panel">
-        <h3>Round timeline</h3>
-        <p class="sub">Order of the fishing spots and the risk of each leg.</p>
-        <ol class="steps" id="steps"></ol>
+        <h2>Round timeline</h2>
+        <p class="sub">Proposed order and estimated risk for each leg.</p>
+        <ol class="steps" id="steps" aria-label="Fishing round computed from simulated data"></ol>
       </div>
 
-      <div class="panel" style="margin-top:16px">
-        <h3>Selected spot</h3>
-        <p class="sub">Click a spot on the map.</p>
+      <div class="panel">
+        <h2>Selected spot</h2>
+        <p class="sub">Select a spot on the map to inspect its data.</p>
         <div id="spotPanel"><p class="dim">Click a spot on the map to see its characteristics (simulated data).</p></div>
       </div>
 
-      <div class="panel" style="margin-top:16px">
-        <h3>Why this round</h3>
-        <p class="sub">Explanation of the route choice.</p>
+      <div class="panel">
+        <h2>Why this round?</h2>
+        <p class="sub">Factors that influence the planner’s choice.</p>
         <div id="explain"></div>
       </div>
     </div>
   </div>
 
   <!-- Sortie du parcours : la demo est une etape, pas une fin. -->
-  <div class="demo-close">
+  <section class="demo-close" aria-labelledby="demo-close-title">
     <div>
-      <h3>Convinced by the simulated map?</h3>
-      <p class="dc-sub">The licence runs the same rules on your own account, on your own spots.
-        €20 once, no renewal.</p>
+      <p class="demo-kicker">NEXT STEP</p>
+      <h2 id="demo-close-title">Verify exactly what is included.</h2>
+      <p class="dc-sub">The module ledger separates shipped, in-development and planned features. Automatic movement between spots remains under in-game validation.</p>
     </div>
     <div class="demo-close-cta">
-      <a class="btn btn-gold" href="./#offre" data-track="cta_click" data-cta-id="demo-offer">See the offer — €20.00</a>
-      <a class="btn btn-ghost" href="./compare.html" data-track="cta_click" data-cta-id="demo-compare">Compare the offers</a>
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Get the lifetime licence — €20</a>
+      <a class="btn btn-ghost" href="./modules.html" data-track="cta_click" data-cta-id="demo-modules">View module status</a>
     </div>
-  </div>
+  </section>
 </main>
 
-<script type="module" src="./assets/demo.js?v=37234215"></script>
+<script type="module" src="./assets/demo.js?v=f941dd16"></script>
+<aside class="demo-mobile-offer" aria-label="BOT-WOW purchase option">
+  <div class="demo-mobile-offer__price"><strong>€20.00</strong><span>One-time · lifetime licence</span></div>
+  <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Buy licence</a>
+</aside>
 </body>
 </html>

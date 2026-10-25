@@ -5,7 +5,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(process.cwd());
-const cssFiles = ['assets/site.css', 'assets/theme.css', 'assets/hero.css', 'assets/compare.css', 'assets/style.css'];
+function walkCss(dir, out = []) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (['node_modules', '.git', 'backups', '.wrangler'].includes(e.name)) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walkCss(p, out);
+    else if (e.name.endsWith('.css')) out.push(path.relative(root, p));
+  }
+  return out;
+}
+const cssFiles = walkCss(path.join(root, 'assets'));
 
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -32,6 +41,11 @@ const used = new Map(); // classe -> Set(fichiers)
 for (const hf of htmlFiles) {
   const html = fs.readFileSync(hf, 'utf8');
   const rel = path.relative(root, hf);
+  // Include embedded style blocks; otherwise valid page-specific selectors
+  // appear to be missing simply because they do not live in a separate file.
+  for (const block of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) {
+    for (const m of block[1].matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+  }
   for (const m of html.matchAll(/class="([^"]+)"/g)) {
     for (const c of m[1].split(/\s+/)) {
       if (!c) continue;

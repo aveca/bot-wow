@@ -56,9 +56,25 @@ for (const p of pages) {
   anchors.set(p, ids);
 }
 
-/* Verifie qu'un chemin de page existe et retourne sa cle canonique. */
-function pageKey(p) {
-  return p.replace(/^\.\//, '').replace(/^\.\.\//, '').replace(/\\/g, '/');
+/* Résout les URL de pages, y compris les répertoires servis par index.html.
+   ./#ancre et ../#ancre doivent être contrôlés contre l'ancre de la page cible,
+   pas seulement contre l'existence du répertoire. */
+function resolvePageTarget(fromPage, rawTarget) {
+  const dir = path.posix.dirname(fromPage);
+  const target = rawTarget.split('?')[0];
+  let key = path.posix.normalize(path.posix.join(dir, target));
+  if (!key || key === '.') key = 'index.html';
+  else {
+    const absolute = path.join(REPO, key);
+    if (fs.existsSync(absolute) && fs.statSync(absolute).isDirectory()) {
+      key = path.posix.join(key, 'index.html');
+    } else if (!fs.existsSync(absolute) && fs.existsSync(path.join(REPO, key + '.html'))) {
+      key += '.html';
+    } else if (!fs.existsSync(absolute) && fs.existsSync(path.join(REPO, key, 'index.html'))) {
+      key = path.posix.join(key, 'index.html');
+    }
+  }
+  return key;
 }
 
 const brokenFiles = [];
@@ -85,12 +101,9 @@ for (const p of pages) {
       continue;
     }
 
-    // resout le chemin relatif
-    const joined = path.posix.normalize(path.posix.join(dir, target));
-    const key = pageKey(joined);
-    const withIndex = key.endsWith('/') ? `${key}index.html` : key;
-    const exists = fs.existsSync(path.join(REPO, withIndex))
-      || fs.existsSync(path.join(REPO, key));
+    // Résout le chemin vers un fichier réel ; ./ et ../ représentent index.html.
+    const withIndex = resolvePageTarget(p, target);
+    const exists = fs.existsSync(path.join(REPO, withIndex));
 
     if (!exists) {
       brokenFiles.push(`${p} -> ${raw}`);

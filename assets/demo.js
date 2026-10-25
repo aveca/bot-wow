@@ -6,11 +6,11 @@
  * Le calcul de ronde utilise assets/route-planner.js, dont la parite avec le
  * planificateur Python est verifiee par tests/route-planner-parity.test.mjs.
  */
-import { planRound, confirmedSpots } from './route-planner.js?v=37234215';
+import { planRound, confirmedSpots } from './route-planner.js?v=f941dd16';
 /* Meme module de collecte que les autres pages (aucune duplication) :
    la demo est une etape du parcours, elle doit donc etre mesuree au
    meme titre que l'accueil et le comparateur. */
-import './analytics.js?v=37234215';
+import './analytics.js?v=f941dd16';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('oasis');
@@ -74,9 +74,21 @@ function riskColor(spot) {
   return '#5ad07a';
 }
 
+function localizeObstacle(name) {
+  const value = String(name);
+  if (IS_FR) return value;
+  // The simulated map currently exports French obstacle labels. Translate
+  // known labels for English visitors while preserving unknown future labels.
+  const translations = { loup: 'wolf' };
+  return translations[value.trim().toLocaleLowerCase('fr')] || value;
+}
+
 function riskLabel(leg) {
   if (!leg.verified) return { txt: T.legUnverified, cls: 'risk-mid' };
-  if ((leg.obstacles || []).length) return { txt: T.legRisk + leg.obstacles.join(', '), cls: 'risk-hi' };
+  if ((leg.obstacles || []).length) {
+    const obstacles = leg.obstacles.map(localizeObstacle).join(', ');
+    return { txt: T.legRisk + obstacles, cls: 'risk-hi' };
+  }
   if (leg.successRate < 0.8) return { txt: T.legRel + Math.round(leg.successRate * 100) + ' %', cls: 'risk-mid' };
   return { txt: T.legMastered, cls: 'risk-ok' };
 }
