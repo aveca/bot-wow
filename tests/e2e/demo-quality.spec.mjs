@@ -170,6 +170,8 @@ for (const route of commercialPages) {
     await expect(page.locator('nav .logo')).toBeVisible();
     await expect(page.locator('nav .logo-mark')).toHaveCount(1);
     await expect(page.locator('nav .mark')).toHaveCount(0);
+    await expect(page.locator('.mark')).toHaveCount(0);
+    await expect(page.locator('footer .logo-mark')).toHaveCount(1);
     // Navigation links collapse on mobile by design; validate their presence
     // without treating an intentionally hidden desktop menu as a UI defect.
     await expect(page.locator('nav .nav-links a').first()).toBeAttached();
@@ -179,6 +181,32 @@ for (const route of commercialPages) {
     await expectNoHorizontalOverflow(page);
     await captureScreenshot(page, testInfo, route.name);
     expect(errors, `JavaScript errors on ${route.path}`).toEqual([]);
+  });
+}
+
+
+const legacyLogoRoutes = [
+  { name: '404-en', path: '/404.html' },
+  { name: 'cancel-en', path: '/cancel.html' },
+  { name: 'compatibility-en', path: '/compatibility.html' },
+  { name: 'fishing-en', path: '/fishing.html' },
+  { name: 'getting-started-en', path: '/getting-started.html' },
+  { name: 'roadmap-en', path: '/roadmap.html' },
+  { name: 'success-en', path: '/success.html' },
+  { name: '404-fr', path: '/fr/404.html' },
+  { name: 'cancel-fr', path: '/fr/cancel.html' },
+  { name: 'compatibility-fr', path: '/fr/compatibility.html' },
+  { name: 'fishing-fr', path: '/fr/fishing.html' },
+  { name: 'getting-started-fr', path: '/fr/getting-started.html' },
+  { name: 'roadmap-fr', path: '/fr/roadmap.html' },
+  { name: 'success-fr', path: '/fr/success.html' }
+];
+
+for (const route of legacyLogoRoutes) {
+  test(`${route.name}: no legacy square W wordmark remains`, async ({ page }) => {
+    await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.mark')).toHaveCount(0);
+    await expect(page.locator('.logo-mark').first()).toBeAttached();
   });
 }
 
