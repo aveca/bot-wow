@@ -59,6 +59,34 @@
 
   var JID = journeyId();
 
+  /* Provenance du trafic, normalisee en courte liste fermee :
+     google, yt, reddit, discord, direct, other.
+     Aucune URL complete, aucun parametre, aucune donnee personnelle :
+     on ne lit que le referrer (hôte) et un utm_source reconnu. */
+  var SOURCE_MAP = {
+    'google': 'google', 'googlesyndication': 'google', 'youtube': 'yt',
+    'youtu.be': 'yt', 'reddit': 'reddit', 'redd.it': 'reddit',
+    'discord': 'discord', 'discordapp': 'discord', 'discord.gg': 'discord'
+  };
+  function source() {
+    try {
+      var q = location.search || '';
+      var m = /[?&]utm_source=([a-z0-9._-]{1,30})/i.exec(q);
+      var raw = m ? m[1].toLowerCase() : '';
+      if (SOURCE_MAP[raw]) return SOURCE_MAP[raw];
+      var ref = document.referrer || '';
+      if (!ref) return 'direct';
+      var host = ref.replace(/^https?:\/\//, '').split('/')[0].toLowerCase();
+      if (host.indexOf(location.hostname) >= 0) return 'direct';
+      host = host.replace(/^www\./, '');
+      if (SOURCE_MAP[host]) return SOURCE_MAP[host];
+      if (/(^|\.)google\.[a-z.]+$/.test(host)) return 'google';
+      if (/(^|\.)t\.co$|(^|\.)twitter\.com$|(^|\.)x\.com$/.test(host)) return 'other';
+      return 'other';
+    } catch (e) { return 'other'; }
+  }
+  var SRC = source();
+
   function lang() {
     var l = (document.documentElement.lang || 'en').toLowerCase();
     return l.indexOf('fr') === 0 ? 'fr' : 'en';
@@ -81,21 +109,19 @@
   var test = testRef();
 
   function build(event, props) {
+    // On complete l'objet de proprietes AVANT de le placer dans le payload :
+    // réaffecter la variable après coup ne modifierait pas payload.props.
+    var p = (props && typeof props === 'object') ? props : {};
+    p.journey_id = JID;
+    p.source = SRC;
     var payload = {
       v: SCHEMA,
       event: event,
       page: page(),
       lang: lang(),
-      props: props || {},
+      props: p,
     };
     if (test) { payload.test = true; payload.ref = test; }
-    // L'identifiant de parcours est inclus dans chaque evenement pour
-    // permettre la corrélation cote serveur sans donnee personnelle.
-    if (props && typeof props === 'object') {
-      props.journey_id = JID;
-    } else {
-      props = { journey_id: JID };
-    }
     return payload;
   }
 

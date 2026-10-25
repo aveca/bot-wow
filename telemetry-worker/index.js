@@ -30,14 +30,22 @@ const RETENTION_DAYS = 90;
 
 /* Liste fermee des evenements et de leurs proprietes. */
 const EVENT_SPEC = {
-  page_view: { cta: null, mode: null, years: null, step: 'step' },
-  cta_click: { cta: 'cta', mode: null, years: null, step: 'step' },
-  planner_mode: { cta: null, mode: 'mode', years: null, step: null },
-  ownership_view: { cta: null, mode: null, years: 'years', step: null },
-  checkout_start: { cta: null, mode: null, years: null, step: 'step' },
-  checkout_error: { cta: null, mode: null, years: null, step: 'step' },
-  journey_view: { cta: null, mode: null, years: null, step: 'step' },
+  page_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  cta_click: { cta: 'cta', mode: null, years: null, step: 'step', source: 'source' },
+  planner_mode: { cta: null, mode: 'mode', years: null, step: null, source: 'source' },
+  ownership_view: { cta: null, mode: null, years: 'years', step: null, source: 'source' },
+  checkout_start: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  checkout_error: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  journey_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  // Intention de paiement : clic sur un CTA d'achat. Ce n'est PAS une
+  // vente ; seule la validation du webhook Mollie en etablit une.
+  checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
 };
+
+/* Provenance du trafic : liste fermee. Une valeur inconnue ou forgee est
+   ramenee a "other" (jamais enregistree telle quelle). */
+const SOURCES = ['google', 'yt', 'reddit', 'discord', 'direct', 'other'];
+const RE_SOURCE = /^(google|yt|reddit|discord|direct|other)$/;
 
 /* ATTENTION : la conversion (paiement confirme) n'est PAS dans cette
    liste. Elle n'est jamais acceptee depuis le navigateur : elle est ecrite
@@ -109,7 +117,7 @@ export function validateEvent(payload) {
   const row = {
     event: payload.event, page: payload.page, lang,
     cta: null, mode: null, years: null, step: null, ref: null, test: 0,
-    journey_id: null,
+    journey_id: null, source: null,
   };
 
   if (spec.cta) {
@@ -141,6 +149,17 @@ export function validateEvent(payload) {
   if (journeyId !== undefined && journeyId !== null) {
     if (typeof journeyId !== 'string' || !RE_JOURNEY.test(journeyId)) return null;
     row.journey_id = journeyId;
+  }
+
+  // Provenance du trafic : liste fermee. Absente ou hors liste -> "other"
+  // (jamais une chaine arbitraire). Les evenements anterieurs restent NULL.
+  const rawSource = props.source;
+  if (rawSource === undefined || rawSource === null || rawSource === '') {
+    row.source = 'other';
+  } else if (typeof rawSource === 'string' && RE_SOURCE.test(rawSource)) {
+    row.source = rawSource;
+  } else {
+    row.source = 'other';
   }
 
   // Evenement de test : reference obligatoire, marque comme tel pour ne
@@ -224,15 +243,16 @@ export async function handleTrack(request, env) {
 
   try {
     await db.prepare(
-      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id) ' +
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id, source) ' +
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       Date.now(), row.event, row.page, row.lang, row.cta, row.mode, row.years,
-      row.step, row.ref, row.test, ipHash, uaFamily(request), row.journey_id
+      row.step, row.ref, row.test, ipHash, uaFamily(request), row.journey_id, row.source
     ).run();
   } catch {
-    // La colonne journey_id n'existe pas encore (migration 0003 non appliquee).
-    // On rejoue sans elle : la collecte fonctionne, moins le lien de parcours.
+    // Colonne journey_id ou source absente (schema anterieur) : on rejoue
+    // sans elles. La collecte fonctionne, moins le lien de parcours et la
+    // provenance.
     try {
       await db.prepare(
         'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua) ' +

@@ -168,5 +168,65 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
   check('validateEvent refuse une propriete non listee', validateEvent({ v: 1, event: 'cta_click', page: '/', lang: 'en', props: { email: 'a@b.c' } }) === null);
 }
 
+/* --- 8. journey_id + source : mesure du parcours commercial --- */
+{
+  const { db, state } = makeDb();
+  CURRENT_ENV = { ...BASE_ENV, TELEMETRY_DB: db };
+
+  // journey_id doit etre accepte et stocke meme quand props est absent,
+  // nul ou vide (defaut historique : props || {} figeait la reference).
+  const okJid = 'j_1761abcdef_0123456789';
+  const cases = [
+    ['props absent', undefined],
+    ['props null', null],
+    ['props vide', {}],
+  ];
+  for (const [label, props] of cases) {
+    const before = state.inserts.length;
+    const body = { v: 1, event: 'page_view', page: '/', lang: 'en' };
+    if (props !== undefined) body.props = props;
+    body.props = Object.assign({}, props, { journey_id: okJid });
+    const res = await handleTrack(req(JSON.stringify(body)), CURRENT_ENV);
+    const row = state.inserts[state.inserts.length - 1] || [];
+    check(`journey_id accepte et stocke (${label})`,
+      res.status === 202 && row[12] === okJid, `(status ${res.status}, jid ${row[12]})`);
+  }
+
+  // source : liste fermee, valeurs inconnues ramenees a "other".
+  const srcCases = [
+    ['google', 'google', 'google'],
+    ['reddit', 'reddit', 'reddit'],
+    ['absent', undefined, 'other'],
+    ['inconnu', 'tiktok', 'other'],
+    ['forge trop long', 'google'.repeat(20), 'other'],
+    ['non chaine', 42, 'other'],
+  ];
+  for (const [label, value, expected] of srcCases) {
+    const res = await handleTrack(req(JSON.stringify({
+      v: 1, event: 'page_view', page: '/', lang: 'en',
+      props: value === undefined ? { step: 'load' } : { step: 'load', source: value },
+    })), CURRENT_ENV);
+    const row = state.inserts[state.inserts.length - 1] || [];
+    check(`source "${label}" -> ${expected}`, res.status === 202 && row[13] === expected, `(got ${row[13]})`);
+  }
+
+  // checkout_requested est une intention d'achat, pas une conversion :
+  // il doit etre accepte et stocke, jamais compte comme une vente.
+  const res = await handleTrack(req(JSON.stringify({
+    v: 1, event: 'checkout_requested', page: '/', lang: 'en',
+    props: { step: 'final-buy', journey_id: okJid, source: 'google' },
+  })), CURRENT_ENV);
+  const row = state.inserts[state.inserts.length - 1] || [];
+  check('checkout_requested accepte et stocke (intention, pas conversion)',
+    res.status === 202 && row[1] === 'checkout_requested' && row[12] === okJid,
+    `(status ${res.status}, event ${row[1]})`);
+
+  // un journey_id malforme est refuse (pas de fabrication).
+  const bad = await handleTrack(req(JSON.stringify({
+    v: 1, event: 'page_view', page: '/', lang: 'en', props: { journey_id: 'x'.repeat(80) },
+  })), CURRENT_ENV);
+  check('journey_id trop long refuse', bad.status === 400, `(status ${bad.status})`);
+}
+
 console.log(failures === 0 ? '\nTELEMETRIE : OK' : `\nTELEMETRIE : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
