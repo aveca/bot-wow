@@ -168,6 +168,8 @@ for (const route of commercialPages) {
     await expect(page.locator('html')).toHaveAttribute('lang', route.lang);
     await expect(page.locator('h1').first()).toBeVisible();
     await expect(page.locator('nav .logo')).toBeVisible();
+    await expect(page.locator('nav .logo-mark')).toHaveCount(1);
+    await expect(page.locator('nav .mark')).toHaveCount(0);
     // Navigation links collapse on mobile by design; validate their presence
     // without treating an intentionally hidden desktop menu as a UI defect.
     await expect(page.locator('nav .nav-links a').first()).toBeAttached();
