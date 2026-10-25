@@ -60,20 +60,26 @@
   var JID = journeyId();
 
   /* Provenance du trafic, normalisee en courte liste fermee :
-     google, yt, reddit, discord, direct, other.
+     google, yt, reddit, discord, forum, direct, other.
      Aucune URL complete, aucun parametre, aucune donnee personnelle :
      on ne lit que le referrer (hôte) et un utm_source reconnu. */
   var SOURCE_MAP = {
-    'google': 'google', 'googlesyndication': 'google', 'youtube': 'yt',
-    'youtu.be': 'yt', 'reddit': 'reddit', 'redd.it': 'reddit',
-    'discord': 'discord', 'discordapp': 'discord', 'discord.gg': 'discord'
+    'google': 'google', 'googlesyndication': 'google',
+    'youtube': 'yt', 'yt': 'yt', 'youtu.be': 'yt',
+    'reddit': 'reddit', 'redd.it': 'reddit',
+    'discord': 'discord', 'discordapp': 'discord', 'discord.gg': 'discord',
+    'forum': 'forum', 'forums': 'forum'
   };
   function source() {
     try {
       var q = location.search || '';
       var m = /[?&]utm_source=([a-z0-9._-]{1,30})/i.exec(q);
-      var raw = m ? m[1].toLowerCase() : '';
-      if (SOURCE_MAP[raw]) return SOURCE_MAP[raw];
+      // Un UTM present a priorite : une valeur inconnue devient "other",
+      // elle ne doit pas etre remplacee a tort par "direct" ou un referrer.
+      if (m) {
+        var raw = m[1].toLowerCase();
+        return SOURCE_MAP[raw] || 'other';
+      }
       var ref = document.referrer || '';
       if (!ref) return 'direct';
       var host = ref.replace(/^https?:\/\//, '').split('/')[0].toLowerCase();
