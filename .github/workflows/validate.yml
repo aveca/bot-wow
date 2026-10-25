@@ -18,6 +18,8 @@ jobs:
 
       - name: Validate static project
         run: npm run validate
+      - name: Recompute deterministic asset fingerprint and URLs
+        run: node scripts/versionne-assets.mjs
 
       # Tests de la demonstration (parite JS/Python des regles de ronde) et
       # de la distribution (integrite du paquet, absence de donnees client).
