@@ -87,6 +87,14 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   await expect(page.locator('.sim-banner')).toContainText('does not control the game client');
   await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './fr/demo.html');
+  const mobileOffer = page.locator('.demo-mobile-offer');
+  if ((page.viewportSize()?.width ?? 1440) <= 640) {
+    await expect(mobileOffer).toBeVisible();
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
+    await expect(mobileOffer).toContainText('€20.00');
+  } else {
+    await expect(mobileOffer).toBeHidden();
+  }
   await expect(page.locator('a[href="./#features"]')).toHaveCount(0);
 
   await expect(page.locator('#m-spots')).not.toHaveText('–', { timeout: 10000 });
@@ -124,6 +132,14 @@ test('French demo: locale stays French and all key navigation targets are locali
   await expect(page.locator('nav .langs a[lang="en"]')).toHaveAttribute('href', '../demo.html');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './demo.html');
   await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
+  const mobileOffer = page.locator('.demo-mobile-offer');
+  if ((page.viewportSize()?.width ?? 1440) <= 640) {
+    await expect(mobileOffer).toBeVisible();
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
+    await expect(mobileOffer).toContainText('20,00 €');
+  } else {
+    await expect(mobileOffer).toBeHidden();
+  }
   await expect(page.locator('a[href="../#offre"]')).toHaveCount(0);
   await expect(page.locator('a[href="../#features"]')).toHaveCount(0);
   await expect(page.locator('#m-spots')).not.toHaveText('–', { timeout: 10000 });
@@ -131,6 +147,34 @@ test('French demo: locale stays French and all key navigation targets are locali
   await captureScreenshot(page, testInfo, 'demo-fr');
   expect(errors).toEqual([]);
 });
+
+
+const commercialPages = [
+  { name: 'modules-en', path: '/modules.html', lang: 'en' },
+  { name: 'compare-en', path: '/compare.html', lang: 'en' },
+  { name: 'features-en', path: '/features.html', lang: 'en' },
+  { name: 'faq-en', path: '/faq.html', lang: 'en' },
+  { name: 'modules-fr', path: '/fr/modules.html', lang: 'fr' },
+  { name: 'compare-fr', path: '/fr/compare.html', lang: 'fr' },
+  { name: 'features-fr', path: '/fr/features.html', lang: 'fr' },
+  { name: 'faq-fr', path: '/fr/faq.html', lang: 'fr' }
+];
+
+for (const route of commercialPages) {
+  test(`${route.name}: real browser, purchase path and responsive layout`, async ({ page }, testInfo) => {
+    const errors = collectPageErrors(page);
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok(), `HTTP response for ${route.path}`).toBeTruthy();
+    await expect(page.locator('html')).toHaveAttribute('lang', route.lang);
+    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page.locator('nav .nav-links a').first()).toBeVisible();
+    await expect(page.locator('nav .btn-gold').first()).toBeVisible();
+    await expect(page.locator('a[href*="demo.html"]').first()).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureScreenshot(page, testInfo, route.name);
+    expect(errors, `JavaScript errors on ${route.path}`).toEqual([]);
+  });
+}
 
 test('capture current public demo as a visual comparison baseline when reachable', async ({ page }, testInfo) => {
   try {
