@@ -6,11 +6,11 @@
  * Le calcul de ronde utilise assets/route-planner.js, dont la parite avec le
  * planificateur Python est verifiee par tests/route-planner-parity.test.mjs.
  */
-import { planRound, confirmedSpots } from './route-planner.js?v=f941dd16';
+import { planRound, confirmedSpots } from './route-planner.js?v=9ce18c2d';
 /* Meme module de collecte que les autres pages (aucune duplication) :
    la demo est une etape du parcours, elle doit donc etre mesuree au
    meme titre que l'accueil et le comparateur. */
-import './analytics.js?v=f941dd16';
+import './analytics.js?v=9ce18c2d';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('oasis');
