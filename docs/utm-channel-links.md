@@ -22,6 +22,18 @@ Utiliser une URL distincte par canal pour les nouveaux posts et remplacer les li
 | YouTube | https://bot-wow.com/fr/?utm_source=youtube | `yt` |
 | Forums | https://bot-wow.com/fr/?utm_source=forum | `forum` |
 
+### Page d'achat dédiée (à privilégier pour les campagnes)
+
+Même attribution, arrivée directe sur l'offre et le formulaire de paiement
+(`/buy.html`, `/fr/buy.html`) : le visiteur n'a pas à faire défiler la page.
+
+| Canal | URL EN | URL FR | Valeur enregistrée |
+|---|---|---|---|
+| Reddit | https://bot-wow.com/buy.html?utm_source=reddit | https://bot-wow.com/fr/buy.html?utm_source=reddit | `reddit` |
+| Discord | https://bot-wow.com/buy.html?utm_source=discord | https://bot-wow.com/fr/buy.html?utm_source=discord | `discord` |
+| YouTube | https://bot-wow.com/buy.html?utm_source=youtube | https://bot-wow.com/fr/buy.html?utm_source=youtube | `yt` |
+| Forums | https://bot-wow.com/buy.html?utm_source=forum | https://bot-wow.com/fr/buy.html?utm_source=forum | `forum` |
+
 ## Règles de publication
 
 1. Remplacer le lien nu de BOT-WOW dans chaque publication par l'URL correspondant au canal et à la langue.
