@@ -2186,111 +2186,17 @@ async function handleSubscribe(request, env2) {
 }
 __name(handleSubscribe, "handleSubscribe");
 async function handleClaim(request, env2) {
-  const ip = getClientIp(request);
-  const rl = await checkRateLimit(env2.RATE_LIMIT, "claim", ip, RATE_LIMITS.claim);
-  if (!rl.allowed) {
-    return jsonResponse({ ok: false, error: "rate_limited" }, 429, {
-      "Retry-After": String(rl.retryAfter || 3600)
-    });
-  }
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonResponse({ ok: false, error: "invalid_json" }, 400);
-  }
-  const email = body.email?.toLowerCase().trim();
-  const lang = validateLang(body.lang || DEFAULT_LANG);
-  if (!email || !validateEmail(email)) {
-    return jsonResponse({ ok: false, error: "invalid_email" }, 400);
-  }
-  try {
-    const result = await env2.DB.batch([
-      // Check existing active license for this email
-      env2.DB.prepare(`
-        SELECT l.id, l.key, l.lang, l.status, d.token, d.expires_at
-        FROM licenses l
-        LEFT JOIN downloads d ON d.license_id = l.id
-        WHERE l.email = ? AND l.status = 'active'
-        ORDER BY l.id DESC LIMIT 1
-      `).bind(email),
-      // Get max order id for new order
-      env2.DB.prepare("SELECT COALESCE(MAX(id), 0) as max_id FROM orders").bind()
-    ]);
-    const existingLicense = result[0].results[0];
-    const maxOrderId = result[1].results[0]?.max_id || 0;
-    let licenseId;
-    let licenseKey;
-    let downloadToken;
-    let isNew = false;
-    if (existingLicense) {
-      licenseId = existingLicense.id;
-      licenseKey = existingLicense.key;
-      const now = Date.now();
-      if (!existingLicense.token || (existingLicense.expires_at ?? 0) < now) {
-        downloadToken = generateToken();
-        await env2.DB.prepare(`
-          INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-          VALUES (?, ?, ?, 0, ?, ?)
-        `).bind(
-          downloadToken,
-          licenseId,
-          now + DOWNLOAD_EXPIRY_DAYS * 864e5,
-          DOWNLOAD_MAX_COUNT,
-          now
-        ).run();
-      } else {
-        downloadToken = existingLicense.token;
-      }
-    } else {
-      const newOrderId = maxOrderId + 1;
-      const now = Date.now();
-      const freeProviderId = `free_${generateToken(8)}`;
-      await env2.DB.batch([
-        env2.DB.prepare(`
-          INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-          VALUES (?, 'free', ?, ?, 0, 'eur', 'free', ?, ?, ?)
-        `).bind(newOrderId, freeProviderId, email, JSON.stringify({ lang, product: "bot-wow-lifetime" }), now, now)
-        // License will be inserted below with returned ID
-      ]);
-      licenseKey = generateLicenseKey();
-      downloadToken = generateToken();
-      const licenseResult = await env2.DB.prepare(`
-        INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-      `).bind(licenseKey, newOrderId, email, lang, DEFAULT_MAX_ACTIVATIONS, now, now).run();
-      licenseId = licenseResult.meta.last_row_id;
-      isNew = true;
-      await env2.DB.prepare(`
-        INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-        VALUES (?, ?, ?, 0, ?, ?)
-      `).bind(
-        downloadToken,
-        licenseId,
-        now + DOWNLOAD_EXPIRY_DAYS * 864e5,
-        DOWNLOAD_MAX_COUNT,
-        now
-      ).run();
-    }
-    const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-    sendDeliveryEmail(env2, email, licenseKey, downloadUrl, lang).catch((err) => {
-      console.error("Failed to send delivery email:", err);
-    });
-    if (isNew) {
-      sendAdminNotification(env2, email, licenseKey).catch((err) => {
-        console.error("Failed to send admin notification:", err);
-      });
-    }
-    return jsonResponse({
-      ok: true,
-      key: licenseKey,
-      downloadUrl,
-      message: "Licence cr\xE9\xE9e. Email envoy\xE9."
-    });
-  } catch (error) {
-    console.error("Claim error:", error);
-    return jsonResponse({ ok: false, error: "server_error" }, 500);
-  }
+  // FIX 2026-10-21 (audit paiement) : ce canal creait une licence A VIE
+  // GRATUITE pour n'importe quel e-mail (10/h/IP). Il est incompatible avec
+  // l'offre unique payante (20 EUR) et constituait une livraison sans
+  // paiement. Il est desactive : seule la boutique (/api/checkout) delivre.
+  return jsonResponse({ ok: false, error: "claim_disabled" }, 410, {});
+  // NOTE 2026-10-23 : le corps historique de cette fonction (creation
+  // d'une licence gratuite, generation d'identifiant par MAX(id)+1) a ete
+  // SUPPRIME. Il etait inatteignable depuis le 410 ci-dessus, et sa
+  // generation numerique d'identifiant de commande est desormais
+  // incompatible avec le schema TEXT de migrations/production/0004.
+  // Seule la boutique (/api/checkout) et le parcours Bitcoin delivrent.
 }
 __name(handleClaim, "handleClaim");
 async function handleActivate(request, env2) {
@@ -2400,10 +2306,27 @@ async function handleDownload(request, env2) {
     await env2.DB.prepare(`
       UPDATE downloads SET count = count + 1 WHERE token = ?
     `).bind(token).run();
-    const objectKey = "Casinobabe-v1.0.38.zip";
-    const r2Object = await env2.R2_BINARIES.get(objectKey);
+    // FIX 2026-10-21 : le nom de l'objet R2 etait fige dans le code
+    // ("Casinobabe-v1.0.38.zip"), alors que le paquet livre est versionne
+    // (casinobabe-fishing-<version>.zip). On tente la version configuree,
+    // puis la version courante du paquet, puis l'ancien nom (repli).
+    const candidates = [
+      env2.R2_OBJECT_KEY,
+      "casinobabe-fishing-1.2.0.zip",
+      "Casinobabe-v1.0.38.zip"
+    ].filter(Boolean);
+    let objectKey = candidates[0];
+    let r2Object = null;
+    for (const key of candidates) {
+      const obj = await env2.R2_BINARIES.get(key);
+      if (obj) {
+        objectKey = key;
+        r2Object = obj;
+        break;
+      }
+    }
     if (!r2Object) {
-      console.error("R2 object not found:", objectKey);
+      console.error("R2 object not found. Tried:", candidates.join(", "));
       return jsonResponse({ ok: false, error: "file_not_found" }, 404);
     }
     const headers = new Headers({
@@ -2491,7 +2414,47 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var MOLLIE_API_BASE = "https://api.mollie.com/v2";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+// Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
+// Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
+// remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
+// de paiement par heure et par IP. Chaque appel cree un vrai objet de
+// paiement Mollie : c'est a la fois un cout et un vecteur d'abus.
+// References voisines dans le meme Worker :
+//   BITCOIN_CHECKOUT_RATE_LIMIT = 3 / 5 min
+//   RATE_LIMITS.subscribe        = 10 / heure
+//   RATE_LIMITS.download         = 20 / heure
+// Reponse en cas de depassement : 429 + Retry-After (voir handleCheckout).
 var CHECKOUT_RATE_LIMIT = { max: 5, windowMs: 3e5 };
+// Mapping langue du site -> locale Mollie.
+// Source : liste officielle des `locale` acceptes par l'API Mollie
+// (POST /customers et POST /payments) :
+//   ca_ES cs_CZ da_DK de_AT de_CH de_DE de_LU el_GR en_BE en_GB en_NL en_US
+//   es_ES fi_FI fr_BE fr_FR fr_LU hu_HU is_IS it_IT lt_LT lv_LV nb_NO nl_BE
+//   nl_NL pl_PL pt_PT sk_SK sl_SI sv_SE tr_TR
+// Les codes courts ("en", "fr"...) ne sont PAS acceptes par l'API : il faut
+// une locale ISO 15897 "xx_XX". `ru` n'a pas de page hebergee Mollie : on
+// retombe sur en_US plutot que d'envoyer une valeur invalide (422).
+var MOLLIE_LOCALES = {
+  fr: "fr_FR",
+  en: "en_US",
+  de: "de_DE",
+  es: "es_ES",
+  pt: "pt_PT"
+};
+var MOLLIE_LOCALE_FALLBACK = "en_US";
+function toMollieLocale(lang) {
+  return MOLLIE_LOCALES[String(lang || "").toLowerCase()] || MOLLIE_LOCALE_FALLBACK;
+}
+// FIX 2026-10-21 : le TARIF est fixe COTE SERVEUR.
+// Avant, le montant venait du navigateur (`body.amount || 2e3`) : un client
+// pouvait demander un montant arbitraire (y compris 1,00 EUR) et c'etait le
+// serveur qui debitait. Le navigateur n'envoie plus que l'e-mail et la langue.
+var PRICE_TABLE = {
+  "bot-wow-lifetime": { amount: 2000, currency: "EUR", description: "BOT-WOW — Accès à vie" }
+};
+var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
+var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
+var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
 async function handleCheckout(request, env2) {
   const ip = getClientIp2(request);
   const rl = await checkRateLimit2(env2.RATE_LIMIT, "checkout", ip, CHECKOUT_RATE_LIMIT);
@@ -2508,35 +2471,43 @@ async function handleCheckout(request, env2) {
   }
   const email = body.email?.toLowerCase().trim();
   const lang = validateLang2(body.lang || "fr");
-  const amount = body.amount || 2e3;
-  const currency = (body.currency || "EUR").toUpperCase();
-  const redirectUrl = body.redirectUrl || "https://bot-wow.com/success.html";
-  const webhookUrl = body.webhookUrl || "https://api.bot-wow.com/api/mollie-webhook";
+  // FIX 2026-10-21 : prix, devise, produit et URL de retour sont decides
+  // par le serveur. Le montant venant du navigateur est ignore, et refuse
+  // explicitement s'il ne correspond pas a la reference.
+  const plan = PRICE_TABLE[PRODUCT_METADATA_KEY];
+  const amount = plan.amount;
+  const currency = plan.currency;
+  const redirectUrl = CANONICAL_REDIRECT_URL;
+  const webhookUrl = CANONICAL_WEBHOOK_URL;
   if (!email || !validateEmail2(email)) {
     return jsonResponse2({ ok: false, error: "invalid_email" }, 400);
   }
-  if (amount < 100 || amount > 1e5) {
+  if (body.amount !== void 0 && Number(body.amount) !== amount) {
+    console.warn("Checkout: montant demande par le client refuse", body.amount, "attendu", amount);
     return jsonResponse2({ ok: false, error: "invalid_amount" }, 400);
   }
+  const rawJourneyId = body.journey_id;
+  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
       customerId: customer.id,
       amount: { value: (amount / 100).toFixed(2), currency },
-      description: "BOT-WOW \u2014 Acc\xE8s \xE0 vie",
+      description: plan.description,
       redirectUrl,
+      cancelUrl: CANONICAL_CANCEL_URL,
       webhookUrl,
       metadata: {
         email,
         lang,
-        product: PRODUCT_METADATA_KEY
+        product: PRODUCT_METADATA_KEY,
+        journey_id: journeyId || ""
       }
     });
-    const paymentKey = `mollie_payment:${payment.id}`;
-    await env2.RATE_LIMIT.put(paymentKey, JSON.stringify({ email, lang, product: PRODUCT_METADATA_KEY }), {
-      expirationTtl: 86400
-      // 24h
-    });
+    // Evenement serveur : commande de paiement creee (cote serveur, montant
+    // verifie). Ne confirme pas un paiement reussi : seule la notification
+    // webhook Mollie peut confirmer.
+    await emitFunnelEvent(env2, 'checkout_created', journeyId, '/api/checkout', lang, { step: 'checkout_created' });
     return jsonResponse2({
       paymentId: payment.id,
       checkoutUrl: payment._links?.checkout?.href || `https://www.mollie.com/payscreen/${payment.id}`,
@@ -2546,87 +2517,243 @@ async function handleCheckout(request, env2) {
   } catch (error) {
     console.error("Checkout error:", error);
     if (error instanceof Response) return error;
-    return jsonResponse2({ ok: false, error: "checkout_failed" }, 500);
+    // Evenement serveur : echec de creation du paiement.
+    await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/checkout', lang, { step: 'checkout_failed' });
+    return jsonResponse2({ ok: false, error: "checkout_failed", detail: error && error.message }, 500);
   }
 }
 __name(handleCheckout, "handleCheckout");
 async function handleMollieWebhook(request, env2) {
-  const signature = request.headers.get("Mollie-Signature");
-  if (!signature || !env2.MOLLIE_WEBHOOK_SECRET) {
-    console.error("Missing webhook signature or secret");
-    return new Response("Unauthorized", { status: 401 });
-  }
+  // PROTOCOLE : webhook classique de la Payments API Mollie.
+  // Mollie envoie un POST dont le corps contient `id=tr_xxx` ; on interroge
+  // l'API avec la cle serveur pour obtenir l'etat REEL du paiement. La
+  // signature HMAC (autre format de webhook) n'est pas exigee : si elle est
+  // presente et que le secret est configure, elle est verifiee en
+  // complement (une verification supplementaire, jamais la source de verite).
   let payload;
   try {
     payload = await request.text();
   } catch {
     return new Response("Bad Request", { status: 400 });
   }
-  if (!verifyMollieSignature(payload, signature, env2.MOLLIE_WEBHOOK_SECRET)) {
-    console.error("Invalid webhook signature");
-    return new Response("Invalid Signature", { status: 401 });
+  const signature = request.headers.get("Mollie-Signature");
+  if (signature && env2.MOLLIE_WEBHOOK_SECRET) {
+    if (!verifyMollieSignature(payload, signature, env2.MOLLIE_WEBHOOK_SECRET)) {
+      console.error("Invalid webhook signature");
+      return new Response("Invalid Signature", { status: 401 });
+    }
   }
-  let event;
+  let event = null;
   try {
     event = JSON.parse(payload);
   } catch {
-    return new Response("Invalid JSON", { status: 400 });
+    event = null;
   }
-  if (event.type !== "payment.paid" && event.type !== "payment.cancelled" && event.type !== "payment.expired" && event.type !== "payment.failed" && event.type !== "payment.refunded" && event.type !== "payment.chargeback") {
-    return new Response("OK", { status: 200 });
+  let paymentId = null;
+  if (event && typeof event === "object") {
+    paymentId = event.id || event.payload?.id || (typeof event.data?.id === "string" ? event.data.id : null);
   }
-  const paymentId = event.payload?.id || event.id;
   if (!paymentId) {
+    try {
+      paymentId = new URLSearchParams(payload).get("id");
+    } catch {
+      paymentId = null;
+    }
+  }
+  if (!paymentId) {
+    console.error("Webhook: aucun identifiant de paiement recu");
     return new Response("Missing payment ID", { status: 400 });
   }
+  let payment;
   try {
-    const payment = await fetchMolliePayment(env2, paymentId, true);
-    if (payment.metadata?.product !== PRODUCT_METADATA_KEY) {
-      console.log(`Webhook: Ignoring payment ${paymentId} - not our product`);
-      return new Response("OK", { status: 200 });
-    }
-    const email = payment.metadata?.email?.toLowerCase();
-    const lang = validateLang2(payment.metadata?.lang || "fr");
-    if (!email) {
-      console.error("Webhook: No email in payment metadata");
-      return new Response("Missing email", { status: 400 });
-    }
-    const eventId = `${event.type}:${paymentId}`;
-    const existing = await env2.DB.prepare(
-      "SELECT id FROM webhook_events WHERE id = ?"
-    ).bind(eventId).first();
-    if (existing) {
-      console.log(`Webhook: Duplicate event ${eventId}, skipping`);
-      return new Response("OK", { status: 200 });
-    }
-    switch (event.type) {
-      case "payment.paid":
-        await fulfillOrder(env2, payment, email, lang, eventId);
-        break;
-      case "payment.cancelled":
-      case "payment.expired":
-      case "payment.failed":
-        await markOrderFailed(env2, payment, email, eventId);
-        break;
-      case "payment.refunded":
-      case "payment.chargeback":
-        await revokeLicense(env2, payment, email, eventId);
-        break;
-    }
-    return new Response("OK", { status: 200 });
-  } catch (error) {
-    console.error("Webhook processing error:", error);
-    return new Response("Internal Error", { status: 500 });
+    payment = await fetchMolliePayment(env2, paymentId, true);
+  } catch (e) {
+    console.error("Webhook: lecture du paiement impossible", e && e.message);
+    return new Response("Server Error", { status: 500 });
   }
+  if (!payment || !payment.id) {
+    console.error(`Webhook: paiement ${paymentId} introuvable via l'API`);
+    return new Response("OK", { status: 200 });
+  }
+  if (payment.metadata?.product !== PRODUCT_METADATA_KEY) {
+    console.log(`Webhook: Ignoring payment ${paymentId} - not our product`);
+    return new Response("OK", { status: 200 });
+  }
+  // VERIFICATION REELLE : montant, devise, produit, statut.
+  const plan = PRICE_TABLE[PRODUCT_METADATA_KEY];
+  const paidAmount = Math.round(parseFloat(payment.amount?.value || "0") * 100);
+  const paidCurrency = String(payment.amount?.currency || "").toUpperCase();
+  if (paidAmount !== plan.amount || paidCurrency !== plan.currency) {
+    console.error(`Webhook: montant inattendu pour ${paymentId}: ${paidAmount} ${paidCurrency} (attendu ${plan.amount} ${plan.currency})`);
+    return new Response("Amount mismatch", { status: 400 });
+  }
+  const email = String(payment.metadata?.email || "").toLowerCase();
+  const lang = validateLang2(payment.metadata?.lang || "fr");
+  if (!email) {
+    console.error("Webhook: aucun e-mail dans les metadonnees du paiement");
+    return new Response("Missing email", { status: 400 });
+  }
+  const status = String(payment.status || "");
+  // FIX 2026-10-21 : un remboursement ou une contestation doit revoquer la
+  // licence liee — AVANT le garde statut-ouvert (sinon jamais traitee).
+  if (status === "refunded" || status === "charged_back") {
+    await revokeLicense(env2, payment, email, `refund:${paymentId}`);
+    return new Response("OK", { status: 200 });
+  }
+  if (status !== "paid" && status !== "failed" && status !== "expired" && status !== "canceled") {
+    // open / pending : rien a faire, la confirmation suivra.
+    console.log(`Webhook: paiement ${paymentId} statut=${status} (en attente)`);
+    return new Response("OK", { status: 200 });
+  }
+  // GARDE-FOU D'IDEMPOTENCE : l'insertion de l'evenement est atomique et
+  // sert de verrou. Deux notifications simultanees ne peuvent donc pas creer
+  // deux licences. La cle est l'identifiant du paiement (stable quel que
+  // soit le type d'evenement).
+  const eventId = `payment:${paymentId}`;
+  try {
+    await env2.DB.prepare(
+      "INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'mollie', ?)"
+    ).bind(eventId, Date.now()).run();
+  } catch (e) {
+    const msg = String(e && e.message || "");
+    if (/UNIQUE|constraint/i.test(msg)) {
+      console.log(`Webhook: paiement ${paymentId} deja traite, ignore`);
+      return new Response("OK", { status: 200 });
+    }
+    console.error("Webhook: insertion de l'evenement impossible", msg);
+    return new Response("Server Error", { status: 500 });
+  }
+  // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
+  // On le récupère ici sans lecture KV supplémentaire.
+  const rawJourneyId = payment.metadata?.journey_id;
+  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+  let paymentRef = null;
+  try {
+    paymentRef = await hashPaymentReference(payment.id);
+  } catch {
+    // La télémétrie reste facultative : une erreur de hachage ne bloque pas le webhook.
+  }
+  // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
+  // doit revoquer la licence liee (le signal existait mais n'etait jamais
+  // branche sur le flux du webhook).
+  if (status === "paid") {
+    await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef);
+    // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
+    // Ecris APRÈS fulfillOrder pour ne rien ecrire si la livraison echoue
+    // (schema de production avec orders.id INTEGER -> datatype mismatch).
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef });
+    // MESURE DE CONVERSION (V11.2).
+    // Cette ligne n'est ecrite QUE par le serveur, apres verification du
+    // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
+    // paiement confirme restent donc trois evenements distincts, et un
+    // evenement "conversion" ne peut pas etre forge depuis le navigateur
+    // (le point de collecte public ne l'accepte pas).
+    // L'echec de cette mesure ne doit JAMAIS empecher la livraison de la
+    // licence : l'echec est attrape et journalise.
+    try {
+      await recordConversion(env2, payment, email, lang);
+    } catch (e) {
+      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+    }
+  } else {
+    await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
+  }
+  return new Response("OK", { status: 200 });
 }
 __name(handleMollieWebhook, "handleMollieWebhook");
-async function fulfillOrder(env2, payment, email, lang, eventId) {
+/**
+ * Enregistre une CONVERSION confirmee dans la base de telemetrie.
+ *
+ * - Ecrit uniquement par le serveur, apres que le paiement a ete verifie
+ *   (montant, devise, produit, statut) via l'API Mollie ;
+ * - aucune donnee personnelle : ni e-mail, ni nom, ni montant detaille.
+ *   Seul un hash tronque de l'identifiant de paiement est conserve, pour
+ *   rapprocher un evenement d'une commande sans exposer l'identifiant ;
+ * - la base de telemetrie est une base D1 DEDIEE, distincte de la base des
+ *   commandes : elle ne contient ni e-mail, ni licence, ni jeton ;
+ * - si la base est absente ou en erreur, l'echec est silencieux : la
+ *   livraison de la licence ne doit jamais dependre de la mesure.
+ */
+async function hashPaymentReference(paymentId) {
+  const normalizedId = String(paymentId || "");
+  if (!normalizedId) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("botwow-conversion-v1|" + normalizedId));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+}
+__name(hashPaymentReference, "hashPaymentReference");
+async function recordConversion(env2, payment, email, lang) {
+  const db = env2.TELEMETRY_DB;
+  if (!db) return;
+  const amount = Math.round(parseFloat(payment.amount.value) * 100) / 100;
+  const paymentId = String(payment.id || "");
+  const ref = await hashPaymentReference(paymentId);
+  await db.prepare(
+    "INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, value_eur, source) " +
+    "VALUES (?, 'conversion', '/', ?, NULL, NULL, NULL, 'paid', ?, 0, NULL, NULL, ?, ?)"
+  ).bind(Date.now(), lang === "fr" ? "fr" : "en", ref, amount, "mollie").run();
+  console.log("Conversion enregistree", ref, amount);
+}
+
+/**
+ * Ecrit un evenement d'entonnoir (funnel) dans la base de telemetrie.
+ * N'est jamais bloquant : toute echec est silencieux. Le champ journey_id
+ * lie les evenements d'une meme session sans exposer de donnee personnelle.
+ * Si la colonne journey_id n'existe pas encore (migration 0003 non appliquee),
+ * l'insertion est rejouee sans elle.
+ */
+async function emitFunnelEvent(env2, event, journey_id, page, lang, extra) {
+  const db = env2.TELEMETRY_DB;
+  if (!db) return;
+  const insertFull = (
+    'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id) ' +
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  const insertLite = (
+    'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua) ' +
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  const bindFull = [
+    Date.now(), event, page || '/', lang || 'fr',
+    extra && extra.cta ? extra.cta : null,
+    null, null,
+    extra && extra.step ? extra.step : null,
+    extra && extra.ref ? extra.ref : null,
+    0, null, 'server',
+    journey_id || null,
+  ];
+  const bindLite = [
+    Date.now(), event, page || '/', lang || 'fr',
+    extra && extra.cta ? extra.cta : null,
+    null, null,
+    extra && extra.step ? extra.step : null,
+    extra && extra.ref ? extra.ref : null,
+    0, null, 'server',
+  ];
+  try {
+    await db.prepare(insertFull).bind(...bindFull).run();
+  } catch {
+    try {
+      await db.prepare(insertLite).bind(...bindLite).run();
+    } catch {
+      // La collecte d'entonnoir est meilleure effort : on n'arrete jamais
+      // le parcours de paiement pour une erreur de telemetrie.
+    }
+  }
+}
+
+async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
-  const orderResult = await env2.DB.prepare(`
-    INSERT INTO orders (provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-    VALUES ('mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
+  // FIX 2026-10-21 : la commande porte un identifiant TEXT explicite.
+  // Avant, `id` n'etait pas insere (colonne TEXT PRIMARY KEY => NULL) et la
+  // licence pointait sur `meta.last_row_id` (un nombre) : la jointure
+  // orders <-> licenses ne pouvait donc jamais aboutir.
+  const orderId = `ord_${payment.id}`;
+  await env2.DB.prepare(`
+    INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+    VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
   `).bind(
+    orderId,
     payment.id,
     email,
     amount,
@@ -2635,7 +2762,6 @@ async function fulfillOrder(env2, payment, email, lang, eventId) {
     now,
     now
   ).run();
-  const orderId = orderResult.meta.last_row_id;
   const licenseKey = generateLicenseKey2();
   const licenseResult = await env2.DB.prepare(`
     INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
@@ -2653,30 +2779,33 @@ async function fulfillOrder(env2, payment, email, lang, eventId) {
     10,
     now
   ).run();
-  await env2.DB.prepare(`
-    INSERT INTO webhook_events (id, provider, processed_at)
-    VALUES (?, 'mollie', ?)
-  `).bind(eventId, now).run();
   const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang);
+  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId);
   await sendAdminNotification2(env2, email, licenseKey, amount);
   console.log(`Order fulfilled: ${payment.id} -> ${email} (${licenseKey})`);
+  // Evenement serveur : licence creee et liee a la commande payee.
+  await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef });
 }
 __name(fulfillOrder, "fulfillOrder");
-async function markOrderFailed(env2, payment, email, eventId) {
+async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
-  await env2.DB.batch([
-    env2.DB.prepare(`
-      INSERT INTO orders (provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-      VALUES ('mollie', ?, ?, ?, ?, 'failed', ?, ?, ?)
-    `).bind(payment.id, email, amount, payment.amount.currency, JSON.stringify({ mollie: payment }), now, now),
-    env2.DB.prepare(`
-      INSERT INTO webhook_events (id, provider, processed_at)
-      VALUES (?, 'mollie', ?)
-    `).bind(eventId, now)
-  ]);
+  await env2.DB.prepare(`
+    INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+    VALUES (?, 'mollie', ?, ?, ?, ?, 'failed', ?, ?, ?)
+  `).bind(
+    `ord_${payment.id}`,
+    payment.id,
+    email,
+    amount,
+    payment.amount.currency,
+    JSON.stringify({ mollie: payment }),
+    now,
+    now
+  ).run();
   console.log(`Order failed: ${payment.id} -> ${email}`);
+  // Evenement serveur : echec de paiement confirme par Mollie.
+  await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/mollie-webhook', lang, { step: 'checkout_failed', ref: paymentRef });
 }
 __name(markOrderFailed, "markOrderFailed");
 async function revokeLicense(env2, payment, email, eventId) {
@@ -2689,10 +2818,18 @@ async function revokeLicense(env2, payment, email, eventId) {
   if (license) {
     await env2.DB.batch([
       env2.DB.prepare("UPDATE licenses SET status = ? WHERE id = ?").bind("revoked", license.id),
-      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id),
-      env2.DB.prepare("INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now)
+      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id)
     ]);
     console.log(`License revoked: ${license.key} (refund/chargeback for ${payment.id})`);
+  } else {
+    console.log(`No license to revoke for ${payment.id} (refund/chargeback)`);
+  }
+  // L'evenement de remboursement est journalise meme sans licence associee :
+  // ce MARQUEUR rend les rejeux du webhook naturellement sans effet.
+  try {
+    await env2.DB.prepare("INSERT OR IGNORE INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now).run();
+  } catch (e) {
+    console.error("Refund event logging failed:", e && e.message);
   }
 }
 __name(revokeLicense, "revokeLicense");
@@ -2703,7 +2840,7 @@ async function getOrCreateMollieCustomer(env2, email, locale) {
   if (cached) return cached;
   const response = await mollieFetch(env2, "POST", "/customers", {
     email,
-    locale,
+    locale: toMollieLocale(locale),
     metadata: { source: "bot-wow" }
   });
   const customer = response;
@@ -2720,10 +2857,11 @@ async function createMolliePayment(env2, params) {
     amount: params.amount,
     description: params.description,
     redirectUrl: params.redirectUrl,
+    cancelUrl: params.cancelUrl,
     webhookUrl: params.webhookUrl,
     metadata: params.metadata,
-    method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24", "applepay", "googlepay"],
-    locale: params.metadata.lang || "fr"
+    method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24"],
+    locale: toMollieLocale(params.metadata.lang)
   };
   return mollieFetch(env2, "POST", "/payments", body, true);
 }
@@ -2751,7 +2889,7 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   if (!response.ok) {
     const error = await response.text();
     console.error(`Mollie API error (${response.status}):`, error);
-    throw new Error(`Mollie API error: ${response.status}`);
+    throw new Error(`Mollie API error: ${response.status} - ${error}`);
   }
   return response.json();
 }
@@ -2846,9 +2984,85 @@ function getClientIp2(request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
 __name(getClientIp2, "getClientIp");
-async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang) {
-  console.log("[EMAIL] Delivery to:", email, "Key:", key, "Lang:", lang);
+async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId) {
+  // FIX 2026-10-21 : la livraison etait un simple console.log -> le client
+  // ne recevait JAMAIS sa cle. On envoie reellement l'e-mail si une cle
+  // d'envoi est configuree (Resend), sinon on conserve la commande et la
+  // licence en base (table deliveries) pour un rejeu, sans jamais la
+  // dupliquer.
+  const subject = lang === "en" ? "Your BOT-WOW licence and download link" : "Votre licence BOT-WOW et votre lien de téléchargement";
+  const text = lang === "en" ? [
+    "Thank you for your purchase.",
+    "",
+    "Licence key: " + key,
+    "Download: " + downloadUrl,
+    "",
+    "Installation guide: https://bot-wow.com/docs/install.html",
+    "Support: support@bot-wow.com",
+    "",
+    "The download link is limited in time and in number of downloads."
+  ].join("\n") : [
+    "Merci pour votre achat.",
+    "",
+    "Cle de licence : " + key,
+    "Telechargement : " + downloadUrl,
+    "",
+    "Guide d'installation : https://bot-wow.com/docs/install.html",
+    "Support : support@bot-wow.com",
+    "",
+    "Le lien de telechargement est limite dans le temps et en nombre de downloads."
+  ].join("\n");
+  const html = "<p>Merci pour votre achat.</p>"
+    + "<p><b>Cle de licence :</b> <code>" + key + "</code></p>"
+    + "<p><b>Lien de telechargement :</b> <a href=\"" + downloadUrl + "\">" + downloadUrl + "</a></p>"
+    + "<p>Guide d'installation : <a href=\"https://bot-wow.com/docs/install.html\">bot-wow.com/docs/install.html</a></p>"
+    + "<p>Support : support@bot-wow.com</p>";
+  const status = await sendEmail2(env2, email, subject, text, html);
+  if (!status.sent) {
+    console.error("[EMAIL] Envoi impossible (" + status.reason + ") - livraison consignee en base pour rejeu");
+    try {
+      await env2.DB.prepare(`
+        INSERT INTO deliveries (email, subject, body, kind, status, created_at)
+        VALUES (?, ?, ?, 'delivery', 'pending', ?)
+      `).bind(email, subject, text, Date.now()).run();
+    } catch (e) {
+      console.error("[EMAIL] consignation impossible:", e && e.message);
+    }
+    // Evenement serveur : echec de livraison e-mail.
+    await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed' });
+  } else {
+    // Evenement serveur : licence livree par e-mail.
+    await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_sent' });
+  }
+  return status;
 }
+__name(sendDeliveryEmail2, "sendDeliveryEmail2");
+async function sendEmail2(env2, to, subject, text, html) {
+  const apiKey = env2.RESEND_API_KEY;
+  if (!apiKey) {
+    return { sent: false, reason: "aucun secret RESEND_API_KEY configure" };
+  }
+  const from = env2.MAIL_FROM || "BOT-WOW <licences@bot-wow.com>";
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, text, html })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("[EMAIL] Resend a repondu", res.status, err.slice(0, 200));
+      return { sent: false, reason: "resend_" + res.status };
+    }
+    const data = await res.json().catch(() => ({}));
+    console.log("[EMAIL] envoi accepte par le provider pour", to);
+    return { sent: true, id: data && data.id };
+  } catch (e) {
+    console.error("[EMAIL] echec reseau", e && e.message);
+    return { sent: false, reason: "network" };
+  }
+}
+__name(sendEmail2, "sendEmail2");
 __name(sendDeliveryEmail2, "sendDeliveryEmail");
 async function sendAdminNotification2(env2, email, key, amount) {
   console.log("[ADMIN] Paid order:", { email, key, amount });
@@ -2896,9 +3110,13 @@ async function handleBitcoinCheckout(request, env2) {
     const now = Date.now();
     const orderReference = `BTC-${generateToken(8).toUpperCase()}`;
     const orderResult = await env2.DB.prepare(`
-      INSERT INTO orders (provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-      VALUES ('bitcoin_manual', ?, ?, ?, 'eur', 'pending_payment', ?, ?, ?)
+      INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+      VALUES (?, 'bitcoin_manual', ?, ?, ?, 'eur', 'pending_payment', ?, ?, ?)
     `).bind(
+      // FIX 2026-10-21 (audit paiement) : id TEXT explicite. Sans lui la
+      // colonne TEXT PRIMARY KEY recevait NULL (toutes les lignes NULL) et la
+      // jointure commandes <-> licences ne pouvait jamais aboutir.
+      `ord_bitcoin_manual_${orderReference}`,
       orderReference,
       email,
       PRICE_EUR,
@@ -2910,7 +3128,7 @@ async function handleBitcoinCheckout(request, env2) {
       now,
       now
     ).run();
-    const orderId = orderResult.meta.last_row_id;
+    const orderId = `ord_bitcoin_manual_${orderReference}`;
     const mailtoSubject = encodeURIComponent(`Bot-Wow \u2014 Paiement Bitcoin \u2014 ${orderReference}`);
     const mailtoBody = encodeURIComponent(generatePaymentEmailBody({
       orderReference,
@@ -2921,6 +3139,8 @@ async function handleBitcoinCheckout(request, env2) {
       lang
     }));
     const mailtoLink = `mailto:${env2.CONTACT_EMAIL}?subject=${mailtoSubject}&body=${mailtoBody}`;
+    // Evenement serveur : commande Bitcoin creee.
+    await emitFunnelEvent(env2, 'checkout_created', body.journey_id || null, '/api/bitcoin/checkout', lang, { step: 'checkout_created', ref: orderReference });
     return jsonResponse3({
       ok: true,
       orderId,
@@ -2978,16 +3198,28 @@ async function handleBitcoinPaidNotification(request, env2) {
 }
 __name(handleBitcoinPaidNotification, "handleBitcoinPaidNotification");
 async function handleAdminApproveOrder(request, env2) {
+  // FIX 2026-10-21 (audit paiement) : la validation etait atteinte par la route
+  // directe SANS authentification (le garde-fou n'existe que dans le catch-all
+  // /api/admin/*). Toute personne pouvait marquer une commande payee et creer
+  // une licence gratuite. Verification obligatoire ici.
+  const auth = await verifyAdminAuth(request, env2);
+  if (!auth) {
+    return jsonResponse3({ ok: false, error: "unauthorized" }, 401);
+  }
   const url = new URL(request.url);
   const pathParts = url.pathname.split("/").filter((p) => p);
-  const orderId = parseInt(pathParts[pathParts.length - 2] || "0");
-  if (!orderId) {
+  // FIX 2026-10-21 (audit paiement) : les ids de commande sont des TEXT
+  // (ordre_*) ; accepter egalement la reference fournisseur (BTC-*) en repli.
+  const orderIdRaw = decodeURIComponent(pathParts[pathParts.length - 2] || "");
+  if (!orderIdRaw) {
     return jsonResponse3({ ok: false, error: "invalid_order_id" }, 400);
   }
   try {
     const order = await env2.DB.prepare(`
-      SELECT * FROM orders WHERE id = ?
-    `).bind(orderId).first();
+      SELECT * FROM orders
+      WHERE id = ?1 OR (provider = 'bitcoin_manual' AND provider_id = ?1)
+      LIMIT 1
+    `).bind(orderIdRaw).first();
     if (!order) {
       return jsonResponse3({ ok: false, error: "order_not_found" }, 404);
     }
@@ -3005,13 +3237,13 @@ async function handleAdminApproveOrder(request, env2) {
     const licenseResult = await env2.DB.prepare(`
       INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
       VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-    `).bind(licenseKey, orderId, email, lang, 2, now, now).run();
+    `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
     const licenseId = licenseResult.meta.last_row_id;
     const downloadToken = generateToken();
     await env2.DB.batch([
       env2.DB.prepare(`
         UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ?
-      `).bind(now, orderId),
+      `).bind(now, order.id),
       env2.DB.prepare(`
         INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
         VALUES (?, ?, ?, 0, ?, ?)
@@ -3051,10 +3283,16 @@ async function handleAdminApproveOrder(request, env2) {
 }
 __name(handleAdminApproveOrder, "handleAdminApproveOrder");
 async function handleAdminRejectOrder(request, env2) {
+  // FIX 2026-10-21 (audit paiement) : meme garde d'authentification que l'app
+  // robation des commandes (la route directe contournait verifierAdminAuth).
+  const auth = await verifyAdminAuth(request, env2);
+  if (!auth) {
+    return jsonResponse3({ ok: false, error: "unauthorized" }, 401);
+  }
   const url = new URL(request.url);
   const pathParts = url.pathname.split("/").filter((p) => p);
-  const orderId = parseInt(pathParts[pathParts.length - 2] || "0");
-  if (!orderId) {
+  const orderIdRaw = decodeURIComponent(pathParts[pathParts.length - 2] || "");
+  if (!orderIdRaw) {
     return jsonResponse3({ ok: false, error: "invalid_order_id" }, 400);
   }
   let body;
@@ -3065,8 +3303,10 @@ async function handleAdminRejectOrder(request, env2) {
   }
   try {
     const order = await env2.DB.prepare(`
-      SELECT * FROM orders WHERE id = ?
-    `).bind(orderId).first();
+      SELECT * FROM orders
+      WHERE id = ?1 OR (provider = 'bitcoin_manual' AND provider_id = ?1)
+      LIMIT 1
+    `).bind(orderIdRaw).first();
     if (!order) {
       return jsonResponse3({ ok: false, error: "order_not_found" }, 404);
     }
@@ -3082,7 +3322,7 @@ async function handleAdminRejectOrder(request, env2) {
     `).bind(
       now,
       JSON.stringify({ ...JSON.parse(order.metadata || "{}"), rejectionReason: body.reason || "Payment not received" }),
-      orderId
+      order.id
     ).run();
     return jsonResponse3({ ok: true, message: "Order rejected" });
   } catch (error) {

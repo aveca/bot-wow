@@ -1,0 +1,12 @@
+dist/
+worker/
+telemetry-worker/
+security-guard/
+tests/
+scripts/
+migrations/
+node_modules/
+.github/
+package.json
+package-lock.json
+wrangler.toml

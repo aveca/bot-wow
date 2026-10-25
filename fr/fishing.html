@@ -1,0 +1,155 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La pêche en détail — BOT-WOW</title>
+<meta name="description" content="Comment BOT-WOW pêche : capture, détection HSV, clics en arrière-plan, mémoire des spots, rondes optimisées — avec les mesures derrière chaque affirmation.">
+<link rel="canonical" href="https://bot-wow.com/fr/fishing.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/fishing.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/fishing.html">
+<link rel="icon" href="../assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="../assets/style.css?v=9ce18c2d">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+    <div class="nav-links">
+        <a href="./modules.html">Modules</a>
+      <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./demo.html">Démo</a>
+      <a href="./roadmap.html">Feuille de route</a><a href="../docs/fr/">Docs</a><a href="./faq.html">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="../#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Accueil</a>
+    <h1>Comment le bot <span class="grad">pêche</span></h1>
+    <p class="kp">Chaque mécanisme ci-dessous est soit mesuré dans nos sessions journalisées,
+      soit testé dans les suites hors ligne. Là où la preuve s'arrête, nous le disons.</p>
+
+    <div class="prose">
+      <h2>1 · Capture</h2>
+      <p>Le bot photographie la fenêtre de jeu avec <code>PrintWindow</code>, une API Windows
+        documentée. Aucune injection dans le processus du jeu, aucune lecture de mémoire :
+        le bot voit ce que vous voyez à l'écran.</p>
+
+      <h2>2 · Détection</h2>
+      <p>Chaque capture est analysée en espace HSV : le flotteur et la teinte de l'eau sont
+        séparés par des plages jour/nuit, des seuils de texture et d'aire réglés sur un
+        client Classic 1.13 réel en 2336×1323. En cas d'ambiguïté, le bot ne clique pas
+        dans le flou — il revérifie.</p>
+
+      <figure class="evidence">
+        <img src="../assets/evidence/fishing-real-capture.jpg"
+             alt="Client WoW Classic 1.13 réel à Lushwater Oasis — le type d'image que le bot capture et analyse"
+             loading="lazy" width="1200" height="515">
+        <figcaption>
+          <span class="tag">Capture client réel</span>
+          <span>Session de calibration à Lushwater Oasis (Classic 1.13) — le même bassin que
+            la carte de démo. Image utilisée pour régler les plages de détection, pas une
+            affirmation de session en cours.</span>
+        </figcaption>
+      </figure>
+
+      <h2>3 · Le cycle</h2>
+      <p>Lancer → attendre la morsure → cliquer. La latence morsure → clic est mesurée à
+        chaque cycle et journalisée ; la médiane annoncée (308&thinsp;ms) vient de ces
+        journaux. Les clics sont envoyés comme messages de fenêtre, donc la fenêtre n'a
+        pas besoin d'être au premier plan.</p>
+
+      <div class="cycle">
+        <div class="c-step"><span class="c-k">1 · Lancer</span><span class="v c-v">WM_KEY</span>
+          <span class="c-note">envoyé comme message de fenêtre — sans voler le focus</span></div>
+        <div class="c-step"><span class="c-k">2 · Morsure</span><span class="v c-v cy">revérif. HSV</span>
+          <span class="c-note">ambiguïté → le bot revérifie, ne clique jamais à l'aveugle</span></div>
+        <div class="c-step"><span class="c-k">3 · Clic</span><span class="v c-v am">308&thinsp;ms <small>médiane</small></span>
+          <span class="c-note">morsure → clic, instrumenté à chaque cycle</span></div>
+        <div class="c-step"><span class="c-k">4 · Journal</span><span class="v c-v">par cycle</span>
+          <span class="c-note">écrit en mémoire + flux addon</span></div>
+      </div>
+
+      <h2>4 · Mémoire</h2>
+      <p>Chaque visite d'un spot alimente un enregistrement persistant : position, taux de
+        prise mesuré sur les visites, mobs vus à proximité, temps passé. Le magasin est
+        versionné (migrations, sauvegardes, écriture atomique) et exportable — vos
+        données vous appartiennent.</p>
+
+      <h2>5 · Rondes</h2>
+      <p>Le planificateur garde les bons spots en rotation : coût attendu par segment
+        (temps mesuré + risque de mob + probabilité d'échec), ordonné par plus proche
+        voisin puis amélioré en 2-opt, en trois modes (Prudent / Équilibré / Exploration).
+        La démo navigateur exécute le <b>même</b> planificateur JS, comparé au Python sur
+        la même carte à chaque build.</p>
+
+      <h2>6 · Arrêts de sûreté</h2>
+      <ul>
+        <li><b>F9</b> : arrêt propre immédiat, depuis n'importe quel état.</li>
+        <li>Attentes bornées partout : aucune boucle de clic sans limite.</li>
+        <li>Les échecs dégradent sans s'aggraver : un lancer raté est retenté dans une
+          limite, journalisé et diagnostiqué ; des lancers bloqués en série mettent le
+          bot en pause au lieu de forcer des clics.</li>
+        <li>Mort du personnage : le bot s'arrête et attend un humain — la récupération est
+          <a href="./modules.html">en développement</a> (la machine à états est spécifiée et
+          en cours d'implémentation ; tant qu'elle ne tient pas en jeu, l'arrêt sûr reste le
+          comportement).</li>
+      </ul>
+
+      <div class="callout green"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 10.6l3.6 3.6 7.6-8.4"/></svg> <span><b>Essayez maintenant.</b> La <a href="./demo.html">démo
+        navigateur</a> montre la vraie vue carte et le vrai calcul de ronde sur des données
+        simulées — sans compte, sans installation.</span></div>
+
+      <div class="callout"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg> <span><b>Ce que ce bot n'est pas — aujourd'hui.</b> Ni bot d'XP,
+        ni collecteur, ni bot de quêtes, ni moteur de combat. Ces rôles sont en conception
+        écrite seulement (ils exigent une couche de détection de combat qui n'existe pas
+        encore) — suivez leurs statuts réels sur le
+        <a href="./modules.html">registre des modules</a>.</span></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans lien avec ni l'aval de Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h3>Produit</h3>
+        <ul>
+          <li><a href="./features.html">Fonctions</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./compatibility.html">Compatibilité</a></li>
+          <li><a href="../#offre">Prix</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Docs &amp; légal</h3>
+        <ul>
+          <li><a href="../docs/fr/install.html">Installation</a></li>
+          <li><a href="../docs/fr/changelog.html">Notes de version</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="../legal/fr/terms.html">CGV · Confidentialité · Remboursements</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. N'est pas un produit Blizzard.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

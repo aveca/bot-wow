@@ -1,0 +1,126 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibility — BOT-WOW</title>
+<meta name="description" content="What is tested (Classic 1.13 and private servers), what is not (Retail, Mac), and an honest note about automation risks.">
+<link rel="canonical" href="https://bot-wow.com/compatibility.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/compatibility.html">
+<link rel="icon" href="./assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="./assets/style.css?v=9ce18c2d">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+    <div class="nav-links">
+        <a href="./modules.html">Modules</a>
+      <a href="./">Home</a><a href="./features.html">Features</a><a href="./demo.html">Demo</a>
+      <a href="./getting-started.html">Getting started</a><a href="./docs/index.html">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre">Buy — €20.00</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Home</a>
+    <h1>Compatibility <span class="grad">matrix</span></h1>
+    <p class="kp">Untested = unsupported. We prefer a short, honest list over a long,
+      false one.</p>
+
+    <div class="compatwrap">
+      <table>
+        <thead><tr><th>Item</th><th>Status</th><th>Detail</th><th>What is covered</th></tr></thead>
+        <tbody>
+          <tr><td><b>WoW Classic 1.13 (anniversary)</b></td>
+              <td><span class="st st-ok"><i></i>Tested</span></td>
+              <td>Client 2336×1323, Lushwater Oasis</td>
+              <td>Detection, fishing cycle, click, clean stop</td></tr>
+          <tr><td><b>Private server</b></td>
+              <td><span class="st st-ok"><i></i>Tested</span></td>
+              <td>The product's development environment</td>
+              <td>Same as the official client (no network detection)</td></tr>
+          <tr><td><b>Background mode</b></td>
+              <td><span class="st st-ok"><i></i>Tested</span></td>
+              <td>Clicks without window focus</td>
+              <td>Cycle, detection, stop</td></tr>
+          <tr><td><b>Movement between spots</b></td>
+              <td><span class="st st-dev"><i></i>In development</span></td>
+              <td>Odometer + auto-run validated, full travel pending in-game validation</td>
+              <td>Position reading, movement, safeguards</td></tr>
+          <tr><td><b>Corpse-run recovery</b></td>
+              <td><span class="st st-plan"><i></i>Planned</span></td>
+              <td>Failure chain identified, state machine in implementation</td>
+              <td>—</td></tr>
+          <tr><td><b>WoW TBC / WotLK / Live</b></td>
+              <td><span class="st st-no"><i></i>Not tested</span></td>
+              <td>Not supported at this stage</td>
+              <td>—</td></tr>
+          <tr><td><b>MacOS / Linux</b></td>
+              <td><span class="st st-no"><i></i>Not supported</span></td>
+              <td>The bot relies on the client's Windows APIs</td>
+              <td>—</td></tr>
+          <tr><td><b>Battlegrounds / dungeons / quests / combat</b></td>
+              <td><span class="st st-no"><i></i>Out of scope</span></td>
+              <td>This product is a fishing assistant</td>
+              <td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout red mt"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg> <span><b>Honest note about banning.</b> No automation tool is
+      risk-free. Intensive automation is detectable through behaviour analysis. Use this
+      software on an account you are ready to lose, and do not assume the absence of risk.
+      This applies to every bot, whatever its marketing claims.</span></div>
+
+    <div class="callout mt"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.6l6 2.2v5.1c0 3.4-2.5 6-6 7.5-3.5-1.5-6-4.1-6-7.5V4.8l6-2.2z"/><path d="M7.2 10.2l2 2 3.6-4"/></svg> <span><b>Anti-virus.</b> The bot reads pixels of the game window and
+      sends synthetic inputs; heuristics-based antivirus software may flag screen-reading
+      utilities. The install guide documents exactly what the binary does so you can decide,
+      and the package carries a SHA-256 manifest.</span></div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+        <p>Fishing assistant for WoW Classic. Published by Casinobabe.
+           Not affiliated with or endorsed by Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h3>Product</h3>
+        <ul>
+          <li><a href="./features.html">Features</a></li>
+          <li><a href="./demo.html">Demo (simulated data)</a></li>
+          <li><a href="./roadmap.html">Roadmap</a></li>
+          <li><a href="./#offre">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Docs &amp; legal</h3>
+        <ul>
+          <li><a href="./docs/known-issues.html">Known issues</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="./legal/terms.html">Terms · Privacy · Refunds</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Not a Blizzard product.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

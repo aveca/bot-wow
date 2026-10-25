@@ -1,8 +1,28 @@
 {
   "name": "bot-wow-pages",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "test": "node tests/route-planner-parity.test.mjs && node tests/modules-parity.test.mjs && node tests/distribution-package.test.mjs && node tests/payment-flow.test.mjs && node tests/checkout-security.test.mjs && node tests/site-artifact.test.mjs && node tests/link-check.test.mjs && node tests/action-bar.test.mjs && node tests/conversion-path.test.mjs && node tests/telemetry.test.mjs && node --experimental-sqlite tests/migrations.test.mjs && node --experimental-sqlite tests/d1-order-id-regression.test.mjs && node --experimental-sqlite tests/d1-order-id-migration.test.mjs",
+    "test:parity": "node tests/route-planner-parity.test.mjs",
+    "test:modules": "node tests/modules-parity.test.mjs",
+    "test:distribution": "node tests/distribution-package.test.mjs",
+    "test:payment": "node tests/payment-flow.test.mjs",
+    "test:security": "node tests/checkout-security.test.mjs",
+    "test:artifact": "node tests/site-artifact.test.mjs",
+    "test:conversion": "node tests/conversion-path.test.mjs",
+    "test:links": "node tests/link-check.test.mjs",
+    "test:telemetry": "node tests/telemetry.test.mjs",
+    "test:telemetry:e2e": "node scripts/telemetry-e2e.mjs",
+    "test:migrations": "node --experimental-sqlite tests/migrations.test.mjs",
+    "test:d1-order-ids": "node --experimental-sqlite tests/d1-order-id-regression.test.mjs && node --experimental-sqlite tests/d1-order-id-migration.test.mjs",
+    "validate:d1-order-ids": "node --experimental-sqlite scripts/validate-d1-order-ids.mjs",
+    "audit:css": "node scripts/audit-classes.mjs && node scripts/audit-tokens.mjs",
+    "package": "node scripts/build-package.cjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
   }
 }

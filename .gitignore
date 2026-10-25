@@ -1,0 +1,24 @@
+# Artefacts de build de la distribution (paquets zip) : jamais versionnes.
+dist/
+
+# Dependances
+node_modules/
+
+# Artefact du site statique (scripts/build-site.mjs) : genere, jamais versionne.
+_site/
+
+# Etat local du deploiement Cloudflare (wrangler).
+.wrangler/
+
+# Sauvegardes locales.
+backups/
+
+# Copie temporaire du Worker utilisee par le harness de test.
+tests/.worker-under-test.mjs
+
+# Captures d'ecran de verification (audit-viewports) : ne pas versionner.
+captures/
+
+# Captures et releves de QA visuelle (scripts/qa-*-cdp.mjs) : artefacts
+# locaux de verification, regeneres a la demande, jamais versionnes.
+.qa-captures/

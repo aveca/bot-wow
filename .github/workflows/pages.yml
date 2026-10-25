@@ -18,12 +18,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
       - name: Validate static project
         run: npm run validate
+      - name: Recompute deterministic asset fingerprint and URLs
+        run: node scripts/versionne-assets.mjs
+      - name: Run unit and integration tests
+        run: npm test
+      - name: Audit all CSS selectors and tokens
+        run: npm run audit:css
 
       - uses: actions/configure-pages@v5
+
+      # FIX 2026-10-21 : le deploiement uploadait TOUT le depot, ce qui
+      # exposait publiquement worker/index.js, les migrations SQL, package.json
+      # et les sources. L'artefact ne contient plus que le site statique.
+      # FIX 2026-10-22 : l'assemblage est fait par scripts/build-site.mjs,
+      # le MEME script que le projet Cloudflare Pages (qui sert le domaine
+      # bot-wow.com) : une seule source de verite pour la liste des
+      # fichiers publies, et un controle de securite qui echoue le build
+      # si un fichier interdit se glisse dans l'artefact.
+      - name: Build static site
+        run: node scripts/build-site.mjs _site
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Run real-browser UI checks before deployment
+        run: npm run test:e2e
+      - name: Preserve UI screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-wow-ui-deployment-evidence
+          path: artifacts/ui/
+          if-no-files-found: warn
+          retention-days: 14
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

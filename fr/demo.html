@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Explorez le planificateur de ronde BOT-WOW sur une carte simulée. Les positions sont synthétiques ; aucun déplacement automatique en jeu n’est démontré.">
+<meta name="theme-color" content="#08080d">
+<title>BOT-WOW — Démonstration du planificateur de ronde</title>
+<link rel="canonical" href="https://bot-wow.com/fr/demo.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html">
+<link rel="icon" href="../assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="../assets/style.css?v=9ce18c2d">
+<link rel="stylesheet" href="../assets/demo.css?v=9ce18c2d">
+
+</head>
+<body>
+<nav aria-label="Navigation principale">
+  <div class="w">
+    <a class="logo" href="./" aria-label="Accueil BOT-WOW">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      BOT-WOW
+    </a>
+    <div class="nav-links">
+      <a href="./modules.html">Modules</a>
+      <a href="./compare.html">Versus</a>
+      <a href="./demo.html" aria-current="page">Démo</a>
+      <a href="./features.html">Fonctionnalités</a>
+      <a href="./faq.html">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../demo.html" lang="en">EN</a><a class="on" href="./demo.html" lang="fr" aria-current="page">FR</a></div>
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="nav-buy">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="demo-wrap">
+  <a class="backlink" href="./">← Retour à l’accueil</a>
+  <section class="demo-intro" aria-labelledby="demo-title">
+    <p class="demo-kicker">PLANIFICATEUR · DÉMONSTRATION INTERACTIVE</p>
+    <h1 class="demo-title" id="demo-title">Explorez le planificateur de ronde.</h1>
+    <p class="demo-lead">Ajustez le niveau de prudence et le nombre de bancs : l’ordre proposé et les estimations se recalculent immédiatement. Examinez la logique de planification avant d’acheter.</p>
+  </section>
+  <aside class="sim-banner" role="note" aria-label="Limites de la démonstration">
+    <svg class="sim-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg>
+    <div><strong>DONNÉES SIMULÉES · AUCUN JEU EN DIRECT</strong><p>Les positions et taux de prise sont synthétiques. Cette démo montre le calcul d’une ronde, pas une session WoW réelle : elle ne pilote pas le client et ne démontre pas le déplacement automatique entre bancs, encore en validation en jeu.</p></div>
+  </aside>
+  <div class="grid-demo">
+    <div class="panel panel--map" aria-labelledby="map-title">
+        <h2 id="map-title">Carte de l’oasis</h2>
+        <p class="sub">Bancs simulés, niveaux de risque et ronde calculée.</p>
+        <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Carte interactive simulée de l’oasis de pêche"></svg>
+      <div class="legend">
+        <span><i class="legend-dot legend-dot--safe"></i>Banc à fiabilité élevée</span>
+        <span><i class="legend-dot legend-dot--medium"></i>Banc intermédiaire</span>
+        <span><i class="legend-dot legend-dot--risk"></i>Banc risqué (mobs / faible rendement)</span>
+        <span><i class="legend-dot legend-dot--mob"></i>Mob repéré</span>
+        <span><i class="legend-dot legend-dot--route"></i>Ronde calculée</span>
+      </div>
+    </div>
+
+    <div class="demo-side">
+      <div class="panel panel--controls">
+        <h2>Paramètres de la ronde</h2>
+        <p class="sub">Modifiez une valeur : le planificateur recalcule la proposition.</p>
+        <div class="controls">
+          <div class="ctl"><label for="mode">Mode</label>
+            <select id="mode">
+              <option value="prudent">Prudent</option>
+              <option value="equilibre" selected>Équilibré</option>
+              <option value="exploration">Exploration</option>
+            </select>
+          </div>
+          <div class="ctl"><label for="maxspots">Bancs max.</label>
+            <input type="range" id="maxspots" min="1" max="6" value="6">
+            <output id="maxspotsv" for="maxspots">6</output>
+          </div>
+        </div>
+        <table class="metrics" aria-label="Estimations calculées sur des données simulées">
+          <caption class="demo-sr-only">Estimations calculées sur des données simulées</caption>
+          <tbody aria-live="polite">
+            <tr><th scope="row">Bancs dans la ronde</th><td id="m-spots">–</td></tr>
+            <tr><th scope="row">Temps de trajet estimé</th><td id="m-travel">–</td></tr>
+            <tr><th scope="row">Temps de pêche estimé</th><td id="m-fish">–</td></tr>
+            <tr><th scope="row">Prises attendues (estimation)</th><td id="m-exp">–</td></tr>
+            <tr><th scope="row">Rendement attendu</th><td id="m-h">–</td></tr>
+            <tr><th scope="row">Segments non mesurés</th><td id="m-unv">–</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Les prises attendues sont une estimation issue de l’historique simulé, pas une mesure de jeu. Les trajets non mesurés restent signalés et ne sont proposés qu’en mode exploration.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Déroulé de la ronde</h2>
+        <p class="sub">Ordre proposé et risque estimé de chaque trajet.</p>
+        <ol class="steps" id="steps" aria-label="Ronde calculée à partir de données simulées"></ol>
+      </div>
+
+      <div class="panel">
+        <h2>Banc sélectionné</h2>
+        <p class="sub">Sélectionnez un banc sur la carte pour examiner ses données.</p>
+        <div id="spotPanel"><p class="dim">Cliquez un banc sur la carte pour voir ses caractéristiques (données simulées).</p></div>
+      </div>
+
+      <div class="panel">
+        <h2>Pourquoi cette ronde ?</h2>
+        <p class="sub">Les facteurs qui influencent le choix du planificateur.</p>
+        <div id="explain"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sortie du parcours : la demo est une etape, pas une fin. -->
+  <section class="demo-close" aria-labelledby="demo-close-title">
+    <div>
+      <p class="demo-kicker">PROCHAINE ÉTAPE</p>
+      <h2 id="demo-close-title">Vérifiez ce qui est réellement inclus.</h2>
+      <p class="dc-sub">Le registre des modules distingue les fonctions livrées, en développement et planifiées. Le déplacement automatique entre bancs reste en validation en jeu.</p>
+    </div>
+    <div class="demo-close-cta">
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Prendre la licence à vie — 20 €</a>
+      <a class="btn btn-ghost" href="./modules.html" data-track="cta_click" data-cta-id="demo-modules">Voir le statut des modules</a>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="../assets/demo.js?v=9ce18c2d"></script>
+<aside class="demo-mobile-offer" aria-label="Option d’achat BOT-WOW">
+  <div class="demo-mobile-offer__price"><strong>20,00 €</strong><span>Paiement unique · licence à vie</span></div>
+  <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Acheter la licence</a>
+</aside>
+</body>
+</html>

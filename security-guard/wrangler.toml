@@ -1,0 +1,5 @@
+﻿# Worker de garde-fou HTTP du domaine public (voir index.js).
+# Deploiement : npx wrangler deploy depuis ce dossier.
+name = "botwow-security-guard"
+main = "index.js"
+compatibility_date = "2026-10-22"

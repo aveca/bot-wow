@@ -1,0 +1,235 @@
+/* ============================================================ VARIANT A — CINEMATIC KEY ART
+   Composition éditoriale, profondeur de champ, éclairage cinématographique.
+   Le hero est un écran de cinéma : le mascot est au centre, le texte posé
+   dessus avec un voile dégradé, le HUD en bandeau bas dans l'image.
+   Mascotte au centre, pas sur le côté. Texte qui chevauche légèrement
+   l'image avec un dégradé de lisibilité. Pas de CTA dans le coin, tout est
+   centré. */
+
+/* ---------- GRID : deux colonnes égales, texte à droite, mascotte à gauche ---------- */
+.variant-a .hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  padding: 80px 20px;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(201,162,39,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 70%, rgba(95,180,216,0.06) 0%, transparent 50%),
+    var(--bg);
+}
+
+/* ---------- LA CAPTURE : écran de cinéma, pas de vignette ---------- */
+.variant-a .hero-view {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0c12 0%, #0d0f1a 50%, #0a0c12 100%);
+  border: 1px solid rgba(201,162,39,0.15);
+  box-shadow:
+    0 0 0 1px rgba(201,162,39,0.1),
+    0 40px 120px -40px rgba(0,0,0,0.9),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* Mascot dans le coin inférieur droit du cadre d'écran */
+.variant-a .hero__visual .mascot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 270px;
+  height: auto;
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,0.8));
+  animation: mascot-entrance 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes mascot-entrance {
+  0% { opacity: 0; transform: translateY(60px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ----- COPIE : calée à droite, texte qui chevauche légèrement l'image ----- */
+.variant-a .hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding-right: 40px;
+}
+
+.variant-a .hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: rgba(201,162,39,0.12);
+  border: 1px solid rgba(201,162,39,0.25);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c9a227;
+  width: fit-content;
+}
+
+.variant-a .hero__badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c9a227;
+  box-shadow: 0 0 16px #c9a227;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.4; }
+}
+
+.variant-a .hero__title {
+  font-size: clamp(42px, 5.5vw, 68px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.variant-a .hero__title .highlight {
+  color: #c9a227;
+}
+
+.variant-a .hero__lead {
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.7;
+  color: var(--mut);
+  max-width: 52ch;
+  margin: 0;
+}
+
+.variant-a .hero__cta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.variant-a .hero__cta .btn {
+  padding: 16px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 200px;
+}
+
+.variant-a .hero__price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(201,162,39,0.15);
+}
+
+.variant-a .hero__price-value {
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 800;
+  font-family: var(--mono);
+  color: #c9a227;
+}
+
+.variant-a .hero__price-label {
+  color: var(--mut);
+  font-size: 15px;
+}
+
+.variant-a .hero__trust {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(201,162,39,0.1);
+}
+
+.variant-a .hero__trust-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--mut);
+}
+
+.variant-a .hero__trust-icon {
+  width: 22px;
+  height: 22px;
+  color: #c9a227;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .variant-a .hero {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    text-align: center;
+    min-height: auto;
+    padding: 56px 20px;
+  }
+  .variant-a .hero__copy {
+    padding-right: 0;
+    align-items: center;
+    gap: 18px;
+  }
+  .variant-a .hero__title {
+    font-size: clamp(30px, 10vw, 44px);
+    line-height: 1.15;
+  }
+  .variant-a .hero__lead {
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: none;
+  }
+  .variant-a .hero__cta {
+    justify-content: center;
+    gap: 12px;
+  }
+  .variant-a .hero__cta .btn {
+    padding: 14px 24px;
+    font-size: 14px;
+    min-width: auto;
+  }
+  .variant-a .hero__price {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+  .variant-a .hero__price-value {
+    font-size: 26px;
+  }
+  .variant-a .benefits {
+    gap: 14px;
+  }
+  .variant-a .benefit {
+    padding: 12px;
+    gap: 10px;
+  }
+  /* Sur mobile, on cache le film/mascot pour garder le hero compact
+     et le CTA au-dessus de la ligne de flottaison. */
+  .variant-a .hero-view {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .variant-a .hero {
+    min-height: auto;
+    padding: 40px 16px;
+  }
+  .variant-a .hero__title {
+    font-size: clamp(26px, 11vw, 38px);
+  }
+}

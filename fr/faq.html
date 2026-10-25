@@ -1,0 +1,149 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — BOT-WOW</title>
+<meta name="description" content="Réponses franches sur BOT-WOW : ce qu'il fait, ce qu'il ne fait pas, paiement, licences, risques et mises à jour.">
+<link rel="canonical" href="https://bot-wow.com/fr/faq.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html">
+<link rel="icon" href="../assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="../assets/style.css?v=9ce18c2d">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./" aria-label="Accueil BOT-WOW">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      BOT-WOW
+    </a>
+    <div class="nav-links">
+        <a href="./modules.html">Modules</a>
+      <a href="../">Accueil</a><a href="./features.html">Fonctions</a><a href="./demo.html">Démo</a>
+      <a href="./compatibility.html">Compatibilité</a><a href="../docs/fr/">Docs</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="../#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Accueil</a>
+    <h1>Questions <span class="grad">fréquentes</span></h1>
+    <p class="kp">Des réponses franches. S'il en manque une, écrivez à
+      <a href="mailto:support@bot-wow.com">support@bot-wow.com</a>.</p>
+
+    <div class="faq">
+      <details class="qa"><summary>Que fait exactement le bot ?</summary>
+        <div class="ans">Il pêche, comme un humain soigneux : il lance, surveille le
+          flotteur par détection calibrée, clique quand la morsure arrive, et recommence.
+          Il mémorise chaque spot visité et calcule des rondes optimisées pour les
+          garder en rotation. C'est un produit <b>de pêche uniquement</b> : pas de
+          combat, pas de quêtes, pas d'automatisation de champs de bataille.</div></details>
+
+      <details class="qa"><summary>Y a-t-il un essai gratuit ?</summary>
+        <div class="ans">Oui — la <a href="./demo.html">démo navigateur</a> exécute le vrai
+          planificateur sur des données simulées, sans compte et sans installation.
+          Le bot lui-même est un produit payant ; nous ne livrons pas de binaires
+          limités dans le temps.</div></details>
+
+      <details class="qa"><summary>Combien ça coûte ?</summary>
+        <div class="ans">20 € une fois, à vie. Pas d'abonnement, pas de renouvellement,
+          pas de limite de postes au-delà d'une machine par licence. La liste complète
+          est dans la <a href="../#offre">section tarif</a> de l'accueil.</div></details>
+
+      <details class="qa"><summary>Quels moyens de paiement acceptez-vous ?</summary>
+        <div class="ans">La carte via le checkout de Mollie. Le montant et la devise sont
+          fixés côté serveur : la page ne peut donc pas être trompée pour facturer un
+          autre prix. Un rail bitcoin manuel existe aussi (vous contactez le support, le
+          paiement est vérifié, puis un admin délivre la licence explicitement). Si le
+          checkout échoue, le bouton d'achat le dit au lieu de faire semblant, et le
+          formulaire de repli vous met en relation directe avec le support.</div></details>
+
+      <details class="qa"><summary>Puis-je être banni pour l'utiliser ?</summary>
+        <div class="ans">Les outils d'automatisation peuvent contrevenir aux conditions
+          d'un serveur de jeu, et une automatisation intensive est détectable par
+          l'analyse de comportement. Nous ne promettons pas une sûreté impossible à
+          prouver. Utilisez un compte que vous acceptez de perdre — la page
+          <a href="./compatibility.html">compatibilité</a> détaille tout cela.</div></details>
+
+      <details class="qa"><summary>Fonctionne-t-il sur les serveurs privés ?</summary>
+        <div class="ans">C'est notre environnement de référence et il y est testé, sur
+          Classic 1.13. Retail et autres versions Classic ne sont <b>pas</b> testés,
+          donc non pris en charge.</div></details>
+
+      <details class="qa"><summary>Peut-il déplacer mon personnage entre les spots ?</summary>
+        <div class="ans">Partiellement. L'odomètre et le contrôleur de déplacement
+          existent et passent les tests unitaires, mais le trajet complet d'un banc à
+          l'autre est encore en validation en jeu ; les statuts de la page
+          <a href="./features.html">fonctions</a> restent exacts au fur et à mesure.</div></details>
+
+      <details class="qa"><summary>Que se passe-t-il si mon personnage meurt ?</summary>
+        <div class="ans">Aujourd'hui : le bot s'arrête proprement et attend qu'un humain
+          gère le retour au cadavre. Une récupération automatique est <b>prévue</b> et en
+          cours d'implémentation — mais tant qu'elle n'est pas prouvée en jeu, nous
+          gardons l'arrêt sûr.</div></details>
+
+      <details class="qa"><summary>Mon antivirus signale l'exécutable / son comportement.</summary>
+        <div class="ans">Les utilitaires de capture d'écran et d'entrées synthétiques
+          déclenchent parfois des heuristiques. Le guide d'installation documente
+          exactement quelles API Windows le bot appelle, et le paquet porte un
+          manifeste SHA-256 pour vérifier ce que vous avez reçu.</div></details>
+
+      <details class="qa"><summary>Comment fonctionnent les mises à jour ?</summary>
+        <div class="ans">Les mises à jour de la branche 1.x sont incluses dans la licence
+          à vie ; elles arrivent comme de nouveaux paquets versionnés avec notes de
+          version. Une clé perdue peut être renvoyée par le support sur demande.</div></details>
+
+      <details class="qa"><summary>Remboursements ?</summary>
+        <div class="ans">Un remboursement peut être demandé dans les 14 jours suivant
+          l'achat tant que la licence n'a pas été activée sur une machine, plus les cas
+          de téléchargement impossible et de double prélèvement. La procédure complète
+          est sur la <a href="../legal/fr/refund.html">politique de remboursement</a>.</div></details>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="grid">
+      <div>
+        <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
+           Sans lien avec ni l'aval de Blizzard Entertainment.</p>
+      </div>
+      <div>
+        <h3>Produit</h3>
+        <ul>
+          <li><a href="./features.html">Fonctions</a></li>
+          <li><a href="./demo.html">Démo (données simulées)</a></li>
+          <li><a href="./compatibility.html">Compatibilité</a></li>
+          <li><a href="../#offre">Prix</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Docs &amp; légal</h3>
+        <ul>
+          <li><a href="../docs/fr/install.html">Installation</a></li>
+          <li><a href="../docs/fr/known-issues.html">Problèmes connus</a></li>
+          <li><a class="foot-mail" href="mailto:support@bot-wow.com">support@bot-wow.com</a></li>
+          <li><a href="../legal/fr/terms.html">CGV · Confidentialité · Remboursements</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. N'est pas un produit Blizzard.</div>
+      <span class="mono">v1.2.0</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,11 +1,43 @@
-name = "bot-wow"
+name = "botwow-api"
+account_id = "abf2b92cf718313567b4b38eb9dda17f"
+# FIX 2026-10-21 : le domaine api.bot-wow.com est rattache au script
+# `botwow-api` (verifie via l'API Cloudflare : le domaine personnalise pointe
+# vers ce script). Le nom `bot-wow` deployait un script INUTILISE en
+# production : les corrections de securite du checkout n'etaient donc pas
+# en ligne. Le nom ci-dessous est celui reellement servi.
 main = "worker/index.js"
-compatibility_date = "2026-10-17"
+compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Assets statiques (le Worker sert aussi une copie du site) : le repertoire
+# par defaut est la racine du depot.
+[assets]
+directory = "./"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "botwow-production"
 database_id = "e57f5874-a9f0-42bf-8dbc-10785ef083f5"
+# FIX 2026-10-23 : les migrations metier/paiement et les migrations de
+# telemetrie partageaient le meme repertoire `migrations/`. Consequence :
+# `wrangler d1 migrations list botwow-analytics` proposait d'appliquer les
+# migrations METIER (orders, licences, emails) a la base de TELEMETRIE, qui
+# ne doit contenir que `events` et `rl`. Chaque base a desormais son propre
+# repertoire, declare explicitement ci-dessous.
+migrations_dir = "migrations/production"
+
+# Base D1 DEDIEE a la telemetrie de parcours (V11.2). Distincte de la base
+# des commandes : elle ne contient ni e-mail, ni licence, ni jeton. Elle
+# sert a ecrire la MESURE DE CONVERSION (paiement confirme, verifie par le
+# webhook Mollie) — un evenement que le navigateur ne peut pas forger.
+[[d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "botwow-analytics"
+database_id = "935b0632-d712-4266-bece-028c70b545be"
+# Telemetrie UNIQUEMENT : events + rl (aucune table de paiement).
+migrations_dir = "migrations/analytics"
+
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
@@ -15,8 +47,38 @@ id = "5cca39707796468f83d2016350794f72"
 binding = "R2_BINARIES"
 bucket_name = "botwow-binaries"
 
-[[domains]]
-domain = "api.bot-wow.com"
+# FIX 2026-10-23 : l'ancienne declaration `domains` (double crochet, cle
+# "domains") n'etait PAS reconnue par Wrangler — chaque commande emettait
+# « Unexpected fields found in top-level field: domains ». La forme DOCUMENTEE
+# pour exposer un Worker sur un domaine personnalise est `[[routes]]` +
+# `custom_domain = true`. Le domaine cible est inchange : api.bot-wow.com
+# continue de pointer vers ce script.
+[[routes]]
+pattern = "api.bot-wow.com"
+custom_domain = true
+
 
 [vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "production"
+# Valeur de production observee (placeholder non configure) : elle est
+# reproduite a l'identique pour ne pas modifier le comportement du profil.
+
+# Nom de l'objet R2 livre au client (le build produit
+# casinobabe-fishing-<version>.zip ; le Worker essaie aussi ce nom et
+# l'ancien "Casinobabe-v1.0.38.zip" par repli).
+R2_OBJECT_KEY = "casinobabe-fishing-1.2.0.zip"
+# Expediteur des e-mails de livraison (la cle d'envoi est un SECRET).
+MAIL_FROM = "BOT-WOW <licences@bot-wow.com>"
+
+# ---------------------------------------------------------------------------
+# SECRETS deja configures en production (conserver, ne jamais reprint) :
+#   ADMIN_EMAIL, ADMIN_JWT_SECRET, ADMIN_PASSWORD_HASH, CONTACT_EMAIL,
+#   EXPORT_TOKEN, LICENSE_SECRET
+# A POSER (absents = le checkout et la livraison e-mail echouent) :
+#   MOLLIE_API_KEY        cle API Mollie (mode test ou live selon le compte)
+#   MOLLIE_WEBHOOK_SECRET secret de signature des webhooks (optionnel :
+#                         le webhook verifie l'etat du paiement via l'API)
+#   RESEND_API_KEY        envoi des e-mails de livraison
+#   MOLLIE_PROFILE_ID    (actuellement un placeholder : a configurer chez
+#                         Mollie puis a remplacer ici)
+# ---------------------------------------------------------------------------

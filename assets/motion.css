@@ -1,0 +1,168 @@
+/* ==========================================================================
+   BOT-WOW — motion.css (V9)
+   --------------------------------------------------------------------------
+   Systeme de mouvement. Regles appliquees :
+   - courbes d'easing explicites (jamais `ease` par defaut, jamais `ease-in`
+     sur une interaction UI) ;
+   - durees bornees : < 300ms pour une interaction, 400-600ms pour une
+     entree editoriale ;
+   - proprietes de transition explicites (jamais `transition: all`) ;
+   - uniquement des proprietes composites (transform / opacity) pour le
+     mouvement : pas de layout ni de paint au fil des frames ;
+   - feedback de press sur les elements actionnables ;
+   - `prefers-reduced-motion` neutralise tout.
+   ========================================================================== */
+
+:root{
+  /* courbes — jamais `ease` seul */
+  --ease-out:cubic-bezier(0.23, 1, 0.32, 1);       /* entree UI, exit */
+  --ease-in-out:cubic-bezier(0.77, 0, 0.175, 1);   /* deplacement a l'ecran */
+  --ease-drawer:cubic-bezier(0.32, 0.72, 0, 1);    /* tiroir / panneau */
+
+  /* durees */
+  --dur-press:120ms;
+  --dur-ui:180ms;
+  --dur-enter:520ms;
+
+  /* proprietes transitees — liste explicite partagee */
+  --prop-ui:color, background-color, border-color, box-shadow, opacity, transform;
+}
+
+/* ---------------------------------------------------- feedback de press
+   120ms, scale 0.97 : le bouton confirme avoir entendu le clic. */
+.btn,.nav-links a,.dl-card a,.mbar a,.formula .btn{
+  transition-property:color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration:var(--dur-ui);
+  transition-timing-function:var(--ease-out);
+}
+.btn:active{transform:scale(0.975)}
+.btn-gold:active{transform:scale(0.975)}
+.btn:focus-visible{transition-duration:var(--dur-press)}
+
+/* ---------------------------------------------------- hover : sobre
+   Le survol est une action repetee des dizaines de fois par jour : on
+   limite a un changement de teinte + une legere montee, pas de halo. */
+.btn:hover{transform:translateY(-2px)}
+.btn:hover::before{opacity:1;transition:opacity var(--dur-ui) var(--ease-out)}
+
+/* ---------------------------------------------------- focus visible
+   Anneau net, decale pour ne pas toucher le texte. */
+.btn:focus-visible,
+.nav-links a:focus-visible,
+.dl-card a:focus-visible,
+a:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+/* ---------------------------------------------------- revelation au scroll
+   `.js` est ajoute par app.js : sans JavaScript, rien n'est masque
+   (la page reste 100% lisible). Le decalage progressif est porte par
+   `--reveal-i`, calcule par l'observer. */
+.js [data-reveal],
+.js .reveal{
+  opacity:0;
+  transform:translateY(16px);
+  transition-property:opacity, transform;
+  transition-duration:var(--dur-enter);
+  transition-timing-function:var(--ease-out);
+  transition-delay:calc(var(--reveal-i, 0) * 60ms);
+  will-change:opacity, transform;
+}
+.js [data-reveal].is-in,
+.js .reveal.is-in{
+  opacity:1;
+  transform:none;
+  will-change:auto;
+}
+
+/* ---------------------------------------------------- entree du hero
+   Orchestree : le badge, le titre, le sous-titre, les benefices, les CTA
+   puis le visuel. Un seul mouvement, une seule direction, un seul rythme. */
+.js .hero .badge,
+.js .hero h1,
+.js .hero .lead,
+.js .hero .benefits,
+.js .hero .hero-cta,
+.js .hero .visual,
+.js .hero .radar-panel{
+  opacity:0;
+  animation:hero-in var(--dur-enter) var(--ease-out) forwards;
+}
+.js .hero .badge{animation-delay:40ms}
+.js .hero h1{animation-delay:110ms}
+.js .hero .lead{animation-delay:180ms}
+.js .hero .benefits{animation-delay:250ms}
+.js .hero .hero-cta{animation-delay:320ms}
+.js .hero .visual{animation-delay:260ms}
+.js .hero .radar-panel{animation-delay:340ms}
+@keyframes hero-in{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:none}
+}
+
+/* ---------------------------------------------------- etats de survol
+   des elements non actionnables (cartes) : transformation + bordure,
+   proprietes composites uniquement. */
+.metric-card,
+.step,
+.formula,
+.dl-card,
+.vs-card,
+.ledger-row,
+.modrow,
+.price-card{
+  transition-property:border-color, background-color, box-shadow, transform;
+  transition-duration:var(--dur-ui);
+  transition-timing-function:var(--ease-out);
+}
+.metric-card:hover,
+.step:hover,
+.formula:hover,
+.dl-card:hover,
+.vs-card:hover,
+.ledger-row:hover,
+.modrow:hover{
+  transform:translateY(-3px);
+}
+
+/* ---------------------------------------------------- barre de progression
+   Le module ledger represente une progression reelle : l'echantillon
+   (`p-dev`, `p-shipped`...) est anime a l'arrivee dans le viewport. */
+.ledger-bar > span{transition:width 700ms var(--ease-out)}
+
+/* ---------------------------------------------------- accordéon (.qa)
+   Ouverture : la flèche tourne, le contenu se deploye. */
+.qa summary::after{
+  transition:transform 200ms var(--ease-out), color 200ms var(--ease-out);
+}
+.qa[open] summary::after{transform:rotate(45deg)}
+
+/* ---------------------------------------------------- reduced motion
+   Tout le mouvement est neutralise : ni revelation, ni hero, ni survol. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+    transition-property:none !important;
+    scroll-behavior:auto !important;
+  }
+  .js [data-reveal],
+  .js .reveal,
+  .js .hero .badge,
+  .js .hero h1,
+  .js .hero .lead,
+  .js .hero .benefits,
+  .js .hero .hero-cta,
+  .js .hero .visual,
+  .js .hero .radar-panel{
+    opacity:1 !important;
+    transform:none !important;
+  }
+  .btn:active{transform:none}
+  .metric-card:hover,.step:hover,.formula:hover,.dl-card:hover,.vs-card:hover,.ledger-row:hover,.modrow:hover{
+    transform:none;
+  }
+}

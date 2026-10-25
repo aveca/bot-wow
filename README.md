@@ -1,61 +1,150 @@
-# Bot-Wow — MVP
+# BOT-WOW — Site compagnon de l'addon Casinobabe (WoW Classic)
 
-Site compagnon de l'addon **Bot-Wow**.
+Site compagnon du bot de pêche **Casinobabe** pour WoW Classic (serveurs 1.13 et privés inclus).
+Vente d'une licence à vie (20 €), démo navigateur (carte simulée), registre honnête des modules.
 
-## Architecture actuelle
+## État actuel
 
-Le projet est volontairement **100 % GitHub pour le MVP** :
+- **Version :** V13.1 (héros editorial bold, variant C, EN + FR cohérents)
+- **Commit de référence :** `8dbf98f` — Factory V3 : documentation persistante + héros FR mis à jour
+- **Production :** https://bot-wow.com/ (Cloudflare Pages) + https://aveca.github.io/bot-wow/ (GitHub Pages)
+- **Dernière livraison vérifiée :** tests complets passés, aucun débordement, CTA visible sur tous les viewports
 
-- frontend statique dans ce dépôt ;
-- GitHub Pages pour l'hébergement ;
-- GitHub Actions pour le déploiement automatique ;
-- aucune dépendance FTP ;
-- aucun hébergement Namecheap ;
-- aucun domaine personnalisé requis ;
-- aucun backend ou secret serveur dans le MVP.
+## Architecture
 
-**URL MVP :** https://aveca.github.io/bot-wow/
+Le site est **100 % statique** :
+
+- Frontend statique dans ce dépôt (`index.html`, `demo.html`, `compare.html`, `modules.html`, `features.html`, `fishing.html`, `getting-started.html`, `compatibility.html`, `roadmap.html`, `faq.html`, `success.html`, `cancel.html`, `fr/` pour la traduction française, `docs/` pour les guides)
+- GitHub Pages et Cloudflare Pages pour l'hébergement (deux cibles, mêmes contenus)
+- GitHub Actions pour le déploiement automatique sur push `main`
+- Aucun secret dans le frontend
+- `/worker/*`, `package.json`, `package-lock.json` protégés (404 via `_redirects`)
+
+### Pages
+
+| Page | Rôle |
+|------|------|
+| `index.html` | Accueil : héros, démo du produit, parcours, télémétrie, étapes, registre, comparaison, tarifs, docs, CTA final |
+| `demo.html` | Démo navigateur : carte simulée, planificateur de rondes |
+| `compare.html` | Comparaison honnête BOT-WOW vs. bots tout-en-un |
+| `modules.html` | Registre des modules : statuts (livré / en développement / planifié) |
+| `features.html` | Fonctionnalités détaillées |
+| `fishing.html` | Page dédiée pêche |
+| `getting-started.html` | Guide de démarrage |
+| `compatibility.html` | Matrice de compatibilité |
+| `roadmap.html` | Feuille de route |
+| `faq.html` | FAQ produit |
+| `success.html` / `cancel.html` | Résultats de paiement |
+| `docs/` | Guide d'installation, notes de version, problèmes connus, récupération de licence |
+| `legal/` | Conditions, confidentialité, remboursements |
+
+### Parcours critiques
+
+1. Héros CTA → Démo navigateur
+2. Héros CTA → Offre (tarifs)
+3. Formulaire de paiement → Mollie checkout → Webhook → Livraison de licence
+4. Registre des modules → Statuts honnêtes
+5. Démo navigateur → Planificateur de rondes (carte simulée)
 
 ## Déploiement
 
-Chaque push sur `main` déclenche `.github/workflows/pages.yml`.
+### GitHub Pages (production automatique)
 
-GitHub → **Settings → Pages → Source: GitHub Actions**.
+Chaque push sur `main` déclenche `.github/workflows/pages.yml` :
 
-## Produit
+1. `npm run validate` — validation du projet statique
+2. `node scripts/build-site.mjs _site` — construction de l'artefact statique
+3. `actions/upload-pages-artifact` + `actions/deploy-pages` — déploiement
 
-Le site présente :
+### Cloudflare Pages (manuel, wrangler)
 
-- accueil / positionnement Bot-Wow ;
-- parcours `RECEIVE → INVITE → LAUNCH → PLAY` ;
-- lobby et gestion des joueurs ;
-- sessions et rand ;
-- annonces / emotes / showtime ;
-- gestion explicite des `ACTION_REQUIRED` ;
-- playground interactif ;
-- FAQ produit.
+```bash
+node scripts/build-site.mjs _site
+wrangler pages deploy _site --project-name=bot-wow --branch=main
+```
 
-## Règle fondamentale
+Le projet Cloudflare Pages `bot-wow` sert le domaine `bot-wow.com`.
 
-Une action dépendant réellement du client WoW ne doit jamais être affichée comme réussie sans confirmation réelle.
+## Tests et validation
 
-État attendu :
+```bash
+npm run validate                    # Validation : fichiers, refs, secrets, syntaxe JS, démo, migrations
+npm test                           # Tous les tests : parité JS/Python, distribution, paiement, sécurité, artefact, liens, conversion, télémétrie, migrations
+node scripts/build-site.mjs _site  # Construction de l'artefact statique
+node scripts/serve.mjs 8099 _site  # Serveur local de test
+node scripts/audit-viewports.mjs <url> <label>   # Audit Chrome CDP (4 viewports, pas de débordement, CTA visible, erreurs console)
+```
 
-`ACTION_REQUIRED` → le site indique l'action à effectuer → le joueur agit dans WoW → un événement réel confirme → le parcours reprend.
+### Critères de qualité (garantis)
 
-## Backend et paiement — plus tard
+- `npm run validate` et `npm test` passent
+- Aucun débordement horizontal sur aucun viewport
+- Aucune erreur console
+- CTA principal visible au-dessus de la ligne de flottaison (mobile et desktop)
+- Exactement un `<h1>` par page
+- Contenu visible avec `prefers-reduced-motion`
+- Aucun secret dans les artefacts publiés
+- Budget gzip : ≤ 210 Ko pour les assets de code (actuel ≈ 67 Ko)
+- Protection de `/worker/*`, `package.json`, `package-lock.json` (404)
+- Télémétrie first-party uniquement, jamais de clic compté comme conversion
 
-Ils sont volontairement hors périmètre du MVP.
+## Design system et règles d'animation
 
-La future architecture pourra ajouter une API séparée pour :
+### Tokens
+Définis dans `assets/style.css` et `assets/site.css` :
+- `--bg`, `--txt`, `--mut`, `--mut2` — couleurs
+- `--gold` (#c9a227), `--cyan` (#5fb4d8), `--green` (#7bd88f) — couleurs d'accent
+- `--mono` — JetBrains Mono
 
-- comptes / sessions ;
-- persistance ;
-- intégration addon ;
-- Mollie et webhooks.
+### Héros (variant C — actif)
+Structure : `section.hero.variant-c` avec `.hero__wrapper` contenant badge, titre en 3 mots, lead, CTA, prix, garantie, séparateur, preuves.
 
-Aucune clé Mollie, credential, mot de passe ou secret ne doit être placé dans GitHub Pages.
+### Règles d'animation
+- Propriétés composites uniquement (transform, opacity)
+- Aucun `transition: all`
+- Respect de `prefers-reduced-motion`
+- Aucun mouvement gratuit
+- Aucune dépendance redondante
 
-## Prochaine étape
+## Sécurité
 
-Valider le parcours visuel sur GitHub Pages, puis développer l'intégration réelle de l'addon sans casser le frontend statique.
+- Aucune clé Mollie, credential, mot de passe ou secret dans le frontend
+- Validation côté serveur des champs et tailles
+- Protection anti-spam / abus (rate limiting)
+- Dégradation gracieuse (pas de stockage en mémoire non borné)
+- Les clics ne sont jamais comptés comme conversions (télémétrie = intention uniquement)
+
+## Contraintes SEO et accessibilité
+
+- URLs canoniques, hreflang (en/fr)
+- Meta descriptions, Open Graph
+- Sitemap.xml
+- Un seul `<h1>` par page
+- Texte alternatif sur les images
+- ARIA sur les éléments interactifs
+- Navigation clavier supportée
+
+## Contribuer (Factory V3)
+
+Ce dépôt suit le système **Factory V3** d'amélioration continue (voir `FACTORY.md`) :
+
+1. **Auditer** le code existant et les retours de production
+2. **Identifier** les problèmes réels et opportunités d'amélioration
+3. **Classer** par impact sur l'expérience utilisateur, la conversion, la qualité visuelle, les fonctionnalités, la performance
+4. **Modifier** directement le code existant (pas de refonte depuis zéro)
+5. **Construire et tester** : `npm run validate`, `npm test`
+6. **Vérifier** dans un vrai navigateur (Chrome CDP, mobile + desktop)
+7. **Corriger** les défauts, recommencer les tests
+8. **Intégrer**, mettre à jour `FACTORY.md`, préparer la prochaine amélioration
+
+### Règles
+
+- Aucune refonte successive pour produire V14, V15, V16… — chaque intervention améliore le même produit
+- Aucun changement décoratif sans valeur démontrable
+- Si un test échoue, corriger avant publication
+- Si la production est dégradée, appliquer la procédure de retour arrière
+- Publier uniquement si les garanties de qualité sont respectées
+
+### État de la dernière livraison (voir FACTORY.md)
+
+Voir `FACTORY.md` pour : contrat fonctionnel, design system, composants, règles d'animation, contraintes, commandes, critères de qualité, problèmes connus, backlog priorisé, et état de la dernière livraison vérifiée.

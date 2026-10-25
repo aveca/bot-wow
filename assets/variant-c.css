@@ -1,0 +1,266 @@
+/* ============================================================ VARIANT C — EDITORIAL BOLD
+   Typographie expressive, composition magazine, aucune 3D.
+   Le hero est une affiche : le titre domine, la démo est une vignette
+   placée dans le contenu, pas au centre. Le prix est visible immédiatement.
+
+   CORRECTION 2026-10-23 — SELECTEURS MORTS. Le markup pose les DEUX classes
+   sur le MÊME élément : `<section class="hero variant-c">`. Les règles
+   ci-dessous étaient écrites `.variant-c .hero` (DESCENDANT) : elles
+   n'ont JAMAIS matché. Mesuré au navigateur sur la page publiée : avec
+   `.variant-c .hero` pour seule feuille de style active, le hero gardait
+   padding 0 / 0 et min-height 0. Conséquence réelle : `min-height:100vh`,
+   le centrage grid, `text-align:center` et les filets dorés (::before /
+   ::after) étaient inertes, et le hero était mis en page par les règles
+   de l'ANCIEN hero (hero.css / premium.css, pensées pour `.hero-copy` et
+   `.hero-grid`). Le hero mesurait 1614 px de haut et son propre CTA
+   tombait SOUS la ligne de flottaison en desktop (911 px > 900 px) —
+   l'inverse de l'objectif V13. Tout devient donc `.hero.variant-c`
+   (le même élément), ce qui match réellement. */
+
+/* ---------- Composition : colonne centrée, texte prend toute la largeur ---------- */
+.hero.variant-c {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  /* Rythme resseré : le contenu du hero (badge, titre, chapo, CTA, prix,
+     garantie) doit tenir dans le premier écran. Les valeurs héritées de
+     l'ancien hero (100 px / 120 px) poussaient le CTA sous la ligne de
+     flottaison. */
+  padding: clamp(56px, 7vw, 96px) 20px clamp(60px, 9vw, 110px);
+  background:
+    linear-gradient(180deg, #05070c 0%, #080a10 40%, #05070c 100%);
+}
+
+.hero.variant-c::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(201,162,39,0.3) 50%, transparent 100%);
+}
+
+.hero.variant-c::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, transparent 0%, #05070c 100%);
+  pointer-events: none;
+}
+
+.variant-c .hero__wrapper {
+  max-width: 800px;
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Un SEUL espacement vertical dans le hero : le gap. Chaque enfant
+     portait en plus sa propre marge (h1 24 px, chapo 32 px, CTA 16 px,
+     prix 40 + 40, filet 48, preuves 48) : l'espacement s'additionnait et
+     le hero atteignait 1614 px. Le gap porte maintenant tout le rythme,
+     avec une échelle responsive. */
+  gap: clamp(16px, 2.2vw, 26px);
+  z-index: 10;
+}
+
+/* Les enfants du hero n'ont plus de marge propre : le gap du wrapper
+   suffit. Une marge résiduelle recréerait exactement le gonflement
+   mesuré (346 px entre le bas du titre et le CTA en desktop). */
+.hero.variant-c .hero__title,
+.hero.variant-c .hero__lead,
+.hero.variant-c .hero__cta,
+.hero.variant-c .hero__guarantee,
+.hero.variant-c .hero__divider,
+.hero.variant-c .hero__proof { margin: 0; }
+
+.variant-c .hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: 100px;
+  background: rgba(201,162,39,0.1);
+  border: 1px solid rgba(201,162,39,0.2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c9a227;
+}
+
+.variant-c .hero__badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c9a227;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.variant-c .hero__title {
+  /* 96 px écrasait la composition : trois lignes de 96 px laissent le chapo et
+     les CTA sous la ligne de flottaison (mesuré à 1440x900). Une taille
+     d'affichage se juge sur ce qu'elle laisse voir, pas sur ce qu'elle prend.
+     76 px garde l'autorité et rend le chapo + les deux CTA visibles. */
+  font-size: clamp(38px, 5.9vw, 76px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
+
+.variant-c .hero__title .word { display: block; }
+
+.variant-c .hero__title .word--1 { color: var(--txt); }
+.variant-c .hero__title .word--2 { color: #c9a227; }
+.variant-c .hero__title .word--3 { color: #5fb4d8; }
+
+.variant-c .hero__lead {
+  /* 28 px pour un chapo, c'était une taille de titre : 5 lignes, 210 px de
+     haut, qui poussaient le CTA hors de l'écran. Un chapo se lit à 19 px. */
+  font-size: clamp(16px, 1.55vw, 19px);
+  line-height: 1.6;
+  color: var(--mut);
+  max-width: 62ch;
+  margin: 0;
+  font-weight: 400;
+}
+
+.variant-c .hero__cta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.variant-c .hero__cta .btn {
+  padding: 18px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 220px;
+  border-radius: 100px;
+}
+
+.variant-c .hero__price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  /* La marge est supprimée (le gap du wrapper la remplace) mais le filet
+     garde un peu d'air au-dessus : 80 px d'espace mort (40 + 40) avant. */
+  margin-top: 0;
+  padding-top: clamp(20px, 3vw, 32px);
+  border-top: 1px solid rgba(201,162,39,0.15);
+}
+
+.variant-c .hero__price-value {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900;
+  font-family: var(--mono);
+  color: #c9a227;
+  letter-spacing: -0.02em;
+}
+
+.variant-c .hero__price-label {
+  color: var(--mut);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.variant-c .hero__guarantee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 32px;
+  background: rgba(201,162,39,0.06);
+  border: 1px solid rgba(201,162,39,0.12);
+  border-radius: 100px;
+}
+
+.variant-c .hero__guarantee-icon {
+  width: 20px;
+  height: 20px;
+  color: #7bd88f;
+}
+
+.variant-c .hero__guarantee-text {
+  font-size: 14px;
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.variant-c .hero__guarantee-text strong {
+  color: #7bd88f;
+}
+
+.variant-c .hero__divider {
+  width: 100%;
+  max-width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,162,39,0.3), transparent);
+  margin: 48px auto 0;
+}
+
+.variant-c .hero__proof {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+}
+
+.variant-c .proof-item {
+  text-align: center;
+  max-width: 180px;
+}
+
+.variant-c .proof-value {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+  font-family: var(--mono);
+  color: var(--txt);
+  line-height: 1;
+}
+
+.variant-c .proof-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut2);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .variant-c .hero__title { font-size: clamp(36px, 10vw, 64px); }
+  .variant-c .hero__lead { font-size: 17px; }
+  /* Les trois preuves passent sur UNE ligne : empilées avec 48 px d'écart
+     elles ajoutaient ~216 px de hauteur au hero sur mobile. */
+  .variant-c .hero__proof { gap: clamp(14px, 4vw, 28px); }
+  .variant-c .proof-item { max-width: 33%; }
+}
+
+@media (max-width: 480px) {
+  .hero.variant-c { padding: 44px 14px 56px; }
+}

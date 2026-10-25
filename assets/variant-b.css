@@ -1,0 +1,251 @@
+/* ============================================================ VARIANT B — 3D IMMERSIVE WORLD
+   Une scène 3D interactive temps réel. Le hero est une scène WebGL où le
+   bot de pêche évolue. Pas de décoration : tout a un rôle. */
+
+/* ---------- Mise en page : héros occupe toute la hauteur ---------- */
+.variant-b .hero {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+  padding: 60px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 20%, rgba(201,162,39,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(95,180,216,0.05) 0%, transparent 50%),
+    var(--bg);
+}
+
+/* ---------- CANVAS : occupe toute la hauteur du héros ---------- */
+.variant-b .hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  border-radius: 24px;
+  background: #05070c;
+}
+
+.variant-b .hero__canvas-wrapper {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #05070c;
+  border: 1px solid rgba(201,162,39,0.12);
+  box-shadow:
+    0 0 0 1px rgba(201,162,39,0.08),
+    0 60px 160px -50px rgba(0,0,0,0.9),
+    inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.variant-b .hero__canvas-wrapper canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.variant-b .hero__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5,7,12,0) 0%, rgba(5,7,12,0.3) 40%, rgba(5,7,12,0.9) 100%);
+  pointer-events: none;
+}
+
+.variant-b .hero__hud {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+.variant-b .hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.variant-b .hud-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #5fb4d8;
+  opacity: 0.7;
+}
+
+.variant-b .hud-title {
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--txt);
+  line-height: 1.2;
+}
+
+.variant-b .hud-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.variant-b .hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variant-b .hud-stat__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut2);
+}
+
+.variant-b .hud-stat__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.variant-b .hud-stat__value--gold { color: #c9a227; }
+.variant-b .hud-stat__value--cyan { color: #5fb4d8; }
+
+.variant-b .hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding-right: 40px;
+}
+
+.variant-b .hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(95,180,216,0.12);
+  border: 1px solid rgba(95,180,216,0.25);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5fb4d8;
+}
+
+.variant-b .hero__title {
+  font-size: clamp(36px, 4.5vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.variant-b .hero__lead {
+  font-size: clamp(17px, 1.9vw, 20px);
+  line-height: 1.65;
+  color: var(--mut);
+  max-width: 48ch;
+  margin: 0;
+}
+
+.variant-b .hero__cta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.variant-b .hero__cta .btn {
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 180px;
+}
+
+.variant-b .hero__price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(95,180,216,0.15);
+}
+
+.variant-b .hero__price-value {
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 800;
+  font-family: var(--mono);
+  color: #5fb4d8;
+}
+
+.variant-b .hero__price-label {
+  color: var(--mut);
+  font-size: 14px;
+}
+
+.variant-b .hero__features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.variant-b .feature {
+  padding: 20px;
+  background: rgba(201,162,39,0.05);
+  border: 1px solid rgba(201,162,39,0.1);
+  border-radius: 16px;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.variant-b .feature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -20px rgba(201,162,39,0.3);
+  border-color: rgba(201,162,39,0.3);
+}
+
+.variant-b .feature-icon {
+  width: 40px;
+  height: 40px;
+  color: #c9a227;
+  margin-bottom: 12px;
+}
+
+.variant-b .feature-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 8px 0 6px;
+  color: var(--txt);
+}
+
+.variant-b .feature-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+
+@media (max-width: 1024px) {
+  .variant-b .hero__content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .variant-b .hero__features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .variant-b .hero__features {
+    grid-template-columns: 1fr;
+  }
+}

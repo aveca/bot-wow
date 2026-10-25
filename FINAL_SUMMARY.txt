@@ -1,0 +1,31 @@
+BOT-WOW P0 FINAL — Résumé exécutif
+
+COMMIT AUDITÉ : 0e53b1b (sur main, ahead de 1 par rapport à origin/main)
+STATUT : PRÊT POUR AUTORISATION (non pushé, non déployé)
+
+VALIDATIONS :
+- npm run validate → PASS
+- npm test → exit 0 (10 suites)
+- Audit viewport 4 viewports → CTA dans écran (741px vs 911px avant)
+- Stamp déterministe (plus de date)
+- SEO noindex/sitemap/canonical
+
+DÉFAUTS CORRIGÉS :
+1. Paiement honnête : Mollie LIVE + support réel
+2. Hero V13 dans l'écran : sélecteur variant-c corrigé, hauteur 1193px
+3. Stamp déterministe : date retirée
+4. SEO : noindex sur pages paiement, sitemap propre, canonical 404 retiré
+5. FAQ + app.js : messages EN/FR cohérents
+
+RESTANT (actions admin hors dépôt) :
+- git push origin main → GitHub Pages
+- wrangler deploy → Worker Cloudflare
+- wrangler secret put (4 secrets)
+- D1 migrations (3, idempotentes)
+- R2 paquet build+upload
+- Webhook Mollie déclaration
+- Paiement test mode Mollie
+
+INTERDICTIONS RESPECTÉES : aucun push, aucun deploy, aucun secret modifié, aucun paiement réel, aucun autre repo touché.
+
+RAPPORT COMPLET : PRE_DEPLOYMENT_REPORT.md (nouveau fichier, non suivi par git)

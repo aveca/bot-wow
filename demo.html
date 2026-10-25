@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Explore BOT-WOW’s route planner on a simulated fishing map. Positions are synthetic; automatic in-game movement is not demonstrated.">
+<meta name="theme-color" content="#08080d">
+<title>BOT-WOW — Interactive route planner demo</title>
+<link rel="canonical" href="https://bot-wow.com/demo.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/demo.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/demo.html">
+<link rel="icon" href="./assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="./assets/style.css?v=9ce18c2d">
+<link rel="stylesheet" href="./assets/demo.css?v=9ce18c2d">
+
+</head>
+<body>
+<nav aria-label="Main navigation">
+  <div class="w">
+    <a class="logo" href="./" aria-label="BOT-WOW home">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      BOT-WOW
+    </a>
+    <div class="nav-links">
+      <a href="./modules.html">Modules</a>
+      <a href="./compare.html">Versus</a>
+      <a href="./demo.html" aria-current="page">Demo</a>
+      <a href="./features.html">Features</a>
+      <a href="./faq.html">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="langs"><a class="on" href="./demo.html" lang="en" aria-current="page">EN</a><a href="./fr/demo.html" lang="fr">FR</a></div>
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="nav-buy">Buy — €20.00</a>
+    </div>
+  </div>
+</nav>
+
+<main class="demo-wrap">
+  <a class="backlink" href="./">← Back to home</a>
+  <section class="demo-intro" aria-labelledby="demo-title">
+    <p class="demo-kicker">ROUTE PLANNER · INTERACTIVE DEMO</p>
+    <h1 class="demo-title" id="demo-title">Explore the route planner.</h1>
+    <p class="demo-lead">Adjust the risk preference and number of fishing spots; the proposed round and its estimates recalculate immediately. Inspect the planning logic before you buy.</p>
+  </section>
+  <aside class="sim-banner" role="note" aria-label="Demo limitations">
+    <svg class="sim-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.8l7.2 13.4H2.8L10 2.8z"/><path d="M10 7.6v3.8"/><path d="M10 13.8h.01"/></svg>
+    <div><strong>SIMULATED DATA · NO LIVE GAMEPLAY</strong><p>Spot positions and catch rates are synthetic. This demo shows route computation, not a live WoW session: it does not control the game client or demonstrate automatic movement between spots, which is still under in-game validation.</p></div>
+  </aside>
+  <div class="grid-demo">
+    <div class="panel panel--map" aria-labelledby="map-title">
+        <h2 id="map-title">Oasis map</h2>
+        <p class="sub">Simulated spots, risk levels and the computed round.</p>
+        <svg id="oasis" viewBox="-60 -60 120 120" role="img" aria-label="Interactive simulated fishing oasis map"></svg>
+      <div class="legend">
+        <span><i class="legend-dot legend-dot--safe"></i>High-reliability spot</span>
+        <span><i class="legend-dot legend-dot--medium"></i>Medium spot</span>
+        <span><i class="legend-dot legend-dot--risk"></i>Risky spot (mobs / low yield)</span>
+        <span><i class="legend-dot legend-dot--mob"></i>Mob spotted</span>
+        <span><i class="legend-dot legend-dot--route"></i>Computed round</span>
+      </div>
+    </div>
+
+    <div class="demo-side">
+      <div class="panel panel--controls">
+        <h2>Round settings</h2>
+        <p class="sub">Change a value and the planner recomputes the proposal.</p>
+        <div class="controls">
+          <div class="ctl"><label for="mode">Mode</label>
+            <select id="mode">
+              <option value="prudent">Cautious</option>
+              <option value="equilibre" selected>Balanced</option>
+              <option value="exploration">Exploration</option>
+            </select>
+          </div>
+          <div class="ctl"><label for="maxspots">Max spots</label>
+            <input type="range" id="maxspots" min="1" max="6" value="6">
+            <output id="maxspotsv" for="maxspots">6</output>
+          </div>
+        </div>
+        <table class="metrics" aria-label="Estimates computed from simulated data">
+          <caption class="demo-sr-only">Estimates computed from simulated data</caption>
+          <tbody aria-live="polite">
+            <tr><th scope="row">Spots in the round</th><td id="m-spots">–</td></tr>
+            <tr><th scope="row">Estimated travel time</th><td id="m-travel">–</td></tr>
+            <tr><th scope="row">Estimated fishing time</th><td id="m-fish">–</td></tr>
+            <tr><th scope="row">Expected catches (estimate)</th><td id="m-exp">–</td></tr>
+            <tr><th scope="row">Expected yield</th><td id="m-h">–</td></tr>
+            <tr><th scope="row">Unmeasured legs</th><td id="m-unv">–</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Expected catches are estimates from simulated history, not in-game measurements. Unmeasured legs remain flagged and are only proposed in exploration mode.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Round timeline</h2>
+        <p class="sub">Proposed order and estimated risk for each leg.</p>
+        <ol class="steps" id="steps" aria-label="Fishing round computed from simulated data"></ol>
+      </div>
+
+      <div class="panel">
+        <h2>Selected spot</h2>
+        <p class="sub">Select a spot on the map to inspect its data.</p>
+        <div id="spotPanel"><p class="dim">Click a spot on the map to see its characteristics (simulated data).</p></div>
+      </div>
+
+      <div class="panel">
+        <h2>Why this round?</h2>
+        <p class="sub">Factors that influence the planner’s choice.</p>
+        <div id="explain"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sortie du parcours : la demo est une etape, pas une fin. -->
+  <section class="demo-close" aria-labelledby="demo-close-title">
+    <div>
+      <p class="demo-kicker">NEXT STEP</p>
+      <h2 id="demo-close-title">Verify exactly what is included.</h2>
+      <p class="dc-sub">The module ledger separates shipped, in-development and planned features. Automatic movement between spots remains under in-game validation.</p>
+    </div>
+    <div class="demo-close-cta">
+      <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Get the lifetime licence — €20</a>
+      <a class="btn btn-ghost" href="./modules.html" data-track="cta_click" data-cta-id="demo-modules">View module status</a>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="./assets/demo.js?v=9ce18c2d"></script>
+<aside class="demo-mobile-offer" aria-label="BOT-WOW purchase option">
+  <div class="demo-mobile-offer__price"><strong>€20.00</strong><span>One-time · lifetime licence</span></div>
+  <a class="btn btn-gold" href="./#buy" data-track="cta_click" data-cta-id="demo-offer">Buy licence</a>
+</aside>
+</body>
+</html>

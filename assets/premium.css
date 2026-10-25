@@ -1,0 +1,1065 @@
+﻿/* ==========================================================================
+   BOT-WOW — premium.css (V9)
+   --------------------------------------------------------------------------
+   Couche de finition : profondeur des surfaces, etats de navigation,
+   feedback des CTA, cadrage technique du visuel, mouvement du radar.
+   Regles : aucun halo permanent, aucune animation gratuite, uniquement
+   des proprietes composites (transform / opacity) et des transitions
+   courtes. `prefers-reduced-motion` neutralise l'ensemble.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- SELECTION */
+::selection{background:rgba(201,162,39,.30);color:#fff}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--bg-deep)}
+::-webkit-scrollbar-thumb{background:#232936;border-radius:99px;border:3px solid var(--bg-deep)}
+::-webkit-scrollbar-thumb:hover{background:#2f3746}
+
+/* ---------------------------------------------------------------- NAVIGATION
+   La nav devient plus dense et plus nette des que la page defile :
+   le fond passe de translucide a opaque, la bordure gagne un liseré or
+   et la typo se resserre. Un seul etat, un seul seuil. */
+.nav-links{position:relative}
+.nav-links a{position:relative;transition:color 180ms var(--ease-out)}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:0;bottom:-7px;height:1px;
+  background:linear-gradient(90deg,var(--gold),var(--gold-line));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform 240ms var(--ease-out);
+}
+.nav-links a:hover::after,
+.nav-links a[aria-current="page"]::after{transform:scaleX(1)}
+.nav-links a[aria-current="page"]{color:var(--txt)}
+
+nav.is-scrolled{
+  background:rgba(6,7,11,.94);
+  border-bottom-color:rgba(201,162,39,.22);
+  box-shadow:0 12px 40px rgba(0,0,0,.55);
+}
+nav .nav-links{transition:gap 240ms var(--ease-out)}
+.logo-mark{transition:transform 240ms var(--ease-out)}
+
+/* ---------------------------------------------------------------- SURFACES
+   Lumiere interieure d'un pixel sur le bord haut : c'est ce qui donne
+   l'impression d'un materiau, pas d'un rectangle plat. */
+.metric-card,
+.step,
+.formula,
+.dl-card,
+.vs-card,
+.ledger-row,
+.modrow,
+.price-card,
+.radar-panel,
+.docstrip-alt > *{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 18px 44px rgba(0,0,0,.35);
+}
+.metric-card:hover,
+.step:hover,
+.formula:hover,
+.dl-card:hover,
+.vs-card:hover,
+.ledger-row:hover,
+.modrow:hover{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 28px 64px rgba(0,0,0,.55);
+}
+
+/* Le CTA or : un reflet qui balaie une seule fois, au survol. */
+.btn-gold{position:relative;overflow:hidden;isolation:isolate}
+.btn-gold::after{
+  content:"";position:absolute;top:-20%;bottom:-20%;left:-45%;width:38%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:translateX(-120%) skewX(-16deg);opacity:0;pointer-events:none;z-index:-1;
+}
+.btn-gold:hover::after{
+  opacity:1;transform:translateX(420%) skewX(-16deg);
+  transition:transform 760ms var(--ease-out),opacity 180ms var(--ease-out);
+}
+.btn-gold:active{transform:scale(.975)}
+
+/* Bouton discret : un liseré qui s'ouvre au survol. */
+.btn-ghost{position:relative;overflow:hidden}
+.btn-ghost::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  border:1px solid var(--cyan-line);opacity:0;transform:scale(.97);
+  transition:opacity 220ms var(--ease-out),transform 260ms var(--ease-out);pointer-events:none;
+}
+.btn-ghost:hover::after{opacity:1;transform:scale(1)}
+
+/* ---------------------------------------------------------------- VISUEL
+   Cadrage technique : deux angles metaliques aux coins de la capture
+   reelle. Pure CSS, aucun element ajoute au DOM. */
+.visual{position:relative}
+.visual::before,
+.visual::after{
+  content:"";position:absolute;width:24px;height:24px;pointer-events:none;
+  border-color:rgba(201,162,39,.55);
+}
+.visual::before{top:12px;left:12px;border-left:1px solid;border-top:1px solid}
+.visual::after{bottom:12px;right:12px;border-right:1px solid;border-bottom:1px solid}
+.visual img{filter:saturate(1.04) contrast(1.02)}
+.visual-caption{
+  background:linear-gradient(180deg,transparent 0%,rgba(6,7,11,.55) 42%,rgba(6,7,11,.96) 100%);
+}
+
+/* ---------------------------------------------------------------- RADAR
+   Le radar est un instrument : balayage continu + pulsation de la sonde.
+   Le balayage est un groupe SVG injecte par app.js (transform CSS, donc
+   compose, pas de repaint). */
+.radar-map{position:relative;overflow:hidden}
+.radar-map .sweep{
+  transform-origin:0 0;
+  animation:radar-sweep 6.4s linear infinite;
+}
+@keyframes radar-sweep{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+.radar-map .ping{
+  transform-origin:0 0;
+  animation:radar-ping 3.4s var(--ease-out) infinite;
+}
+@keyframes radar-ping{
+  0%{transform:scale(.6);opacity:.85}
+  70%{opacity:0}
+  100%{transform:scale(8.5);opacity:0}
+}
+/* Trajet de la ronde : pointilles qui defilent dans le sens de lecture. */
+.radar-map .route-path{
+  animation:route-flow 1.8s linear infinite;
+}
+@keyframes route-flow{to{stroke-dashoffset:-10}}
+
+/* Halo d'ecoute discret autour de la carte. */
+.radar-map::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,rgba(95,180,216,.07),transparent 62%);
+}
+
+/* ---------------------------------------------------------------- SPARKLINE
+   La courbe se trace a l'arrivee dans le viewport : le chiffre n'arrive
+   pas seul, il est suivi de sa courbe. */
+.metric-spark path{
+  stroke-dasharray:220;stroke-dashoffset:220;
+  transition:stroke-dashoffset 1100ms var(--ease-out);
+}
+.metric-card.is-in .metric-spark path{stroke-dashoffset:0}
+
+/* ---------------------------------------------------------------- FOOTER
+   Un liseré or tres fin qui marque la séparation, et des liens au
+   survol qui glissent legerement. */
+footer{border-top:1px solid var(--line);position:relative}
+footer::before{
+  content:"";position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  width:min(420px,60%);height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,162,39,.5),transparent);
+}
+footer li a{transition:color 180ms var(--ease-out),transform 180ms var(--ease-out)}
+footer li a:hover{transform:translateX(2px)}
+
+/* ---------------------------------------------------------------- VERDICT
+   La ligne de verdict gagne un marqueur qui s'aligne sur la couleur
+   de la valeur (victoire cyan / defaite rouge). */
+.verdict .v-row{position:relative}
+.verdict .v-val{position:relative;padding-left:16px}
+.verdict .v-val::before{
+  content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;background:currentColor;
+  box-shadow:0 0 10px currentColor;
+}
+
+/* ---------------------------------------------------------------- PRIX
+   Le montant est le point focal : un leger reflet, jamais un halo. */
+.amt b{
+  background:linear-gradient(180deg,#fff 0%,#e8ecf2 55%,#b9c2d0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.price-card .price-tag{transition:box-shadow 240ms var(--ease-out)}
+.price-card:hover .price-tag{box-shadow:0 0 22px rgba(201,162,39,.28)}
+
+/* ---------------------------------------------------------------- FORMULAIRE
+   Le champ se revele au focus : un liseré or + une legere montee. */
+.pm-input{
+  transition:border-color 200ms var(--ease-out),box-shadow 200ms var(--ease-out),background-color 200ms var(--ease-out);
+}
+.pm-input:focus{
+  border-color:var(--gold-line);
+  box-shadow:0 0 0 3px rgba(201,162,39,.12);
+}
+
+/* ---------------------------------------------------------------- ETIQUETTES
+   Pastille de statut : le point pulse tres lentement, assez pour
+   signifier "actif" sans jamais distraire. */
+.st i{animation:status-pulse 3.2s ease-in-out infinite}
+@keyframes status-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ---------------------------------------------------------------- REDUCED MOTION */
+@media (prefers-reduced-motion: reduce){
+  .radar-map .sweep,
+  .radar-map .ping,
+  .radar-map .route-path,
+  .st i{animation:none !important}
+  .radar-map .ping{opacity:.5}
+  .metric-spark path,.telemetry-spark path{stroke-dashoffset:0 !important;transition:none !important}
+  .btn-gold::after{opacity:0 !important;display:none}
+  .nav-links a::after{transition:none !important}
+  nav.is-scrolled{transition:none !important}
+}
+
+/* ============================================================ TELEMETRY
+   Les quatre mesures reelles, dans UN seul panneau d'instrument
+   (pas quatre cartes) : la credibilite tient dans une ligne, la
+   repetition disparait, et chaque valeur est suivie de sa courbe. */
+.telemetry{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--line);border-radius:20px;
+  background:var(--glass);backdrop-filter:blur(14px) saturate(115%);
+  overflow:hidden;position:relative;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 22px 60px rgba(0,0,0,.42);
+}
+.telemetry-item{padding:24px 24px 20px;position:relative;min-width:0}
+.telemetry-item + .telemetry-item::before{
+  content:"";position:absolute;left:0;top:16%;bottom:16%;width:1px;
+  background:linear-gradient(180deg,transparent,var(--line),transparent);
+}
+.telemetry-k{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.26em;
+  color:var(--mut2);text-transform:uppercase;margin-bottom:10px;
+}
+.telemetry-v{
+  display:block;font-family:var(--mono);font-weight:800;
+  font-size:clamp(28px,3.8vw,38px);line-height:1;letter-spacing:-.02em;color:var(--txt);
+}
+.telemetry-v small{font-size:14px;color:var(--mut2);font-weight:400;vertical-align:super}
+.telemetry-v.cy{color:var(--cyan)}
+.telemetry-v.am{color:var(--gold)}
+.telemetry-v.green{color:var(--green)}
+.telemetry-note{display:block;font-size:12px;color:var(--mut);margin-top:10px;line-height:1.45}
+.telemetry-spark{position:relative;height:34px;margin-top:12px}
+.telemetry-spark svg{width:100%;height:100%;display:block;overflow:visible}
+.telemetry-spark path{
+  stroke-dasharray:220;stroke-dashoffset:220;
+  transition:stroke-dashoffset 1200ms var(--ease-out);
+}
+.telemetry.is-in .telemetry-spark path{stroke-dashoffset:0}
+@media (max-width:900px){.telemetry{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.telemetry-item{padding:16px 14px 14px}.telemetry-v{font-size:24px}.telemetry-note{font-size:11px}.telemetry-spark{height:26px}}
+@media (max-width:900px){
+  .telemetry-item:nth-child(3)::before,.telemetry-item:nth-child(1)::before{content:none}
+  .telemetry-item:nth-child(2n+1)::before{
+    content:"";position:absolute;left:0;top:16%;bottom:16%;width:1px;
+    background:linear-gradient(180deg,transparent,var(--line),transparent);
+  }
+  .telemetry-item:nth-child(2n+1)::before{left:auto;right:0}
+}
+@media (max-width:560px){
+  .telemetry{grid-template-columns:repeat(2,1fr)}
+  .telemetry-item + .telemetry-item::before{
+    content:"";position:absolute;left:16%;right:16%;top:0;bottom:auto;width:auto;height:1px;
+    background:linear-gradient(90deg,transparent,var(--line),transparent);
+  }
+  .telemetry-item{padding:16px 14px 14px}
+}
+
+/* ============================================================ PLANNER MODES (hero)
+   L'aha moment : trois modes, un vrai recalcul de la ronde.
+   Boutons compacts, etat actif net, focus clavier visible. */
+.radar-modes{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:12px 18px;border-top:1px solid var(--line);background:rgba(6,7,11,.35);
+}
+.radar-modes-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--mut2);margin-right:4px;
+}
+.radar-modes button{
+  font-family:var(--sans);font-size:12.5px;font-weight:700;letter-spacing:.01em;
+  color:var(--mut);background:transparent;
+  border:1px solid var(--line);border-radius:999px;
+  padding:7px 14px;min-height:34px;cursor:pointer;
+  transition:color 160ms var(--ease-out),border-color 160ms var(--ease-out),
+             background-color 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+.radar-modes button:hover{color:var(--txt);border-color:var(--line-bright);transform:translateY(-1px)}
+.radar-modes button:active{transform:scale(.96)}
+.radar-modes button[aria-pressed="true"]{
+  color:var(--cyan);border-color:var(--cyan-line);background:var(--cyan-dim);
+}
+.radar-modes button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.radar-modes[hidden]{display:none}
+
+/* ============================================================ OWNERSHIP (compare)
+   Comparaison de cout de possession : chiffres publies, source et date
+   affichees, calcul transparent. */
+.ownership{
+  border:1px solid var(--gold-line);border-radius:24px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(201,162,39,.07) 0%,var(--glass) 55%);
+  backdrop-filter:blur(14px);position:relative;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 26px 70px rgba(0,0,0,.45);
+}
+.ownership-head{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding:22px 26px;border-bottom:1px solid var(--line);
+}
+.ownership-head h3{margin:0;font-size:17px}
+.ownership-src{font-family:var(--mono);font-size:11px;color:var(--mut2)}
+.ownership-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+@media (max-width:760px){.ownership-grid{grid-template-columns:1fr}}
+.ownership-cell{padding:24px 26px;border-right:1px solid var(--line);position:relative}
+.ownership-cell:last-child{border-right:none}
+@media (max-width:760px){
+  .ownership-cell{border-right:none;border-bottom:1px solid var(--line)}
+  .ownership-cell:last-child{border-bottom:none}
+}
+.ownership-cell .o-term{font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut2);display:block;margin-bottom:10px}
+.ownership-cell .o-price{font-family:var(--mono);font-weight:800;font-size:clamp(26px,3.6vw,34px);line-height:1;display:block;color:var(--txt)}
+.ownership-cell.ours .o-price{color:var(--gold)}
+.ownership-cell .o-note{display:block;font-size:12.5px;color:var(--mut);margin-top:10px;line-height:1.5}
+.ownership-cell .o-bar{height:6px;border-radius:3px;background:var(--bg-deep);margin-top:14px;overflow:hidden;border:1px solid var(--hairline)}
+.ownership-cell .o-bar > span{display:block;height:100%;border-radius:3px}
+.ownership-cell.ours .o-bar > span{background:linear-gradient(90deg,var(--gold),var(--gold-line))}
+.ownership-cell.them .o-bar > span{background:#7d92b4}
+.ownership-foot{
+  padding:14px 26px;border-top:1px solid var(--line);background:rgba(6,7,11,.35);
+  font-size:12px;color:var(--mut2);line-height:1.6;
+}
+
+/* Selecteur d horizon du cout de possession. */
+.own-switch{display:inline-flex;gap:6px;flex-wrap:wrap}
+.own-switch button{
+  font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--mut);
+  background:transparent;border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;min-height:34px;cursor:pointer;
+  transition:color 160ms var(--ease-out),border-color 160ms var(--ease-out),background-color 160ms var(--ease-out);
+}
+.own-switch button:hover{color:var(--txt);border-color:var(--line-bright)}
+.own-switch button[aria-pressed="true"]{color:var(--gold);border-color:var(--gold-line);background:var(--gold-dim)}
+.own-switch button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ============================================================ CTA ROW
+   Rangee de CTA apres une section : le point de decision le plus
+   visible de la page. Deux boutons max, le premier en or. */
+.cta-row{
+  display:flex;flex-wrap:wrap;gap:14px;justify-content:center;
+  margin-top:30px;
+}
+.cta-row .btn{min-width:210px}
+
+/* ============================================================ RADAR NEXT
+   Le radar interactif doit avoir une sortie : apres avoir manipule
+   les modes, l'utilisateur doit pouvoir voir la ronde en detail. */
+.radar-next{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:12px 18px;border-top:1px solid var(--line);background:rgba(6,7,11,.25);
+}
+.radar-next-t{font-size:12px;color:var(--mut2);line-height:1.4}
+.radar-next-link{
+  font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.04em;
+  color:var(--gold);text-decoration:none;white-space:nowrap;
+  transition:color 180ms var(--ease-out),transform 180ms var(--ease-out);
+}
+.radar-next-link:hover{color:var(--gold2,#e2c866);transform:translateX(2px)}
+.radar-next-link:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+@media (max-width:760px){
+  .cta-row{flex-direction:column;align-items:stretch}
+  .cta-row .btn{width:100%;min-width:0}
+  .radar-next{padding:12px 14px}
+  .radar-next-t{font-size:11.5px}
+}
+
+/* ============================================================ V10.1 — CONSOLE INSTRUMENT
+   La capture reelle et le radar forment UNE seule console (au lieu de deux
+   cartes empilees qui repoussaient le hero a 2014 px). La capture devient
+   un bandeau de contexte au-dessus de la carte. */
+.radar-panel .visual{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;border-bottom:1px solid var(--line);
+  background:rgba(6,7,11,.35);
+}
+.radar-panel .visual picture{
+  display:block;flex:none;width:132px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--line);
+}
+.radar-panel .visual img{
+  display:block;width:100%;height:auto;max-height:74px;object-fit:cover;
+  transition:none;
+}
+.radar-panel .visual-caption{
+  position:static;background:none;padding:0;display:flex;flex-direction:column;gap:4px;
+  min-width:0;
+}
+.radar-panel .visual-caption .v-k{font-size:9px}
+.radar-panel .visual-caption .v-v{font-size:11px;text-align:left}
+.radar-map{height:220px}
+
+/* ============================================================ V10.1 — ECHELLE TYPOGRAPHIQUE
+   h3 unifie : le saut h2 (44) -> h3 (17) etait trop large, et les
+   .step h3 / .dc-t restaient a 17 px par specificite. */
+h3,
+.step h3,
+.dl-card .dc-t,
+.formula .formula-name,
+.modrow h3{
+  font-size:19px;
+  line-height:1.3;
+  letter-spacing:-.01em;
+}
+@media (min-width:1024px){
+  h3,.step h3,.dl-card .dc-t,.formula .formula-name,.modrow h3{font-size:20px}
+}
+
+/* ============================================================ V10.1 — RAYONS UNIFIES
+   999 (pilule) / 14 (carte) / 10 (petit element) : trois valeurs, pas six. */
+:root{
+  --r-pill:999px;
+  --r-card:14px;
+  --r-sm:10px;
+}
+.metric-card,.step,.formula,.dl-card,.vs-card,.ledger-row,.modrow,.price-card,
+.radar-panel,.evidence-strip,.telemetry,.ownership,.cmptable{
+  border-radius:var(--r-card);
+}
+.price-includes li,.benefit,.docstrip-alt > *{border-radius:var(--r-sm)}
+.st,.v-badge,.ledger-tag,.formula-tag,.eyebrow,.badge,.price-tag,.live-pulse,
+.radar-modes button,.own-switch button,.own-switch button,.langs a{
+  border-radius:var(--r-pill);
+}
+
+/* ============================================================ V10.1 — PERFORMANCE
+   Les barres de progression animaient `width` (layout a chaque frame).
+   `transform: scaleX()` est compose : pas de layout thrash. */
+.ledger-bar{position:relative;overflow:hidden}
+.ledger-bar > span{
+  display:block;height:100%;width:100%;transform-origin:left center;
+  transform:scaleX(0);transition:transform 700ms var(--ease-out);
+}
+.ledger-row.is-in .ledger-bar > span{transform:scaleX(var(--p,1))}
+.ledger-bar{--p:1}
+@media (prefers-reduced-motion:reduce){
+  .ledger-bar > span{transition:none;transform:scaleX(var(--p,1))}
+}
+
+/* ============================================================ V10.1 — HERO DANS UN ECRAN
+   Le CTA principal doit etre visible sans defiler. On resserre le
+   rythme vertical du hero et le titre. */
+.hero{padding-top:clamp(64px,7vw,120px)}
+.hero-copy h1{font-size:clamp(38px,5.2vw,58px);line-height:1.04;margin-bottom:22px}
+.hero-copy .lead{margin-bottom:26px}
+.hero-copy .badge{margin-bottom:24px}
+.benefits{gap:12px;margin-bottom:26px}
+.hero-trust{gap:14px}
+
+/* ============================================================ V10.1 — BARRES DU LEDGER
+   Etat initial visible : la reduction d'echelle n'est appliquee que
+   lorsque le systeme de revelation est actif (classe `js`). Sans
+   JavaScript, ou en mouvement reduit, la barre reste lisible. */
+.ledger-bar > span{transform:scaleX(var(--p,1))}
+.js .ledger-row.reveal:not(.is-in) .ledger-bar > span{transform:scaleX(0)}
+.js .ledger-row.reveal:not(.is-in) .ledger-bar > span{transition:none}
+
+/* ============================================================ V10.1 — NAV BASSE
+   97 px de hauteur pour une barre de navigation : on resserre. */
+nav{padding-top:12px;padding-bottom:12px}
+@media (max-width:760px){nav{padding-top:10px;padding-bottom:10px}}
+
+/* ============================================================ V10.1 — MARGE DE SECURITE
+   Le CTA principal ne doit pas dependre de la hauteur exacte de police. */
+.hero{padding-top:clamp(56px,6vw,96px)}
+nav .btn{min-height:44px}
+
+/* ============================================================ V10.1 — SVG ICONES BORNEES
+   Un SVG inline depourvu d attribut width/height s etire a la largeur de
+   son conteneur : le titre du verdict occupait 906 px de haut (SVG 906 px).
+   On borne les icones placees dans le flux de texte. Les elements qui ont
+   deja leur propre taille (logo, cartes, map) sont prioritaires :
+   une regle de classe bat une regle d element. */
+h2 > svg, h3 > svg, p > svg, span > svg, a > svg, button > svg,
+li > svg, strong > svg, b > svg, em > svg, small > svg{
+  width:1em;height:1em;flex:none;vertical-align:-0.15em;
+}
+
+/* ============================================================ V10.1 — COMPARATEUR GROUPES
+   Sous-en-tetes de theme : le tableau cesse d etre un mur de 26 lignes
+   et devient balayable par intention. */
+table.vs tr.vs-group td{
+  padding:20px 20px 8px;border-bottom:none;background:transparent;
+}
+table.vs tr.vs-group span{
+  font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--gold);
+}
+table.vs tr.vs-group:first-child td{padding-top:8px}
+@media (max-width:760px){
+  table.vs tr.vs-group{display:block;border-radius:16px;background:rgba(201,162,39,.06);margin:14px 0 4px}
+  table.vs tr.vs-group td{display:block;padding:12px 16px 4px}
+  table.vs tr.vs-group td::before{content:none}
+}
+
+/* ============================================================ V10.1 — COMPARATEUR EN ACCORDEON
+   Un <details> par theme : natif, accessible, sans JavaScript. Sur mobile
+   seul le premier theme reste deploye au chargement (voir app.js), ce qui
+   ramene la page de 14 670 px a une longueurasonable. */
+.cmp-group{border-top:1px solid var(--line)}
+.cmp-group:first-of-type{border-top:none}
+.cmp-group > summary{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 20px;cursor:pointer;list-style:none;
+  transition:background-color 180ms var(--ease-out),color 180ms var(--ease-out);
+}
+.cmp-group > summary::-webkit-details-marker{display:none}
+.cmp-group > summary:hover{background:rgba(201,162,39,.05)}
+.cmp-group > summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.cmp-group-title{
+  font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--gold);
+}
+.cmp-group-count{
+  font-family:var(--mono);font-size:10px;color:var(--mut2);
+  display:inline-flex;align-items:center;gap:8px;flex:none;
+}
+.cmp-group-count::after{
+  content:"";width:7px;height:7px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform 220ms var(--ease-out);
+}
+.cmp-group[open] > summary .cmp-group-count::after{transform:rotate(225deg) translate(-1px,-1px)}
+.cmp-group-body{overflow-x:auto}
+.cmp-group table.vs{width:100%}
+.cmp-group table.vs thead th{background:rgba(6,7,11,.45)}
+.cmp-group:not(:first-of-type) table.vs thead{display:none}
+.cmp-group table.vs tbody tr:first-child td{padding-top:14px}
+.cmp-group:last-child{border-bottom:1px solid var(--line)}
+@media (max-width:760px){
+  .cmp-group > summary{padding:14px 16px}
+  .cmp-group-count{font-size:9px}
+}
+
+/* ============================================================ V10.1 — LEAD HERO
+   17 px : le francais est plus long que l anglais, le lead prenait une
+   ligne de plus et le CTA sortait de l ecran. */
+.hero-copy .lead{font-size:clamp(15px,1.9vw,17px);line-height:1.65}
+
+/* ============================================================ V10.1 — HERO : MARGE ET TYPO FR
+   Le francais prend ~15 % de place en plus : on reduit le display
+   francais (pratique typographique standard) et on resserre le padding
+   haut, pour que le CTA principal reste au-dessus de la ligne de
+   flottaison dans les deux langues. */
+.hero{padding-top:clamp(48px,5vw,80px)}
+:lang(fr) .hero-copy h1{font-size:clamp(36px,4.9vw,54px)}
+
+/* ============================================================ V11.2 — HERO :
+   LE CTA ET LE PRIX DANS L'ECRAN
+   Mesure V10/V11 sur la version publiee (1440x900) : CTA principal a
+   792 px, prix absent du hero. Le rythme vertical est resserre (-57 px)
+   et le prix est affiche : l'Offre est decidee dans le premier ecran.
+   Mesure du concurrent (PixelBuddy, meme viewport) : CTA a 666 px, sans
+   prix dans le hero non plus.
+
+   CORRECTIF DE GRILLE : site.css pose `.hero .w{grid-template-columns:1.05fr
+   .95fr}` (specificite 0-2-0) alors que hero.css ne pose que `.hero-grid`
+   (0-1-0) : la regle media de hero.css ne pouvait donc jamais s'appliquer,
+   et le hero restait sur deux colonnes entre 881 et 1024 px. La colonne de
+   texte tombait a 422 px de large (chapo sur 6 lignes) au lieu de
+   s'empiler. On redonne la priorite a la grille du hero sur cette plage. */
+@media (min-width:761px){
+  .hero{padding-top:clamp(44px,4vw,64px)}
+  .hero-copy h1{font-size:clamp(38px,4.6vw,54px);margin-bottom:16px}
+  .hero-copy .badge{margin-bottom:16px}
+  .hero-copy .lead{margin-bottom:18px}
+  .benefits{margin-bottom:18px}
+}
+
+@media (max-width:1080px){
+  /* Sur un petit ecran, l'instrument de droite ne tient pas dans la
+     hauteur de vue : mieux vaut une colonne de texte pleine largeur
+     (promesse + CTA au-dessus de la ligne de flottaison) que deux
+     colonnes et un CTA coupe. */
+  .hero .w{grid-template-columns:1fr;gap:36px}
+}
+@media (max-width:880px){
+  .hero .w{grid-template-columns:1fr;gap:32px}
+}
+
+/* Ligne de prix sous le CTA : lisible sans scroller, explicite. */
+.hero-price{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  margin-top:14px;font-size:14px;color:var(--mut2)
+}
+.hero-price b{font-size:20px;color:var(--txt);font-weight:800;letter-spacing:-.01em}
+.hero-price .hp-sep{opacity:.45}
+.hero-price a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,162,39,.35);padding-bottom:1px}
+@media (hover:hover) and (pointer:fine){
+  .hero-price a:hover{border-bottom-color:var(--gold)}
+}
+
+/* Note de bas de comparateur : date d'observation et prudence. */
+.cmp-note{
+  margin:14px 0 0;padding:12px 16px;font-size:12.5px;line-height:1.6;
+  color:var(--mut2);border:1px dashed var(--line);border-radius:12px;
+  background:rgba(255,255,255,.02)
+}
+.cmp-note b{color:var(--mut)}
+
+/* ============================================================ V11.2 — RECAPITULATIF
+   AVANT PAIER
+   Trois colonnes separees par des filets, pas trois cartes : c'est un
+   tableau de lecture, pas une collection de boites. */
+.before-buy{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:28px;
+  border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02);
+  overflow:hidden
+}
+.bb-col{padding:22px 24px;border-right:1px solid var(--line)}
+.bb-col:last-child{border-right:none}
+.bb-h{
+  margin:0 0 14px;font-size:13px;font-family:var(--mono);font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.bb-h.bb-in{color:var(--green)}
+.bb-h.bb-out{color:var(--red)}
+.bb-list{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.bb-list li{position:relative;padding-left:18px;font-size:13.5px;line-height:1.55;color:var(--mut)}
+.bb-list li::before{
+  content:"";position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:2px;
+  background:var(--green);opacity:.75
+}
+.bb-h.bb-out ~ .bb-list li::before{background:var(--red)}
+.bb-dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px;line-height:1.55}
+.bb-dl dt{color:var(--gold);font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-top:3px;white-space:nowrap}
+.bb-dl dd{margin:0;color:var(--mut)}
+.bb-dl a{color:var(--gold)}
+@media (max-width:860px){
+  .before-buy{grid-template-columns:1fr}
+  .bb-col{border-right:none;border-bottom:1px solid var(--line)}
+  .bb-col:last-child{border-bottom:none}
+}
+
+/* Badge : l'anneau qui grandissait jusqu'a 2x (806 px de large !) devient
+   un halo discret. Un mouvement decoratif ne doit pas dominer l'ecran. */
+.badge::after{
+  inset:-5px;border:1px solid rgba(95,180,216,.26);opacity:.55;
+  animation:badge-ring 4.6s ease-out infinite
+}
+@keyframes badge-ring{
+  0%{transform:scale(1);opacity:.5}
+  60%{opacity:0}
+  100%{transform:scale(1.1);opacity:0}
+}
+
+/* ============================================================ V12 — INDEX
+   EDITORIAL : « comment ca marche »
+   Trois cartes egales font catalogue. La section devient un index
+   technique numerote, avec filets : meme grammaire que l'etape de
+   session, et le rythme de la page cesse de se repeter. */
+.how-it-works .steps{
+  grid-template-columns:1fr;max-width:860px;margin:0 auto;
+  border-top:1px solid var(--line)
+}
+.how-it-works .step{
+  display:grid;grid-template-columns:96px 190px 1fr;gap:26px;align-items:baseline;
+  padding:24px 0;border:0;border-top:1px solid var(--line);border-radius:0;
+  background:none;backdrop-filter:none;box-shadow:none;
+  transition:border-color 240ms var(--ease-out)
+}
+.how-it-works .step:first-child{border-top:none}
+@media (hover:hover) and (pointer:fine){
+  .how-it-works .step:hover{transform:none;border-color:var(--gold)}
+}
+.how-it-works .step-num{
+  font-size:30px;line-height:1;color:var(--mut2);letter-spacing:-.02em;
+  transition:color 240ms var(--ease-out)
+}
+@media (hover:hover) and (pointer:fine){
+  .how-it-works .step:hover .step-num{color:var(--gold)}
+}
+.how-it-works .step h3{margin:0;font-size:17px;letter-spacing:-.01em}
+.how-it-works .step p{margin:0;font-size:14px;line-height:1.6;max-width:52ch}
+@media (max-width:760px){
+  .how-it-works .step{grid-template-columns:64px 1fr;gap:8px 16px;padding:18px 0}
+  .how-it-works .step-num{font-size:24px}
+  .how-it-works .step p{grid-column:2}
+}
+
+/* ============================================================ V12 — ETAPE DE SESSION
+   La demonstration devient le centre de gravite du hero : ce n'est plus
+   une vignette de capture, c'est l'ecran du jeu avec le cycle du bot
+   rejoue dessus.
+
+   Identite : un instrument de mesure. Reperes, libelles monospace,
+   l'or pour ce que le bot FAIT, le cyan pour ce que la machine VOIT.
+   Aucune animation decorative : chaque mouvement correspond a une etape
+   reelle du cycle (lancer, analyse, morsure, clic, memorisation). */
+.stage{
+  position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(13,15,23,.94),rgba(8,9,15,.97));
+  box-shadow:0 34px 90px -46px rgba(0,0,0,.95)
+}
+.stage-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(90deg,rgba(201,162,39,.05),transparent 60%)
+}
+.stage-title{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.04em;color:var(--mut)}
+.stage-title .radar-icon{width:15px;height:15px;color:var(--cyan)}
+.stage-k{
+  font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mut2);display:block;margin-bottom:6px
+}
+
+/* --- l'ecran du jeu ---
+   Le ratio de la capture (1200x515) est respecte : on ne rogne pas l'ecran
+   du jeu, la UI reste lisible. */
+.stage-view{position:relative;aspect-ratio:12/5;overflow:hidden;background:#05070c}
+.stage-shot{display:block;width:100%;height:100%}
+.stage-shot img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.06) contrast(1.03)}
+.stage-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:8px 14px;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);
+  background:linear-gradient(180deg,transparent,rgba(3,4,8,.88));
+  font-family:var(--mono)
+}
+.stage-caption b{color:var(--gold);font-weight:800}
+
+/* --- calques de detection --- */
+.stage-ov{position:absolute;inset:0;pointer-events:none}
+.stage-scan{
+  position:absolute;top:-10%;bottom:-10%;left:-30%;width:26%;
+  background:linear-gradient(90deg,transparent,rgba(95,180,216,.18),transparent);
+  opacity:0
+}
+.stage-float{
+  position:absolute;left:27%;top:44%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
+  border-radius:50%;background:var(--gold);opacity:0;
+  box-shadow:0 0 0 3px rgba(201,162,39,.16),0 0 16px rgba(201,162,39,.6)
+}
+.stage-reticle{
+  position:absolute;left:27%;top:44%;width:58px;height:58px;margin:-29px 0 0 -29px;
+  border:1px solid rgba(95,180,216,.8);border-radius:3px;opacity:0
+}
+.stage-reticle::before,.stage-reticle::after{
+  content:"";position:absolute;background:linear-gradient(180deg,transparent,rgba(95,180,216,.75),transparent)
+}
+.stage-reticle::before{left:50%;top:-12px;bottom:-12px;width:1px}
+.stage-reticle::after{top:50%;left:-12px;right:-12px;height:1px;background:linear-gradient(90deg,transparent,rgba(95,180,216,.75),transparent)}
+.stage-reticle i{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;background:var(--cyan)
+}
+.stage-click{
+  position:absolute;left:27%;top:44%;width:24px;height:24px;margin:-12px 0 0 -12px;
+  border:1px solid var(--gold);border-radius:2px;opacity:0
+}
+
+/* --- etats du cycle --- */
+[data-phase="cast"] .stage-float{animation:stage-cast 900ms cubic-bezier(.3,.8,.4,1) forwards}
+[data-phase="detect"] .stage-scan{animation:stage-scan 1250ms cubic-bezier(.4,0,.2,1) forwards}
+[data-phase="detect"] .stage-reticle{animation:stage-lock 760ms cubic-bezier(.2,.8,.2,1) forwards}
+[data-phase="bite"] .stage-float{background:var(--red);box-shadow:0 0 0 4px rgba(224,108,94,.16),0 0 20px rgba(224,108,94,.7)}
+[data-phase="bite"] .stage-reticle{border-color:rgba(224,108,94,.9)}
+[data-phase="bite"] .stage-reticle i{background:var(--red);animation:stage-dip 320ms ease-in-out infinite alternate}
+[data-phase="click"] .stage-click{animation:stage-click 460ms cubic-bezier(.2,.8,.2,1) forwards}
+[data-phase="save"] .stage-float{animation:stage-save 700ms ease-out forwards}
+
+@keyframes stage-cast{
+  0%{opacity:0;transform:translate(140px,74px) scale(.25)}
+  100%{opacity:1;transform:translate(0,0) scale(1)}
+}
+@keyframes stage-scan{
+  0%{left:-30%;opacity:0}
+  12%{opacity:1}
+  100%{left:104%;opacity:0}
+}
+@keyframes stage-lock{
+  0%{opacity:0;transform:scale(2)}
+  55%{opacity:1}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes stage-dip{
+  from{transform:translateY(0)}
+  to{transform:translateY(9px)}
+}
+@keyframes stage-click{
+  0%{opacity:0;transform:scale(.35)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.7)}
+}
+@keyframes stage-save{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.5)}
+  100%{transform:scale(1)}
+}
+
+/* --- bandeau de mesure --- */
+.stage-hud{padding:13px 16px;border-bottom:1px solid var(--line)}
+.stage-steps{
+  display:flex;gap:5px;flex-wrap:wrap;list-style:none;margin:0 0 11px;padding:0
+}
+.stage-steps li{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mut2);opacity:.42;transition:opacity 260ms var(--ease-out),color 260ms var(--ease-out)
+}
+.stage-steps li .n{
+  width:16px;height:16px;border-radius:50%;border:1px solid currentColor;
+  display:grid;place-items:center;font-size:8.5px;letter-spacing:0
+}
+.stage-steps li[data-state="on"]{opacity:1;color:var(--gold)}
+.stage-steps li[data-state="on"] .n{background:var(--gold);color:#14110a;border-color:transparent}
+.stage-steps li[data-state="done"]{opacity:.75;color:var(--cyan)}
+.stage-read{margin:0 0 11px;font-size:13.5px;line-height:1.55;color:var(--mut);min-height:2.9em}
+.stage-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stage-lat{
+  display:inline-flex;align-items:baseline;gap:8px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.stage-lat b{font-size:19px;letter-spacing:-.02em;color:var(--gold);font-weight:800}
+.stage-replay{
+  appearance:none;cursor:pointer;font:inherit;font-family:var(--mono);
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mut);background:transparent;border:1px solid var(--line-bright);
+  border-radius:999px;padding:7px 14px;
+  transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out)
+}
+@media (hover:hover) and (pointer:fine){
+  .stage-replay:hover{color:var(--gold);border-color:var(--gold);background:rgba(201,162,39,.08)}
+}
+.stage-replay:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* --- carte et reglages --- */
+.stage-lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.stage-mapbox{padding:12px 14px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.stage-mapbox svg{width:100%;height:186px;display:block;border-radius:10px;background:rgba(6,9,14,.6)}
+.stage-side{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+/* Les trois modes tiennent sur une ligne : ils sont une seule commande. */
+.stage-side .radar-modes{gap:6px}
+.stage-side .radar-modes-label{width:100%;margin-bottom:2px}
+.stage-side .radar-modes button{padding:6px 11px;font-size:11.5px}
+/* Les mesures du planificateur passent en ligne pleine largeur : a
+   300 px de colonne, le libelle "unverified" etait coupe. */
+.stage-foot-stats{border-top:1px solid var(--line);border-right:none;padding:12px 16px;grid-template-columns:repeat(4,1fr)}
+.stage-spot{animation:stage-spot 900ms var(--ease-out) forwards}
+.stage-spot.is-out{animation:stage-spot-out 900ms var(--ease-out) forwards}
+@keyframes stage-spot{from{opacity:0}to{opacity:1}}
+@keyframes stage-spot-out{from{opacity:1}to{opacity:0}}
+
+/* --- le hero cede la place a l'etape ---
+   La colonne de texte garde sa largeur (540 px) : c'est elle qui porte le
+   CTA, et un titre trop etroit le repousse sous la ligne de flottaison.
+   Mesure : a 460 px, le chapo passait sur 6 lignes et le CTA tombait a
+   845 px dans un viewport de 900 px. */
+@media (min-width:1100px){
+  .hero .w{grid-template-columns:minmax(400px,540px) minmax(0,1fr);gap:40px;align-items:start}
+}
+@media (max-width:880px){
+  .stage-lower{grid-template-columns:1fr}
+  .stage-mapbox{border-right:none;border-bottom:1px solid var(--line)}
+}
+@media (max-width:560px){
+  .stage-view{aspect-ratio:16/10}
+  .stage-read{font-size:13px}
+  .stage-steps{gap:4px}
+  .stage-steps li{font-size:8.5px;letter-spacing:.1em}
+}
+
+/* ============================================================ V12.2 — FILM DU PRODUIT
+   Le hero montre le produit reel : un enregistrement de la demonstration
+   navigateur (carte, ronde, mesures), pas une illustration. Le poster
+   s'affiche immediatement, la video ne se joue qu'une fois, et sous
+   prefers-reduced-motion elle ne demarre pas du tout. */
+.film{
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:rgba(10,12,18,.74);
+  box-shadow:0 34px 90px -46px rgba(0,0,0,.95)
+}
+.film-frame{position:relative;aspect-ratio:1000/620;background:#05070c}
+.film-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.film-tag{
+  position:absolute;left:12px;top:12px;z-index:2;padding:5px 10px;border-radius:999px;
+  background:rgba(4,6,11,.82);border:1px solid rgba(95,180,216,.32);color:var(--cyan);
+  font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  backdrop-filter:blur(6px)
+}
+.film-bar{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;justify-content:space-between;gap:12px;
+  padding:10px 14px;background:linear-gradient(180deg,transparent,rgba(3,4,8,.92));
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut2)
+}
+.film-bar b{color:var(--gold)}
+.film-replay{
+  position:absolute;right:12px;top:12px;z-index:3;appearance:none;cursor:pointer;font:inherit;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:#14110a;background:var(--gold);border:none;border-radius:999px;padding:7px 13px;
+  transition:transform 160ms cubic-bezier(0.23,1,0.32,1),filter 160ms cubic-bezier(0.23,1,0.32,1)
+}
+@media (hover:hover) and (pointer:fine){
+  .film-replay:hover{filter:brightness(1.08)}
+}
+.film-replay:active{transform:scale(0.97)}
+.film-replay:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.film-hud{padding:14px 16px;border-top:1px solid var(--line)}
+.film-steps{display:flex;gap:5px;list-style:none;margin:0 0 10px;padding:0;flex-wrap:wrap}
+.film-steps li{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.film-steps li .n{
+  width:16px;height:16px;border-radius:50%;border:1px solid currentColor;
+  display:grid;place-items:center;font-size:8.5px;letter-spacing:0
+}
+.film-read{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--mut)}
+.film-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.film-lat{
+  display:inline-flex;align-items:baseline;gap:8px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)
+}
+.film-lat b{font-size:19px;letter-spacing:-.02em;color:var(--gold);font-weight:800}
+
+/* La demonstration interactive passe en pleine largeur : un plan de coupe
+   a deux colonnes (l'ecran du jeu + la mesure a cote), pas une vignette
+   haute qui pousse le reste de la page. */
+.cycle-sec{padding-top:0}
+.cycle-sec .stage{
+  display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
+  grid-template-areas:"view lower" "hud lower" "foot foot";border-radius:20px
+}
+.cycle-sec .stage-view{grid-area:view;aspect-ratio:16/9}
+.cycle-sec .stage-hud{grid-area:hud}
+.cycle-sec .stage-lower{grid-area:lower;border-top:none;border-left:1px solid var(--line)}
+.cycle-sec .radar-foot{grid-area:foot}
+/* Dans la colonne de droite, le lien vers la demo doit pouvoir passer a la
+   ligne : il etait coupe. */
+.cycle-sec .radar-next-link{display:inline-block;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+@media (max-width:980px){
+  .cycle-sec .stage{
+    grid-template-columns:1fr;
+    grid-template-areas:"view" "hud" "lower" "foot"
+  }
+  .cycle-sec .stage-view{aspect-ratio:16/10}
+  .cycle-sec .stage-lower{border-left:none;border-top:1px solid var(--line)}
+}
+@media (max-width:880px){
+  .cycle-sec .stage-lower{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .film-tag{font-size:8px;letter-spacing:.1em;padding:4px 8px}
+  .film-bar{font-size:8px;letter-spacing:.08em;padding:8px 10px}
+}
+
+/* ============================================================ V11.2 — SELECTEUR
+   DE PARCOURS
+   Le selecteur doit se lire comme un outil de decision, pas comme une
+   grille de cartes : un jeu d'onglets, puis UN panneau. Les faits (besoins,
+   limites, demarrage) sont alignes en colonnes, pas empiles en boites. */
+.journey-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px;
+  border-bottom:1px solid var(--line);padding-bottom:14px}
+.journey-tab{
+  appearance:none;cursor:pointer;font:inherit;font-size:14px;font-weight:600;
+  color:var(--mut);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:9px 18px;
+  transition:color 180ms var(--ease-out),border-color 180ms var(--ease-out),background-color 180ms var(--ease-out);
+}
+@media (hover:hover) and (pointer:fine){
+  .journey-tab:hover{color:var(--txt);border-color:var(--line-bright)}
+}
+.journey-tab[aria-selected="true"]{color:#1a1205;background:linear-gradient(100deg,var(--gold),var(--gold2));border-color:transparent}
+.journey-tab:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+.journey-panel{border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:14px;padding:26px 28px;background:var(--glass)}
+.js .journey-panel[hidden]{display:none}
+.journey-panel.is-not{border-left-color:var(--red)}
+
+.journey-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:start}
+.journey-title{margin:0 0 8px;font-size:21px;line-height:1.25}
+.journey-lead{margin:0 0 16px;color:var(--mut);font-size:15px;line-height:1.65;max-width:56ch}
+.journey-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.journey-list li{position:relative;padding-left:22px;color:var(--mut);font-size:14.5px;line-height:1.6}
+.journey-list li b{color:var(--txt)}
+.journey-list li::before{
+  content:"";position:absolute;left:0;top:8px;width:9px;height:9px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 10px rgba(201,162,39,.45)
+}
+.journey-panel.is-not .journey-list li::before{background:var(--red);box-shadow:0 0 10px rgba(224,108,94,.35)}
+
+.journey-facts{display:grid;gap:14px}
+.journey-fact{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:start}
+.journey-fact b{
+  font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);padding-top:2px
+}
+.journey-fact span{color:var(--mut);font-size:14px;line-height:1.6}
+.journey-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+
+@media (max-width:900px){
+  .journey-grid{grid-template-columns:1fr;gap:24px}
+  .journey-panel{padding:20px 18px}
+}
+@media (max-width:560px){
+  .journey-tab{font-size:13.5px;padding:8px 14px}
+  .journey-fact{grid-template-columns:1fr;gap:2px}
+  .journey-cta .btn{width:100%}
+}
+
+/* ============================================================ V11 — ANCRES
+   La nav est sticky (91 px sur desktop, 77 px sur mobile). Sans
+   scroll-margin-top, une ancre (#buy, #offre, #ownership...) amenait la
+   section SOUS la nav : le titre de la section etait masque. On reserve
+   la hauteur de la nav, plus une marge de lecture. */
+[id]{scroll-margin-top:112px}
+.anchor-alias{display:block;height:0;scroll-margin-top:112px}
+
+/* ============================================================ V11 — CTA DANS
+   L'ECRAN SUR PETIT ECRAN
+   Mesures sur la V10 publiee (EN, 360x800) :
+     - CTA principal a 932 px dans un viewport de 800 px ;
+     - bandeau d infos : 79 px sur 2 lignes ;
+     - nav sticky : 91 px toujours visibles ;
+     - h1 a 38 px (plancher du clamp) : 6 lignes, 237 px de haut ;
+     - le CTA venait apres le chapo ET les 3 blocs de beneficiaires.
+   Correctif compose de quatre mesures, sans masquer ni ecraser quoi que
+   ce soit :
+     1. bandeau et nav compacts (une ligne, moins de hauteur) ;
+     2. typographie responsive du titre jusqu a 420 px (chaque segment du
+        titre tient sur une ligne) ;
+     3. badge ramene a une ligne sur petit ecran ;
+     4. sur mobile, le CTA passe juste apres le titre. L'ORDRE DU DOM
+        reste intact (badge, titre, chapo, beneficiaires, CTA) : seul
+        l'ordre visuel change, pour que l'offerte et l'action soient
+        accessibles sans defiler. */
+
+/* --- 1. bandeau d infos : une seule ligne --- */
+@media (max-width:900px){
+  .topbar{font-size:11.5px}
+  .topbar .w{gap:12px;padding:5px 0}
+  .topbar .w span{white-space:nowrap}
+}
+
+/* --- 2. nav compacte sur mobile --- */
+@media (max-width:760px){
+  nav{padding-top:8px;padding-bottom:8px}
+  nav .w{padding:8px 0}
+  .logo{font-size:19px;gap:7px}
+  nav .logo svg{width:24px;height:24px}
+}
+
+/* --- 3+4. composition du hero sur petit ecran --- */
+@media (max-width:760px){
+  /* le CTA remonte juste apres le titre (ordre visuel uniquement) */
+  .hero-copy{display:flex;flex-direction:column;align-items:stretch}
+  .hero-copy > *{order:5}
+  .hero-copy .badge{order:1}
+  .hero-copy h1{order:2}
+  .hero-copy .hero-cta{order:3;margin-bottom:22px}
+  .hero-copy .lead{order:4}
+}
+
+@media (max-width:480px){
+  .hero{padding-top:28px}
+  .hero-copy h1{font-size:clamp(28px,8vw,34px);line-height:1.08;margin-bottom:18px}
+  :lang(fr) .hero-copy h1{font-size:clamp(27px,7.7vw,33px)}
+  .hero-copy .badge{font-size:11px;padding:6px 12px;margin-bottom:18px}
+  .hero-copy .lead{font-size:14.5px;line-height:1.6;margin-bottom:22px}
+  .benefits{gap:10px;margin-bottom:22px}
+  .benefit .b-body{font-size:13px}
+  .hero-cta .btn{min-height:48px}
+}

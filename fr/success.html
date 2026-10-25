@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commande confirmée — BOT-WOW</title>
+<meta name="description" content="Retour après un paiement BOT-WOW : vérification du paiement côté serveur puis délivrance de la licence.">
+<link rel="canonical" href="https://bot-wow.com/fr/success.html">
+<link rel="alternate" hreflang="en" href="https://bot-wow.com/success.html">
+<link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/success.html">
+<link rel="icon" href="../assets/favicon.svg?v=9ce18c2d" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=9ce18c2d">
+<link rel="stylesheet" href="../assets/style.css?v=9ce18c2d">
+
+<meta name="robots" content="noindex, follow">
+</head>
+<body>
+
+<nav>
+  <div class="w">
+    <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
+    <div class="nav-links">
+        <a href="./modules.html">Modules</a><a href="./features.html">Fonctions</a><a href="./demo.html">Démo</a><a href="../docs/fr/">Docs</a></div>
+    <div class="nav-right">
+      <div class="langs"><a href="../">EN</a><a class="on" href="./">FR</a></div>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="../#offre">Acheter — 20,00 €</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="w">
+    <a class="backlink2" href="./">← Accueil</a>
+    <div class="callout green" style="padding:22px 24px">
+      <span><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 10.6l3.6 3.6 7.6-8.4"/></svg></span>
+      <span><b>Merci — votre commande est enregistrée.</b> La simple visite de cette
+        page ne confirme <b>pas</b> le paiement : il est vérifié côté serveur,
+        auprès de notre prestataire.</span>
+    </div>
+
+    <div class="prose">
+      <h2>Ce qui se passe maintenant</h2>
+      <ol>
+        <li>Notre serveur reçoit la confirmation signée du prestataire (un webhook).</li>
+        <li>Il vérifie le statut <code>paid</code>, le montant, la devise et le produit,
+            puis crée votre licence. Une confirmation rejouée est ignorée.</li>
+        <li>Vous recevez par e-mail votre <b>clé de licence</b> et votre <b>lien de
+            téléchargement</b>, avec la procédure d'installation.</li>
+      </ol>
+      <h2>Si le courriel n'arrive pas</h2>
+      <p>Vérifiez vos indésirables, puis écrivez à
+        <a href="mailto:support@bot-wow.com">support@bot-wow.com</a> en indiquant l'adresse
+        utilisée au paiement : la commande est conservée, aucune licence n'est perdue.</p>
+      <p style="margin-top:22px"><a class="btn btn-gold" href="../docs/fr/install.html">Lire le guide d'installation →</a></p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="w">
+    <div class="foot-bottom">
+      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Sans lien avec ni l'aval de Blizzard Entertainment.</div>
+      <a href="./">← Accueil</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
