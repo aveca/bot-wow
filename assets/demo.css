@@ -63,8 +63,7 @@
    obscuring the planner or changing desktop navigation. */
 .demo-mobile-offer{display:none}
 @media(max-width:640px){
-  body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
-  .demo-wrap{padding-bottom:112px}
+  .demo-wrap{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
   .demo-mobile-offer{
     position:fixed;inset-inline:0;bottom:0;z-index:80;
     display:flex;align-items:center;justify-content:space-between;gap:12px;
