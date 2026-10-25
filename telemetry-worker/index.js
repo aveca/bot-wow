@@ -43,9 +43,10 @@ const EVENT_SPEC = {
 };
 
 /* Provenance du trafic : liste fermee. Une valeur inconnue ou forgee est
-   ramenee a "other" (jamais enregistree telle quelle). */
-const SOURCES = ['google', 'yt', 'reddit', 'discord', 'direct', 'other'];
-const RE_SOURCE = /^(google|yt|reddit|discord|direct|other)$/;
+   ramenee a "other" (jamais enregistree telle quelle). Sources admises :
+   google, yt, reddit, discord, forum, direct, other. */
+const SOURCES = ['google', 'yt', 'reddit', 'discord', 'forum', 'direct', 'other'];
+const RE_SOURCE = /^(google|yt|reddit|discord|forum|direct|other)$/;
 
 /* ATTENTION : la conversion (paiement confirme) n'est PAS dans cette
    liste. Elle n'est jamais acceptee depuis le navigateur : elle est ecrite
