@@ -55,6 +55,26 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
   check(`present dans l'artefact : ${f}`, fs.existsSync(path.join(out, f)));
 }
 
+// 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
+const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
+const enNoticeAt = enHome.indexOf('id="release-availability-notice"');
+const frNoticeAt = frHome.indexOf('id="release-availability-notice"');
+check('EN : avertissement de disponibilité avant le formulaire d\'achat',
+  enNoticeAt >= 0 && enNoticeAt < enHome.indexOf('<form id="buyForm"') &&
+  /do not purchase until delivery is confirmed/i.test(enHome));
+check('FR : avertissement de disponibilité avant le formulaire d\'achat',
+  frNoticeAt >= 0 && frNoticeAt < frHome.indexOf('<form id="buyForm"') &&
+  /n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
+check('EN : aucune promesse de livraison immédiate par e-mail',
+  !/Immediately by email:\s*download link/i.test(enHome));
+check('FR : aucune promesse de livraison immédiate par e-mail',
+  !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
+check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
+  !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
+check('FR : le badge indique que la livraison reste à confirmer',
+  /<b>v1\.2\.0<\/b>\s*livraison à confirmer/i.test(frHome));
+
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {
   check(`protection conservee : ${f}`, fs.existsSync(path.join(out, f)));
