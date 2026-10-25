@@ -45,6 +45,12 @@
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
   </url>
 
+  <!-- Page d'achat (bilingue) -->
+  <url><loc>https://bot-wow.com/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+  </url>
+
   <!-- Documentation (bilingue, EN sous docs/, FR sous docs/fr/) -->
   <url><loc>https://bot-wow.com/docs/index.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/docs/index.html"/>
