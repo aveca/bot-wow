@@ -39,13 +39,31 @@ const NOTES = arg('notes', null);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
 /** Fichiers du bot Python livre au client. */
-const BOT_FILES = [
+/* Tous les modules du bot. La liste etait a l'origine codée en dur et
+   oubliait une grande partie de la chaine d'imports (navigation, frames,
+   window_guard, recovery...), ce qui produisait un paquet casse des le
+   premier lancement. On embarque donc l'ensemble du runtime Python,
+   moins les fichiers hors perimetre (outils de dev, tests, app desktop).
+   La securite reste assuree par FORBIDDEN (aucune donnee de session). */
+const BOT_EXCLUDE = new Set([
+  'build_desktop_package.py',
+  'create_control_center_shortcut.py',
+]);
+const BOT_SCRIPT = /^scripts\/[^/]+\.(py|ps1)$/;
+const collectBotFiles = (root) => {
+  const dir = path.join(root, 'scripts');
+  if (!fs.existsSync(dir)) return BOT_FILES_FALLBACK;
+  return fs.readdirSync(dir)
+    .filter((f) => /\.(py|ps1)$/.test(f) && !BOT_EXCLUDE.has(f))
+    .sort()
+    .map((f) => `scripts/${f}`);
+};
+const BOT_FILES_FALLBACK = [
   'scripts/fishing_bot.py',
   'scripts/fishing_observer.py',
   'scripts/fishing_memory.py',
   'scripts/fishing_popup.py',
   'scripts/focus_broker.py',
-  'scripts/fishing-oneclick.ps1',
 ];
 
 /** Repertoires exclus (donnees de session, journaux, memoire). */
@@ -207,7 +225,8 @@ function main() {
 
   // 2. le bot
   let botCount = 0;
-  for (const rel of BOT_FILES) if (copy(rel, rel.replace(/^scripts[\\/]/, 'scripts/'))) botCount++;
+  const botFiles = collectBotFiles(SOURCE);
+  for (const rel of botFiles) if (copy(rel, rel.replace(/^scripts[\\/]/, 'scripts/'))) botCount++;
   if (!botCount) {
     console.error('Aucun script du bot trouve : paquet incomplet.');
     process.exit(1);
