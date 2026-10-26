@@ -197,5 +197,20 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
 }
 
+// 8. La promesse de remboursement doit rester conforme aux conditions publiees.
+// Le hero doit annoncer la verite (14 jours, sauf licence activee) et jamais
+// une garantie inconditionnelle.
+for (const file of ['index.html', 'fr/index.html']) {
+  const html = read(file);
+  const heroGuarantee = (html.match(/hero__guarantee-text">([\s\S]*?)<\/span>/) || ['', ''])[1]
+    .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+  check(`${file} : le hero lie la politique de remboursement`,
+    /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
+  check(`${file} : aucune garantie de remboursement inconditionnelle`,
+    !/No catch|Sans piège/i.test(heroGuarantee), `("${heroGuarantee}")`);
+  check(`${file} : la condition d'activation est mentionnee`,
+    /activée|activated/i.test(heroGuarantee), `("${heroGuarantee}")`);
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
