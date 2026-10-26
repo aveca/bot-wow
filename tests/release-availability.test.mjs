@@ -47,6 +47,19 @@ for (const { page, file, deliveryClaim } of pages) {
   check(page + ' : prix 20,00 EUR inchangé', /20,00\s*€/.test(html));
   check(page + ' : les CTA restent instrumentés',
     (html.match(/data-cta-id=/g) || []).length >= 3);
+
+  if (page === 'compare.html') {
+    check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
+      /<li><span class="m warn"[^>]*>!<\\/span><span><b>Fishing bot build v1\\.2\\.0/.test(html) &&
+      /<li><span class="m warn"[^>]*>!<\\/span><span>Intended fishing bot build/.test(html) &&
+      /<li><span class="m warn"[^>]*>!<\\/span><span>The intended Casinobabe addon/.test(html));
+  }
+  if (page === 'fr/compare.html') {
+    check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
+      /<li><span class="m warn"[^>]*>!<\\/span><span><b>Build du bot de pêche v1\\.2\\.0/.test(html) &&
+      /<li><span class="m warn"[^>]*>!<\\/span><span>Build prévu du bot/.test(html) &&
+      /<li><span class="m warn"[^>]*>!<\\/span><span>Le build prévu de l’addon Casinobabe/.test(html));
+  }
 }
 
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : '\nRELEASE AVAILABILITY : ' + failures + ' ECHEC(S)');
