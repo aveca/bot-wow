@@ -163,19 +163,13 @@
   window.botwowJourneyId = JID;
   window.botwowTrackFlush = function () {
     if (!enabled || !buffer.length) return;
-    try {
-      var body = JSON.stringify({ v: SCHEMA, batch: buffer });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }));
-      } else if (window.fetch) {
-        window.fetch(ENDPOINT, {
-          method: 'POST', body: body, keepalive: true,
-          headers: { 'Content-Type': 'application/json' },
-          mode: 'same-origin', credentials: 'omit',
-        }).catch(function () {});
-      }
-    } catch (e) { /* ignore */ }
+    // Un envoi par evenement : le Worker /api/track attend un objet evenement
+    // ({ v, event, page, lang, ... }) et refuse un payload { batch: [...] }.
+    // Le lot etait donc systematiquement rejete (400), ce qui perdait tous les
+    // evenements emis juste avant la sortie de page.
+    var pending = buffer.slice();
     buffer = [];
+    for (var i = 0; i < pending.length; i++) send(pending[i]);
   };
 
   /* 1. Clics sur les elements marques (delegation : fonctionne meme si le
