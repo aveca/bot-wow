@@ -28,7 +28,9 @@ function check(name, ok, detail = '') {
 }
 
 /* ---------------------------------------------------------- environnement */
-function makeEnv(state) {
+function makeEnv(state, releaseStatus) {
+  // Par defaut la livraison n'est PAS confirmee : c'est l'etat de production.
+  // Les tests de locale passent 'confirmed' pour exercer la creation Mollie.
   const db = {
     prepare(sql) {
       const key = sql.replace(/\s+/g, ' ').trim();
@@ -62,6 +64,7 @@ function makeEnv(state) {
 
   return {
     DB: db,
+    RELEASE_STATUS: releaseStatus || 'pending',
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key_secret_value',
@@ -129,14 +132,18 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
       var limitedBody = await res.json();
     }
   }
-  check('les 5 premieres tentatives de checkout passent', statuses.slice(0, 5).every((s) => s === 200),
+  // GARDE DE LIVRAISON : tant que RELEASE_STATUS !== 'confirmed', le
+  // checkout est refuse en 409 et AUCUN paiement n'est cree. Les 5 premieres
+  // tentatives consomment leur budget puis sont limitees en 429.
+  check('garde livraison : les tentatives sont refusees en 409',
+    statuses.slice(0, 5).every((s) => s === 409),
     `(statuts ${statuses.join(',')})`);
   check('la 6e tentative est refusee en 429', statuses[5] === 429, `(statut ${statuses[5]})`);
   check('la reponse 429 porte un Retry-After', !!retryAfter && Number(retryAfter) > 0, `(Retry-After=${retryAfter})`);
   check('la reponse 429 indique rate_limited', limitedBody && limitedBody.error === 'rate_limited',
     `(corps ${JSON.stringify(limitedBody)})`);
-  check('aucun paiement Mollie cree pour la tentative refusee',
-    mollieCalls.filter((c) => c.url.endsWith('/payments') && c.method === 'POST').length === 5,
+  check('aucun paiement Mollie cree quand la livraison n est pas confirmee',
+    mollieCalls.filter((c) => c.url.endsWith('/payments') && c.method === 'POST').length === 0,
     `(appels ${mollieCalls.length})`);
 
   // une autre IP a son propre budget
@@ -145,7 +152,8 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
     method: 'POST', body: { email: 'other@test.fr', lang: 'fr' }, env,
     headers: { 'cf-connecting-ip': '198.51.100.77' },
   });
-  check('le budget est par IP (une autre IP passe)', res2.status === 200, `(statut ${res2.status})`);
+  check('le budget est par IP (une autre IP est aussi refusee par la garde)',
+    res2.status === 409, `(statut ${res2.status})`);
 }
 
 /* 4. locale Mollie valide pour chaque langue supportee */
@@ -168,7 +176,7 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
   ];
   for (const [lang, expected] of expectations) {
     const state = freshState();
-    const env = makeEnv(state);
+    const env = makeEnv(state, 'confirmed');
     mollieCalls = [];
     await callWorker('/api/checkout', {
       method: 'POST', body: { email: 'loc@test.fr', lang }, env,
