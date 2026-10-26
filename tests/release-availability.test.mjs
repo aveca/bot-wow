@@ -50,15 +50,15 @@ for (const { page, file, deliveryClaim } of pages) {
 
   if (page === 'compare.html') {
     check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
-      /<li><span class="m warn"[^>]*>!<\\/span><span><b>Fishing bot build v1\\.2\\.0/.test(html) &&
-      /<li><span class="m warn"[^>]*>!<\\/span><span>Intended fishing bot build/.test(html) &&
-      /<li><span class="m warn"[^>]*>!<\\/span><span>The intended Casinobabe addon/.test(html));
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span><b>Fishing bot build v1.2.0') &&
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Intended fishing bot build') &&
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>The intended Casinobabe addon'));
   }
   if (page === 'fr/compare.html') {
     check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
-      /<li><span class="m warn"[^>]*>!<\\/span><span><b>Build du bot de pêche v1\\.2\\.0/.test(html) &&
-      /<li><span class="m warn"[^>]*>!<\\/span><span>Build prévu du bot/.test(html) &&
-      /<li><span class="m warn"[^>]*>!<\\/span><span>Le build prévu de l’addon Casinobabe/.test(html));
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span><b>Build du bot de pêche v1.2.0') &&
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Build prévu du bot') &&
+      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Le build prévu de l’addon Casinobabe'));
   }
 }
 
