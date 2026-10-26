@@ -212,5 +212,15 @@ for (const file of ['index.html', 'fr/index.html']) {
     /activée|activated/i.test(heroGuarantee), `("${heroGuarantee}")`);
 }
 
+// 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
+for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.html']) {
+  let html = '';
+  try { html = read(file); } catch { continue; }
+  const wrong = [...html.matchAll(/href="([^"]*legal\/[^"]*)"/g)].map(m => m[1])
+    .filter(u => !u.includes('/legal/fr/') && !/privacy|terms/.test(u));
+  check(`${file} : les liens legaux FR pointent vers /legal/fr/`,
+    wrong.length === 0, `(${wrong.join(', ')})`);
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
