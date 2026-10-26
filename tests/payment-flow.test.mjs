@@ -126,6 +126,10 @@ function makeEnv(state) {
   };
   return {
     DB: db,
+    // Ce fichier teste la LOGIQUE de paiement (montant, URLs canoniques,
+    // webhook, licence). La garde de livraison a ses propres tests
+    // (checkout-gate.test.mjs) : ici on la suppose levee.
+    RELEASE_STATUS: 'confirmed',
     TELEMETRY_DB: telemetry,
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
