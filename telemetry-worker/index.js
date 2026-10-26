@@ -40,6 +40,8 @@ const EVENT_SPEC = {
   // Intention de paiement : clic sur un CTA d'achat. Ce n'est PAS une
   // vente ; seule la validation du webhook Mollie en etablit une.
   checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  offer_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  demo_open: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
 };
 
 /* Provenance du trafic : liste fermee. Une valeur inconnue ou forgee est

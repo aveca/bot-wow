@@ -228,5 +228,21 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
   check('journey_id trop long refuse', bad.status === 400, `(status ${bad.status})`);
 }
 
+/* --- 9. tous les evenements emis par le site sont acceptes --------- */
+{
+  // Le site emis par assets/analytics.js : si l'un est refuse, le parcours
+  // de vente devient invisible cote mesure.
+  const emitted = {
+    page_view: {}, journey_view: {}, cta_click: { cta: 'hero-buy' },
+    planner_mode: { mode: 'equilibre' }, ownership_view: { years: 1 },
+    checkout_start: {}, checkout_requested: {}, offer_view: {},
+    demo_open: {}, checkout_error: {},
+  };
+  for (const [name, extra] of Object.entries(emitted)) {
+    const ev = validateEvent({ v: 1, event: name, page: '/', lang: 'en', props: { step: 'load', ...extra } });
+    check(`l evenement emis par le site est accepte : ${name}`, ev && ev.event === name);
+  }
+}
+
 console.log(failures === 0 ? '\nTELEMETRIE : OK' : `\nTELEMETRIE : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
