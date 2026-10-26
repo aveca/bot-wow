@@ -62,6 +62,8 @@ test('homepage: primary demo and purchase paths remain visible and responsive', 
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator('#release-availability-notice')).toBeVisible();
+  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-offer"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
@@ -209,6 +211,29 @@ for (const route of legacyLogoRoutes) {
     await expect(page.locator('.logo-mark').first()).toBeAttached();
   });
 }
+
+test('capture current public homepage as a before-change visual baseline when reachable', async ({ page }, testInfo) => {
+  try {
+    const response = await page.goto('https://bot-wow.com/', {
+      waitUntil: 'domcontentloaded',
+      timeout: 12000
+    });
+    if (!response || !response.ok()) {
+      test.info().annotations.push({
+        type: 'baseline',
+        description: 'Public homepage baseline not captured: production did not return a successful response.'
+      });
+      return;
+    }
+    await expect(page.locator('h1')).toBeVisible({ timeout: 5000 });
+    await captureScreenshot(page, testInfo, 'production-homepage-baseline');
+  } catch (error) {
+    test.info().annotations.push({
+      type: 'baseline',
+      description: 'Public homepage baseline capture was unavailable: ' + String(error).slice(0, 180)
+    });
+  }
+});
 
 test('capture current public demo as a visual comparison baseline when reachable', async ({ page }, testInfo) => {
   try {
