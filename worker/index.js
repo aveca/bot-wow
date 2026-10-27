@@ -2303,35 +2303,29 @@ async function handleDownload(request, env2) {
     if (result.count >= result.max_count) {
       return jsonResponse({ ok: false, error: "limit_reached" }, 429);
     }
-    await env2.DB.prepare(`
-      UPDATE downloads SET count = count + 1 WHERE token = ?
-    `).bind(token).run();
-    // FIX 2026-10-21 : le nom de l'objet R2 etait fige dans le code
-    // ("Casinobabe-v1.0.38.zip"), alors que le paquet livre est versionne
-    // (casinobabe-fishing-<version>.zip). On tente la version configuree,
-    // puis la version courante du paquet, puis l'ancien nom (repli).
-    const candidates = [
-      env2.R2_OBJECT_KEY,
-      "casinobabe-fishing-1.2.0.zip",
-      "Casinobabe-v1.0.38.zip"
-    ].filter(Boolean);
-    let objectKey = candidates[0];
-    let r2Object = null;
-    for (const key of candidates) {
-      const obj = await env2.R2_BINARIES.get(key);
-      if (obj) {
-        objectKey = key;
-        r2Object = obj;
-        break;
-      }
+    // Serve only the configured release. Never silently deliver an older archive.
+    const objectKey = typeof env2.R2_OBJECT_KEY === "string" ? env2.R2_OBJECT_KEY.trim() : "";
+    if (!objectKey || !/^casinobabe-fishing-\d+\.\d+\.\d+\.zip$/.test(objectKey)) {
+      console.error("Download artifact key is missing or invalid");
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
+    const r2Object = await env2.R2_BINARIES.get(objectKey);
     if (!r2Object) {
-      console.error("R2 object not found. Tried:", candidates.join(", "));
-      return jsonResponse({ ok: false, error: "file_not_found" }, 404);
+      console.error("Configured R2 artifact not found:", objectKey);
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
+    // Reserve one download atomically (only after the artifact is confirmed
+    // available, so an absent artefact never consumes quota).
+    const reservation = await env2.DB.prepare(
+      "UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count"
+    ).bind(token).run();
+    if (!reservation?.meta?.changes) {
+      return jsonResponse({ ok: false, error: "limit_reached" }, 429);
+    }
+    const safeFilename = objectKey.replace(/["\\\r\n]/g, "_");
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": "attachment; filename=\"" + safeFilename + "\"",
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
@@ -2414,6 +2408,14 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var MOLLIE_API_BASE = "https://api.mollie.com/v2";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+/* Etat de livraison du paquet telechargeable, decide cote serveur.
+   "pending" (defaut) : l'archive n'est pas verifiee -> le checkout est
+   refuse (409) pour ne pas encaisse contre une livraison non confirmee.
+   "confirmed" : archive verifiee et disponible -> checkout autorise.
+   La valeur est lue dans l'environnement du Worker (var Cloudflare ou
+   wrangler.toml [vars]) : elle n'est JAMAIS prise dans le corps de la
+   requete, donc non contournable par le visiteur. */
+var RELEASE_STATUS = "pending";
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
 // remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
@@ -2488,6 +2490,29 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+
+  // GARDE DE LIVRAISON (prepare, non deploye) : tant que la disponibilite du
+  // paquet telechargeable n'est pas confirmee cote serveur, on n'encaisse
+  // pas. L'etat est une VARIABLE D'ENVIRONNEMENT du Worker : un visiteur ne
+  // peut pas la contourner depuis le navigateur. Reactivation controlee en
+  // passant RELEASE_STATUS=confirmed (aucun prix, secret ou route changes).
+  const releaseStatus = (env2 && typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS)
+    ? env2.RELEASE_STATUS
+    : RELEASE_STATUS;
+  if (releaseStatus !== "confirmed") {
+    console.warn("Checkout refuse : livraison non confirmee (RELEASE_STATUS=" + releaseStatus + ")");
+    return jsonResponse2({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr"
+        ? "La livraison du paquet n'est pas encore confirmee. Contactez le support avant de payer."
+        : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, {
+      "Retry-After": "3600"
+    });
+  }
+
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {

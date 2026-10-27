@@ -18,7 +18,7 @@
   },
   "missions": {
     "1": { "title": "Contrat commercial réel (harmoniser offres EN/FR)", "status": "DONE" },
-    "2": { "title": "Release v1.2.0 : build, intégrité, réconcilier PR #19/#44", "status": "IN_PROGRESS" },
+    "2": { "title": "Release v1.2.0 : build, intégrité, réconcilier PR #19/#44", "status": "DONE_LOCAL_BLOCKED_APPROVAL_PUBLICATION" },
     "3": { "title": "Webhooks Mollie idempotents + reprise de livraison", "status": "PENDING" },
     "4": { "title": "Diagnostic chute checkout + durcir contrat checkout", "status": "PENDING" },
     "5": { "title": "Route démo `/demo` en production", "status": "PENDING" },

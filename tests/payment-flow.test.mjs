@@ -72,6 +72,11 @@ function makeEnv(state) {
             if (/INSERT INTO downloads/i.test(key)) state.downloads.push(args);
             if (/INSERT INTO deliveries/i.test(key)) state.deliveries.push(args);
             if (/INSERT INTO mollie_customers/i.test(key)) state.customers.push(args);
+            if (/UPDATE downloads SET count = count \+ 1 WHERE token = \? AND count < max_count/i.test(key)) {
+              const canReserve = Boolean(state.downloadRow && state.downloadRow.count < state.downloadRow.max_count);
+              if (canReserve) state.downloadRow.count += 1;
+              return { meta: { changes: canReserve ? 1 : 0, last_row_id: 0 } };
+            }
             return { meta: { last_row_id: state.orders.length } };
           },
           first: async () => {
@@ -79,6 +84,10 @@ function makeEnv(state) {
             if (/FROM mollie_customers/i.test(key)) return null;
             if (/FROM webhook_events/i.test(key)) {
               return state.events.has(args[0]) ? { id: args[0] } : null;
+            }
+            // Download token + licence liee (pour /api/download).
+            if (/FROM downloads d/i.test(key)) {
+              return state.downloadRow || null;
             }
             // FIX 2026-10-21 : SELECT * FROM orders -> retrouver une commande
             // reelle par id (ord_*) ou reference fournisseur (BTC-*).
@@ -132,6 +141,7 @@ function makeEnv(state) {
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
+    RELEASE_STATUS: 'confirmed',
     state,
   };
 }
@@ -403,6 +413,103 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
   check('le rejeu du webhook de remboursement reste sans effet (200)', res2.status === 200, `(status=${res2.status})`);
   check('aucune seconde licence n\'est creee, aucun crash', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* 13. Le telechargement ne sert jamais un ancien paquet de repli et ne
+   consomme pas le quota si l'artefact configure est absent. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      // Simule uniquement l'ancien objet historique present dans R2.
+      return key === 'Casinobabe-v1.0.38.zip' ? { body: 'old-package' } : null;
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('un artefact v1.2.0 absent renvoie 503 plutot que le paquet ancien',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    `(status=${res.status} error=${data.error})`);
+  check('seule la cle R2 configuree est consultee',
+    state.r2Keys.length === 1 && state.r2Keys[0] === 'casinobabe-fishing-1.2.0.zip',
+    `(${JSON.stringify(state.r2Keys)})`);
+  check('un artefact absent ne consomme pas le quota de telechargement',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 14. Une cle R2 historique est refusee avant toute lecture R2. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+    r2Keys: [],
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'Casinobabe-v1.0.38.zip';
+  env.R2_BINARIES = {
+    get: async (key) => {
+      state.r2Keys.push(key);
+      return { body: 'old-package' };
+    },
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  const data = await res.json();
+  check('une cle R2 historique est refusee avec 503',
+    res.status === 503 && data.error === 'artifact_unavailable',
+    `(status=${res.status} error=${data.error})`);
+  check('aucun objet historique nest meme lu',
+    state.r2Keys.length === 0, `(${JSON.stringify(state.r2Keys)})`);
+  check('la cle historique ne consomme pas le quota',
+    !state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 15. Le nom telecharge correspond exactement a l'objet versionne servi. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'download-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 3 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const res = await callWorker('/api/download?t=download-token', { method: 'GET', env });
+  check('le telechargement du paquet configure repond 200', res.status === 200, `(status=${res.status})`);
+  check('le nom du fichier correspond a la cle R2 servie',
+    res.headers.get('content-disposition') === 'attachment; filename="casinobabe-fishing-1.2.0.zip"',
+    `(${res.headers.get('content-disposition')})`);
+  check('le quota est consomme seulement apres la disponibilite de l artefact',
+    state.calls.some((c) => /UPDATE downloads SET count = count \+ 1/i.test(c.sql || '')));
+}
+
+/* 16. Deux telechargements simultanes ne peuvent pas depasser max_count. */
+{
+  const state = {
+    calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [],
+    downloadRow: { token: 'single-slot-token', lic_status: 'active', expires_at: Date.now() + 60000, count: 0, max_count: 1 },
+  };
+  const env = makeEnv(state);
+  env.R2_OBJECT_KEY = 'casinobabe-fishing-1.2.0.zip';
+  env.R2_BINARIES = {
+    get: async (key) => key === env.R2_OBJECT_KEY ? { body: 'versioned-package' } : null,
+  };
+  const [first, second] = await Promise.all([
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+    callWorker('/api/download?t=single-slot-token', { method: 'GET', env }),
+  ]);
+  const statuses = [first.status, second.status].sort((a, b) => a - b);
+  check('deux requetes simultanees donnent un seul telechargement autorise',
+    statuses[0] === 200 && statuses[1] === 429, `(statuses=${JSON.stringify(statuses)})`);
+  check('le compteur ne depasse jamais max_count',
+    state.downloadRow.count === 1, `(count=${state.downloadRow.count})`);
 }
 
 

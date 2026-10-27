@@ -39,8 +39,8 @@
 
 | Mission | Intitulé | Statut | SHA | Tests | Suivant |
 |---|---|---|---|---|---|
-| 1 | Contrat commercial réel (harmoniser offres EN/FR) | DONE | — | validate PASS, release-availability OK (acheté compare/fr/compare), link-check OK, site-artifact OK | 2 |
-| 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | IN_PROGRESS | — | distribution-package, release-availability, build-package local | 3 |
+| 1 | Contrat commercial réel (harmoniser offres EN/FR) | DONE | cd099a8 | validate PASS, release-availability OK (acheté compare/fr/compare), link-check OK, site-artifact OK | 2 |
+| 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | — | build-package local PASS (verifié indépendamment), payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
 | 3 | Webhooks Mollie idempotents + reprise de livraison | PENDING | — | payment-flow, migrations (DB temp) | 4 |
 | 4 | Diagnostic chute checkout + durcir contrat checkout | PENDING | — | payment-flow, checkout-security, funnel | 5 |
 | 5 | Route démo `/demo` en production | PENDING | — | site-artifact, e2e démo, navigateur | 6 |
@@ -51,3 +51,20 @@
 | 10 | Certification finale, déploiement autorisé, rapport | PENDING | — | npm test complet, CI SHA exact | FIN |
 
 Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutation R2/D1/production ; aucun e-mail réel ; rapports versionnés sur GitHub.
+
+## Preuves mission 2 (Release v1.2.0)
+
+- Source autorisée : `C:\factory\worktrees\casinobabe-v2` (dépôt logiciel distinct, dépôt casinobabe-v2). Contient `runtime-addon/Casinobabe`, `scripts/fishing_bot.py`, `fishing_observer.py`, `fishing_memory.py`, `fishing_popup.py`, `focus_broker.py`. `fishing-oneclick.ps1` absent (non bloquant : `botCount > 0`).
+- Build local isolé : `node scripts/build-package.cjs --source "C:\factory\worktrees\casinobabe-v2" --version 1.2.0 --out <temp>` → `casinobabe-fishing-1.2.0.zip` (17 entrées, 15 fichiers MANIFEST, addon 8 fichiers, bot 5 scripts).
+- Vérification indépendante SHA-256 du MANIFEST vs fichiers livrés : PASS. Aucune donnée de session (state/reports/logs/mem-*.jsonl). VERSION = 1.2.0.
+- Reproductibilité bit-pour-bit : NON (le champ `builtAt` de MANIFEST.json varie à chaque build). Les deux builds diffèrent uniquement par cet horodatage.
+- Etat R2 (lecture seule, `wrangler r2 object get`, compte `abf2b92cf718313567b4b38eb9dda17f`, bucket `botwow-binaries`) :
+  - `casinobabe-fishing-1.2.0.zip` = VERIFIED_ABSENT (clé introuvable à distance, 27/10/2026).
+  - `Casinobabe-v1.0.38.zip` = VERIFIED_ABSENT (pas de repli historique non plus).
+  - L'assertion du rapport sale-readiness (objet R2 présent, vérifié le 27/10) est donc STALE/inexacte à l'heure actuelle.
+- Réconciliation PR #19 + PR #44 (complémentaires, pas de conflit) appliquée sur `worker/index.js` :
+  - PR #19 : `handleDownload` ne sert que `R2_OBJECT_KEY` (pattern `casinobabe-fishing-X.Y.Z.zip`), 503 `artifact_unavailable` si absent/invalide, pas de repli sur `Casinobabe-v1.0.38.zip`, nom de fichier servi = clé R2, réservation de quota atomique (`count < max_count`) après vérification R2, protection concurrence.
+  - PR #44 : `handleCheckout` garde `RELEASE_STATUS` (variable d'environnement, non contournable depuis le navigateur), 409 `delivery_unverified` si != confirmed, pas d'appel Mollie tant que non confirmé.
+  - Correction apportée à PR #19 : la vérification R2 est faite AVANT la réservation de quota (ainsi un artefact absent ne consomme jamais le quota, conforme au test 13).
+- Tests ajoutés : `tests/checkout-gate.test.mjs`, `tests/checkout-gate-mollie.test.mjs`, tests 13-16 dans `tests/payment-flow.test.mjs`, `RELEASE_STATUS: 'confirmed'` dans `checkout-security` + `payment-flow`, script `test:gate` dans `package.json`.
+- Blocage publication : aucun objet R2 n'est présent, donc le téléchargement client renverrait 503. L'upload R2 et le déploiement Worker nécessitent une autorisation explicite (non effectués). Pas de mutation R2/D1/production dans cette mission.
