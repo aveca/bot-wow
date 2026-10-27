@@ -222,6 +222,21 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
 
+// 11. Hierarchie visuelle : l OR est reserve aux CTA d achat. Si tout est
+// doré, plus rien ne ressort et l action d achat devient invisible.
+{
+  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy'];
+  for (const file of ['index.html', 'fr/index.html']) {
+    const html = read(file);
+    const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
+      .map(m => (m[0].match(/data-cta-id="([^"]+)"/) || [])[1])
+      .filter(Boolean);
+    const foreign = golds.filter(id => !PURCHASE.includes(id));
+    check(`${file} : aucun bouton OR hors achat (${golds.length} dorés au total)`,
+      foreign.length === 0, `(dorés non-achat : ${foreign.join(', ')})`);
+  }
+}
+
 // 10. Le canal de secours au checkout doit proposer une action qui atteint
 // reellement le support. Le formulaire data-waitlist enregistre l'adresse en
 // base (verifie dans handleSubscribe) sans notifier qui que ce soit : la page
