@@ -245,6 +245,56 @@ function wireBuyForm() {
   });
 }
 
+/* ------------------------------------------------- formulaire support */
+async function wireSupportForm() {
+  const form = document.getElementById('supportForm');
+  if (!form) return;
+  const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+  const T = isFr
+    ? { ok: 'Demande enregistrée. L’équipe vous répondra.',
+        err: 'Impossible d’enregistrer votre demande. Réessayez ou écrivez à support@bot-wow.com.' }
+    : { ok: 'Request recorded. The team will get back to you.',
+        err: 'Could not record your request. Please try again or email support@bot-wow.com.' };
+  const err = document.getElementById('supportErr');
+  const ok = document.getElementById('supportOk');
+  const btn = document.getElementById('supportBtn');
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    err.textContent = '';
+    ok.textContent = '';
+    const input = document.getElementById('supportEmail');
+    const value = (input.value || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) {
+      err.textContent = isFr ? 'Merci d’indiquer une adresse e-mail valide.' : 'Please enter a valid email address.';
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = isFr ? 'Envoi…' : 'Sending…';
+    const API_BASE = 'https://api.bot-wow.com';
+    let sent = false;
+    for (const base of [API_BASE, '']) {
+      try {
+        const res = await fetch(base + '/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: value, source: 'support_purchase', consent_marketing: false })
+        });
+        const body = await res.json().catch(() => ({}));
+        if (res.ok && body.ok) { sent = true; break; }
+      } catch {}
+    }
+    btn.disabled = false;
+    btn.textContent = original;
+    if (sent) {
+      ok.textContent = T.ok;
+      input.value = '';
+    } else {
+      err.textContent = T.err;
+    }
+  });
+}
+
 /* ------------------------------------------------------ révélations
    Chorégraphie d'apparition au scroll (V9).
    - la classe `js` n'est posée QUE si JavaScript est actif : sans JS,
@@ -551,6 +601,7 @@ function wireActionBar() {
 /* ------------------------------------------------------------- boot */
 async function boot() {
   wireBuyForm();
+  wireSupportForm();
   wireWaitlist();
   wireReveal();
   wireNavScroll();

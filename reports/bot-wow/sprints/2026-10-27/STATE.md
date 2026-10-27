@@ -43,8 +43,8 @@
 | 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | 1369b55 | build-package local PASS, payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
 | 3 | Webhooks Mollie idempotents + reprise de livraison | DONE (code+tests, pas de deploy production) | — | payment-flow OK (y compris concurrence, rejet, rejeu), checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS | 4 |
 | 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | 3c9ec1e | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
-| 5 | Route démo `/demo` en production | DONE | — | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
-| 6 | Demandes d'aide après échec checkout → dossier support | PENDING | — | subscribe, D1, idempotence | 7 |
+| 5 | Route démo `/demo` en production | DONE | 580d635 | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
+| 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | — | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
 | 7 | Funnel first-party attribuable jusqu'au paiement | PENDING | — | telemetry, allowlist, conversion-path | 8 |
 | 8 | Test CRO A/B réversible et mesurable | PENDING | — | ab-variants | 9 |
 | 9 | Acquisition gratuite, SEO, UX | PENDING | — | link-check, audit:css, validate | 10 |
@@ -94,3 +94,12 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Cause racine issue #25 résolue par : build statique correct (seulement fichiers publiés), cache HTML à revalidation systématique, pas de redirect hérité. L'ancienne démo n'est plus servie.
 - Tests e2e Playwright : 54/54 pass (desktop + mobile), dont démo EN (simulation, interactions, pas de checkout), démo FR (locale, localisation), capture de baseline production (`bot-wow.com/demo.html` accessible).
 - Aucun déploiement manuel nécessaire : le contenu est déjà correct dans le dépôt et l'artefact.
+
+## Preuves mission 6 (Demandes d'aide après échec checkout → dossier support)
+
+- Constat (issue #8) : le support était uniquement joignable par mailto:support@bot-wow.com, sans formulaire, sans distinction newsletter/support, sans suivi.
+- Backend (`worker/index.js` `handleSubscribe`) : accepte `source = 'support_purchase'` distinct de `'newsletter'` ; `consent_marketing` forcé à 0 pour les demandes de support (jamais ajoutées au marketing par défaut) ; statut `pending` pour les demandes de support vs `'subscribed'` pour la newsletter ; déduplication par e-mail (pas de doublon) ; messages distincts.
+- Frontend (`assets/app.js` `wireSupportForm`, `buy.html`, `fr/buy.html`) : formulaire de support sur la page d'achat, soumet à `/api/subscribe` avec `source: 'support_purchase'` et `consent_marketing: false`, gère succès/erreur, pas de PII dans les traces.
+- Admin (`worker/index.js` `handleListSupportRequests`, route `GET /api/admin/support-requests`) : liste les demandes de support (`source = 'support_purchase'`), protégée par authentification admin JWT (même mécanisme que les autres routes admin), pagination, filtre par statut et recherche.
+- Tests (`tests/subscribe.cjs`) : demande de support avec consent_marketing = 0 et statut pending ; consent_marketing forcé à 0 même si true envoyé ; déduplication newsletter → support ; ré-émission reste pending.
+- Aucun e-mail réel envoyé, aucune mutation de production, aucun déploiement.

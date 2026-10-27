@@ -2156,29 +2156,37 @@ async function handleSubscribe(request, env2) {
     return jsonResponse({ ok: false, error: "invalid_email" }, 400);
   }
   const source = body.source || "newsletter";
-  const consentMarketing = body.consent_marketing === true ? 1 : 0;
+  const isSupport = source === "support_purchase";
+  // Une demande de support n'est JAMAIS ajoutée au marketing par défaut.
+  const consentMarketing = isSupport ? 0 : (body.consent_marketing === true ? 1 : 0);
   const consentTransactional = body.consent_transactional === true ? 1 : 0;
+  // Statut distinct : 'pending' pour une demande de support à traiter,
+  // 'subscribed' pour une inscription newsletter.
+  const status = isSupport ? "pending" : "subscribed";
   const now = Date.now();
   try {
     const existing = await env2.DB.prepare(
-      `SELECT id, status FROM botwow_emails WHERE email = ?`
+      `SELECT id, status, source, consent_marketing FROM botwow_emails WHERE email = ?`
     ).bind(email).first();
     if (existing) {
-      if (existing.status === "subscribed") {
+      // Déduplication par e-mail : on met à jour la source/le statut sans
+      // créer de doublon. Une demande de support existante reste 'pending'
+      // jusqu'à ce qu'un membre de l'équipe la résolve.
+      if (existing.status === "subscribed" && !isSupport) {
         return jsonResponse({ ok: true, message: "Déjà inscrit.", email }, 200);
       }
       await env2.DB.prepare(`
-        UPDATE botwow_emails SET status = 'subscribed', unsubscribed_at = NULL,
+        UPDATE botwow_emails SET status = ?, unsubscribed_at = NULL,
           subscribed_at = ?, consent_marketing = ?, consent_transactional = ?, source = ?
         WHERE email = ?
-      `).bind(now, consentMarketing, consentTransactional, source, email).run();
-      return jsonResponse({ ok: true, message: "Inscription réactivée.", email }, 200);
+      `).bind(status, now, consentMarketing, consentTransactional, source, email).run();
+      return jsonResponse({ ok: true, message: isSupport ? "Demande de support enregistrée." : "Inscription réactivée.", email }, 200);
     }
     await env2.DB.prepare(`
       INSERT INTO botwow_emails (email, source, consent_marketing, consent_transactional, subscribed_at, status, ip)
-      VALUES (?, ?, ?, ?, ?, 'subscribed', ?)
-    `).bind(email, source, consentMarketing, consentTransactional, now, ip).run();
-    return jsonResponse({ ok: true, message: "Inscription enregistrée.", email }, 200);
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(email, source, consentMarketing, consentTransactional, now, status, ip).run();
+    return jsonResponse({ ok: true, message: isSupport ? "Demande de support enregistrée. L'équipe vous répondra." : "Inscription enregistrée.", email }, 200);
   } catch (error) {
     console.error("Subscribe error:", error);
     return jsonResponse({ ok: false, error: "server_error" }, 500);
@@ -5368,6 +5376,7 @@ var ADMIN_ROUTES = {
   "GET /api/admin/stats": handleStats,
   "GET /api/admin/orders": handleListOrders,
   "GET /api/admin/licenses": handleListLicenses,
+  "GET /api/admin/support-requests": handleListSupportRequests,
   "POST /api/admin/licenses/revoke": handleRevokeLicense,
   "POST /api/admin/licenses/reactivate": handleReactivateLicense,
   "POST /api/admin/licenses/resend": handleResendLicense,
@@ -5528,6 +5537,48 @@ async function handleListOrders(request, env2, corsHeaders2) {
   }, 200, corsHeaders2);
 }
 __name(handleListOrders, "handleListOrders");
+async function handleListSupportRequests(request, env2, corsHeaders2) {
+  const url = new URL(request.url);
+  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+  const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "50")));
+  const status = url.searchParams.get("status");
+  const search = url.searchParams.get("search");
+  const offset = (page - 1) * limit;
+  let where = "WHERE source = 'support_purchase'";
+  const params = [];
+  if (status) {
+    where += " AND status = ?";
+    params.push(status);
+  }
+  if (search) {
+    where += " AND email LIKE ?";
+    params.push(`%${search}%`);
+  }
+  params.push(limit, offset);
+  const [requests, total] = await Promise.all([
+    env2.DB.prepare(`
+      SELECT id, email, source, consent_marketing, consent_transactional, status, subscribed_at, ip
+      FROM botwow_emails
+      ${where}
+      ORDER BY subscribed_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(...params).all(),
+    env2.DB.prepare(`
+      SELECT COUNT(*) as cnt FROM botwow_emails ${where}
+    `).bind(...params.slice(0, -2)).first()
+  ]);
+  return jsonResponse4({
+    ok: true,
+    requests: requests.results,
+    pagination: {
+      page,
+      limit,
+      total: total?.cnt || 0,
+      totalPages: Math.ceil((total?.cnt || 0) / limit)
+    }
+  }, 200, corsHeaders2);
+}
+__name(handleListSupportRequests, "handleListSupportRequests");
 async function handleListLicenses(request, env2, corsHeaders2) {
   const url = new URL(request.url);
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));

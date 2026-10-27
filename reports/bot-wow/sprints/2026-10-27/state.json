@@ -22,7 +22,7 @@
     "3": { "title": "Webhooks Mollie idempotents + reprise de livraison", "status": "DONE_NO_PROD_DEPLOY" },
     "4": { "title": "Diagnostic chute checkout + durcir contrat checkout", "status": "DONE_NO_PROD_DIAGNOSIS" },
     "5": { "title": "Route démo `/demo` en production", "status": "DONE" },
-    "6": { "title": "Demandes d'aide après échec checkout → dossier support", "status": "PENDING" },
+    "6": { "title": "Demandes d'aide après échec checkout → dossier support", "status": "DONE_NO_PROD_DEPLOY" },
     "7": { "title": "Funnel first-party attribuable jusqu'au paiement", "status": "PENDING" },
     "8": { "title": "Test CRO A/B réversible et mesurable", "status": "PENDING" },
     "9": { "title": "Acquisition gratuite, SEO, UX", "status": "PENDING" },

@@ -169,6 +169,27 @@
     </div>
   </div>
 </section>
+<!-- ============================================================ DEMANDE DE SUPPORT -->
+<section class="pad" id="support">
+  <div class="w">
+    <header class="section-head">
+      <h2 class="h2">Besoin d'aide pour votre achat ?</h2>
+    </header>
+    <p class="lead">Votre paiement a échoué ou vous n'avez pas reçu votre clé de licence ? Indiquez-nous votre e-mail et nous regarderons. C'est une demande de support, pas un abonnement à la newsletter : vous ne serez ajouté à aucune liste marketing.</p>
+    <form id="supportForm" novalidate>
+      <input type="hidden" name="source" value="support_purchase">
+      <input type="hidden" name="consent_marketing" value="0">
+      <label for="supportEmail" class="form-label">Votre e-mail (celui utilisé lors du paiement)</label>
+      <div class="input-group">
+        <input class="pm-input" id="supportEmail" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email">
+        <button class="btn btn-gold btn-lg" type="submit" id="supportBtn"><span class="btn-text">Envoyer la demande</span></button>
+      </div>
+      <p class="formerr" id="supportErr" role="alert"></p>
+      <p class="formsent" id="supportOk" role="status"></p>
+    </form>
+    <p class="small">Vous pouvez aussi écrire à <a href="mailto:support@bot-wow.com">support@bot-wow.com</a> directement.</p>
+  </div>
+</section>
 <section class="pad" id="faq">
   <div class="w">
     <header class="section-head">

@@ -19,7 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const MIGRATION_FILE = path.join(__dirname, '..', 'migrations', '0001_botwow_emails.sql');
+const MIGRATION_FILE = path.join(__dirname, '..', 'migrations', 'production', '0001_botwow_emails.sql');
 
 let failures = 0;
 function assert(condition, message) {
@@ -135,29 +135,34 @@ async function handleSubscribe(request, env2) {
     return jsonResponse({ ok: false, error: 'invalid_email' }, 400);
   }
   const source = body.source || 'newsletter';
-  const consentMarketing = body.consent_marketing === true ? 1 : 0;
+  const isSupport = source === 'support_purchase';
+  // Une demande de support n'est JAMAIS ajoutée au marketing par défaut.
+  const consentMarketing = isSupport ? 0 : (body.consent_marketing === true ? 1 : 0);
   const consentTransactional = body.consent_transactional === true ? 1 : 0;
+  // Statut distinct : 'pending' pour une demande de support à traiter,
+  // 'subscribed' pour une inscription newsletter.
+  const status = isSupport ? 'pending' : 'subscribed';
   const now = Date.now();
   try {
     const existing = await env2.DB.prepare(
-      `SELECT id, status FROM botwow_emails WHERE email = ?`
+      `SELECT id, status, source, consent_marketing FROM botwow_emails WHERE email = ?`
     ).bind(email).first();
     if (existing) {
-      if (existing.status === 'subscribed') {
+      if (existing.status === 'subscribed' && !isSupport) {
         return jsonResponse({ ok: true, message: 'Déjà inscrit.', email }, 200);
       }
       await env2.DB.prepare(`
-        UPDATE botwow_emails SET status = 'subscribed', unsubscribed_at = NULL,
+        UPDATE botwow_emails SET status = ?, unsubscribed_at = NULL,
           subscribed_at = ?, consent_marketing = ?, consent_transactional = ?, source = ?
         WHERE email = ?
-      `).bind(now, consentMarketing, consentTransactional, source, email).run();
-      return jsonResponse({ ok: true, message: 'Inscription réactivée.', email }, 200);
+      `).bind(status, now, consentMarketing, consentTransactional, source, email).run();
+      return jsonResponse({ ok: true, message: isSupport ? 'Demande de support enregistrée.' : 'Inscription réactivée.', email }, 200);
     }
     await env2.DB.prepare(`
       INSERT INTO botwow_emails (email, source, consent_marketing, consent_transactional, subscribed_at, status, ip)
-      VALUES (?, ?, ?, ?, ?, 'subscribed', ?)
-    `).bind(email, source, consentMarketing, consentTransactional, now, now, ip).run();
-    return jsonResponse({ ok: true, message: 'Inscription enregistrée.', email }, 200);
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(email, source, consentMarketing, consentTransactional, now, status, ip).run();
+    return jsonResponse({ ok: true, message: isSupport ? 'Demande de support enregistrée. L’équipe vous répondra.' : 'Inscription enregistrée.', email }, 200);
   } catch (error) {
     console.error('Subscribe error:', error);
     return jsonResponse({ ok: false, error: 'server_error' }, 500);
@@ -268,6 +273,94 @@ test('email avec consents différents est accepté et mis à jour', async () => 
   assert(row.consent_marketing === 0, 'consent_marketing mis à jour à 0');
   assert(row.consent_transactional === 1, 'consent_transactional mis à jour à 1');
   assert(row.source === 'website', 'source mise à jour');
+});
+
+test('email avec consents différents est accepté et mis à jour', async () => {
+  await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'consent@example.com',
+    source: 'newsletter',
+    consent_marketing: true,
+    consent_transactional: false
+  }), env);
+  const res = await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'consent@example.com',
+    source: 'website',
+    consent_marketing: false,
+    consent_transactional: true
+  }), env);
+  assert(res.ok === true, 'ok=true');
+  const row = await env2.DB.prepare('SELECT * FROM botwow_emails WHERE email = ?').bind('consent@example.com').first();
+  assert(row.consent_marketing === 0, 'consent_marketing mis à jour à 0');
+  assert(row.consent_transactional === 1, 'consent_transactional mis à jour à 1');
+  assert(row.source === 'website', 'source mise à jour');
+});
+
+test('demande de support : consent_marketing = 0 et statut pending', async () => {
+  const res = await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'support@example.com',
+    source: 'support_purchase',
+    consent_marketing: false,
+    consent_transactional: false
+  }), env);
+  assert(res.ok === true, 'ok=true');
+  assert(res.body.message.includes('support'), 'message de support');
+  const row = await env2.DB.prepare('SELECT * FROM botwow_emails WHERE email = ?').bind('support@example.com').first();
+  assert(row !== undefined, 'email présent en base');
+  assert(row.consent_marketing === 0, 'consent_marketing = 0 (pas de marketing)');
+  assert(row.status === 'pending', 'statut pending');
+  assert(row.source === 'support_purchase', 'source = support_purchase');
+});
+
+test('demande de support : même avec consent_marketing=true envoyé, reste à 0', async () => {
+  const res = await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'support2@example.com',
+    source: 'support_purchase',
+    consent_marketing: true,
+    consent_transactional: false
+  }), env);
+  assert(res.ok === true, 'ok=true');
+  const row = await env2.DB.prepare('SELECT * FROM botwow_emails WHERE email = ?').bind('support2@example.com').first();
+  assert(row.consent_marketing === 0, 'consent_marketing forcé à 0 pour le support');
+  assert(row.status === 'pending', 'statut pending');
+});
+
+test('déduplication : une newsletter existante ne devient pas une demande de support', async () => {
+  await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'dedup@example.com',
+    source: 'newsletter',
+    consent_marketing: true,
+    consent_transactional: false
+  }), env);
+  const res = await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'dedup@example.com',
+    source: 'support_purchase',
+    consent_marketing: false,
+    consent_transactional: false
+  }), env);
+  assert(res.ok === true, 'ok=true');
+  const row = await env2.DB.prepare('SELECT * FROM botwow_emails WHERE email = ?').bind('dedup@example.com').first();
+  assert(row.status === 'pending', 'statut mis à jour à pending');
+  assert(row.source === 'support_purchase', 'source mise à jour à support_purchase');
+  assert(row.consent_marketing === 0, 'consent_marketing mis à 0');
+});
+
+test('une demande de support existante reste pending à la ré-émission', async () => {
+  await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'reissue@example.com',
+    source: 'support_purchase',
+    consent_marketing: false,
+    consent_transactional: false
+  }), env);
+  const res = await handleSubscribe(makeRequest('POST', '/api/subscribe', {
+    email: 'reissue@example.com',
+    source: 'support_purchase',
+    consent_marketing: false,
+    consent_transactional: false
+  }), env);
+  assert(res.ok === true, 'ok=true');
+  assert(res.body.message.includes('support'), 'message de support');
+  const row = await env2.DB.prepare('SELECT * FROM botwow_emails WHERE email = ?').bind('reissue@example.com').first();
+  assert(row.status === 'pending', 'statut toujours pending');
 });
 
 // ── 7. Résumé ──────────────────────────────────────────────────────────
