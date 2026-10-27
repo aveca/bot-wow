@@ -4,7 +4,7 @@
 **Dépôt :** `C:\factory\worktrees\bot-wow-repo` → `aveca/bot-wow` (GitHub)  
 **Branche de vérification :** `docs/p0.13-production-verification-report-2026-10-27`  
 **Base :** `main` (`45b0c5c` — inclut PR #48 fusionnée)  
-**PR documentaire :** #49 — `https://github.com/aveca/bot-wow/pull/49`  
+**PR documentaire :** #51 — `https://github.com/aveca/bot-wow/pull/51`  
 **PR liée :** #48 — `https://github.com/aveca/bot-wow/pull/48` (FR hero CTA, fusionnée)  
 **PR liée :** #46 — `https://github.com/aveca/bot-wow/pull/46` (EN hero CTA, fusionnée, déjà en production)
 
@@ -93,7 +93,7 @@ Total : 6 combinaisons (2 langues × 3 viewports).
 
 ### 3.3 Captures d'écran
 
-Toutes les captures sont stockées dans `artifacts/ui/` :
+Les 6 captures ont été enregistrées pendant la mission dans `artifacts/ui/` sur le poste d’exécution. Elles ne figurent pas dans les fichiers modifiés de cette PR (qui ne versionne que ce rapport) :
 
 | Viewport | Anglais | Français |
 |---|---|---|
@@ -154,16 +154,11 @@ Tous les contrôles de production sont passés sur les 6 combinaisons (2 langues
 
 ---
 
-## 7. Prochaine action prioritaire
+## 7. Décision et périmètre de livraison
 
-**Fusionner la PR #48** (`ui/cro-french-hero-cta-20261027` vers `main`) — bien que le correctif soit déjà déployé en production via un autre canal, la PR doit être fusionnée pour aligner `main` sur l'état de production. Aucun déploiement supplémentaire n'est nécessaire car le code est déjà en ligne.
+Le correctif fonctionnel est déjà présent en production et sa vérification est **PASS**. Cette PR #51 ne contient qu’un rapport documentaire ; elle ne nécessite aucun déploiement applicatif. Avant fusion, vérifier les contrôles CI attachés au commit courant et l’absence de modifications concurrentes de la branche.
 
-Nouveau prompt pour la suite :
-```
-# BOT-WOW — Fusionner PR #48 et PR #49
-
-Fusionner les PR #48 (ui/cro-french-hero-cta-20261027) et #49 (docs/p0.11-production-verification-report-2026-10-27) vers main sur le dépôt aveca/bot-wow. Ne pas fusionner la PR #44.
-```
+La PR #44 (checkout garde) reste **OPEN et non touchée**. Aucun paiement réel n’a été initié et aucun prix, secret, paramètre de checkout ou code de production n’a été modifié dans cette mission.
 
 ---
 
