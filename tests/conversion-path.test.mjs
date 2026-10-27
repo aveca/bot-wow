@@ -62,7 +62,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
   check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
   check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
-  check('accueil : liste d\'attente proposee en repli', /data-waitlist/.test(t));
+  check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
 // 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
@@ -220,6 +220,23 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     .filter(u => !u.includes('/legal/fr/') && !/privacy|terms/.test(u));
   check(`${file} : les liens legaux FR pointent vers /legal/fr/`,
     wrong.length === 0, `(${wrong.join(', ')})`);
+}
+
+// 10. Le canal de secours au checkout doit proposer une action qui atteint
+// reellement le support. Le formulaire data-waitlist enregistre l'adresse en
+// base (verifie dans handleSubscribe) sans notifier qui que ce soit : la page
+// ne doit donc plus promettre une reponse manuelle du support.
+{
+  const en = read('index.html');
+  const fr = read('fr/index.html');
+  for (const [label, html] of [['index.html', en], ['fr/index.html', fr]]) {
+    check(`${label} : canal de secours = lien mailto direct`,
+      /href="mailto:support@bot-wow\.com"/.test(html), '(aucun mailto)');
+    check(`${label} : le formulaire silencieux data-waitlist est retire`,
+      !/data-waitlist/.test(html));
+    check(`${label} : aucune promesse de reponse manuelle du support`,
+      !/support answers|le support répond/i.test(html.replace(/\s+/g, ' ')));
+  }
 }
 
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
