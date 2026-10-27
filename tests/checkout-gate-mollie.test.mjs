@@ -17,6 +17,18 @@ const tmpWorker = path.join(HERE, '.worker-under-test.mjs');
 fs.writeFileSync(tmpWorker, fs.readFileSync(path.join(REPO, 'worker', 'index.js'), 'utf8'));
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
+/* Source de verite du tarif : PRICE_TABLE du Worker (jamais invente ici).
+   On lit le montant et la devise directement dans le code livre. */
+const workerSource = fs.readFileSync(path.join(REPO, 'worker', 'index.js'), 'utf8');
+const priceMatch = workerSource.match(/PRICE_TABLE\s*=\s*\{[\s\S]*?amount:\s*(\d+),\s*currency:\s*"([A-Z]+)"/);
+if (!priceMatch) {
+  console.log('FAIL source de verite PRICE_TABLE introuvable dans worker/index.js');
+  process.exit(1);
+}
+const EXPECTED_CENTS = Number(priceMatch[1]);
+const EXPECTED_CURRENCY = priceMatch[2];
+const EXPECTED_VALUE = (EXPECTED_CENTS / 100).toFixed(2);
+
 let failures = 0;
 const check = (name, ok, detail = '') => {
   if (ok) console.log(`  ok   ${name}`);
@@ -49,8 +61,28 @@ const realFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : (input && input.url) || String(input);
   if (/mollie\.com/.test(url)) {
-    MOLLIE_CALLS.push({ url, method: (init && init.method) || 'GET' });
-    return new Response(JSON.stringify({ id: 'cst_should_not_happen' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    // On capture le CORPS de la requete : c'est la seule facon de verifier
+    // le montant et la devise reellement envoyes au prestataire.
+    let parsedBody = null;
+    if (init && init.body) {
+      try { parsedBody = JSON.parse(init.body); } catch { parsedBody = null; }
+    }
+    MOLLIE_CALLS.push({
+      url,
+      method: (init && init.method) || 'GET',
+      body: parsedBody,
+    });
+    // Reponses simulees conformes a l'API Mollie (aucun appel reseau reel).
+    if (/\/payments$/.test(url) && (init && init.method) === 'POST') {
+      return new Response(JSON.stringify({
+        id: 'tr_simulated',
+        _links: { checkout: { href: 'https://www.mollie.com/checkout/simulated' } },
+      }), { status: 201, headers: { 'content-type': 'application/json' } });
+    }
+    if (/\/customers/.test(url)) {
+      return new Response(JSON.stringify({ id: 'cst_simulated' }), { status: 201, headers: { 'content-type': 'application/json' } });
+    }
+    return new Response(JSON.stringify({ id: 'mollie_simulated' }), { status: 200, headers: { 'content-type': 'application/json' } });
   }
   return realFetch(input, init);
 };
@@ -95,20 +127,49 @@ for (const attack of [
   check(`injection ${Object.keys(attack)[0]} -> 0 appel Mollie`, MOLLIE_CALLS.length === 0, `(${MOLLIE_CALLS.length})`);
 }
 
-/* 3. Statut confirme cote serveur : la garde ne bloque plus (reseau simule). */
+/* 3. Statut confirme cote serveur : la garde ne bloque plus et le parcours
+      va bien jusqu'a la creation du paiement Mollie (reseau simule). */
 {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const b = await res.json().catch(() => ({}));
   check('confirmed -> pas de 409', res.status !== 409, `(status ${res.status})`);
-  check('confirmed -> les appels Mollie restent simules', MOLLIE_CALLS.every(c => /mollie\.com/.test(c.url)), '(hors perimetre)');
+  check('confirmed -> reponse 200 avec un paymentId', res.status === 200 && !!b.paymentId, `(status ${res.status})`);
+  check('confirmed -> une checkoutUrl Mollie est renvoyee',
+    !!b.checkoutUrl && /mollie\.com/.test(b.checkoutUrl), `(${b.checkoutUrl})`);
+  // Le parcours doit avoir REELLEMENT appele Mollie : client + paiement.
+  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
+  const customerCalls = MOLLIE_CALLS.filter((c) => /\/customers/.test(c.url));
+  check('confirmed -> un client Mollie est cree', customerCalls.length >= 1, `(${MOLLIE_CALLS.length} appels)`);
+  check('confirmed -> un paiement Mollie est cree', paymentCalls.length === 1, `(${paymentCalls.length})`);
 }
 
-/* 4. Le prix reste inchange : la garde ne touche pas au montant. */
+/* 4. Le tarif envoye a Mollie est exactement celui de PRICE_TABLE :
+      la garde ne modifie ni le montant ni la devise. Verification REELLE
+      du corps de la requete de paiement (plus d assertion vacument vraie). */
 {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'));
-  const amountOk = MOLLIE_CALLS.length === 0 || true; // aucun paiement reel en test
-  check('aucun prix modifie (montant attendu 2000 centimes cote serveur)', amountOk);
+  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
+  check('un paiement Mollie est cree (prerequis au controle du montant)',
+    paymentCalls.length === 1, `(${paymentCalls.length})`);
+  const body = paymentCalls[0] && paymentCalls[0].body;
+  check('montant envoye a Mollie conforme a PRICE_TABLE',
+    !!body && body.amount && body.amount.value === EXPECTED_VALUE,
+    `(attendu ${EXPECTED_VALUE} ${EXPECTED_CURRENCY}, recu ${body && body.amount ? body.amount.value + ' ' + body.amount.currency : 'aucun'})`);
+  check('devise envoyee a Mollie conforme a PRICE_TABLE',
+    !!body && body.amount && body.amount.currency === EXPECTED_CURRENCY,
+    `(attendu ${EXPECTED_CURRENCY}, recu ${body && body.amount ? body.amount.currency : 'aucune'})`);
+  check('produit verrouille dans les metadonnees',
+    !!body && body.metadata && body.metadata.product === 'bot-wow-lifetime',
+    `(recu ${body && body.metadata ? body.metadata.product : 'aucun'})`);
+  // Le navigateur ne doit jamais pouvoir imposer son propre montant.
+  const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed'));
+  const injectedPayments = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
+  const lastBody = injectedPayments[injectedPayments.length - 1] && injectedPayments[injectedPayments.length - 1].body;
+  check('un montant impose par le navigateur est ignore (reste le tarif serveur)',
+    injected.status !== 200 || (!!lastBody && lastBody.amount && lastBody.amount.value === EXPECTED_VALUE),
+    `(recu ${lastBody && lastBody.amount ? lastBody.amount.value : 'aucun'})`);
 }
 
 try { fs.unlinkSync(tmpWorker); } catch {}
