@@ -264,5 +264,20 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
+// 13. Accessibilite du champ email : un outline:none global rend le champ
+// invisible a la navigation clavier. Le clavier doit retrouver un anneau.
+for (const file of ['index.html', 'fr/index.html']) {
+  const html = read(file);
+  check(`${file} : champ email avec type="email"`, /id="email"[^>]*type="email"/.test(html));
+  check(`${file} : label associe au champ email`, /<label[^>]*for="email"/.test(html));
+  const css = read('assets/site.css');
+  check(`site.css : pm-input retrouve un :focus-visible`,
+    /\.pm-input:focus-visible\{[^}]*outline:/.test(css));
+  check(`site.css : pas de outline:none global sur :focus-visible`,
+    !/\.pm-input:focus-visible\{[^}]*outline:\s*none/.test(css));
+  check(`theme.css : :focus-visible global doré present`,
+    /:focus-visible\{[^}]*outline:\s*3px solid var\(--gold\)/.test(read('assets/theme.css')));
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
