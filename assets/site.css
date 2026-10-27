@@ -316,6 +316,12 @@ footer ul a{color:var(--mut);font-size:14px}footer ul a:hover{color:var(--txt)}
 .pm-input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:11px;
   padding:13px 14px;color:var(--txt);font-family:inherit;font-size:15px;margin-bottom:18px;transition:border .15s}
 .pm-input:focus{outline:none;border-color:var(--gold)}
+/* Accessibilite : le outline:none ci-dessus tuait le :focus-visible de
+   theme.css et rendait le champ invisible a la navigation clavier.
+   Le pointeur garde un focus discret (pas de anneau), le clavier retrouve
+   un anneau or net et offset. */
+.pm-input:focus:not(:focus-visible){outline:none}
+.pm-input:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
 #payment-element{margin-bottom:18px;min-height:42px}
 .pm-err{color:var(--red);font-size:13px;margin-bottom:14px;display:none}
 .pm-err.show{display:block}
