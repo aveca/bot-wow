@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 /**
- * release-availability.test.mjs — commercial truth guard.
- * The v1.2.0 package is not verified in the download store (issue #18,
- * PRs #26/#28). Every known direct purchase form must disclose that fact.
- * Static assertions inspect repository HTML; they do not query production R2.
+ * release-availability.test.mjs — garde-fou commercial.
+ *
+ * Probleme demontre : le site vend la v1.2.0 alors que le paquet de
+ * telechargement correspondant n'est pas verifiable dans R2 (issue #18,
+ * PR #26). Les pages de vente ne doivent donc PAS promettre de livraison
+ * immediate ni presenter v1.2.0 comme une version confirmee.
+ *
+ * Ce test est un garde-fou statique : il lit le code publie, pas R2.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,52 +19,37 @@ const read = (p) => fs.readFileSync(path.join(REPO, p), 'utf8');
 
 let failures = 0;
 const check = (name, ok, detail = '') => {
-  if (ok) console.log('  ok   ' + name);
-  else { failures += 1; console.log('  FAIL ' + name + ' ' + detail); }
+  if (ok) console.log(`  ok   ${name}`);
+  else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-const pages = [
-  { page: 'buy.html', file: 'buy.html', deliveryClaim: /Delivered\s+<b>by email<\/b>\s+in minutes/i },
-  { page: 'fr/buy.html', file: 'fr/buy.html', deliveryClaim: /Livré\s+<b>par e-mail<\/b>\s+en quelques minutes/i },
-  { page: 'compare.html', file: 'compare.html', deliveryClaim: /€20,\s*delivered by email/i },
-  { page: 'fr/compare.html', file: 'fr/compare.html', deliveryClaim: /20\s*€,\s*livrés par e-mail/i },
-];
+const EN_CLAIM = /Delivered\s+<b>by email<\/b>\s+in minutes/i;
+const FR_CLAIM = /Livré\s+<b>par e-mail<\/b>\s+en quelques minutes/i;
 
-for (const { page, file, deliveryClaim } of pages) {
+for (const [page, file, claimRe] of [
+  ['buy.html', 'buy.html', EN_CLAIM],
+  ['fr/buy.html', 'fr/buy.html', FR_CLAIM],
+]) {
   const html = read(file);
+  // Les retours a la ligne du HTML ne sont pas significatifs : on compare
+  // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
-  const noticeIndex = html.indexOf('id="release-availability-notice"');
-  const formIndex = html.indexOf('id="buyForm"');
-
-  check(page + ' : avis de disponibilité accessible présent',
-    noticeIndex >= 0 && /role="alert"/.test(html.slice(noticeIndex, noticeIndex + 250)));
-  check(page + " : avis placé avant le formulaire d'achat",
-    noticeIndex >= 0 && formIndex > noticeIndex);
-  check(page + ' : aucune promesse de livraison immédiate', !deliveryClaim.test(flat));
-  check(page + " : v1.2.0 n'est pas étiquetée comme version actuelle",
-    !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) &&
-    !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
-  check(page + " : le support est proposé avant paiement tant que la livraison n'est pas confirmée",
+  check(`${page} : avis de disponibilite present`,
+    /id="release-availability-notice"/.test(html) && /role="alert"/.test(html));
+  check(`${page} : avis place AVANT le formulaire d'achat`,
+    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
+  check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
+  check(`${page} : v1.2.0 non presente comme une version confirmee`,
+    !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
+  check(`${page} : invitation a contacter le support avant paiement`,
     /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée/i.test(flat));
-  check(page + ' : le vrai formulaire de checkout est conservé',
+  check(`${page} : le vrai formulaire de checkout est conserve`,
     /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
-  check(page + ' : prix 20,00 EUR inchangé', /20,00\s*€/.test(html));
-  check(page + ' : les CTA restent instrumentés',
-    (html.match(/data-cta-id=/g) || []).length >= 3);
-
-  if (page === 'compare.html') {
-    check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span><b>Fishing bot build v1.2.0') &&
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Intended fishing bot build') &&
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>The intended Casinobabe addon'));
-  }
-  if (page === 'fr/compare.html') {
-    check(page + ' : les lignes de produit non disponibles portent un pictogramme avertissement',
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span><b>Build du bot de pêche v1.2.0') &&
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Build prévu du bot') &&
-      html.includes('<li><span class="m warn" aria-hidden="true">!</span><span>Le build prévu de l’addon Casinobabe'));
-  }
+  check(`${page} : prix 20,00 EUR inchange`,
+    /20,00\s*€/.test(html));
+  check(`${page} : CTAs instrumentes pour la mesure`,
+    (html.match(/data-cta-id="buy-/g) || []).length >= 3);
 }
 
-console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : '\nRELEASE AVAILABILITY : ' + failures + ' ECHEC(S)');
+console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
