@@ -42,8 +42,8 @@
 | 1 | Contrat commercial réel (harmoniser offres EN/FR) | DONE | cd099a8 | validate PASS, release-availability OK (acheté compare/fr/compare), link-check OK, site-artifact OK | 2 |
 | 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | 1369b55 | build-package local PASS, payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
 | 3 | Webhooks Mollie idempotents + reprise de livraison | DONE (code+tests, pas de deploy production) | — | payment-flow OK (y compris concurrence, rejet, rejeu), checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS | 4 |
-| 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | — | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
-| 5 | Route démo `/demo` en production | PENDING | — | site-artifact, e2e démo, navigateur | 6 |
+| 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | 3c9ec1e | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
+| 5 | Route démo `/demo` en production | DONE | — | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
 | 6 | Demandes d'aide après échec checkout → dossier support | PENDING | — | subscribe, D1, idempotence | 7 |
 | 7 | Funnel first-party attribuable jusqu'au paiement | PENDING | — | telemetry, allowlist, conversion-path | 8 |
 | 8 | Test CRO A/B réversible et mesurable | PENDING | — | ab-variants | 9 |
@@ -86,3 +86,11 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Client caisse durci (`assets/app.js` `startCheckout`) : codes d'erreur fermés tracés (`delivery_unverified`, `invalid_request`, `rate_limited`, `server_error`, `network_error`, `http_4xx`, `unknown`) ; message d'erreur explicite avec canal support ; bouton désactivé pendant l'appel (anti double-soumission) ; fallback même-origine si l'API est indisponible.
 - Télémétrie (`telemetry-worker/index.js`) : événement `checkout_error` accepte le prop `code` (liste fermée, validée par RE_CODE) ; colonne `code` ajoutée à la table `events` (migration 0004 analytics, non appliquée en production).
 - Aucun paiement réel, aucun e-mail réel, aucune mutation D1/production.
+
+## Preuves mission 5 (Route démo `/demo` en production)
+
+- Constat : `demo.html` (EN + FR) est dans la liste FILES de `scripts/build-site.mjs` → publiée dans l'artefact ; aucune entrée `_redirects` ne détournant `/demo` ; `_headers` impose `max-age=0, must-revalidate` sur le HTML (pas de cache obsolète).
+- Contenu vérifié : mention explicite "données simulées / SIMULATED DATA" (`.sim-banner`, role="note"), titre, CTA d'achat, lien vers l'offre `#buy`, canonical/hreflang EN/FR cohérents, aucun appel `/checkout` depuis la démo.
+- Cause racine issue #25 résolue par : build statique correct (seulement fichiers publiés), cache HTML à revalidation systématique, pas de redirect hérité. L'ancienne démo n'est plus servie.
+- Tests e2e Playwright : 54/54 pass (desktop + mobile), dont démo EN (simulation, interactions, pas de checkout), démo FR (locale, localisation), capture de baseline production (`bot-wow.com/demo.html` accessible).
+- Aucun déploiement manuel nécessaire : le contenu est déjà correct dans le dépôt et l'artefact.
