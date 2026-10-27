@@ -82,6 +82,28 @@ for (const [page, file, claimRe, unverifiedRe, verifiedRe] of [
     /mailto:support@bot-wow\.com/.test(html));
 }
 
+/* Pages de comparaison (hybrides : elles contiennent aussi une section
+   d'achat) : memes garde-fous sur l'allégation de non-disponibilité, sans
+   exiger le formulaire complet qui n'est pas leur seul objet. */
+for (const [page, file, unverifiedRe, verifiedRe] of [
+  ['compare.html', 'compare.html', EN_UNVERIFIED, /verified/i],
+  ['fr/compare.html', 'fr/compare.html', FR_UNVERIFIED, /vérifié/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  check(`${page} : aucune affirmation de livraison NON confirmee`,
+    !unverifiedRe.test(flat),
+    `(le paquet v1.2.0 est verifie en R2 le 27/10/2026)`);
+  check(`${page} : disponibilite presentee comme verifiee`,
+    verifiedRe.test(flat));
+  check(`${page} : le manifeste SHA-256 est mentionne`,
+    /SHA-256/i.test(flat));
+  check(`${page} : aucune promesse de livraison instantanee`,
+    !EN_CLAIM.test(html) && !FR_CLAIM.test(html));
+  check(`${page} : prix 20,00 EUR inchange`,
+    /20,00\s*€/.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
 

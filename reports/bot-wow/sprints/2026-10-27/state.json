@@ -1,0 +1,32 @@
+{
+  "sprint": "bot-wow-10-missions-2026-10-27",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "botwow-10-missions-sprint-2026-10-27",
+  "base_sha": "8eaad0e",
+  "date": "2026-10-27",
+  "capabilities_verified": {
+    "model": "Nemotron 3.5 Super VL 120B A12B",
+    "node": "v24.14.0",
+    "npm": "11.9.0",
+    "playwright": "@playwright/test ^1.64.1",
+    "shell": "PowerShell (Win32)",
+    "git": "remote origin https://github.com/aveca/bot-wow.git",
+    "browser": "Playwright Chromium",
+    "build_package": "scripts/build-package.cjs",
+    "build_site": "scripts/build-site.mjs",
+    "validate": "scripts/validate.mjs"
+  },
+  "missions": {
+    "1": { "title": "Contrat commercial réel (harmoniser offres EN/FR)", "status": "DONE" },
+    "2": { "title": "Release v1.2.0 : build, intégrité, réconcilier PR #19/#44", "status": "IN_PROGRESS" },
+    "3": { "title": "Webhooks Mollie idempotents + reprise de livraison", "status": "PENDING" },
+    "4": { "title": "Diagnostic chute checkout + durcir contrat checkout", "status": "PENDING" },
+    "5": { "title": "Route démo `/demo` en production", "status": "PENDING" },
+    "6": { "title": "Demandes d'aide après échec checkout → dossier support", "status": "PENDING" },
+    "7": { "title": "Funnel first-party attribuable jusqu'au paiement", "status": "PENDING" },
+    "8": { "title": "Test CRO A/B réversible et mesurable", "status": "PENDING" },
+    "9": { "title": "Acquisition gratuite, SEO, UX", "status": "PENDING" },
+    "10": { "title": "Certification finale, déploiement autorisé, rapport", "status": "PENDING" }
+  },
+  "notes": "Aucun prix/devise/checkout modifié. Aucune mutation production. Aucun e-mail réel."
+}
