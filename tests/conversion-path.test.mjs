@@ -254,5 +254,15 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
   }
 }
 
+// 12. Lisibilite : chaque section de l accueil porte un titre. Une section
+// sans titre casse le balayage de la page et fait disparaitre son contenu.
+for (const file of ['index.html', 'fr/index.html']) {
+  const html = read(file);
+  const sections = html.match(/<section[\s\S]*?<\/section>/g) || [];
+  const untitled = sections.filter(s => !/<h[12][\s>]/.test(s)).length;
+  check(`${file} : aucune section sans titre (${sections.length} sections)`,
+    untitled === 0, `(${untitled} sans titre)`);
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
