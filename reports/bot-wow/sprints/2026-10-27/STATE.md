@@ -42,7 +42,7 @@
 | 1 | Contrat commercial réel (harmoniser offres EN/FR) | DONE | cd099a8 | validate PASS, release-availability OK (acheté compare/fr/compare), link-check OK, site-artifact OK | 2 |
 | 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | 1369b55 | build-package local PASS, payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
 | 3 | Webhooks Mollie idempotents + reprise de livraison | DONE (code+tests, pas de deploy production) | — | payment-flow OK (y compris concurrence, rejet, rejeu), checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS | 4 |
-| 4 | Diagnostic chute checkout + durcir contrat checkout | PENDING | — | payment-flow, checkout-security, funnel | 5 |
+| 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | — | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
 | 5 | Route démo `/demo` en production | PENDING | — | site-artifact, e2e démo, navigateur | 6 |
 | 6 | Demandes d'aide après échec checkout → dossier support | PENDING | — | subscribe, D1, idempotence | 7 |
 | 7 | Funnel first-party attribuable jusqu'au paiement | PENDING | — | telemetry, allowlist, conversion-path | 8 |
@@ -77,3 +77,12 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Migration 0005_botwow_webhook_states.sql : table payment_states (id, status, attempt, last_error, timestamps), indexes. Idempotente (IF NOT EXISTS), non destructive. NON appliquee en production (mission sensible, approbation requise).
 - Tests ajoutes : concurrence webhook (1 licence max), statut pending (0 licence), rejeu termine (200, pas de doublon), remboursement rejoue (sans effet).
 - Blocage production : aucun deploy Worker, aucune migration D1 de production, aucun e-mail réel. Approbation requise avant merge/deploy.
+
+## Preuves mission 4 (Diagnostic chute checkout + durcir contrat checkout)
+
+- Constat (rapport sale-readiness, lecture seule D1) : entonnoir 27 `checkout_requested` → 4 `checkout_created` (−85,2 %) ; `checkout_created` (4) < paiements confirmés (5), certains paiements sans trace de télémétrie client.
+- Cause exacte en production NON prouvée : pas d'accès aux logs Worker/production (BLOCKED_EVIDENCE sur la cause racine exacte). Causes plausibles : abandon utilisateur (normal), RELEASE_STATUS != 'confirmed' (409 delivery_unverified sur tout checkout), erreurs réseau vers api.bot-wow.com.
+- Serveur caisse durci (missions 2+3, déjà en place) : montant/devise/produit imposés côté serveur (PRICE_TABLE), montant navigateur refusé (400), URLs de redirection/webhook canoniques, garde RELEASE_STATUS (variable d'environnement, non contournable), pas d'appel Mollie tant que livraison non confirmée, idempotence webhook.
+- Client caisse durci (`assets/app.js` `startCheckout`) : codes d'erreur fermés tracés (`delivery_unverified`, `invalid_request`, `rate_limited`, `server_error`, `network_error`, `http_4xx`, `unknown`) ; message d'erreur explicite avec canal support ; bouton désactivé pendant l'appel (anti double-soumission) ; fallback même-origine si l'API est indisponible.
+- Télémétrie (`telemetry-worker/index.js`) : événement `checkout_error` accepte le prop `code` (liste fermée, validée par RE_CODE) ; colonne `code` ajoutée à la table `events` (migration 0004 analytics, non appliquée en production).
+- Aucun paiement réel, aucun e-mail réel, aucune mutation D1/production.

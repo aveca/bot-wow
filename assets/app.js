@@ -145,6 +145,7 @@ async function startCheckout(email) {
   }
   let data = null;
   let lastError = null;
+  let lastCode = null;
   for (const base of [API_BASE, '']) {
     try {
       const res = await fetch(base + '/api/checkout', {
@@ -155,17 +156,26 @@ async function startCheckout(email) {
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.checkoutUrl) { data = body; break; }
       lastError = body.error || ('http_' + res.status);
+      lastCode = body.error || ('http_' + res.status);
+      // Codes d'erreur fermes, sans PII, pour diagnostiquer la chute checkout.
+      if (res.status === 409) lastCode = 'delivery_unverified';
+      else if (res.status === 400) lastCode = 'invalid_request';
+      else if (res.status === 429) lastCode = 'rate_limited';
+      else if (res.status === 500) lastCode = 'server_error';
+      else if (!res.ok) lastCode = 'http_' + res.status;
     } catch (e) {
       lastError = String(e && e.message ? e.message : e);
+      lastCode = 'network_error';
     }
   }
   if (!data) {
     btn.disabled = false;
     btn.textContent = original;
     err.textContent = T.fail.replace('%1', lastError || 'error');
-    // Le parcours s'est arrete ici : on le signale (sans aucune PII).
+    // Le parcours s'est arrete ici : on le signale avec un code d'erreur ferme
+    // (sans aucune PII) pour diagnostiquer la chute checkout.
     if (typeof window.botwowTrack === 'function') {
-      window.botwowTrack('checkout_error', { step: 'no_checkout_url' });
+      window.botwowTrack('checkout_error', { step: 'no_checkout_url', code: lastCode || 'unknown' });
     }
     return;
   }
