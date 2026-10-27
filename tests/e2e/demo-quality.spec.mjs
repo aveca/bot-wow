@@ -63,7 +63,8 @@ test('homepage: primary demo and purchase paths remain visible and responsive', 
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText('current release');
+  await expect(page.locator('#release-availability-notice')).not.toContainText('do not purchase');
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-offer"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
