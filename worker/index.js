@@ -2331,7 +2331,7 @@ async function handleDownload(request, env2) {
     }
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": `attachment; filename="${objectKey}"`,
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
@@ -2414,6 +2414,16 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var MOLLIE_API_BASE = "https://api.mollie.com/v2";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+/* Etat de livraison du paquet telechargeable, decide cote serveur.
+   "pending" (defaut) : l'archive n'est pas verifiee -> le checkout est
+   refuse (409) pour ne pas encaisse contre une livraison non confirmee.
+   "confirmed" : archive verifiee et disponible -> checkout autorise.
+   La valeur est lue dans l'environnement du Worker (var Cloudflare ou
+   wrangler.toml [vars]) : elle n'est JAMAIS prise dans le corps de la
+   requete, donc non contournable par le visiteur. */
+var RELEASE_STATUS = "pending";
+/* Surchargeable par l'environnement du Worker (var Cloudflare / wrangler.toml
+   [vars]) et, en test seulement, par l'env injecte. Jamais depuis la requete. */
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
 // remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
@@ -2488,6 +2498,29 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+
+  // GARDE DE LIVRAISON (prepare, non deploye) : tant que la disponibilite du
+  // paquet telechargeable n'est pas confirmee cote serveur, on n'encaisse
+  // pas. L'etat est une VARIABLE D'ENVIRONNEMENT du Worker : un visiteur ne
+  // peut pas la contourner depuis le navigateur. Reactivation controlee en
+  // passant RELEASE_STATUS=confirmed (aucun prix, secret ou route changes).
+  const releaseStatus = (env2 && typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS)
+    ? env2.RELEASE_STATUS
+    : RELEASE_STATUS;
+  if (releaseStatus !== "confirmed") {
+    console.warn("Checkout refuse : livraison non confirmee (RELEASE_STATUS=" + releaseStatus + ")");
+    return jsonResponse2({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr"
+        ? "La livraison du paquet n'est pas encore confirmee. Contactez le support avant de payer."
+        : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, {
+      "Retry-After": "3600"
+    });
+  }
+
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
