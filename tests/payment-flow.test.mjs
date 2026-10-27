@@ -37,6 +37,25 @@ function makeEnv(state) {
         bind: (...args) => ({
           run: async () => {
             state.calls.push({ sql: key, args });
+            state.paymentStates = state.paymentStates || new Map();
+            if (/INSERT INTO payment_states/i.test(key)) {
+              const id = args[0];
+              const status = args.find((a) => typeof a === 'string' && /^(received|processing|completed|retryable_failure|permanent_failure)$/.test(a)) || 'received';
+              state.paymentStates.set(id, { id, status, attempt: 0, last_error: null });
+              return { meta: { changes: 1, last_row_id: 0 } };
+            }
+            if (/UPDATE payment_states/i.test(key)) {
+              const id = args[args.length - 1];
+              const row = state.paymentStates.get(id) || { id, status: 'received', attempt: 0, last_error: null };
+              if (/SET status = .retryable_failure/i.test(key)) { row.status = 'retryable_failure'; row.last_error = args[args.length - 3]; }
+              else if (/SET status = .completed/i.test(key)) { row.status = 'completed'; }
+              else if (/SET status = .permanent_failure/i.test(key)) { row.status = 'permanent_failure'; }
+              else if (/SET status = .received/i.test(key)) { row.status = 'received'; row.last_error = null; }
+              else if (/SET status = .processing/i.test(key)) { row.status = 'processing'; }
+              row.attempt = (row.attempt || 0) + 1;
+              state.paymentStates.set(id, row);
+              return { meta: { changes: 1, last_row_id: 0 } };
+            }
             if (/INSERT INTO webhook_events/i.test(key)) {
               if (state.events.has(args[0])) {
                 throw new Error('UNIQUE constraint failed: webhook_events.id');
@@ -81,6 +100,10 @@ function makeEnv(state) {
           },
           first: async () => {
             state.calls.push({ sql: key, args });
+            state.paymentStates = state.paymentStates || new Map();
+            if (/FROM payment_states/i.test(key)) {
+              return state.paymentStates.get(args[0]) || null;
+            }
             if (/FROM mollie_customers/i.test(key)) return null;
             if (/FROM webhook_events/i.test(key)) {
               return state.events.has(args[0]) ? { id: args[0] } : null;
@@ -413,6 +436,50 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
   check('le rejeu du webhook de remboursement reste sans effet (200)', res2.status === 200, `(status=${res2.status})`);
   check('aucune seconde licence n\'est creee, aucun crash', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* 13.bis. Deux webhooks concurrents pour le meme paiement ne creent qu'une seule licence. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_concurrent', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  const [r1, r2] = await Promise.all([
+    callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_concurrent' }, env }),
+    callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_concurrent' }, env }),
+  ]);
+  const statuses = [r1.status, r2.status].sort((a, b) => a - b);
+  check('concurrence : une reponse 200 et une attente (202) ou deux 200',
+    (statuses[0] === 200 && (statuses[1] === 200 || statuses[1] === 202)),
+    `(statuses=${JSON.stringify(statuses)})`);
+  check('concurrence : exactement une licence creee', state.licenses.length === 1, `(${state.licenses.length})`);
+  check('concurrence : exactement une commande', state.orders.length === 1, `(${state.orders.length})`);
+}
+
+/* 13.ter. Un paiement en statut non terminal (open/pending) ne cree aucune licence. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_pending', status: 'pending', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_pending' }, env });
+  check('statut pending -> 200, aucune licence', res.status === 200 && state.licenses.length === 0,
+    `(status=${res.status} licences=${state.licenses.length})`);
+}
+
+/* 13.quater. Le rejeu d'un webhook bereits termine ne cree pas de seconde licence ni de seconde commande. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_replay', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_replay' }, env });
+  const licensesAfter1 = state.licenses.length;
+  const ordersAfter1 = state.orders.length;
+  const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_replay' }, env });
+  check('rejeu : repond 200', res2.status === 200, `(status=${res2.status})`);
+  check('rejeu : pas de seconde licence', state.licenses.length === licensesAfter1, `(${licensesAfter1} -> ${state.licenses.length})`);
+  check('rejeu : pas de seconde commande', state.orders.length === ordersAfter1, `(${ordersAfter1} -> ${state.orders.length})`);
 }
 
 /* 13. Le telechargement ne sert jamais un ancien paquet de repli et ne

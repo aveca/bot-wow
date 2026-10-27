@@ -40,8 +40,8 @@
 | Mission | Intitulé | Statut | SHA | Tests | Suivant |
 |---|---|---|---|---|---|
 | 1 | Contrat commercial réel (harmoniser offres EN/FR) | DONE | cd099a8 | validate PASS, release-availability OK (acheté compare/fr/compare), link-check OK, site-artifact OK | 2 |
-| 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | — | build-package local PASS (verifié indépendamment), payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
-| 3 | Webhooks Mollie idempotents + reprise de livraison | PENDING | — | payment-flow, migrations (DB temp) | 4 |
+| 2 | Release v1.2.0 : build, intégrité, réconcilier PR #19/#44 | DONE (local) / BLOCKED_APPROVAL (publication R2 + déploiement Worker) | 1369b55 | build-package local PASS, payment-flow OK, checkout-gate OK, checkout-gate-mollie OK, checkout-security OK, release-availability OK, validate PASS | 3 |
+| 3 | Webhooks Mollie idempotents + reprise de livraison | DONE (code+tests, pas de deploy production) | — | payment-flow OK (y compris concurrence, rejet, rejeu), checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS | 4 |
 | 4 | Diagnostic chute checkout + durcir contrat checkout | PENDING | — | payment-flow, checkout-security, funnel | 5 |
 | 5 | Route démo `/demo` en production | PENDING | — | site-artifact, e2e démo, navigateur | 6 |
 | 6 | Demandes d'aide après échec checkout → dossier support | PENDING | — | subscribe, D1, idempotence | 7 |
@@ -68,3 +68,12 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
   - Correction apportée à PR #19 : la vérification R2 est faite AVANT la réservation de quota (ainsi un artefact absent ne consomme jamais le quota, conforme au test 13).
 - Tests ajoutés : `tests/checkout-gate.test.mjs`, `tests/checkout-gate-mollie.test.mjs`, tests 13-16 dans `tests/payment-flow.test.mjs`, `RELEASE_STATUS: 'confirmed'` dans `checkout-security` + `payment-flow`, script `test:gate` dans `package.json`.
 - Blocage publication : aucun objet R2 n'est présent, donc le téléchargement client renverrait 503. L'upload R2 et le déploiement Worker nécessitent une autorisation explicite (non effectués). Pas de mutation R2/D1/production dans cette mission.
+
+## Preuves mission 3 (Webhooks Mollie idempotents + reprise de livraison)
+
+- Modele d'etats : received -> processing -> completed | retryable_failure | permanent_failure. Cle d'idempotence stable `payment:<paymentId>`. Une contrainte UNIQUE seule ne transforme pas une panne temporaire en succes definitif.
+- worker/index.js : handleMollieWebhook lit/ecrit payment_states AVANT fulfillOrder ; statut `completed` verrouille l'idempotence (rejeu -> 200, aucune seconde licence) ; statut `processing` en concurrence -> 202 attente ; refund/charged_back -> revocation idempotente + permanent_failure ; statuts non terminaux (open/pending) -> aucune licence.
+- fulfillOrder : idempotent a chaque frontiere (commande TEXT ord_<paymentId>, licence unique par commande, telechargement lie a la licence, e-mail consigne dans deliveries pour rejeul sans doublon). Echec e-mail consigne en pending sans faire echouer la commande.
+- Migration 0005_botwow_webhook_states.sql : table payment_states (id, status, attempt, last_error, timestamps), indexes. Idempotente (IF NOT EXISTS), non destructive. NON appliquee en production (mission sensible, approbation requise).
+- Tests ajoutes : concurrence webhook (1 licence max), statut pending (0 licence), rejeu termine (200, pas de doublon), remboursement rejoue (sans effet).
+- Blocage production : aucun deploy Worker, aucune migration D1 de production, aucun e-mail réel. Approbation requise avant merge/deploy.
