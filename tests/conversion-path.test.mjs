@@ -225,7 +225,7 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
 // 11. Hierarchie visuelle : l OR est reserve aux CTA d achat. Si tout est
 // doré, plus rien ne ressort et l action d achat devient invisible.
 {
-  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy'];
+  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy', 'hero-offer'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
