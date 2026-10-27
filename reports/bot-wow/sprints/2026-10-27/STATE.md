@@ -44,8 +44,8 @@
 | 3 | Webhooks Mollie idempotents + reprise de livraison | DONE (code+tests, pas de deploy production) | — | payment-flow OK (y compris concurrence, rejet, rejeu), checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS | 4 |
 | 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | 3c9ec1e | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
 | 5 | Route démo `/demo` en production | DONE | 580d635 | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
-| 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | — | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
-| 7 | Funnel first-party attribuable jusqu'au paiement | PENDING | — | telemetry, allowlist, conversion-path | 8 |
+| 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | 74687ed | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
+| 7 | Funnel first-party attribuable jusqu'au paiement | DONE | — | telemetry OK, conversion-path OK, telemetry-source-allowlist OK, analytics-source OK, payment-flow OK, validate PASS | 8 |
 | 8 | Test CRO A/B réversible et mesurable | PENDING | — | ab-variants | 9 |
 | 9 | Acquisition gratuite, SEO, UX | PENDING | — | link-check, audit:css, validate | 10 |
 | 10 | Certification finale, déploiement autorisé, rapport | PENDING | — | npm test complet, CI SHA exact | FIN |
@@ -103,3 +103,14 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Admin (`worker/index.js` `handleListSupportRequests`, route `GET /api/admin/support-requests`) : liste les demandes de support (`source = 'support_purchase'`), protégée par authentification admin JWT (même mécanisme que les autres routes admin), pagination, filtre par statut et recherche.
 - Tests (`tests/subscribe.cjs`) : demande de support avec consent_marketing = 0 et statut pending ; consent_marketing forcé à 0 même si true envoyé ; déduplication newsletter → support ; ré-émission reste pending.
 - Aucun e-mail réel envoyé, aucune mutation de production, aucun déploiement.
+
+## Preuves mission 7 (Funnel first-party attribuable jusqu'au paiement)
+
+- Contrat d'événements (telemetry-worker/index.js, EVENT_SPEC) : liste fermée des événements et propriétés (page_view, offer_view, demo_open, cta_click, planner_mode, ownership_view, checkout_start, checkout_requested, checkout_error, journey_view). Aucune donnée personnelle (pas d'email, pas d'identifiant de commande, pas de texte libre).
+- Identifiant de parcours first-party (assets/analytics.js) : `journey_id` généré une fois par session, stocké en sessionStorage, opaque (`j_<timestamp>_<random>`), aucune donnée personnelle, rotation à chaque nouvelle session.
+- Do Not Track respecté : si `navigator.doNotTrack === '1'`, aucun événement n'est envoyé.
+- Conversion uniquement côté serveur (worker/index.js `recordConversion`) : écrite par le Worker de paiement après vérification du webhook Mollie (montant, devise, produit, statut `paid`). Le collecteur public `/api/track` refuse un événement `conversion` (absent de EVENT_SPEC). Le navigateur ne peut pas forger une vente.
+- Chaîne d'attribution : `checkout_requested` (client) → `checkout_start` (client) → `checkout_created` (serveur) → `payment_confirmed` (serveur, webhook) → `license_created` (serveur) → `delivery_sent` (serveur). Chaque étape a un événement distinct avec `journey_id` pour le lien de parcours.
+- Déduplication : webhook idempotent via `payment_states` (mission 3) ; événements de test marqués `test: true` et exclus des stats ; fenêtre de rétention 90 jours avec purge opportuniste.
+- Tests : telemetry.test.mjs (collecteur), telemetry-source-allowlist.test.mjs (sources), analytics-source.test.mjs (attribution UTM), conversion-path.test.mjs (invariants du parcours, instrumentation, pas de PII, serveur ne compte pas les conversions), payment-flow.test.mjs (webhook → conversion → licence).
+- Aucun déploiement, aucun e-mail réel, aucune mutation de production.
