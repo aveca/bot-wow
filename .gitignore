@@ -22,3 +22,8 @@ captures/
 # Captures et releves de QA visuelle (scripts/qa-*-cdp.mjs) : artefacts
 # locaux de verification, regeneres a la demande, jamais versionnes.
 .qa-captures/
+
+# Sorties Playwright (tests/e2e) : captures de verification et contexte
+# d'erreur. Artefacts locaux de verification, jamais versionnes.
+artifacts/
+test-results/
