@@ -46,8 +46,8 @@
 | 5 | Route démo `/demo` en production | DONE | 580d635 | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
 | 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | 74687ed | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
 | 7 | Funnel first-party attribuable jusqu'au paiement | DONE | 1cfd3bb | telemetry OK, conversion-path OK, telemetry-source-allowlist OK, analytics-source OK, payment-flow OK, validate PASS | 8 |
-| 8 | Test CRO A/B réversible et mesurable | DONE (code+tests, experience desactivee par drapeau) | — | ab-variants OK, validate PASS | 9 |
-| 9 | Acquisition gratuite, SEO, UX | PENDING | — | link-check, audit:css, validate | 10 |
+| 8 | Test CRO A/B réversible et mesurable | DONE (code+tests, experience desactivee par drapeau) | 83311b3 | ab-variants OK, validate PASS | 9 |
+| 9 | Acquisition gratuite, SEO, UX | DONE | — | link-check OK, audit:css OK, validate PASS, e2e 54/54, meta descriptions 404 | 10 |
 | 10 | Certification finale, déploiement autorisé, rapport | PENDING | — | npm test complet, CI SHA exact | FIN |
 
 Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutation R2/D1/production ; aucun e-mail réel ; rapports versionnés sur GitHub.
@@ -123,3 +123,18 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Expérience désactivée par défaut (`AB_ENABLED = false`) : ne s'active que quand disponibilité, funnel, consentement/privacy et mesure sont certifiés.
 - Migration `migrations/analytics/0005_telemetry_variant.sql` : colonne `variant` sur `events` (non appliquée en production).
 - Aucun déploiement, aucun e-mail réel, aucune mutation de production.
+
+## Preuves mission 9 (Acquisition gratuite, SEO, UX)
+
+- SEO : sitemap.xml complet avec hreflang EN/FR sur toutes les pages ; robots.txt correct (noindex /api/, /worker/, etc.) ; sitemap référencé ; canonical et hreflang sur chaque page ; titres uniques par page (sauf FAQ EN/FR qui sont des variantes linguistiques attendues) ; meta descriptions sur toutes les pages (404 ajoutées).
+- Link-check : 44 pages vérifiées, aucun lien mort, aucune ancre interne morte, ancres #offre et #buy présentes.
+- Budget gzip : 75 Ko pour les assets de code (sous la limite de 210 Ko).
+- Audit CSS : 18 classes utilisées mais non définies (préexistant, principalement dans docs/, ab/, et 3 classes sur index.html/fr/index.html) — non bloquant, pas de régression introduite.
+- E2E Playwright : 54/54 pass (desktop + mobile), y compris démo EN/FR, pages commerciales, pas de legacy logo.
+- Plan d'acquisition gratuit (3-5 expériences, classées par effort/impact) :
+  1. Publier le lien de la démo sur Reddit r/classicwow et forums WoW avec capture honnête + mention des limites (effort faible, impact moyen).
+  2. Guide d'installation optimisé SEO ciblant "wow classic fishing bot install" (effort moyen, impact moyen).
+  3. Comparaison honnête BOT-WOW vs bots tout-en-un déjà publiée — promouvoir sur Discord de guilde (effort faible, impact moyen).
+  4. Article de blog sur les limites de l'automatisation WoW (risque de ban) — honnêteté comme différenciateur (effort moyen, impact faible).
+  5. Partage de la démo dans les discords de pêche WoW (effort faible, impact faible).
+- Aucun achat de trafic, aucun spam, aucun faux témoignage, aucune dépense.

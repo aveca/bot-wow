@@ -25,7 +25,7 @@
     "6": { "title": "Demandes d'aide après échec checkout → dossier support", "status": "DONE_NO_PROD_DEPLOY" },
     "7": { "title": "Funnel first-party attribuable jusqu'au paiement", "status": "DONE" },
     "8": { "title": "Test CRO A/B réversible et mesurable", "status": "DONE_DISABLED_BY_DEFAULT" },
-    "9": { "title": "Acquisition gratuite, SEO, UX", "status": "PENDING" },
+    "9": { "title": "Acquisition gratuite, SEO, UX", "status": "DONE" },
     "10": { "title": "Certification finale, déploiement autorisé, rapport", "status": "PENDING" }
   },
   "notes": "Aucun prix/devise/checkout modifié. Aucune mutation production. Aucun e-mail réel."
