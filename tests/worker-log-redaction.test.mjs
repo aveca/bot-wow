@@ -128,7 +128,7 @@ try {
   check('paid webhook reaches the license creation path', paidState.licenseKeys.length === 1 && paidState.downloadTokens.length === 1);
   check('paid webhook logs contain no email, licence key, token, or token URL',
     sensitiveValues.slice(0, 3).every((value) => !paidLogs.includes(value)) && !paidLogs.includes(sensitiveValues[4]), paidLogs);
-  check('delivery failure is persisted for retry when provider credentials are absent', paidState.deliveries.length === 1);
+  check('delivery failure is recorded in deliveries when provider credentials are absent', paidState.deliveries.length === 1);
 
   const resendState = makeState();
   const resendEnv = makeEnv(resendState, 'test-resend-key');
