@@ -94,3 +94,12 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 3. Lever le garde-fou commercial (décision distincte, nécessite autorisation séparée).
 
 **Blocage restant :** Aucune autorisation de déploiement ni d'ouverture commerciale n'a été obtenue. Le garde-fou commercial reste actif.
+
+## Revalidation commerciale — 2026-10-28 19:17 UTC
+
+- GitHub main base observed: `dc1fb691a912e8db3aa23d90565422bd6292d6bd`; PR #54 is merged at `7d6cc4e91bf36ee91a907f035ee40e778d4df61c`.
+- Cloudflare Pages production deployment `f8721609-df59-4e19-9fa6-fa10b8645975` completed successfully at `2026-10-28T18:12:46Z`, triggered by main commit `dc1fb691a912e8db3aa23d90565422bd6292d6bd`.
+- Main now disables the primary `buyBtn` on EN/FR homepage, buy and compare pages, but homepage copy still said “Card payments via Mollie” and “Card payment is live through Mollie” (French equivalents too). This contradicts the disabled checkout and delivery-verification notice.
+- Prepared focused correction on branch `fix/p0.21-home-checkout-copy-20261028`: make EN/FR homepage payment availability explicit, retain demo/support alternatives, and extend `tests/release-availability.test.mjs` to prevent reintroducing live-payment claims while the checkout button is disabled.
+- This is a checkout-adjacent commercial copy change: PR will remain draft and will not be merged/deployed without explicit approval.
+- Worker remains on deployed version `c3dcc842-c422-42d3-9828-405f30d70b5f`; the Mollie replay/idempotency defect in issue #13 remains unresolved. No production payment, email, secret, D1 row or R2 object was changed.

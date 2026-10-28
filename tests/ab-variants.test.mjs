@@ -77,6 +77,17 @@ for (const v of VARIANTS) {
     /id="buyForm"/.test(html) && /id="email"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
   check(`${v.f} : prix 20,00 EUR inchange`, /20,00\s*€|20\.00/.test(html));
   check(`${v.f} : CTA instrumentes (>=3)`, (html.match(/data-cta-id="buy-/g) || []).length >= 3);
+  const checkoutButton = (html.match(/<button\b[^>]*id="buyBtn"[^>]*disabled[^>]*>[\s\S]*?<\/button>/i) || [])[0] || '';
+  check(v.f + ' : bouton de checkout réellement désactivé', !!checkoutButton);
+  check(v.f + ' : libellé explicite de livraison non confirmée',
+    /delivery not confirmed|livraison a confirmer/i.test(strip(checkoutButton)));
+  check(v.f + ' : aucun badge Mollie ne suggère un paiement actif',
+    !/Payment by <b[^>]*>Mollie<\/b>|Paiement par <b[^>]*>Mollie<\/b>/i.test(flat));
+  check(v.f + ' : aucune redirection Mollie promise',
+    !/you are redirected to Mollie|vous etes redirige vers Mollie/i.test(strip(flat)));
+  check(v.f + ' : aucune promesse de livraison e-mail non certifiée',
+    !/licence key and the download link arrive by email|cle de licence et le lien de telechargement sont envoyes par e-mail/i.test(strip(flat)));
+
   check(`${v.f} : risque de bannissement mentionne`,
     /terms of service|conditions d.utilisation/i.test(flat));
   check(`${v.f} : mouvement spot-a-spot en validation`,
