@@ -335,9 +335,9 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `d3173807c203349d87bd3e5e36be24882914c9d6`
+**SHA final certifié :** `df9d635571384a58bddbd8bb907a803dea98b72e`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "d3173807c203349d87bd3e5e36be24882914c9d6"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "df9d635571384a58bddbd8bb907a803dea98b72e"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
