@@ -2,7 +2,7 @@
 
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
-**SHA HEAD (PR #54) :** `e5c853041f06cc8abfa56ce60e1a190393498411`  
+**SHA HEAD (PR #54) :** `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23`  
 **SHA de base (main) :** non fusionné (PR ouverte)  
 **Date :** 2026-10-28  
 **Statut global :** `READY_FOR_REVIEW`
@@ -15,20 +15,20 @@
 |---------|--------|
 | Numéro | 54 |
 | Branche | `botwow-p0-ui-ux-2026-10-28` |
-| SHA HEAD | `e5c853041f06cc8abfa56ce60e1a190393498411` |
+| SHA HEAD | `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23` |
 | Base | `main` |
 | État | OPEN |
 | Mergeable | MERGEABLE |
 | Draft | Non |
 | Revue humaine (`reviewDecision`) | Vide — aucune revue enregistrée |
 
-### Checks requis — Tous passés sur le SHA `e5c8530`
+### Checks requis — Tous passés sur le SHA `d38d01e`
 
 | Check | État | Durée | Lien |
 |-------|------|-------|------|
-| `validate` | SUCCESS | 9s | https://github.com/aveca/bot-wow/actions/runs/40641220925/job/122659585958 |
-| `ui-quality` | SUCCESS | 1m56s | https://github.com/aveca/bot-wow/actions/runs/40641220868/job/122659585783 |
-| `GitGuardian Security Checks` | SUCCESS | 8s | https://dashboard.gitguardian.com |
+| `validate` | SUCCESS | 9s | https://github.com/aveca/bot-wow/actions/runs/40653802623/job/122699889261 |
+| `ui-quality` | SUCCESS | 2m56s | https://github.com/aveca/bot-wow/actions/runs/40653802611/job/122699889363 |
+| `GitGuardian Security Checks` | SUCCESS | 5s | https://dashboard.gitguardian.com |
 
 ### Protection de branche
 La PR est mergeable mais **aucune revue humaine n'a été enregistrée**. Le merge ne peut pas être effectué sans satisfaire cette exigence.
@@ -119,6 +119,8 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 | `fr/buy.html` (FR) | ✅ `#buyBtn` disabled | `.checkout-blocked` — "Achat indisponible" |
 | `index.html` (EN) | ✅ `#buyBtn` disabled | `.checkout-blocked` ajouté |
 | `fr/index.html` (FR) | ✅ `#buyBtn` disabled | `.checkout-blocked` ajouté |
+| `compare.html` (EN) | ✅ `#buyBtn` disabled | `.checkout-blocked` ajouté (corrigé P0.4) |
+| `fr/compare.html` (FR) | ✅ `#buyBtn` disabled | `.checkout-blocked` ajouté (corrigé P0.4) |
 
 **Règle impérative :** les achats restent bloqués tant que le parcours de livraison complet n'est pas vérifié en production. L'upload R2 et le déploiement Worker ne constituent pas à eux seuls une autorisation d'ouvrir les ventes. La décision d'ouverture commerciale est distincte et nécessite une autorisation explicite.
 
@@ -126,15 +128,16 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 
 ## 5. Tests et contrôles exécutés
 
-### Playwright e2e — 130 tests, tous passés
+### Playwright e2e — 156 tests, tous passés
 
 | Fichier | Tests | Résultat | Lien CI |
 |---------|-------|----------|---------|
-| `tests/e2e/demo-quality.spec.mjs` | 60 | ✅ Pass | ui-quality run #40641220868 |
-| `tests/e2e/accessibility.spec.mjs` | 16 | ✅ Pass | ui-quality run #40641220868 |
-| `tests/e2e/checkout-flow.spec.mjs` | 14 | ✅ Pass | ui-quality run #40641220868 |
-| `tests/e2e/responsive.spec.mjs` | 30 | ✅ Pass | ui-quality run #40641220868 |
-| `tests/e2e/i18n.spec.mjs` | 10 | ✅ Pass | ui-quality run #40641220868 |
+| `tests/e2e/demo-quality.spec.mjs` | 60 | ✅ Pass | ui-quality run #40653802611 |
+| `tests/e2e/accessibility.spec.mjs` | 16 | ✅ Pass | ui-quality run #40653802611 |
+| `tests/e2e/checkout-flow.spec.mjs` | 14 | ✅ Pass | ui-quality run #40653802611 |
+| `tests/e2e/responsive.spec.mjs` | 30 | ✅ Pass | ui-quality run #40653802611 |
+| `tests/e2e/i18n.spec.mjs` | 10 | ✅ Pass | ui-quality run #40653802611 |
+| `tests/e2e/visual-inspection.spec.mjs` | 26 | ✅ Pass | ui-quality run #40653802611 |
 
 ### Tests Node.js
 
@@ -147,14 +150,21 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 ### Captures d'écran
 88 fichiers dans `artifacts/ui/` couvrant : skip link, focus-visible, ARIA, checkout bloqué, responsive (5 viewports), i18n EN/FR.
 
+### Défauts UI/UX découverts et corrigés (P0.4)
+
+| # | Défaut | Page(s) | Gravité | Correction | Preuve |
+|---|--------|---------|---------|------------|--------|
+| 1 | Bouton d'achat **activé** alors que livraison v1.2.0 non confirmée, permettant de contourner le garde-fou commercial | `compare.html`, `fr/compare.html` | Critique | `disabled` ajouté sur `#buyBtn`, texte "delivery not confirmed" / "livraison à confirmer", div `.checkout-blocked` ajoutée avant le formulaire, `aria-describedby="buyErr buyOk"` sur l'input email | `visual-inspection.spec.mjs` — `COMPARE EN BUY BTN` : `disabled: true`, `opacity: 0.7` (était `disabled: false`, `opacity: 1`) |
+| 2 | Lien légal FR pointant vers EN (`../legal/terms.html`) au lieu de `../legal/fr/terms.html` | `fr/compare.html` | Mineur | Corrigé vers `../legal/fr/terms.html` | Inspection du code source |
+
 ---
 
 ## 6. Actions de production effectuées
 
 | Action | Statut | Preuve |
 |--------|--------|--------|
-| Corrections UI/UX (accessibilité, checkout bloqué, responsive, i18n) | ✅ Effectué | Commit `dbe1442`, `e5c8530` |
-| 70 tests Playwright ajoutés | ✅ Effectué | 4 fichiers dans `tests/e2e/` |
+| Corrections UI/UX (accessibilité, checkout bloqué, responsive, i18n, bouton compare) | ✅ Effectué | Commit `d38d01e`, `dbe1442`, `e5c8530` |
+| 96 tests Playwright ajoutés (70 + 26 inspection visuelle) | ✅ Effectué | 5 fichiers dans `tests/e2e/` |
 | Vérification archive v1.2.0 (locale + R2) | ✅ Effectué | SHA-256 `1C132F...` confirmé |
 | Vérification secrets Cloudflare | ✅ Effectué | `wrangler secret list` |
 | Upload R2 de l'archive | ❌ Non effectué | Autorisation requise (mutation de production) |

@@ -3,7 +3,7 @@
 **Date de dernière vérification :** 2026-10-28  
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
-**SHA HEAD :** `e5c853041f06cc8abfa56ce60e1a190393498411`  
+**SHA HEAD :** `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23`  
 **PR associée :** #54 (https://github.com/aveca/bot-wow/pull/54)
 
 ---
@@ -12,24 +12,26 @@
 
 | Projet | Dépôt | Branche | SHA | État |
 |--------|-------|---------|-----|------|
-| BOT-WOW pages | aveca/bot-wow | `botwow-p0-ui-ux-2026-10-28` | `e5c853041f06cc8abfa56ce60e1a190393498411` | PR #54 ouverte, mergeable, CI verte |
+| BOT-WOW pages | aveca/bot-wow | `botwow-p0-ui-ux-2026-10-28` | `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23` | PR #54 ouverte, mergeable, CI verte |
 
 ---
 
 ## Dernière étape terminée et preuves
 
-**Tâche :** Corrections UI/UX (accessibilité, checkout bloquant, responsive, i18n) + 70 tests Playwright ajoutés.
+**Tâche :** Corrections UI/UX (accessibilité, checkout bloquant, responsive, i18n) + 70 tests Playwright ajoutés, puis correction du bouton d'achat activé sur compare.html + 26 tests d'inspection visuelle.
 
 **Preuves :**
-- 130 tests e2e passés (60 existants + 70 nouveaux) — `tests/e2e/demo-quality.spec.mjs`, `accessibility.spec.mjs`, `checkout-flow.spec.mjs`, `responsive.spec.mjs`, `i18n.spec.mjs`
-- Captures d'écran : `artifacts/ui/` (88 fichiers)
-- Fichiers modifiés : `assets/app.js`, `buy.html`, `fr/buy.html`, `fr/index.html`, `index.html`
+- 156 tests e2e passés (130 initiaux + 26 nouveaux d'inspection visuelle) — `tests/e2e/demo-quality.spec.mjs`, `accessibility.spec.mjs`, `checkout-flow.spec.mjs`, `responsive.spec.mjs`, `i18n.spec.mjs`, `visual-inspection.spec.mjs`
+- Captures d'écran : `artifacts/ui/` (incluant `visual-inspection/`)
+- Fichiers modifiés : `assets/app.js`, `buy.html`, `fr/buy.html`, `fr/index.html`, `index.html`, `compare.html`, `fr/compare.html`
+- Commit : `d38d01e` — `fix(ui/ux): bouton d'achat desactive sur compare.html (EN + FR) + tests d'inspection visuelle`
+- Commit : `68f5e2e` — `docs(release): ajouter memoire operationnelle et rapport release-readiness P0.3`
 - Commit : `e5c8530` — `fix(ui/ux): ajouter id=hero aux pages buy pour le skip link (ancre interne)`
 - Commit : `dbe1442` — `feat(ui/ux): accessibilite, checkout bloquant, responsive et i18n (Playwright)`
 
-**Liens CI :**
-- Validate : https://github.com/aveca/bot-wow/actions/runs/40641220925/job/122659585958 (SUCCESS)
-- UI quality : https://github.com/aveca/bot-wow/actions/runs/40641220868/job/122659585783 (SUCCESS)
+**Liens CI sur SHA d38d01e :**
+- Validate : https://github.com/aveca/bot-wow/actions/runs/40653802623/job/122699889261 (SUCCESS)
+- UI quality : https://github.com/aveca/bot-wow/actions/runs/40653802611/job/122699889363 (SUCCESS)
 - GitGuardian : https://dashboard.gitguardian.com (SUCCESS)
 
 ---
@@ -102,7 +104,7 @@ Les secrets suivants sont configurés en production (présence vérifiée via `w
 
 ## Tests exécutés et résultats
 
-### Playwright e2e (130 tests, tous passés)
+### Playwright e2e (156 tests, tous passés)
 
 | Fichier | Tests | Résultat |
 |---------|-------|----------|
@@ -111,6 +113,7 @@ Les secrets suivants sont configurés en production (présence vérifiée via `w
 | `checkout-flow.spec.mjs` | 14 | ✅ Pass |
 | `responsive.spec.mjs` | 30 | ✅ Pass |
 | `i18n.spec.mjs` | 10 | ✅ Pass |
+| `visual-inspection.spec.mjs` | 26 | ✅ Pass |
 
 ### Tests Node.js (validate.mjs, link-check, etc.)
 
@@ -119,6 +122,15 @@ Les secrets suivants sont configurés en production (présence vérifiée via `w
 | `node scripts/validate.mjs` | ✅ BOT-WOW validation PASS |
 | `node tests/link-check.test.mjs` | ✅ LIENS INTERNES : OK |
 | `node tests/release-availability.test.mjs` | ✅ RELEASE AVAILABILITY : OK |
+
+---
+
+## Défauts UI/UX découverts et corrigés (P0.4)
+
+| # | Défaut | Page | Gravité | Correction | Preuve |
+|---|--------|------|---------|------------|--------|
+| 1 | Bouton d'achat **activé** alors que livraison non confirmée | `compare.html`, `fr/compare.html` | Critique | `disabled` ajouté, texte "delivery not confirmed", `.checkout-blocked` ajouté, `aria-describedby` sur l'email | `visual-inspection.spec.mjs` — `COMPARE EN BUY BTN` : `disabled: true`, `opacity: 0.7` |
+| 2 | Lien légal FR pointant vers EN (`../legal/terms.html`) | `fr/compare.html` | Mineur | Corrigé vers `../legal/fr/terms.html` | Inspection du code source |
 
 ---
 
@@ -144,6 +156,8 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 | 4 | Vérifié secrets Cloudflare : tous configurés (MOLLIE_API_KEY, RESEND_API_KEY, etc.) | `wrangler secret list` |
 | 5 | Vérifié wrangler.toml : bucket, clé, domaine, bindings corrects | Lecture fichier |
 | 6 | Créé mémoire opérationnelle `docs/operations/FACTORY-RELEASE-STATE.md` | Ce fichier |
+| 7 | Corrigé bouton d'achat activé sur compare.html (EN + FR) | Commit `d38d01e`, vérifié via `visual-inspection.spec.mjs` |
+| 8 | Ajouté 26 tests d'inspection visuelle Playwright | `tests/e2e/visual-inspection.spec.mjs`, 26 tests passés |
 
 ---
 
@@ -187,4 +201,4 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 
 ---
 
-**Statut global :** `READY_FOR_REVIEW` — toutes les préparations techniques sont terminées, une revue humaine et une autorisation de déploiement restent nécessaires.
+**Statut global :** `READY_FOR_REVIEW` — toutes les préparations techniques sont terminées (156 tests e2e passés, défaut du bouton compare corrigé), une revue humaine et une autorisation de déploiement restent nécessaires.
