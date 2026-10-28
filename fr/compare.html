@@ -495,12 +495,16 @@
           <p style="margin:0">Nous ne pouvons pas confirmer actuellement que le paquet v1.2.0 est disponible au téléchargement. Cette page décrit le produit prévu, pas un téléchargement confirmé. Contactez le <a href="mailto:support@bot-wow.com">support</a> avant tout paiement ; n'achetez pas tant que la livraison n'est pas confirmée.</p>
         </div>
 
+        <div class="checkout-blocked" style="max-width:none;margin:0 0 18px;border-color:var(--red);padding:16px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.28);border-radius:12px">
+          <p style="margin:0"><span class="mk" style="width:16px;height:16px;display:inline-block;border-radius:50%;background:var(--red);margin-right:8px"></span><b>Achat indisponible.</b> La livraison du paquet v1.2.0 n'est pas encore confirmée, le formulaire de paiement est désactivé. Vous pouvez encore <a href="./demo.html" style="color:inherit;text-decoration:underline">essayer la démo navigateur</a> ou écrire au <a href="mailto:support@bot-wow.com" style="color:inherit;text-decoration:underline">support</a> pour toute question.</p>
+        </div>
+
         <form id="buyForm" novalidate>
           <input type="hidden" name="locale" value="fr">
           <label for="email" class="form-label">Votre e-mail (pour recevoir la clé et le lien de téléchargement)</label>
           <div class="input-group">
-            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email">
-            <button class="btn btn-gold btn-lg" type="submit" id="buyBtn"><span class="btn-text">Payer 20,00 €</span><span class="btn-loading" aria-hidden="true"><svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg></span></button>
+            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email" aria-describedby="buyErr buyOk">
+            <button class="btn btn-gold btn-lg" type="submit" id="buyBtn" disabled><span class="btn-text">Payer 20,00 € — livraison à confirmer</span><span class="btn-loading" aria-hidden="true"><svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg></span></button>
           </div>
           <p class="formerr" id="buyErr" role="alert"></p>
           <p class="formsent" id="buyOk" role="status"></p>
@@ -508,7 +512,7 @@
 
         <div class="pay-badges">
           <span><svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="7" width="9.2" height="6.8" rx="1.6"/><path d="M5.7 7V5.3a2.3 2.3 0 0 1 4.6 0V7"/></svg> Paiement par <b style="color:var(--mut)">Mollie</b></span>
-          <span><a href="../legal/terms.html" style="color:inherit">Conditions</a> · <a href="../legal/fr/refund.html" style="color:inherit">Remboursements</a> · <a href="../legal/privacy.html" style="color:inherit">Confidentialité</a></span>
+          <span><a href="../legal/fr/terms.html" style="color:inherit">Conditions</a> · <a href="../legal/fr/refund.html" style="color:inherit">Remboursements</a> · <a href="../legal/fr/privacy.html" style="color:inherit">Confidentialité</a></span>
         </div>
         <p class="pay-note">Le montant et la devise sont fixés côté serveur ; le navigateur n'envoie que votre e-mail.</p>
       </article>
