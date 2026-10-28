@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base (main) :** `e02bb2a`  
-**SHA de tête de la PR #54 (commit certifié) :** `cd77e1f9a68a29a70f57ccaf9c29c76cb4262533` (certifié via `gh pr view 54`, headRefOid)  
+**SHA de tête de la PR #54 (commit certifié) :** `d3173807c203349d87bd3e5e36be24882914c9d6` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -335,9 +335,9 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `afa629100121da9a6a6ab850dd10546543b54145`
+**SHA final certifié :** `d3173807c203349d87bd3e5e36be24882914c9d6`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "afa629100121da9a6a6ab850dd10546543b54145"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "d3173807c203349d87bd3e5e36be24882914c9d6"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
