@@ -2303,35 +2303,30 @@ async function handleDownload(request, env2) {
     if (result.count >= result.max_count) {
       return jsonResponse({ ok: false, error: "limit_reached" }, 429);
     }
-    await env2.DB.prepare(`
-      UPDATE downloads SET count = count + 1 WHERE token = ?
-    `).bind(token).run();
-    // FIX 2026-10-21 : le nom de l'objet R2 etait fige dans le code
-    // ("Casinobabe-v1.0.38.zip"), alors que le paquet livre est versionne
-    // (casinobabe-fishing-<version>.zip). On tente la version configuree,
-    // puis la version courante du paquet, puis l'ancien nom (repli).
-    const candidates = [
-      env2.R2_OBJECT_KEY,
-      "casinobabe-fishing-1.2.0.zip",
-      "Casinobabe-v1.0.38.zip"
-    ].filter(Boolean);
-    let objectKey = candidates[0];
-    let r2Object = null;
-    for (const key of candidates) {
-      const obj = await env2.R2_BINARIES.get(key);
-      if (obj) {
-        objectKey = key;
-        r2Object = obj;
-        break;
-      }
+    // Serve only the configured release. Never silently deliver an older archive.
+    const objectKey = typeof env2.R2_OBJECT_KEY === "string" ? env2.R2_OBJECT_KEY.trim() : "";
+    if (!objectKey || !/^casinobabe-fishing-\d+\.\d+\.\d+\.zip$/.test(objectKey)) {
+      console.error("Download artifact key is missing or invalid");
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
+    const r2Object = await env2.R2_BINARIES.get(objectKey);
     if (!r2Object) {
-      console.error("R2 object not found. Tried:", candidates.join(", "));
-      return jsonResponse({ ok: false, error: "file_not_found" }, 404);
+      console.error("Configured R2 artifact not found:", objectKey);
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
     }
+
+    // Reserve one download atomically. Concurrent requests cannot exceed max_count.
+    const reservation = await env2.DB.prepare(
+      "UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count"
+    ).bind(token).run();
+    if (!reservation?.meta?.changes) {
+      return jsonResponse({ ok: false, error: "limit_reached" }, 429);
+    }
+
+    const safeFilename = objectKey.replace(/["\\\r\n]/g, "_");
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": "attachment; filename=\"" + safeFilename + "\"",
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
