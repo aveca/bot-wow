@@ -1,3 +1,43 @@
+## Security review finding fixed — 2026-10-28 17:53 UTC (PR #61)
+
+- Review of the actual branch source at `2f8d1f1b69f6830be9987f93a3547b0affb49ab0` found a remaining log exposure: the invalid-amount checkout path logged caller-controlled `body.amount`. No production logs or customer data were read.
+- Fixed in code/test commit [`6326b262d51e931f72b93aa72b7e8ac0c829fb0f`](https://github.com/aveca/bot-wow/commit/6326b262d51e931f72b93aa72b7e8ac0c829fb0f): the Worker now logs only the fixed category `Checkout rejected: client amount mismatch`; the new regression test submits sentinel `SENSITIVE-AMOUNT-SENTINEL-8f31`, asserts HTTP 400, and proves the sentinel is absent from captured console output.
+- [Validate run 40739505038](https://github.com/aveca/bot-wow/actions/runs/40739505038): **success** on exact code/test HEAD `6326b262d51e931f72b93aa72b7e8ac0c829fb0f`. Its job log confirms both invalid-amount assertions and the log-redaction suite passed.
+- [UI quality run 40739504804](https://github.com/aveca/bot-wow/actions/runs/40739504804): **success** on the same SHA; real-browser checks and artifact upload passed. Artifact `bot-wow-ui-quality-evidence`, 25,691,799 bytes, SHA-256 `b06513a88198c19ac3e761c29de88f6b57603573384c1b3ff6836e9a34119e37`.
+- PR [#61](https://github.com/aveca/bot-wow/pull/61) remains draft, unmerged and undeployed because it changes checkout behavior. The production Worker, D1, R2, secrets, payments and email were not changed.
+
+
+---
+
+## Supervision du sprint — 2026-10-28 17:42 UTC (PR #61)
+
+### Changement de code préparé
+- PR [#61 — réconcilier la garde checkout et la redaction des logs](https://github.com/aveca/bot-wow/pull/61), branche `fix/p0.18-gate-redaction-reconciliation-20261028`, reste en brouillon, non fusionnée et non déployée.
+- HEAD code testé avant cette note : `fb1c2a97821be8e550bd269b71f77337f2a60338`.
+- [Validate run 40737925130](https://github.com/aveca/bot-wow/actions/runs/40737925130) : succès sur ce SHA.
+- [UI quality run 40737924370](https://github.com/aveca/bot-wow/actions/runs/40737924370) : succès sur ce SHA ; artefact `bot-wow-ui-quality-evidence`, 25 691 799 octets.
+- La PR combine les redactions Worker de #60 avec la garde server-side `RELEASE_STATUS` et les tests de #44, sans fusionner ces branches obsolètes. La valeur du binding n'a pas été lue ; elle est de type `secret_text`.
+- La garde échoue fermée (HTTP 409) sauf si le binding côté serveur est exactement `confirmed`; elle ne logue plus la valeur du binding. Le nom du fichier de téléchargement suit maintenant la clé R2 réellement choisie.
+- Une première exécution CI sur le SHA précédent a échoué à cause d'une expression régulière de test sur-échappée. Le test a été corrigé ; les deux workflows sont verts sur `fb1c2a9`. Ne pas considérer le premier échec comme le résultat courant.
+
+### Revalidation production en lecture seule
+- Le Worker `botwow-api` n'a pas été redéployé ; dernière version observée : `c3dcc842-c422-42d3-9828-405f30d70b5f`, déployée le 2026-10-27 à 07:46:28 UTC.
+- Le bundle déployé contient encore l'interpolation `RELEASE_STATUS` dans l'avertissement de refus, le fallback R2 vers `Casinobabe-v1.0.38.zip`, le nom de fichier HTTP historique, le marqueur Mollie avant fulfillment et un retour 200 sur doublon.
+- La page publique `https://bot-wow.com/` affiche toujours l'avertissement obsolète disant que la disponibilité du ZIP ne peut être vérifiée et un formulaire actif `Pay €20.00`. Le ZIP est vérifié au niveau interne, mais la livraison après paiement ne l'est pas. Aucun POST checkout réel n'a été envoyé.
+- D1 production, requêtes SELECT uniquement : commandes Mollie `failed=11, paid=0`; commandes Bitcoin manuel `paid=5, pending_payment=8, rejected=1`; 5 marqueurs Mollie orphelins; `deliveries=0`; 5 licences actives. Toutes les requêtes ont `changed_db=false`, `rows_written=0`.
+- Analytics D1, `test='0'`, fenêtre `2026-10-22T06:30:36.792Z` → `2026-10-28T17:41:54.209Z` : `page_view=1238` (649 avec journey_id), `journey_view=422` (348), `cta_click=41` (31), `checkout_requested=26` (26), `checkout_created=6` (0), `checkout_failed=6` (0; 6 avec ref), `checkout_start=4` (3), `conversion=0 observed`, `payment_confirmed=0 observed`. Les vues ont progressé ; les événements checkout n'ont pas changé depuis le 27 octobre.
+
+### Priorité suivante
+1. Faire relire PR #61 ; elle reste en brouillon car la garde change le comportement du paiement et son déploiement nécessite une approbation explicite.
+2. Séparément, corriger l'idempotence et la reprise durable Mollie sous l'issue #13 ; PR #61 ne résout pas ce défaut.
+3. Retirer le fallback R2 historique et consommer le quota seulement après confirmation de l'objet dans une PR dédiée.
+4. Réconcilier le parcours public pour qu'aucun CTA/formulaire n'initie un achat non certifié ; conserver /demo explicite et fonctionnel.
+5. Diagnostiquer l'erreur réelle D1 derrière la perte de `journey_id` ; ne pas calculer de taux de conversion de paiement à partir des événements checkout.
+
+Aucun paiement, remboursement, e-mail réel, secret, objet R2, mutation D1 ou déploiement Worker n'a été effectué pendant cette supervision. Les preuves de production restent des lectures seules ; l'état du paiement externe Mollie n'est pas disponible dans un connecteur dédié.
+
+---
+
 ## Incremental supervision — 2026-10-28 16:00 UTC
 
 ### Résultat de la revalidation
