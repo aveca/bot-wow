@@ -118,6 +118,30 @@ test('visual: homepage EN — layout, overflow, key elements', async ({ page }, 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
 
+test('visual: homepage EN — comparison section uses the full desktop width', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
+  expect(response && response.ok(), 'HTTP / comparison section').toBeTruthy();
+
+  const metrics = await page.locator('#compare').evaluate((section) => {
+    const container = section.querySelector(':scope > .w');
+    const cards = section.querySelector('.vs-quick');
+    return {
+      sectionDisplay: getComputedStyle(section).display,
+      sectionWidth: section.getBoundingClientRect().width,
+      containerWidth: container?.getBoundingClientRect().width ?? 0,
+      cardsWidth: cards?.getBoundingClientRect().width ?? 0,
+      firstCardWidth: section.querySelector('.vs-card')?.getBoundingClientRect().width ?? 0
+    };
+  });
+
+  expect(metrics.sectionDisplay, 'comparison section must remain a normal full-width block').toBe('block');
+  expect(metrics.sectionWidth, 'section width at 1440px viewport').toBeGreaterThan(1300);
+  expect(metrics.containerWidth, 'inner content width').toBeGreaterThan(1100);
+  expect(metrics.cardsWidth, 'three-card comparison grid width').toBeGreaterThan(1000);
+  expect(metrics.firstCardWidth, 'each desktop comparison card width').toBeGreaterThan(300);
+});
+
 test('visual: homepage EN — mobile layout', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   await page.setViewportSize({ width: 390, height: 844 });
