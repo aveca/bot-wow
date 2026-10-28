@@ -47,8 +47,8 @@
 | 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | 74687ed | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
 | 7 | Funnel first-party attribuable jusqu'au paiement | DONE | 1cfd3bb | telemetry OK, conversion-path OK, telemetry-source-allowlist OK, analytics-source OK, payment-flow OK, validate PASS | 8 |
 | 8 | Test CRO A/B réversible et mesurable | DONE (code+tests, experience desactivee par drapeau) | 83311b3 | ab-variants OK, validate PASS | 9 |
-| 9 | Acquisition gratuite, SEO, UX | DONE | — | link-check OK, audit:css OK, validate PASS, e2e 54/54, meta descriptions 404 | 10 |
-| 10 | Certification finale, déploiement autorisé, rapport | PENDING | — | npm test complet, CI SHA exact | FIN |
+| 9 | Acquisition gratuite, SEO, UX | DONE | 2dfa764 | link-check OK, audit:css OK, validate PASS, e2e 54/54, meta descriptions 404 | 10 |
+| 10 | Certification finale, déploiement autorisé, rapport | DONE | dfe8ee5 | Tous les tests OK (validate, payment-flow, checkout-security, checkout-gate, checkout-gate-mollie, release-availability, ab-variants, telemetry, conversion-path, subscribe.cjs, link-check, e2e 54/54), FINAL.md publié | FIN |
 
 Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutation R2/D1/production ; aucun e-mail réel ; rapports versionnés sur GitHub.
 
