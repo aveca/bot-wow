@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base (main) :** `e02bb2a`  
-**SHA de tête de la PR #54 (commit certifié) :** `d3173807c203349d87bd3e5e36be24882914c9d6` (certifié via `gh pr view 54`, headRefOid)  
+**SHA de tête de la PR #54 (commit certifié) :** `a8c4b6ed3490804bd82051d00e01e144dcf1f3bf` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -335,16 +335,16 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `d3173807c203349d87bd3e5e36be24882914c9d6`
+**SHA final certifié :** `a8c4b6ed3490804bd82051d00e01e144dcf1f3bf`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "d3173807c203349d87bd3e5e36be24882914c9d6"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "a8c4b6ed3490804bd82051d00e01e144dcf1f3bf"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
 | Check | État | Lien vers le run/logs |
 |-------|------|----------------------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40619441101/job/122589606530 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40619441062/job/122589606953 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40625684709/job/122609899120 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40625683331/job/122609894735 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 **Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
