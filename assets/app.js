@@ -233,12 +233,19 @@ function wireBuyForm() {
     const input = document.getElementById('email');
     const value = (input.value || '').trim();
     const err = document.getElementById('buyErr');
+    const ok = document.getElementById('buyOk');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) {
       err.textContent = isFr
         ? 'Merci d’indiquer une adresse e-mail valide.'
         : 'Please enter a valid email address.';
+      ok.textContent = '';
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
       return;
     }
+    input.removeAttribute('aria-invalid');
+    err.textContent = '';
+    ok.textContent = '';
     startCheckout(value);
   });
 }

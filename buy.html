@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="./assets/style.css?v=e37e617b">
 </head>
 <body>
+  <a class="skip-link" href="#hero">Skip to main content</a>
 
 <nav>
   <div class="w">
@@ -154,7 +155,7 @@
           <input type="hidden" name="locale" value="en">
           <label for="email" class="form-label">Your email (to receive the key and download link)</label>
           <div class="input-group">
-            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" inputmode="email">
+            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" inputmode="email" aria-describedby="buyErr buyOk">
             <button class="btn btn-gold btn-lg" type="submit" id="buyBtn" disabled><span class="btn-text">Pay €20.00 — delivery not confirmed</span></button>
           </div>
           <p class="formerr" id="buyErr" role="alert"></p>

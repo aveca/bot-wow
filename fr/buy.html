@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="../assets/style.css?v=e37e617b">
 </head>
 <body>
+  <a class="skip-link" href="#hero">Aller au contenu principal</a>
 
 <nav>
   <div class="w">
@@ -151,7 +152,7 @@
           <input type="hidden" name="locale" value="fr">
           <label for="email" class="form-label">Votre e-mail (pour recevoir la clé et le lien de téléchargement)</label>
           <div class="input-group">
-            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email">
+            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email" aria-describedby="buyErr buyOk">
             <button class="btn btn-gold btn-lg" type="submit" id="buyBtn" disabled><span class="btn-text">Payer 20,00 € — livraison à confirmer</span></button>
           </div>
           <p class="formerr" id="buyErr" role="alert"></p>
@@ -159,7 +160,7 @@
         </form>
         <div class="pay-badges">
           <span><svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="7" width="9.2" height="6.8" rx="1.6"/><path d="M5.7 7V5.3a2.3 2.3 0 0 1 4.6 0V7"/></svg> Paiement par <b style="color:var(--mut)">Mollie</b></span>
-          <span><a href="../legal/terms.html" style="color:inherit">Conditions</a> · <a href="../legal/fr/refund.html" style="color:inherit">Remboursements</a> · <a href="../legal/privacy.html" style="color:inherit">Confidentialité</a></span>
+          <span><a href="../legal/fr/terms.html" style="color:inherit">Conditions</a> · <a href="../legal/fr/refund.html" style="color:inherit">Remboursements</a> · <a href="../legal/fr/privacy.html" style="color:inherit">Confidentialité</a></span>
         </div>
         <p class="pay-note">Le montant et la devise sont fixés côté serveur ; le navigateur n'envoie que votre e-mail.</p>
 

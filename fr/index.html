@@ -467,12 +467,16 @@
           <li><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Documentation, notes de version et support par e-mail</span></li>
         </ul>
 
+        <div class="checkout-blocked" style="max-width:none;margin:0 0 18px;border-color:var(--red);padding:16px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.28);border-radius:12px">
+          <p style="margin:0"><span class="mk" style="width:16px;height:16px;display:inline-block;border-radius:50%;background:var(--red);margin-right:8px"></span><b>Checkout indisponible.</b> La livraison du paquet v1.2.0 n'est pas encore confirmée, le formulaire de paiement est désactivé. Vous pouvez encore <a href="./demo.html" style="color:inherit;text-decoration:underline">essayer la démo navigateur</a> ou écrire au <a href="mailto:support@bot-wow.com" style="color:inherit;text-decoration:underline">support</a> pour toute question.</p>
+        </div>
+
         <form id="buyForm" novalidate>
           <input type="hidden" name="locale" value="fr">
           <label for="email" class="form-label">Votre e-mail (pour recevoir la clé et le lien de téléchargement)</label>
           <div class="input-group">
-            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email">
-            <button class="btn btn-gold btn-lg" type="submit" id="buyBtn"><span class="btn-text">Payer 20,00 €</span><span class="btn-loading" aria-hidden="true"><svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg></span></button>
+            <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com" inputmode="email" aria-describedby="buyErr buyOk">
+            <button class="btn btn-gold btn-lg" type="submit" id="buyBtn" disabled><span class="btn-text">Payer 20,00 € — livraison à confirmer</span></button>
           </div>
           <p class="formerr" id="buyErr" role="alert"></p>
           <p class="formsent" id="buyOk" role="status"></p>
