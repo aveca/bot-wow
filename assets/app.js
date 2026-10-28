@@ -221,16 +221,31 @@ function wireBuyForm() {
   // doit jamais afficher un message en francais (corrige 2026-10-23).
   const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
   form.addEventListener('submit', (ev) => {
+    // Panne de disponibilité : le bouton est desactive, aucune soumission
+    // n'est possibile, ni par clic ni par Enter dans le champ email.
+    const btn = document.getElementById('buyBtn');
+    if (btn && btn.disabled) {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      return false;
+    }
     ev.preventDefault();
     const input = document.getElementById('email');
     const value = (input.value || '').trim();
     const err = document.getElementById('buyErr');
+    const ok = document.getElementById('buyOk');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) {
       err.textContent = isFr
         ? 'Merci d’indiquer une adresse e-mail valide.'
         : 'Please enter a valid email address.';
+      ok.textContent = '';
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
       return;
     }
+    input.removeAttribute('aria-invalid');
+    err.textContent = '';
+    ok.textContent = '';
     startCheckout(value);
   });
 }

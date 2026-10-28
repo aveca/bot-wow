@@ -34,7 +34,7 @@ export default defineConfig({
   webServer: {
     command: `node scripts/serve.mjs ${PORT} _site`,
     url: BASE,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

@@ -12,10 +12,7 @@ function collectPageErrors(page) {
 
 async function captureScreenshot(page, testInfo, name) {
   fs.mkdirSync(artifactDir, { recursive: true });
-  // Full-page screenshots do not scroll the viewport; reveal-on-scroll elements
-  // can otherwise remain at opacity:0 and make a healthy page look broken.
   await page.evaluate(async () => {
-    // Override the site's smooth scroll for deterministic screenshot setup.
     document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
     document.body.style.setProperty('scroll-behavior', 'auto', 'important');
     const step = Math.max(320, Math.floor(window.innerHeight * 0.72));
@@ -30,8 +27,6 @@ async function captureScreenshot(page, testInfo, name) {
     await new Promise((resolve) => setTimeout(resolve, 180));
   });
   await page.waitForFunction(() => window.scrollY === 0, null, { timeout: 1500 });
-  // Keep a true viewport capture for above-the-fold review and a full-page
-  // capture for continuity; fixed/sticky controls are easier to judge in the viewport.
   await page.waitForFunction(() =>
     [...document.querySelectorAll('.js .reveal')].every((el) => el.classList.contains('is-in')),
     null,
@@ -57,6 +52,33 @@ async function expectNoHorizontalOverflow(page) {
   expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
 }
 
+async function verifyPurchaseBlocked(page, testInfo, lang) {
+  const buyBtn = page.locator('#buyBtn');
+  const buyForm = page.locator('#buyForm');
+
+  // Le bouton de paiement est desactive
+  await expect(buyBtn).toBeDisabled();
+
+  // Le message de blocage est visible
+  await expect(page.locator('.checkout-blocked')).toBeVisible();
+
+  // L'avertissement de disponibilite est present (texte selon la langue)
+  if (lang === 'fr') {
+    await expect(page.locator('#release-availability-notice')).toContainText('n\'achetez pas tant que la livraison n\'est pas confirmée');
+  } else {
+    await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  }
+
+  // Le formulaire existe bien
+  await expect(buyForm).toBeAttached();
+
+  // Soumission du formulaire bloquee (meme via Enter) - pas de redirection
+  await page.fill('#email', 'test@example.com');
+  await page.press('#email', 'Enter');
+  await expect(page.locator('#buyErr')).not.toContainText('redirect');
+  await expect(page.locator('#buyOk')).not.toContainText('redirect');
+}
+
 test('homepage: primary demo and purchase paths remain visible and responsive', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -69,6 +91,41 @@ test('homepage: primary demo and purchase paths remain visible and responsive', 
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage');
+  expect(errors).toEqual([]);
+});
+
+test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
+  const errors = collectPageErrors(page);
+
+  // buy.html : bouton de paiement desactive, message de blocage visible
+  const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
+  expect(response && response.ok()).toBeTruthy();
+  await verifyPurchaseBlocked(page, testInfo, 'en');
+
+  await captureScreenshot(page, testInfo, 'purchase-blocked-en');
+  expect(errors).toEqual([]);
+});
+
+test('P0: purchase blocked when delivery not confirmed - FR buy page', async ({ page }, testInfo) => {
+  const errors = collectPageErrors(page);
+
+  // fr/buy.html : bouton de paiement desactive, message de blocage visible
+  const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
+  expect(response && response.ok()).toBeTruthy();
+  await verifyPurchaseBlocked(page, testInfo, 'fr');
+
+  await captureScreenshot(page, testInfo, 'purchase-blocked-fr');
+  expect(errors).toEqual([]);
+});
+
+test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', async ({ page }, testInfo) => {
+  const errors = collectPageErrors(page);
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
+  await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
+  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expectNoHorizontalOverflow(page);
+  await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);
 });
 
@@ -98,7 +155,6 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
     await expect(mobileOffer).toBeHidden();
   }
   await expect(page.locator('a[href="./#features"]')).toHaveCount(0);
-
   await expect(page.locator('#m-spots')).not.toHaveText('–', { timeout: 10000 });
   await expect(page.locator('#oasis .node')).not.toHaveCount(0);
   const timelineColumns = await page.locator('#steps').evaluate((element) =>
@@ -174,8 +230,6 @@ for (const route of commercialPages) {
     await expect(page.locator('nav .mark')).toHaveCount(0);
     await expect(page.locator('.mark')).toHaveCount(0);
     await expect(page.locator('footer .logo-mark')).toHaveCount(1);
-    // Navigation links collapse on mobile by design; validate their presence
-    // without treating an intentionally hidden desktop menu as a UI defect.
     await expect(page.locator('nav .nav-links a').first()).toBeAttached();
     await expect(page.locator('a[href*="demo.html"]:visible').first()).toBeVisible();
     const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"]').count();
