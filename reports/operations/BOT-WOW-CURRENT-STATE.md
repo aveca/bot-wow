@@ -1,3 +1,32 @@
+## Supervision du sprint — 2026-10-28 17:42 UTC (PR #61)
+
+### Changement de code préparé
+- PR [#61 — réconcilier la garde checkout et la redaction des logs](https://github.com/aveca/bot-wow/pull/61), branche `fix/p0.18-gate-redaction-reconciliation-20261028`, reste en brouillon, non fusionnée et non déployée.
+- HEAD code testé avant cette note : `fb1c2a97821be8e550bd269b71f77337f2a60338`.
+- [Validate run 40737925130](https://github.com/aveca/bot-wow/actions/runs/40737925130) : succès sur ce SHA.
+- [UI quality run 40737924370](https://github.com/aveca/bot-wow/actions/runs/40737924370) : succès sur ce SHA ; artefact `bot-wow-ui-quality-evidence`, 25 691 799 octets.
+- La PR combine les redactions Worker de #60 avec la garde server-side `RELEASE_STATUS` et les tests de #44, sans fusionner ces branches obsolètes. La valeur du binding n'a pas été lue ; elle est de type `secret_text`.
+- La garde échoue fermée (HTTP 409) sauf si le binding côté serveur est exactement `confirmed`; elle ne logue plus la valeur du binding. Le nom du fichier de téléchargement suit maintenant la clé R2 réellement choisie.
+- Une première exécution CI sur le SHA précédent a échoué à cause d'une expression régulière de test sur-échappée. Le test a été corrigé ; les deux workflows sont verts sur `fb1c2a9`. Ne pas considérer le premier échec comme le résultat courant.
+
+### Revalidation production en lecture seule
+- Le Worker `botwow-api` n'a pas été redéployé ; dernière version observée : `c3dcc842-c422-42d3-9828-405f30d70b5f`, déployée le 2026-10-27 à 07:46:28 UTC.
+- Le bundle déployé contient encore l'interpolation `RELEASE_STATUS` dans l'avertissement de refus, le fallback R2 vers `Casinobabe-v1.0.38.zip`, le nom de fichier HTTP historique, le marqueur Mollie avant fulfillment et un retour 200 sur doublon.
+- La page publique `https://bot-wow.com/` affiche toujours l'avertissement obsolète disant que la disponibilité du ZIP ne peut être vérifiée et un formulaire actif `Pay €20.00`. Le ZIP est vérifié au niveau interne, mais la livraison après paiement ne l'est pas. Aucun POST checkout réel n'a été envoyé.
+- D1 production, requêtes SELECT uniquement : commandes Mollie `failed=11, paid=0`; commandes Bitcoin manuel `paid=5, pending_payment=8, rejected=1`; 5 marqueurs Mollie orphelins; `deliveries=0`; 5 licences actives. Toutes les requêtes ont `changed_db=false`, `rows_written=0`.
+- Analytics D1, `test='0'`, fenêtre `2026-10-22T06:30:36.792Z` → `2026-10-28T17:41:54.209Z` : `page_view=1238` (649 avec journey_id), `journey_view=422` (348), `cta_click=41` (31), `checkout_requested=26` (26), `checkout_created=6` (0), `checkout_failed=6` (0; 6 avec ref), `checkout_start=4` (3), `conversion=0 observed`, `payment_confirmed=0 observed`. Les vues ont progressé ; les événements checkout n'ont pas changé depuis le 27 octobre.
+
+### Priorité suivante
+1. Faire relire PR #61 ; elle reste en brouillon car la garde change le comportement du paiement et son déploiement nécessite une approbation explicite.
+2. Séparément, corriger l'idempotence et la reprise durable Mollie sous l'issue #13 ; PR #61 ne résout pas ce défaut.
+3. Retirer le fallback R2 historique et consommer le quota seulement après confirmation de l'objet dans une PR dédiée.
+4. Réconcilier le parcours public pour qu'aucun CTA/formulaire n'initie un achat non certifié ; conserver /demo explicite et fonctionnel.
+5. Diagnostiquer l'erreur réelle D1 derrière la perte de `journey_id` ; ne pas calculer de taux de conversion de paiement à partir des événements checkout.
+
+Aucun paiement, remboursement, e-mail réel, secret, objet R2, mutation D1 ou déploiement Worker n'a été effectué pendant cette supervision. Les preuves de production restent des lectures seules ; l'état du paiement externe Mollie n'est pas disponible dans un connecteur dédié.
+
+---
+
 ## Incremental supervision — 2026-10-28 16:00 UTC
 
 ### Résultat de la revalidation
