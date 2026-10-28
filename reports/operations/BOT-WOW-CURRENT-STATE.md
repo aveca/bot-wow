@@ -1,9 +1,9 @@
-## Supervision incrémentale — 2026-10-28 14:50 UTC
+## Supervision incrémentale — 2026-10-28 14:51 UTC
 
 Cette section remplace les instantanés antérieurs pour les points explicitement révalidés ci-dessous. Le reste du document conserve l'historique et ne doit pas être traité comme l'état courant sans recontrôle.
 
 ### GitHub / PR #60 — sécurité des logs
-- `main` est toujours au commit documentaire [30f11fb44c5157671a9e94b0564c3e58c7b0f5ed](https://github.com/aveca/bot-wow/commit/30f11fb44c5157671a9e94b0564c3e58c7b0f5ed). Aucun nouveau commit de code sur `main` n'a été observé depuis.
+- Au début de cette revalidation, `main` pointait sur le commit documentaire [30f11fb44c5157671a9e94b0564c3e58c7b0f5ed](https://github.com/aveca/bot-wow/commit/30f11fb44c5157671a9e94b0564c3e58c7b0f5ed) ; le seul changement apporté dans cette passe est cette mise à jour documentaire. Consultez l'historique de `main` pour son tip courant ; aucun code produit n'a été modifié ici.
 - [PR #60](https://github.com/aveca/bot-wow/pull/60) est ouverte, en brouillon, non fusionnée et non déployée. HEAD exact : `f32fba4f1d937e47d33b6257d932cc3aff0a3824`.
 - [Validate run 40706729509](https://github.com/aveca/bot-wow/actions/runs/40706729509) et [UI quality run 40706730153](https://github.com/aveca/bot-wow/actions/runs/40706730153) sont tous deux terminés avec succès sur ce SHA. L'artefact UI `bot-wow-ui-quality-evidence` est présent, 25 691 799 octets, digest `sha256:b2fe91e5ef2752a81440dd8f40e8f000aeaa86c535ccd17e1a289d75227d4d0f`.
 - Le diff de #60 ajoute `tests/worker-log-redaction.test.mjs` au script `npm test`, capture les trois niveaux de console, utilise des données synthétiques et un Resend mocké, et route le helper de renvoi vers `sendDeliveryEmail2()`. Le test confirme un renvoi simulé et l'absence des valeurs sentinelles dans les logs. Les notifications administratives restent des placeholders non configurés.
