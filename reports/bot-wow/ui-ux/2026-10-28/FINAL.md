@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base :** `e02bb2a` (main)  
-**SHA final du commit Git :** `845d44c4dcb8ffa4b76cec6745ca349a745e6eac`  
+**SHA final du commit Git :** `a0b50112ca9fdab58ac2157f9960938f41dc0c0e` (après merge avec origin/main et correction du rapport)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -234,7 +234,27 @@ Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécuti
 
 ---
 
-## 11. Prochaine action recommandée
+## 11. Pull Request
+
+**PR #54** — https://github.com/aveca/bot-wow/pull/54  
+**Titre :** `fix(checkout): bloquer le paiement tant que la livraison v1.2.0 n'est pas confirmée`  
+**Base :** `main`  
+**Head :** `botwow-p0-ui-ux-2026-10-28` (`a0b5011`)  
+**État :** OPEN  
+**Vérification :** `gh pr view 54 --repo aveca/bot-wow` confirme l'existence et l'accessibilité de la PR.
+
+La PR contient :
+- Le correctif P0 commercial (formulaire de paiement désactivé, CTA de démo, barre mobile de support)
+- Le skip link et le focus-visible renforcé (accessibilité)
+- Le nouveau test e2e `P0: purchase blocked when delivery not confirmed`
+- Le rapport FINAL.md et toutes les captures dans `artifacts/ui/`
+
+La PR n'est **pas encore fusionnée**. La fusion doit attendre :
+1. Que les checks CI passent sur le SHA de la PR
+2. Une revue humaine du diff
+3. Une autorisation explicite pour déployer sur `main` (le correctif modifie le comportement commercial du checkout)
+
+---
 
 **Prompt suivant prêt à copier :**
 
