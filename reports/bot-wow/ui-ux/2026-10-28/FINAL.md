@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base :** `e02bb2a` (main)  
-**SHA final du commit Git :** `5a8f7e54c8258fdbb4570226908b3e7d401613af` (certifié via `gh pr view 54`, headRefOid)  
+**SHA final du commit Git :** `55cedf129204fc959c0f02bbd5a4a165fd6b5297` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -239,15 +239,15 @@ Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécuti
 **PR #54** — https://github.com/aveca/bot-wow/pull/54  
 **Titre :** `fix(checkout): bloquer le paiement tant que la livraison v1.2.0 n'est pas confirmée`  
 **Base :** `main`  
-**Head :** `botwow-p0-ui-ux-2026-10-28` (`5a8f7e54c8258fdbb4570226908b3e7d401613af`, certifié via `gh pr view 54`)  
+**Head :** `botwow-p0-ui-ux-2026-10-28` (`55cedf129204fc959c0f02bbd5a4a165fd6b5297`, certifié via `gh pr view 54`)  
 **État :** OPEN  
 **Vérification :** `gh pr view 54 --repo aveca/bot-wow` confirme l'existence et l'accessibilité de la PR.  
 **Checks CI (tous passés) :**
 
 | Check | État | Détails |
 |-------|------|---------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933686/job/122562000175 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933421/job/122562067472 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959184/job/122568675386 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959181/job/122568675345 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 La PR contient :
@@ -335,16 +335,16 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `5a8f7e54c8258fdbb4570226908b3e7d401613af`
+**SHA final certifié :** `55cedf129204fc959c0f02bbd5a4a165fd6b5297`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "5a8f7e54c8258fdbb4570226908b3e7d401613af"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "55cedf129204fc959c0f02bbd5a4a165fd6b5297"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
 | Check | État | Lien vers le run/logs |
 |-------|------|----------------------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933686/job/122562000175 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933421/job/122562067472 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959184/job/122568675386 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959181/job/122568675345 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 **Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
