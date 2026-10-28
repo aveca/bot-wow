@@ -335,16 +335,16 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `a8c4b6ed3490804bd82051d00e01e144dcf1f3bf`
+**SHA final certifié :** `df9d635571384a58bddbd8bb907a803dea98b72e`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "a8c4b6ed3490804bd82051d00e01e144dcf1f3bf"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "df9d635571384a58bddbd8bb907a803dea98b72e"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
 | Check | État | Lien vers le run/logs |
 |-------|------|----------------------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40625684709/job/122609899120 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40625683331/job/122609894735 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40626649043/job/122613045846 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40626648868/job/122613045757 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 **Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
