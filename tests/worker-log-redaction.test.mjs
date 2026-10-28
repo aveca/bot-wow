@@ -12,7 +12,7 @@ const REPO = join(HERE, '..');
 const workerSource = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
 const tmpWorker = join(HERE, '.worker-log-redaction.mjs');
 writeFileSync(tmpWorker, workerSource);
-const workerMod = await import('file:///' + tmpWorker.replace(/\\\\/g, '/') + '?t=' + Date.now());
+const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
 let failures = 0;
 function check(name, ok, detail = '') {
