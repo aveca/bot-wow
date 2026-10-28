@@ -1,3 +1,15 @@
+## Funnel revalidation — 2026-10-28 14:57 UTC
+
+- Analytics D1 was queried again read-only after the earlier snapshot. The `ts` field is integer epoch milliseconds; filtering `test='0'` and the documented start epoch returned `changed_db=false`, `rows_written=0`.
+- Window: `2026-10-22T06:30:36.792Z` through latest event `2026-10-28T14:54:07.701Z`.
+- Counts: `page_view=1221` (632 with journey_id), `journey_view=413` (339), `cta_click=41` (31), `checkout_requested=26` (26), `checkout_created=6` (0), `checkout_failed=6` (0; all 6 have `ref`), `checkout_start=4` (3), `conversion=0 observed`, `payment_confirmed=0 observed`.
+- Last checkout events remain 2026-10-27: requested `20:46:05.160Z`, created `23:07:01.087Z`, failed `23:23:17.733Z`. These are event counts, not unique visitors/sessions. No payment conversion rate is supported.
+- The prior query using an ISO timestamp string against integer `ts` returned no rows; the corrected query uses the integer epoch boundary. Do not reuse the empty result as evidence of no events.
+- Latest snapshot was published to [PR #52](https://github.com/aveca/bot-wow/pull/52) and [issue #31](https://github.com/aveca/bot-wow/issues/31). The attribution defect remains: all six checkout_created and six checkout_failed events lack journey_id. The fallback in `emitFunnelEvent()` remains a hypothesis until its exact D1/runtime failure is reproduced.
+- Latest documentation-only state refresh and its Pages validation/deployment must be checked by SHA after this commit. No product code, Worker, secret, checkout, payment, R2 object, or production data was modified.
+
+---
+
 ## Supervision incrémentale — 2026-10-28 14:51 UTC
 
 Cette section remplace les instantanés antérieurs pour les points explicitement révalidés ci-dessous. Le reste du document conserve l'historique et ne doit pas être traité comme l'état courant sans recontrôle.
