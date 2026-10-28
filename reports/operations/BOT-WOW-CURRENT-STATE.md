@@ -153,3 +153,48 @@ Si ce document n’est pas accessible dans la branche de départ, rechercher cet
 - Ne pas déclarer le code « corrigé en production » sur la base d’une PR seulement.
 
 **Résumé d’une ligne pour la reprise :** le SHA-256 de l’objet R2 correspond à la référence, mais le Worker de production observé conserve encore l’ancien repli/fichier/404 ; la PR #19 est le correctif prioritaire à réexaminer ; ne pas reconfigurer les secrets ni déployer automatiquement.
+
+## 7. Supervision complémentaire — 2026-10-28 09:34 UTC
+
+Cette section complète l'instantané P0.7 après le merge documentaire de la PR #58. Base examinée avant cette mise à jour : `main` à `21d09d22e18031bf4a5351b63cbf58162a15c463`. Cette mise à jour est documentaire ; elle ne modifie aucun Worker, paiement, binding ou donnée de production.
+
+### État des branches et de la production
+
+- PR #58 est fusionnée au commit `21d09d22e18031bf4a5351b63cbf58162a15c463`. Les workflows Validate et UI quality étaient verts sur son HEAD ; la revue Codex n'a pas abouti car la limite d'utilisation du service de revue était atteinte. Le contenu fusionné est documentaire (`AGENTS.md` et ce fichier).
+- Cloudflare Pages a déployé ce commit documentaire avec succès : déploiement `64a4b4db-4bf0-4b2b-8c18-dac11601fb9a`, étape `deploy` réussie à `2026-10-28T09:32:08Z`. Le déploiement ne contient pas de correctif de checkout ou Worker.
+- PR #54 reste ouverte et non déployée : HEAD `ff556668b6376cb9fb9985ca812cda25aac13441`. Les runs Validate `40654318060` et UI quality `40654318065` sont verts sur ce SHA. La comparaison effectuée après le merge #58 indiquait 26 commits en avance et 2 en retard sur `main`; refaire la comparaison après tout changement de base.
+- Le diff de la PR #54 contient 200 fichiers, dont 178 captures PNG suivies. L'artefact UI `12800594733` fait 112 538 622 octets. Les tests actuels ne couvrent pas tous les CTA des pages compare/A-B et ne démontrent pas par interception réseau l'absence de requête `/api/checkout` et de redirection Mollie.
+
+### Défaut UI public toujours ouvert
+
+- Après le déploiement documentaire, la page publique `https://bot-wow.com/` affiche toujours l'avertissement de livraison non vérifiée et un formulaire actif `Pay €20.00`. La source `main/index.html` et `main/fr/index.html` contient encore un bouton `#buyBtn` sans attribut `disabled` ; la PR #54 désactive ces boutons uniquement dans sa branche candidate.
+- Sur le HEAD de la PR #54, des CTA d'achat restent dans `index.html`, `fr/index.html`, `compare.html`, `fr/compare.html` et les quatre variantes A/B. Ils pointent vers `#buy` et conservent des libellés/Styles de vente, même lorsque le formulaire est désactivé.
+- `/demo.html` redirige actuellement vers `/demo`, qui présente le planificateur interactif et marque les données comme simulées. L'issue #25 peut rester fermée tant qu'aucune nouvelle régression n'est observée.
+
+### P0 sécurité — issue #59
+
+- Le code source `main/worker/index.js` (blob `d2fa2a0943a75374c61cceb5d07ee035d350ee1c`) et le bundle Worker récupéré en lecture seule contiennent plusieurs chemins qui journalisent des informations sensibles : `sendDeliveryEmail()` journalise e-mail, clé et URL avec token ; `sendAdminNotification2()` journalise e-mail et clé ; `fulfillOrder()` journalise l'e-mail et la clé ; `sendEmail2()` journalise le destinataire. Ce sont des chemins de code vérifiés, pas la preuve qu'un client a été exposé. Aucun log client de production n'a été lu.
+- L'issue #59 est ouverte. Préparer une PR ciblée avec logs redacted et tests capturant `console.log/warn/error`. Aucun déploiement de sécurité, rotation de secret ou opération de confinement sans autorisation.
+
+### Mollie, téléchargement et attribution
+
+- D1 production en lecture seule : 11 commandes Mollie `failed`, 0 `paid`; 5 commandes Bitcoin manuel `paid`, 8 `pending_payment`, 1 `rejected`; 16 marqueurs `webhook_events`, dont 5 orphelins ; 0 ligne `deliveries`; 5 licences actives et 5 téléchargements. Les requêtes ont confirmé `changed_db=false` et `rows_written=0`. Aucun connecteur Mollie en lecture seule n'est disponible pour confirmer les paiements externes.
+- Le Worker déployé insère `payment:<paymentId>` avant `fulfillOrder()` et retourne `200 OK` sur conflit unique sans reprendre un traitement incomplet. La table `deliveries` n'a pas de consommateur de reprise dans le bundle observé. L'issue #13 reste ouverte.
+- Le Worker déployé a une garde `RELEASE_STATUS` (valeur de repli `pending`) ; le nom du binding secret est présent, mais sa valeur n'a pas été lue. Le code `main/worker/index.js` n'a pas cette garde. Le code déployé conserve le fallback vers `Casinobabe-v1.0.38.zip` et le nom HTTP historique ; les PR #19 et #44 restent ouvertes.
+- La PR #57 documente un SHA-256 calculé sur les octets R2 (`1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, 1 387 543 octets). Cette preuve est documentée mais les CRC/contenus de chaque entrée, les hash individuels du manifeste et la provenance reproductible restent à certifier ; l'issue #18 reste ouverte.
+- Analytics D1, événements `test=0` : 1 175 `page_view`, 387 `journey_view`, 41 `cta_click`, 26 `checkout_requested`, 6 `checkout_created`, 6 `checkout_failed`, 4 `checkout_start`, 0 `conversion` et 0 `payment_confirmed`, fenêtre `2026-10-22T06:30:36.792Z` à `2026-10-28T09:32:54.616Z`. Les 26 `checkout_requested` ont un `journey_id`, mais aucun des 6 `checkout_created` ni `checkout_failed` n'en a. `emitFunnelEvent()` tente une insertion complète puis supprime `journey_id` après n'importe quelle erreur ; cause plausible, à reproduire avant correction.
+
+### Offre et support
+
+- `PRODUCT.md` annonce une activation sur une machine, tandis que le Worker crée les licences avec `max_activations=2`. Ne pas choisir la règle commerciale ni changer le prix de 20 € sans approbation.
+- L'issue #8 reste ouverte : `handleSubscribe()` enregistre une adresse dans `botwow_emails` avec source par défaut `newsletter`, sans preuve d'un dossier support durable ni d'une notification effectivement transmise. Préparer une voie support distincte et testée avec mocks uniquement.
+
+### Prochaine action
+
+1. Corriger les logs sensibles dans une PR de sécurité, avec tests de non-divulgation.
+2. Préparer séparément l'idempotence et la reprise Mollie après échec partiel.
+3. Réconcilier la PR #54 avec `main`, remplacer les CTA compare/A-B par démo/support, ajouter assertions réseau et réduire les PNG suivis.
+4. Corriger le fallback de téléchargement dans la branche existante #19/#44, sans modifier R2 ni déployer.
+5. Diagnostiquer la vraie erreur Analytics avant de modifier l'attribution ; préparer le handoff support dans une PR distincte.
+
+Limites : cette session a accès au connecteur GitHub et aux lectures Cloudflare (Worker, bindings par noms/types, Pages, R2, D1). Aucun shell/worktree Factory local n'était exposé ; aucun test Playwright local, checkout live, paiement, e-mail, secret ou mutation D1 n'a été exécuté.
