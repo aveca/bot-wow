@@ -1,3 +1,13 @@
+## CI final revalidation — 2026-10-28 14:27 UTC
+
+- [PR #60](https://github.com/aveca/bot-wow/pull/60) remains a draft, unmerged and undeployed.
+- On code/report SHA `9da21b041892e238382be6f5543ce5d0df69d4bf`, [Validate run 40705954062](https://github.com/aveca/bot-wow/actions/runs/40705954062) and [UI quality run 40705954016](https://github.com/aveca/bot-wow/actions/runs/40705954016) both completed successfully.
+- Validate logs show the synthetic webhook/redaction assertions, mocked Resend request, and provider-error redaction assertions passing. The earlier failed runs on SHA `a4907e27ced7629bc578a35b4fe9d725b7136e4e` were superseded after restoring the redacted conversion-telemetry diagnostic expected by an existing static invariant.
+- This follow-up note is documentation-only; do not amend it merely to include its own resulting SHA. Check the branch head and its checks directly after this update.
+- No real payment, email, production D1/R2 mutation, secret change, or Worker deployment occurred. P0 Mollie idempotency/recoverable fulfillment remains unresolved; PR #60 must not be merged/deployed without explicit approval because it changes the transactional resend path.
+
+---
+
 ## Revalidation opérationnelle — 2026-10-28 14:25 UTC (PR #60)
 
 - **Code / branche :** préparation du correctif sur `fix/p0.15-worker-log-redaction`. SHA du code et des tests avant cette note : `23744eb04c76147496a1c540f076dc81df89c312`. Ne pas créer de boucle de commits pour inscrire le SHA de ce propre rapport ; vérifier le HEAD effectif et les checks directement sur GitHub.
