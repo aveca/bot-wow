@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base :** `e02bb2a` (main)  
-**SHA final du commit Git :** `55cedf129204fc959c0f02bbd5a4a165fd6b5297` (certifié via `gh pr view 54`, headRefOid)  
+**SHA final du commit Git :** `65d4c903897e39771f416a2e041a6383f09cc37d` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -246,8 +246,8 @@ Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécuti
 
 | Check | État | Détails |
 |-------|------|---------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959184/job/122568675386 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959181/job/122568675345 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40613280428/job/122569749494 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40613280383/job/122569749714 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 La PR contient :
@@ -335,16 +335,16 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `55cedf129204fc959c0f02bbd5a4a165fd6b5297`
+**SHA final certifié :** `65d4c903897e39771f416a2e041a6383f09cc37d`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "55cedf129204fc959c0f02bbd5a4a165fd6b5297"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "65d4c903897e39771f416a2e041a6383f09cc37d"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
 | Check | État | Lien vers le run/logs |
 |-------|------|----------------------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959184/job/122568675386 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40612959181/job/122568675345 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40613280428/job/122569749494 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40613280383/job/122569749714 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 **Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
