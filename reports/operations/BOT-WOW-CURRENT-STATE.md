@@ -1,10 +1,11 @@
-## Additional review finding — 2026-10-28 17:45 UTC (PR #61)
+## Security review finding fixed — 2026-10-28 17:53 UTC (PR #61)
 
-- Re-reviewed the actual PR branch Worker at code HEAD `2f8d1f1b69f6830be9987f93a3547b0affb49ab0`. The broader redaction patch still logs request-controlled `body.amount` in the invalid-amount path: `console.warn("Checkout: montant demande par le client refuse", body.amount, "attendu", amount)`.
-- This is a potential log-injection / data-disclosure path because `body.amount` is caller-controlled and can be an arbitrary string or object. No production logs or customer data were read.
-- Review comment published on [PR #61](https://github.com/aveca/bot-wow/pull/61#issuecomment-6476407987). Required follow-up: log a fixed category only, and add a regression test that sends a unique sensitive sentinel as `amount`, captures console output, and proves the sentinel is absent while preserving server-side amount validation.
-- Prior code HEAD `2f8d1f1b69f6830be9987f93a3547b0affb49ab0` passed Validate run [40738272887](https://github.com/aveca/bot-wow/actions/runs/40738272887) and UI quality run [40738272521](https://github.com/aveca/bot-wow/actions/runs/40738272521). These runs do not cover any future code change for this finding. After the fix, re-run both workflows on the exact new HEAD.
-- No code or production changes were made in this review step.
+- Review of the actual branch source at `2f8d1f1b69f6830be9987f93a3547b0affb49ab0` found a remaining log exposure: the invalid-amount checkout path logged caller-controlled `body.amount`. No production logs or customer data were read.
+- Fixed in code/test commit [`6326b262d51e931f72b93aa72b7e8ac0c829fb0f`](https://github.com/aveca/bot-wow/commit/6326b262d51e931f72b93aa72b7e8ac0c829fb0f): the Worker now logs only the fixed category `Checkout rejected: client amount mismatch`; the new regression test submits sentinel `SENSITIVE-AMOUNT-SENTINEL-8f31`, asserts HTTP 400, and proves the sentinel is absent from captured console output.
+- [Validate run 40739505038](https://github.com/aveca/bot-wow/actions/runs/40739505038): **success** on exact code/test HEAD `6326b262d51e931f72b93aa72b7e8ac0c829fb0f`. Its job log confirms both invalid-amount assertions and the log-redaction suite passed.
+- [UI quality run 40739504804](https://github.com/aveca/bot-wow/actions/runs/40739504804): **success** on the same SHA; real-browser checks and artifact upload passed. Artifact `bot-wow-ui-quality-evidence`, 25,691,799 bytes, SHA-256 `b06513a88198c19ac3e761c29de88f6b57603573384c1b3ff6836e9a34119e37`.
+- PR [#61](https://github.com/aveca/bot-wow/pull/61) remains draft, unmerged and undeployed because it changes checkout behavior. The production Worker, D1, R2, secrets, payments and email were not changed.
+
 
 ---
 
