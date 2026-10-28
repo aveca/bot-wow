@@ -1,3 +1,36 @@
+# Revalidation opérationnelle — 2026-10-28 10:20 UTC
+
+**Vérification directe de cette passe ; ce bloc complète l'instantané historique ci-dessous.** Les valeurs de secrets n'ont pas été lues. Les requêtes D1 étaient uniquement des SELECT : `changed_db=false`, `rows_written=0`.
+
+## État actuel et nouvelles preuves
+
+- **main :** `cf11b36aa14ab9c723d991096c146c490917a85b`. Aucun nouveau commit de code n'est apparu depuis ce commit ; les derniers commits de main sont documentaires.
+- **Cloudflare Pages :** le déploiement production `22669ad5-5973-4d62-a4ac-ccb5a6c013c3`, déclenché par `cf11b36`, a terminé `success` à **2026-10-28 09:43:26 UTC**. Le précédent état « actif à clone_repo » est résolu. Cette livraison est documentaire et ne contient aucun correctif commercial.
+- **GitHub Actions du commit documentaire :** le job `validate` du run [40665576781](https://github.com/aveca/bot-wow/actions/runs/40665576781) et le job `deploy` du run [40665576702](https://github.com/aveca/bot-wow/actions/runs/40665576702) sont terminés avec succès.
+- **Worker botwow-api :** dernier déploiement observé par l'API Cloudflare le **2026-10-27 07:46:28 UTC**, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100 %. Aucun déploiement Worker n'a eu lieu dans cette passe. Les valeurs effectives des secrets restent inconnues.
+- **Production publique :** la page d'accueil affiche encore l'avertissement « do not purchase until delivery is confirmed » tout en présentant un CTA et un formulaire « Pay €20.00 » actifs. La correction UI reste dans la PR #54, pas dans main/live.
+- **PR #54 :** ouverte, non fusionnée et non déployée. Dernier HEAD vérifié dans les commentaires : `ff556668b6376cb9fb9985ca812cda25aac13441`. Comparaison directe `main...botwow-p0-ui-ux-2026-10-28` : 26 commits en avance, 3 en retard. Les runs [Validate 40654318060](https://github.com/aveca/bot-wow/actions/runs/40654318060) et [UI quality 40654318065](https://github.com/aveca/bot-wow/actions/runs/40654318065) sont verts sur le HEAD rapporté ; ils ne prouvent pas l'absence de requêtes réseau sur tous les parcours.
+- **PR #53 :** toujours ouverte. Un commentaire de supervision a été ajouté le 28 octobre : [réconciliation vente/prix/livraison](https://github.com/aveca/bot-wow/pull/53#issuecomment-6466488311). Ne pas fusionner pour réactiver la vente tant que le conflit avec #54, la provenance du paquet et le Worker réellement déployé ne sont pas réconciliés.
+- **Issue #59 sécurité :** ouverte. Le code source et le bundle Worker observé contiennent encore des chemins de logs qui exposent potentiellement email, clé de licence et URL de téléchargement/token. C'est un risque au niveau du code, pas une preuve que des logs clients ont été consultés. Aucun log historique contenant des données personnelles n'a été lu.
+- **Release R2 v1.2.0 / issue #18 :** l'empreinte globale documentée reste `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, taille 1 387 543 octets. Le contenu de `VERSION`, les CRC/hashes individuels du manifeste et la provenance reproductible restent à certifier. Ne pas confondre la preuve SHA-256 globale avec une certification complète du paquet.
+- **Worker de livraison :** le code déployé observé conserve le fallback vers `Casinobabe-v1.0.38.zip` et le nom de fichier historique. Les PR #19 et #44 sont les candidates existantes à réconcilier ; ne pas créer un correctif concurrent avant leur inspection.
+- **D1 botwow-production (lecture seule) :** commandes Mollie `failed=11`, `paid=0`; commandes `bitcoin_manual` : `paid=5`, `pending_payment=8`, `rejected=1`; 16 marqueurs webhook Mollie ; 0 ligne `deliveries` ; 5 licences `active` ; 5 téléchargements. Les cinq commandes payées sont Bitcoin manuel, pas Mollie. Ces nombres ne prouvent pas qu'un paiement Mollie externe a été encaissé ou perdu.
+- **D1 botwow-analytics (lecture seule) :** `page_view=1179`, `journey_view=389`, `cta_click=41`, `checkout_requested=26`, `checkout_created=6`, `checkout_failed=6`, `checkout_start=4`, `conversion=0`, `payment_confirmed=0`. Tous les 26 `checkout_requested` ont `journey_id`, aucun des 6 `checkout_created` ou 6 `checkout_failed` n'en a. Dernier événement observé : `2026-10-28T09:37:58.580Z`. Ce sont des événements, pas des visiteurs uniques. Le fallback d'INSERT dans `emitFunnelEvent()` après toute erreur reste une cause plausible, pas une cause racine démontrée.
+- **Offre/support :** `PRODUCT.md` annonce une activation sur une machine ; le Worker crée les licences avec `max_activations=2`. Ne pas choisir la politique commerciale sans approbation. `handleSubscribe()` ne démontre toujours pas la création/transmission d'un dossier support durable.
+- **Démo :** issue #25 fermée ; ne pas la rouvrir sans régression nouvellement prouvée.
+
+## Prochaine action prioritaire
+
+1. Préparer une PR ciblée pour expurger les logs sensibles et ajouter des tests capturant `console.log/warn/error` ; aucun déploiement ni rotation de secret.
+2. Préparer une PR séparée pour rendre les webhooks Mollie et le fulfillment récupérables après échec partiel, avec tests de concurrence/retry sur fixtures ; aucun paiement, e-mail ou D1 de production.
+3. Réconcilier la PR #54 avec main, remplacer les CTA d'achat résiduels, nettoyer les PNG suivis et ajouter des assertions réseau prouvant zéro checkout/redirection Mollie lorsque bloqué. Ne pas fusionner/déployer le checkout sans autorisation.
+4. Réconcilier #19/#44 et compléter la certification du manifeste/provenance avant toute réactivation de la vente.
+5. Traiter support et attribution dans des PR distinctes. Ne jamais traiter `checkout_created` comme une vente confirmée.
+
+Cette mise à jour ne modifie aucun code de paiement, Worker, secret ou donnée de production. Elle n'enregistre pas son propre SHA ; consulter l'historique Git pour l'identifiant du commit documentaire qui la publiera.
+
+---
+
 # BOT-WOW — État opérationnel persistant
 
 **Version :** 1.0  
