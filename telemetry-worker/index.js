@@ -30,18 +30,20 @@ const RETENTION_DAYS = 90;
 
 /* Liste fermee des evenements et de leurs proprietes. */
 const EVENT_SPEC = {
-  page_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
-  cta_click: { cta: 'cta', mode: null, years: null, step: 'step', source: 'source' },
-  planner_mode: { cta: null, mode: 'mode', years: null, step: null, source: 'source' },
-  ownership_view: { cta: null, mode: null, years: 'years', step: null, source: 'source' },
-  checkout_start: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
-  checkout_error: { cta: null, mode: null, years: null, step: 'step', source: 'source', code: 'code' },
-  journey_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  page_view: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  cta_click: { cta: 'cta', mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  planner_mode: { cta: null, mode: 'mode', years: null, step: null, source: 'source', variant: 'variant' },
+  ownership_view: { cta: null, mode: null, years: 'years', step: null, source: 'source', variant: 'variant' },
+  checkout_start: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  checkout_error: { cta: null, mode: null, years: null, step: 'step', source: 'source', code: 'code', variant: 'variant' },
+  journey_view: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
   // Intention de paiement : clic sur un CTA d'achat. Ce n'est PAS une
   // vente ; seule la validation du webhook Mollie en etablit une.
-  checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
-  offer_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
-  demo_open: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  offer_view: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  demo_open: { cta: null, mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
+  // Exposition a une variante A/B (emise uniquement si AB_ENABLED).
+  ab_exposure: { cta: 'cta', mode: null, years: null, step: 'step', source: 'source', variant: 'variant' },
 };
 
 /* Provenance du trafic : liste fermee. Une valeur inconnue ou forgee est
@@ -60,6 +62,7 @@ const RE_CTA = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 const RE_MODE = /^(prudent|equilibre|exploration)$/;
 const RE_STEP = /^[a-z0-9][a-z0-9_-]{0,31}$/;
 const RE_CODE = /^[a-z0-9][a-z0-9_-]{0,31}$/;
+const RE_VARIANT = /^[ab]$/;
 const RE_PAGE = /^\/[a-zA-Z0-9\-_/.]{0,63}$/;
 const RE_REF = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 const RE_JOURNEY = /^[a-z0-9][a-z0-9_-]{0,39}$/;
@@ -121,7 +124,7 @@ export function validateEvent(payload) {
   const row = {
     event: payload.event, page: payload.page, lang,
     cta: null, mode: null, years: null, step: null, ref: null, test: 0,
-    journey_id: null, source: null, code: null,
+    journey_id: null, source: null, code: null, variant: null,
   };
 
   if (spec.cta) {
@@ -164,6 +167,17 @@ export function validateEvent(payload) {
     row.source = rawSource;
   } else {
     row.source = 'other';
+  }
+
+  /* Variante A/B : 'a' ou 'b', ignoree si l'experience est desactivee
+     cote client (AB_ENABLED = false => pas de propriete variant envoyee). */
+  const specVariant = spec.variant;
+  if (specVariant) {
+    const rawVariant = props.variant;
+    if (rawVariant !== undefined && rawVariant !== null && rawVariant !== '') {
+      if (typeof rawVariant !== 'string' || !RE_VARIANT.test(rawVariant)) return null;
+      row.variant = rawVariant;
+    }
   }
 
   // Code d'erreur ferme (checkout_error uniquement) : liste fermee, jamais de texte libre.
@@ -257,14 +271,14 @@ export async function handleTrack(request, env) {
 
   try {
     await db.prepare(
-      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id, source, code) ' +
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, journey_id, source, code, variant) ' +
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       Date.now(), row.event, row.page, row.lang, row.cta, row.mode, row.years,
-      row.step, row.ref, row.test, ipHash, uaFamily(request), row.journey_id, row.source, row.code
+      row.step, row.ref, row.test, ipHash, uaFamily(request), row.journey_id, row.source, row.code, row.variant
     ).run();
   } catch {
-    // Colonne journey_id / source / code absente (schema anterieur) : on rejoue
+    // Colonne journey_id / source / code / variant absente (schema anterieur) : on rejoue
     // sans elles. La collecte fonctionne, moins le lien de parcours et la
     // provenance.
     try {

@@ -59,6 +59,28 @@
 
   var JID = journeyId();
 
+  /* Assignation stable d'une variante A/B : generee une fois par session,
+     stockee en sessionStorage. Aucune donnee personnelle. L'experience est
+     DESACTIVEE par defaut (variante null) tant que les prerequis de release
+     et de mesure ne sont pas certifies. */
+  function variantId() {
+    var key = 'botwow_variant';
+    var stored = sessionStorage.getItem(key);
+    if (stored) return stored;
+    // Variante determinee de maniere stable a partir du journey_id (meme
+    // visiteur = meme variante, pas de bascule au milieu de la mesure).
+    var variant = (parseInt(JID.slice(-8), 36) % 2 === 0) ? 'a' : 'b';
+    try { sessionStorage.setItem(key, variant); } catch (e) { /* stockage indisponible */ }
+    return variant;
+  }
+
+  var VID = variantId();
+
+  /* Experience A/B : desactivee par drapeau. A activer uniquement quand
+     la disponibilite du produit, le funnel, le consentement/privacy et la
+     mesure sont certifies. */
+  var AB_ENABLED = false;
+
   /* Provenance du trafic, normalisee en courte liste fermee :
      google, yt, reddit, discord, forum, direct, other.
      Aucune URL complete, aucun parametre, aucune donnee personnelle :
@@ -120,6 +142,7 @@
     var p = (props && typeof props === 'object') ? props : {};
     p.journey_id = JID;
     p.source = SRC;
+    if (AB_ENABLED && VID) p.variant = VID;
     var payload = {
       v: SCHEMA,
       event: event,
@@ -129,6 +152,13 @@
     };
     if (test) { payload.test = true; payload.ref = test; }
     return payload;
+  }
+
+  /* Evenement d'exposition a une variante A/B (une seule fois par session,
+     quand l'experience est activee). */
+  function trackExposure() {
+    if (!AB_ENABLED || !VID) return;
+    track('ab_exposure', { step: 'variant_' + VID, cta: 'ab_variant' });
   }
 
   function send(payload) {
@@ -232,6 +262,9 @@
   if (location.pathname === '/demo.html' || location.pathname === '/fr/demo.html') {
     track('demo_open', { step: 'demo_open' });
   }
+
+  /* Exposition a la variante A/B (no-op tant que AB_ENABLED est false). */
+  trackExposure();
 
   /* 7. Fin de page : on vide le tampon. */
   window.addEventListener('pagehide', function () { window.botwowTrackFlush(); });

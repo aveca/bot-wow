@@ -45,8 +45,8 @@
 | 4 | Diagnostic chute checkout + durcir contrat checkout | DONE (code+tests, cause exacte en prod non prouvee) | 3c9ec1e | payment-flow OK, checkout-security OK, checkout-gate OK, checkout-gate-mollie OK, validate PASS, telemetry OK | 5 |
 | 5 | Route démo `/demo` en production | DONE | 580d635 | site-artifact OK, e2e demo 54/54 pass (EN+FR), validate PASS | 6 |
 | 6 | Demandes d'aide après échec checkout → dossier support | DONE (code+tests, pas de deploy production) | 74687ed | subscribe.cjs OK (y compris demandes de support), worker handleSubscribe mis à jour, endpoint admin /api/admin/support-requests ajouté, validate PASS | 7 |
-| 7 | Funnel first-party attribuable jusqu'au paiement | DONE | — | telemetry OK, conversion-path OK, telemetry-source-allowlist OK, analytics-source OK, payment-flow OK, validate PASS | 8 |
-| 8 | Test CRO A/B réversible et mesurable | PENDING | — | ab-variants | 9 |
+| 7 | Funnel first-party attribuable jusqu'au paiement | DONE | 1cfd3bb | telemetry OK, conversion-path OK, telemetry-source-allowlist OK, analytics-source OK, payment-flow OK, validate PASS | 8 |
+| 8 | Test CRO A/B réversible et mesurable | DONE (code+tests, experience desactivee par drapeau) | — | ab-variants OK, validate PASS | 9 |
 | 9 | Acquisition gratuite, SEO, UX | PENDING | — | link-check, audit:css, validate | 10 |
 | 10 | Certification finale, déploiement autorisé, rapport | PENDING | — | npm test complet, CI SHA exact | FIN |
 
@@ -113,4 +113,13 @@ Règles : aucun prix/devise/checkout modifié sans autorisation ; aucune mutatio
 - Chaîne d'attribution : `checkout_requested` (client) → `checkout_start` (client) → `checkout_created` (serveur) → `payment_confirmed` (serveur, webhook) → `license_created` (serveur) → `delivery_sent` (serveur). Chaque étape a un événement distinct avec `journey_id` pour le lien de parcours.
 - Déduplication : webhook idempotent via `payment_states` (mission 3) ; événements de test marqués `test: true` et exclus des stats ; fenêtre de rétention 90 jours avec purge opportuniste.
 - Tests : telemetry.test.mjs (collecteur), telemetry-source-allowlist.test.mjs (sources), analytics-source.test.mjs (attribution UTM), conversion-path.test.mjs (invariants du parcours, instrumentation, pas de PII, serveur ne compte pas les conversions), payment-flow.test.mjs (webhook → conversion → licence).
+- Aucun déploiement, aucun e-mail réel, aucune mutation de production.
+
+## Preuves mission 8 (Test CRO A/B réversible et mesurable)
+
+- Variantes A/B (`ab/a/`, `ab/b/`, EN + FR) mises à jour : "v1.2.0 package is not currently verified" → "v1.2.0 package is verified (SHA-256 manifest)". Prix inchangé (20,00 EUR). Aucune promesse de résultat, aucune preuve sociale fabriquée, aucune promesse de livraison immédiate. Formulaire de checkout réel avec CTAs instrumentés. Mention du risque de bannissement. Mouvement spot-à-spot en validation.
+- Test `ab-variants.test.mjs` : vérifie chemins d'assets, cohérence de disponibilité, absence de garantie de résultats, checkout réel, prix, CTA, risque de ban, pas de preuve sociale, pas de livraison immédiate. Tous les tests passent.
+- Assignation stable first-party (`assets/analytics.js`) : `variant` ('a'|'b') dérivé du `journey_id` (même visiteur = même variante), stocké en sessionStorage. Propriété `variant` ajoutée à tous les événements de télémétrie. Événement `ab_exposure` ajouté à l'allowlist du collecteur.
+- Expérience désactivée par défaut (`AB_ENABLED = false`) : ne s'active que quand disponibilité, funnel, consentement/privacy et mesure sont certifiés.
+- Migration `migrations/analytics/0005_telemetry_variant.sql` : colonne `variant` sur `events` (non appliquée en production).
 - Aucun déploiement, aucun e-mail réel, aucune mutation de production.

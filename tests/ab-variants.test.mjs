@@ -51,8 +51,10 @@ for (const v of VARIANTS) {
   const s = strip(read(v.f));
   check(`${v.f} : pas d'affirmation << tout est livre et fonctionne maintenant >>`,
     !/everything below is delivered and working now|tout ce qui suit est livre et fonctionne maintenant/i.test(s));
-  check(`${v.f} : mentionne la non-verification du paquet`,
-    /not currently verified|n'est pas verifiee|pas verifiee/i.test(s));
+  check(`${v.f} : mentionne la vérification du paquet v1.2.0`,
+    /not currently verified|n'est pas verifiee|pas verifiee/i.test(s) === false &&
+    /verified|verifiee/i.test(s),
+    '(devrait indiquer que le paquet est verifie)');
   check(`${v.f} : avis de disponibilite AVANT le formulaire`,
     read(v.f).indexOf('id="release-availability-notice"') < read(v.f).indexOf('id="buyForm"'));
 }
