@@ -3,7 +3,9 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base :** `e02bb2a` (main)  
-**SHA final :** à confirmer après commit  
+**SHA final du commit Git :** `845d44c4dcb8ffa4b76cec6745ca349a745e6eac`  
+**SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
+**Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
 
 ---
@@ -164,7 +166,8 @@ La barre mobile `mbar` sur buy.html/fr/buy.html affichait un bouton "Buy" en or 
 | e2e demo-quality | `npx playwright test demo-quality` | 0 | `56 passed` (desktop + mobile) |
 | e2e P0 spécifique | `npx playwright test demo-quality` | 0 | `P0: purchase blocked when delivery not confirmed` passé (desktop + mobile) |
 
-**SHA testé :** `d69aae13` (stamp des assets après build `_site/`)
+**SHA Git du commit testé :** `845d44c4dcb8ffa4b76cec6745ca349a745e6eac`  
+**Stamp des assets après build :** `d69aae13` (employé pour le cache-busting des fichiers CSS/JS, distinct du SHA Git)
 
 **Tests ajoutés :** `P0: purchase blocked when delivery not confirmed` dans `tests/e2e/demo-quality.spec.mjs` — vérifie que le bouton de paiement est désactivé, que le message de blocage est présent, que le CTA nav pointe vers la démo, et que la soumission du formulaire est bloquée (même via Entrée).
 
@@ -174,22 +177,22 @@ La barre mobile `mbar` sur buy.html/fr/buy.html affichait un bouton "Buy" en or 
 
 ### Captures disponibles
 
-Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécution des tests e2e :
+Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécution des tests e2e, contre le serveur local `scripts/serve.mjs` servant l'artefact `_site/` construit à partir du code commité. Ce sont des **captures locales**, pas des captures du site public en direct :
 
-| Capture | Description |
-|---------|-------------|
-| `artifacts/ui/homepage-viewport-desktop.png` | Page d'accueil EN, viewport desktop 1440×900 |
-| `artifacts/ui/homepage-viewport-mobile.png` | Page d'accueil EN, viewport mobile 390×844 |
-| `artifacts/ui/homepage-desktop.png` | Page d'accueil EN, plein écran desktop |
-| `artifacts/ui/homepage-mobile.png` | Page d'accueil EN, plein écran mobile |
-| `artifacts/ui/demo-en-viewport-desktop.png` | Démo EN, desktop |
-| `artifacts/ui/demo-en-mobile.png` | Démo EN, mobile |
-| `artifacts/ui/demo-fr-viewport-desktop.png` | Démo FR, desktop |
-| `artifacts/ui/demo-fr-mobile.png` | Démo FR, mobile |
-| `artifacts/ui/purchase-blocked-viewport-desktop.png` | Page d'achat avec formulaire désactivé, desktop |
-| `artifacts/ui/purchase-blocked-viewport-mobile.png` | Page d'achat avec formulaire désactivé, mobile |
+| Capture | Description | Type |
+|---------|-------------|------|
+| `artifacts/ui/homepage-viewport-desktop.png` | Page d'accueil EN, viewport desktop 1440×900 | Locale (Playwright sur `http://127.0.0.1:8099`) |
+| `artifacts/ui/homepage-viewport-mobile.png` | Page d'accueil EN, viewport mobile 390×844 | Locale |
+| `artifacts/ui/homepage-desktop.png` | Page d'accueil EN, plein écran desktop | Locale |
+| `artifacts/ui/homepage-mobile.png` | Page d'accueil EN, plein écran mobile | Locale |
+| `artifacts/ui/demo-en-viewport-desktop.png` | Démo EN, desktop | Locale |
+| `artifacts/ui/demo-en-mobile.png` | Démo EN, mobile | Locale |
+| `artifacts/ui/demo-fr-viewport-desktop.png` | Démo FR, desktop | Locale |
+| `artifacts/ui/demo-fr-mobile.png` | Démo FR, mobile | Locale |
+| `artifacts/ui/purchase-blocked-viewport-desktop.png` | Page d'achat avec formulaire désactivé, desktop | Locale |
+| `artifacts/ui/purchase-blocked-viewport-mobile.png` | Page d'achat avec formulaire désactivé, mobile | Locale |
 
-**Limite honnête :** Je n'ai pas pu prendre des captures du site public en direct (`https://bot-wow.com/`) car le navigateur n'est pas disponible dans ce runtime. Les captures ci-dessus sont générées localement via Playwright contre le serveur `scripts/serve.mjs` servant l'artefact `_site/`. Elles reflètent fidèlement le code commité.
+**Limite honnête :** Je n'ai pas pu prendre des captures du site public en direct (`https://bot-wow.com/`) car le navigateur (`browser.tabs.open` / `browser.screenshot`) n'est pas disponible dans ce runtime. Les captures ci-dessus sont générées localement via Playwright contre le serveur `scripts/serve.mjs` servant l'artefact `_site/` construit à partir du code commité. Elles reflètent fidèlement le code dans la branche `botwow-p0-ui-ux-2026-10-28`, mais ne constituent pas une preuve de visite du site public en production.
 
 ---
 
