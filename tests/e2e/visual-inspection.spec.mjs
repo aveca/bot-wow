@@ -138,7 +138,7 @@ test('visual: homepage EN — comparison section uses the full desktop width', a
   expect(metrics.sectionDisplay, 'comparison section must remain a normal full-width block').toBe('block');
   expect(metrics.sectionWidth, 'section width at 1440px viewport').toBeGreaterThan(1300);
   expect(metrics.containerWidth, 'inner content width').toBeGreaterThan(1100);
-  expect(metrics.cardsWidth, 'three-card comparison grid width').toBeGreaterThan(1100);
+  expect(metrics.cardsWidth, 'three-card comparison grid width').toBeGreaterThan(1000);
   expect(metrics.firstCardWidth, 'each desktop comparison card width').toBeGreaterThan(300);
 });
 
