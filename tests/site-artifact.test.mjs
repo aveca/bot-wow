@@ -58,6 +58,12 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
+check('EN : la section comparative de l’accueil utilise une classe de section, pas la grille legacy',
+  /<section class="pad compare-section" id="compare">/.test(enHome) &&
+  !/<section class="pad compare" id="compare">/.test(enHome));
+check('FR : la section comparative de l’accueil utilise une classe de section, pas la grille legacy',
+  /<section class="pad compare-section" id="compare">/.test(frHome) &&
+  !/<section class="pad compare" id="compare">/.test(frHome));
 const enNoticeAt = enHome.indexOf('id="release-availability-notice"');
 const frNoticeAt = frHome.indexOf('id="release-availability-notice"');
 check('EN : avertissement de disponibilité avant le formulaire d\'achat',
