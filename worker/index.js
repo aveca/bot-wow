@@ -2118,7 +2118,7 @@ async function checkRateLimit(kv, bucket, identifier, config2) {
     });
     return { allowed: true };
   } catch (error) {
-    console.error("Rate limit check failed:", error);
+    console.error("Rate limit check failed");
     return { allowed: true };
   }
 }
@@ -2180,7 +2180,7 @@ async function handleSubscribe(request, env2) {
     `).bind(email, source, consentMarketing, consentTransactional, now, ip).run();
     return jsonResponse({ ok: true, message: "Inscription enregistrée.", email }, 200);
   } catch (error) {
-    console.error("Subscribe error:", error);
+    console.error("Subscribe handler failed");
     return jsonResponse({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -2265,7 +2265,7 @@ async function handleActivate(request, env2) {
       token
     });
   } catch (error) {
-    console.error("Activate error:", error);
+    console.error("Activation handler failed");
     return jsonResponse({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -2331,7 +2331,7 @@ async function handleDownload(request, env2) {
     }
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": `attachment; filename="${objectKey}"`,
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
@@ -2339,7 +2339,7 @@ async function handleDownload(request, env2) {
       headers
     });
   } catch (error) {
-    console.error("Download error:", error);
+    console.error("Download handler failed");
     return jsonResponse({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -2382,20 +2382,20 @@ async function handleResend(request, env2) {
     }
     return jsonResponse({ ok: true });
   } catch (error) {
-    console.error("Resend error:", error);
+    console.error("Resend handler failed");
     return jsonResponse({ ok: true });
   }
 }
 __name(handleResend, "handleResend");
 async function sendDeliveryEmail(env2, email, key, downloadUrl, lang) {
-  console.log("[EMAIL] Delivery email would be sent to:", email);
-  console.log("[EMAIL] Key:", key);
-  console.log("[EMAIL] Download URL:", downloadUrl);
-  console.log("[EMAIL] Language:", lang);
+  // Use the same transactional delivery path as paid-order fulfillment.
+  // Never log the recipient, licence key, or token-bearing download URL.
+  return sendDeliveryEmail2(env2, email, key, downloadUrl, lang, null);
 }
 __name(sendDeliveryEmail, "sendDeliveryEmail");
 async function sendAdminNotification(env2, email, key) {
-  console.log("[ADMIN] New registration:", { email, key });
+  // Placeholder only. Do not expose personal data or licence credentials.
+  return { sent: false, reason: "not_configured" };
 }
 __name(sendAdminNotification, "sendAdminNotification");
 function jsonResponse(data, status = 200, extraHeaders = {}) {
@@ -2414,6 +2414,10 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var MOLLIE_API_BASE = "https://api.mollie.com/v2";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+var RELEASE_STATUS = "pending";
+/* Surchargeable par l'environnement du Worker (var Cloudflare / wrangler.toml
+   [vars]) et, en test seulement, par l'env injecte. Jamais depuis la requete. */
+
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
 // remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
@@ -2488,6 +2492,23 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+  // Server-side release gate: never create a Mollie payment while delivery is unverified.
+  // RELEASE_STATUS is an environment binding only; never accept it from request data.
+  const releaseStatus = (env2 && typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS)
+    ? env2.RELEASE_STATUS
+    : RELEASE_STATUS;
+  if (releaseStatus !== "confirmed") {
+    console.warn("Checkout refused: delivery not verified");
+    return jsonResponse2({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr"
+        ? "La livraison du paquet n'est pas encore confirmee. Contactez le support avant de payer."
+        : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, { "Retry-After": "3600" });
+  }
+
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
@@ -2515,7 +2536,7 @@ async function handleCheckout(request, env2) {
       // 30 min
     });
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("Checkout handler failed");
     if (error instanceof Response) return error;
     // Evenement serveur : echec de creation du paiement.
     await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/checkout', lang, { step: 'checkout_failed' });
@@ -2568,15 +2589,15 @@ async function handleMollieWebhook(request, env2) {
   try {
     payment = await fetchMolliePayment(env2, paymentId, true);
   } catch (e) {
-    console.error("Webhook: lecture du paiement impossible", e && e.message);
+    console.error("Webhook payment lookup failed");
     return new Response("Server Error", { status: 500 });
   }
   if (!payment || !payment.id) {
-    console.error(`Webhook: paiement ${paymentId} introuvable via l'API`);
+    console.error("Webhook payment lookup returned no payment");
     return new Response("OK", { status: 200 });
   }
   if (payment.metadata?.product !== PRODUCT_METADATA_KEY) {
-    console.log(`Webhook: Ignoring payment ${paymentId} - not our product`);
+    console.log("Webhook ignored: product metadata mismatch");
     return new Response("OK", { status: 200 });
   }
   // VERIFICATION REELLE : montant, devise, produit, statut.
@@ -2584,7 +2605,7 @@ async function handleMollieWebhook(request, env2) {
   const paidAmount = Math.round(parseFloat(payment.amount?.value || "0") * 100);
   const paidCurrency = String(payment.amount?.currency || "").toUpperCase();
   if (paidAmount !== plan.amount || paidCurrency !== plan.currency) {
-    console.error(`Webhook: montant inattendu pour ${paymentId}: ${paidAmount} ${paidCurrency} (attendu ${plan.amount} ${plan.currency})`);
+    console.error("Webhook rejected: amount or currency mismatch");
     return new Response("Amount mismatch", { status: 400 });
   }
   const email = String(payment.metadata?.email || "").toLowerCase();
@@ -2602,7 +2623,7 @@ async function handleMollieWebhook(request, env2) {
   }
   if (status !== "paid" && status !== "failed" && status !== "expired" && status !== "canceled") {
     // open / pending : rien a faire, la confirmation suivra.
-    console.log(`Webhook: paiement ${paymentId} statut=${status} (en attente)`);
+    console.log("Webhook received: payment is not in a terminal state");
     return new Response("OK", { status: 200 });
   }
   // GARDE-FOU D'IDEMPOTENCE : l'insertion de l'evenement est atomique et
@@ -2617,10 +2638,10 @@ async function handleMollieWebhook(request, env2) {
   } catch (e) {
     const msg = String(e && e.message || "");
     if (/UNIQUE|constraint/i.test(msg)) {
-      console.log(`Webhook: paiement ${paymentId} deja traite, ignore`);
+      console.log("Webhook duplicate marker exists; no new work started");
       return new Response("OK", { status: 200 });
     }
-    console.error("Webhook: insertion de l'evenement impossible", msg);
+    console.error("Webhook event marker insertion failed");
     return new Response("Server Error", { status: 500 });
   }
   // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
@@ -2653,7 +2674,7 @@ async function handleMollieWebhook(request, env2) {
     try {
       await recordConversion(env2, payment, email, lang);
     } catch (e) {
-      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+      console.error("Webhook: mesure de conversion impossible");
     }
   } else {
     await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
@@ -2782,7 +2803,7 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
   await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId);
   await sendAdminNotification2(env2, email, licenseKey, amount);
-  console.log(`Order fulfilled: ${payment.id} -> ${email} (${licenseKey})`);
+  console.log("Order fulfillment database steps completed");
   // Evenement serveur : licence creee et liee a la commande payee.
   await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef });
 }
@@ -2803,7 +2824,7 @@ async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, p
     now,
     now
   ).run();
-  console.log(`Order failed: ${payment.id} -> ${email}`);
+  console.log("Order marked failed");
   // Evenement serveur : echec de paiement confirme par Mollie.
   await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/mollie-webhook', lang, { step: 'checkout_failed', ref: paymentRef });
 }
@@ -2820,16 +2841,16 @@ async function revokeLicense(env2, payment, email, eventId) {
       env2.DB.prepare("UPDATE licenses SET status = ? WHERE id = ?").bind("revoked", license.id),
       env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id)
     ]);
-    console.log(`License revoked: ${license.key} (refund/chargeback for ${payment.id})`);
+    console.log("License revoked after refund or chargeback");
   } else {
-    console.log(`No license to revoke for ${payment.id} (refund/chargeback)`);
+    console.log("Refund or chargeback received; no linked license found");
   }
   // L'evenement de remboursement est journalise meme sans licence associee :
   // ce MARQUEUR rend les rejeux du webhook naturellement sans effet.
   try {
     await env2.DB.prepare("INSERT OR IGNORE INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now).run();
   } catch (e) {
-    console.error("Refund event logging failed:", e && e.message);
+    console.error("Refund event logging failed");
   }
 }
 __name(revokeLicense, "revokeLicense");
@@ -2888,8 +2909,8 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   });
   if (!response.ok) {
     const error = await response.text();
-    console.error(`Mollie API error (${response.status}):`, error);
-    throw new Error(`Mollie API error: ${response.status} - ${error}`);
+    console.error("Mollie API request failed", response.status);
+    throw new Error(`Mollie API error: ${response.status}`);
   }
   return response.json();
 }
@@ -3026,7 +3047,7 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
         VALUES (?, ?, ?, 'delivery', 'pending', ?)
       `).bind(email, subject, text, Date.now()).run();
     } catch (e) {
-      console.error("[EMAIL] consignation impossible:", e && e.message);
+      console.error("[EMAIL] delivery retry record could not be stored");
     }
     // Evenement serveur : echec de livraison e-mail.
     await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed' });
@@ -3051,21 +3072,22 @@ async function sendEmail2(env2, to, subject, text, html) {
     });
     if (!res.ok) {
       const err = await res.text();
-      console.error("[EMAIL] Resend a repondu", res.status, err.slice(0, 200));
+      console.error("[EMAIL] provider request failed", res.status);
       return { sent: false, reason: "resend_" + res.status };
     }
     const data = await res.json().catch(() => ({}));
-    console.log("[EMAIL] envoi accepte par le provider pour", to);
+    console.log("[EMAIL] provider accepted delivery request");
     return { sent: true, id: data && data.id };
   } catch (e) {
-    console.error("[EMAIL] echec reseau", e && e.message);
+    console.error("[EMAIL] provider request failed due to network error");
     return { sent: false, reason: "network" };
   }
 }
 __name(sendEmail2, "sendEmail2");
 __name(sendDeliveryEmail2, "sendDeliveryEmail");
 async function sendAdminNotification2(env2, email, key, amount) {
-  console.log("[ADMIN] Paid order:", { email, key, amount });
+  // Placeholder only. Do not expose personal data or licence credentials.
+  return { sent: false, reason: "not_configured" };
 }
 __name(sendAdminNotification2, "sendAdminNotification");
 function jsonResponse2(data, status = 200, extraHeaders = {}) {
@@ -3153,7 +3175,7 @@ async function handleBitcoinCheckout(request, env2) {
       message: "Order created. Payment instructions including the Bitcoin address will be sent to your email by our support team."
     });
   } catch (error) {
-    console.error("Bitcoin checkout error:", error);
+    console.error("Bitcoin checkout handler failed");
     return jsonResponse3({ ok: false, error: "checkout_failed" }, 500);
   }
 }
@@ -3192,7 +3214,7 @@ async function handleBitcoinPaidNotification(request, env2) {
       status: "pending_payment"
     });
   } catch (error) {
-    console.error("Bitcoin paid notification error:", error);
+    console.error("Bitcoin payment notification failed");
     return jsonResponse3({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -3277,7 +3299,7 @@ async function handleAdminApproveOrder(request, env2) {
       }
     });
   } catch (error) {
-    console.error("Admin approve error:", error);
+    console.error("Admin approval handler failed");
     return jsonResponse3({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -3326,7 +3348,7 @@ async function handleAdminRejectOrder(request, env2) {
     ).run();
     return jsonResponse3({ ok: true, message: "Order rejected" });
   } catch (error) {
-    console.error("Admin reject error:", error);
+    console.error("Admin rejection handler failed");
     return jsonResponse3({ ok: false, error: "server_error" }, 500);
   }
 }
@@ -5214,7 +5236,7 @@ async function handleAdmin(request, env2) {
   try {
     return await handler(request, env2, corsHeaders2);
   } catch (error) {
-    console.error("Admin handler error:", error);
+    console.error("Admin handler failed");
     return jsonError("server_error", "Internal server error", 500, corsHeaders2);
   }
 }
@@ -5564,7 +5586,7 @@ async function verifyPassword(password, hash2) {
     }
     return await compare(password, hash2);
   } catch (error) {
-    console.error("Password verification error:", error);
+    console.error("Password verification failed");
     return false;
   }
 }
@@ -5679,7 +5701,7 @@ async function loadDict(lang, env2) {
     dictCache.set(normalizedLang, dict);
     return dict;
   } catch (error) {
-    console.error(`Failed to load i18n for ${normalizedLang}:`, error);
+    console.error("Failed to load i18n resources");
     if (normalizedLang !== I18N_CONFIG.defaultLang) {
       return loadDict(I18N_CONFIG.defaultLang, env2);
     }
@@ -6114,7 +6136,7 @@ var index_default = {
       }
       return jsonError2("not_found", "Endpoint not found", 404);
     } catch (error) {
-      console.error("Worker error:", error);
+      console.error("Worker request failed");
       return jsonError2("server_error", "Internal server error", 500);
     }
   },
@@ -6132,7 +6154,7 @@ var index_default = {
         await cleanupExpiredDownloads(env2);
       }
     } catch (error) {
-      console.error("Scheduled task error:", error);
+      console.error("Scheduled task failed");
     }
   }
 };
@@ -6181,7 +6203,7 @@ async function runDailyBackup(env2) {
       }
     }
   } catch (error) {
-    console.error("Backup failed:", error);
+    console.error("Backup operation failed");
   }
 }
 __name(runDailyBackup, "runDailyBackup");
@@ -6198,7 +6220,7 @@ async function cleanupExpiredDownloads(env2) {
       console.log(`Cleaned up ${result.meta.changes} expired download tokens`);
     }
   } catch (error) {
-    console.error("Cleanup expired downloads error:", error);
+    console.error("Expired download cleanup failed");
   }
 }
 __name(cleanupExpiredDownloads, "cleanupExpiredDownloads");
