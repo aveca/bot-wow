@@ -1,3 +1,25 @@
+## CI final revalidation — 2026-10-28 14:27 UTC
+
+- [PR #60](https://github.com/aveca/bot-wow/pull/60) remains a draft, unmerged and undeployed.
+- On code/report SHA `9da21b041892e238382be6f5543ce5d0df69d4bf`, [Validate run 40705954062](https://github.com/aveca/bot-wow/actions/runs/40705954062) and [UI quality run 40705954016](https://github.com/aveca/bot-wow/actions/runs/40705954016) both completed successfully.
+- Validate logs show the synthetic webhook/redaction assertions, mocked Resend request, and provider-error redaction assertions passing. The earlier failed runs on SHA `a4907e27ced7629bc578a35b4fe9d725b7136e4e` were superseded after restoring the redacted conversion-telemetry diagnostic expected by an existing static invariant.
+- This follow-up note is documentation-only; do not amend it merely to include its own resulting SHA. Check the branch head and its checks directly after this update.
+- No real payment, email, production D1/R2 mutation, secret change, or Worker deployment occurred. P0 Mollie idempotency/recoverable fulfillment remains unresolved; PR #60 must not be merged/deployed without explicit approval because it changes the transactional resend path.
+
+---
+
+## Revalidation opérationnelle — 2026-10-28 14:25 UTC (PR #60)
+
+- **Code / branche :** préparation du correctif sur `fix/p0.15-worker-log-redaction`. SHA du code et des tests avant cette note : `23744eb04c76147496a1c540f076dc81df89c312`. Ne pas créer de boucle de commits pour inscrire le SHA de ce propre rapport ; vérifier le HEAD effectif et les checks directement sur GitHub.
+- **PR dédiée :** [#60 — redaction des logs Worker et test du renvoi transactionnel](https://github.com/aveca/bot-wow/pull/60), brouillon ouvert, pas fusionné ni déployé.
+- **Correctifs préparés :** suppression des emails, clés de licence, tokens/URLs tokenisées, identifiants de paiement et corps d'erreur fournisseur dans les logs sensibles ; le helper de renvoi utilise le même chemin transactionnel que la livraison normale. Les notifications administratives restent explicitement non configurées, sans fausse promesse.
+- **Preuve CI :** [Validate run 40705689059](https://github.com/aveca/bot-wow/actions/runs/40705689059) est **success** sur le SHA `23744eb04c76147496a1c540f076dc81df89c312`. Les logs confirment que `tests/worker-log-redaction.test.mjs` passe : le webhook synthétique, l'absence de PII/clé/token dans les logs, le renvoi avec Resend mocké et l'expurgation d'erreurs sont vérifiés. Un run précédent sur le SHA antérieur a échoué sur une assertion statique de `conversion-path.test.mjs`; le message a été rétabli en version expurgée, puis Validate a réussi.
+- **Qualité UI :** [UI quality run 40705689035](https://github.com/aveca/bot-wow/actions/runs/40705689035) était encore en cours au dernier contrôle ; ne pas déclarer tous les checks verts avant son résultat final.
+- **Garde-fous :** aucun paiement, e-mail réel, mutation D1/R2, secret ou déploiement Worker n'a été effectué. La PR change le chemin de renvoi ; ne pas fusionner/déployer sans autorisation explicite.
+- **P0 restant :** issue #13 — le marqueur webhook est écrit avant fulfillment et le retry peut répondre 200 sans reprendre un état incomplet ; la file `deliveries` n'a pas de consommateur de reprise démontré. Le funnel, le blocage UI, le téléchargement, le support et la cohérence du quota d'activation restent des tâches séparées.
+
+---
+
 ## Revalidation opérationnelle — 2026-10-28 11:12 UTC
 
 - **Git / CI :** le HEAD de `main` est le commit documentaire `fe985fb169c31a302c2e1df14a12d081e8d382a3`. Les workflows `validate` [40672287285](https://github.com/aveca/bot-wow/actions/runs/40672287285) et `deploy` [40672287533](https://github.com/aveca/bot-wow/actions/runs/40672287533) sont verts sur ce SHA. Le code du Worker n'a pas été modifié par ces commits documentaires.
