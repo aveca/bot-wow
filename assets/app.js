@@ -221,6 +221,14 @@ function wireBuyForm() {
   // doit jamais afficher un message en francais (corrige 2026-10-23).
   const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
   form.addEventListener('submit', (ev) => {
+    // Panne de disponibilité : le bouton est desactive, aucune soumission
+    // n'est possibile, ni par clic ni par Enter dans le champ email.
+    const btn = document.getElementById('buyBtn');
+    if (btn && btn.disabled) {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      return false;
+    }
     ev.preventDefault();
     const input = document.getElementById('email');
     const value = (input.value || '').trim();

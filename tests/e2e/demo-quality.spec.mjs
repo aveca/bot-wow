@@ -72,6 +72,33 @@ test('homepage: primary demo and purchase paths remain visible and responsive', 
   expect(errors).toEqual([]);
 });
 
+test('P0: purchase blocked when delivery not confirmed', async ({ page }, testInfo) => {
+  const errors = collectPageErrors(page);
+
+  // buy.html : bouton de paiement desactive, message de blocage visible
+  const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
+  expect(response && response.ok()).toBeTruthy();
+  const buyBtn = page.locator('#buyBtn');
+  await expect(buyBtn).toBeDisabled();
+  await expect(page.locator('.checkout-blocked')).toBeVisible();
+  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+
+  // index.html : CTA navigation pointe vers la demo, pas vers le checkout
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
+  await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
+  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+
+  // Soumission du formulaire bloquee (meme via Enter)
+  await page.fill('#email', 'test@example.com');
+  await page.press('#email', 'Enter');
+  await expect(page.locator('#buyErr')).not.toContainText('redirect');
+  await expect(page.locator('#buyOk')).not.toContainText('redirect');
+
+  await captureScreenshot(page, testInfo, 'purchase-blocked');
+  expect(errors).toEqual([]);
+});
+
 test('English demo: simulation disclosure, interactions and purchase handoff work', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const checkoutRequests = [];
