@@ -118,7 +118,8 @@ const sensitiveValues = [
   'RESEND-LICENCE-SECRET',
   'RESEND-DOWNLOAD-TOKEN-SECRET',
   'SENSITIVE-ERROR-SENTINEL',
-  'https://api.bot-wow.com/api/download?t='
+  'https://api.bot-wow.com/api/download?t=',
+  'SENSITIVE-RELEASE-STATUS'
 ];
 try {
   const paidState = makeState();
@@ -151,6 +152,15 @@ try {
   check('Mollie lookup error details are not copied to logs',
     !sensitiveValues.some((value) => failureLogs.includes(value)), failureLogs);
 
+  const gateEnv = makeEnv(makeState());
+  gateEnv.RELEASE_STATUS = 'SENSITIVE-RELEASE-STATUS';
+  const gateCapture = await captureConsole(() => callWorker('/api/checkout', gateEnv,
+    JSON.stringify({ email: 'synthetic-buyer@example.test', lang: 'en' }), 'application/json'));
+  const gateLogs = gateCapture.output.join('\\n');
+  check('unverified checkout is blocked before Mollie', gateCapture.value.status === 409);
+  check('checkout logs never expose RELEASE_STATUS value',
+    !gateLogs.includes('SENSITIVE-RELEASE-STATUS') && !gateLogs.includes('RELEASE_STATUS='), gateLogs);
+
   const forbiddenPatterns = [
     /console\.log\(["']\[EMAIL\] Key:/,
     /console\.log\(["']\[EMAIL\] Download URL:/,
@@ -158,6 +168,7 @@ try {
     /console\.log\(.Order fulfilled:.*email.*licenseKey/,
     /console\.log\(["']\[ADMIN\] Paid order:["'],\s*\{\s*email,\s*key/
   ];
+  forbiddenPatterns.push(/console\\.warn\\([^)]*RELEASE_STATUS\\s*=/);
   check('source contains no known unsafe log patterns', forbiddenPatterns.every((pattern) => !pattern.test(workerSource)));
 } finally {
   globalThis.fetch = realFetch;
