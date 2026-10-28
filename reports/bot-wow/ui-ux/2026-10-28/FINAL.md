@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base (main) :** `e02bb2a`  
-**SHA de tête de la PR #54 (commit certifié) :** `a8c4b6ed3490804bd82051d00e01e144dcf1f3bf` (certifié via `gh pr view 54`, headRefOid)  
+**SHA de tête de la PR #54 (commit certifié) :** `df9d635571384a58bddbd8bb907a803dea98b72e` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
