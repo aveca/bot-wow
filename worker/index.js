@@ -2487,7 +2487,7 @@ async function handleCheckout(request, env2) {
     return jsonResponse2({ ok: false, error: "invalid_email" }, 400);
   }
   if (body.amount !== void 0 && Number(body.amount) !== amount) {
-    console.warn("Checkout: montant demande par le client refuse", body.amount, "attendu", amount);
+    console.warn("Checkout rejected: client amount mismatch");
     return jsonResponse2({ ok: false, error: "invalid_amount" }, 400);
   }
   const rawJourneyId = body.journey_id;

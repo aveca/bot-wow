@@ -161,6 +161,16 @@ try {
   check('checkout logs never expose RELEASE_STATUS value',
     !gateLogs.includes('SENSITIVE-RELEASE-STATUS') && !gateLogs.includes('RELEASE_STATUS='), gateLogs);
 
+  const amountSentinel = 'SENSITIVE-AMOUNT-SENTINEL-8f31';
+  const amountCapture = await captureConsole(() => callWorker('/api/checkout',
+    makeEnv(makeState()),
+    JSON.stringify({ email: 'synthetic-buyer@example.test', lang: 'en', amount: amountSentinel }),
+    'application/json'));
+  const amountLogs = amountCapture.output.join('\\n');
+  check('client-supplied invalid amount is rejected', amountCapture.value.status === 400);
+  check('client-supplied amount is never copied to logs',
+    !amountLogs.includes(amountSentinel), amountLogs);
+
   const forbiddenPatterns = [
     /console\.log\(["']\[EMAIL\] Key:/,
     /console\.log\(["']\[EMAIL\] Download URL:/,
