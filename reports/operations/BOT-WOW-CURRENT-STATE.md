@@ -1,3 +1,39 @@
+## Supervision incrémentale — 2026-10-28 14:50 UTC
+
+Cette section remplace les instantanés antérieurs pour les points explicitement révalidés ci-dessous. Le reste du document conserve l'historique et ne doit pas être traité comme l'état courant sans recontrôle.
+
+### GitHub / PR #60 — sécurité des logs
+- `main` est toujours au commit documentaire [30f11fb44c5157671a9e94b0564c3e58c7b0f5ed](https://github.com/aveca/bot-wow/commit/30f11fb44c5157671a9e94b0564c3e58c7b0f5ed). Aucun nouveau commit de code sur `main` n'a été observé depuis.
+- [PR #60](https://github.com/aveca/bot-wow/pull/60) est ouverte, en brouillon, non fusionnée et non déployée. HEAD exact : `f32fba4f1d937e47d33b6257d932cc3aff0a3824`.
+- [Validate run 40706729509](https://github.com/aveca/bot-wow/actions/runs/40706729509) et [UI quality run 40706730153](https://github.com/aveca/bot-wow/actions/runs/40706730153) sont tous deux terminés avec succès sur ce SHA. L'artefact UI `bot-wow-ui-quality-evidence` est présent, 25 691 799 octets, digest `sha256:b2fe91e5ef2752a81440dd8f40e8f000aeaa86c535ccd17e1a289d75227d4d0f`.
+- Le diff de #60 ajoute `tests/worker-log-redaction.test.mjs` au script `npm test`, capture les trois niveaux de console, utilise des données synthétiques et un Resend mocké, et route le helper de renvoi vers `sendDeliveryEmail2()`. Le test confirme un renvoi simulé et l'absence des valeurs sentinelles dans les logs. Les notifications administratives restent des placeholders non configurés.
+- **Garde-fou :** #60 peut envoyer un véritable e-mail transactionnel si déployée avec un binding Resend valide. Pas de merge/deploy de cette PR sans autorisation explicite. L'idempotence Mollie et le consommateur de reprise de `deliveries` ne sont pas résolus par #60.
+
+### Démo publique — issue #25
+- L'issue [#25](https://github.com/aveca/bot-wow/issues/25) est fermée depuis le 2026-10-27T23:39:18Z.
+- Revalidation publique du 2026-10-28 : `/demo.html` redirige vers `/demo`, qui sert le planificateur interactif « BOT-WOW — Interactive route planner demo », avec données explicitement simulées et limites indiquant que le déplacement automatique reste en validation en jeu. La régression de contenu de #25 n'est pas actuellement reproduite. Ne pas rouvrir sans nouvelle preuve.
+
+### Release / vente — état à ne pas confondre
+- L'[issue #18](https://github.com/aveca/bot-wow/issues/18) est P1 : la vérification R2 précédente a confirmé l'objet `casinobabe-fishing-1.2.0.zip`, 1 387 543 octets, SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, 30 entrées ZIP, VERSION/MANIFEST 1.2.0, 26/26 fichiers du manifeste conformes, 30/30 CRC32/tailles conformes. Cette vérification est documentée dans [issue #18](https://github.com/aveca/bot-wow/issues/18). La provenance reproductible et l'onboarding autonome dans l'archive restent ouverts.
+- La page publique d'accueil a été relue le 2026-10-28 : elle affirme encore qu'on ne peut pas vérifier la disponibilité du paquet, demande de ne pas acheter avant confirmation de livraison, mais garde un formulaire actif « Pay €20.00 ». L'affirmation sur la disponibilité de l'archive est dépassée au vu de la preuve R2 ; l'avertissement sur la livraison après paiement reste valide tant que webhook, licence, e-mail et téléchargement ne sont pas certifiés de bout en bout.
+- [PR #53](https://github.com/aveca/bot-wow/pull/53) reste ouverte et contient encore des claims de livraison/renvoi insuffisamment prouvés et des contradictions dans les pages buy. [PR #54](https://github.com/aveca/bot-wow/pull/54) reste ouverte, non fusionnée et non déployée ; ses CTA résiduels et son diff volumineux doivent être réconciliés avant toute décision. Ne fusionner aucune des deux en l'état.
+
+### D1 / funnel — dernier instantané déjà publié, non recalculé pendant cette passe
+- L'instantané le plus récent dans [issue #31](https://github.com/aveca/bot-wow/issues/31) et [PR #52](https://github.com/aveca/bot-wow/pull/52) : page_view=1211, journey_view=407, cta_click=41, checkout_requested=26, checkout_created=6, checkout_failed=6, checkout_start=4, conversion=0 observé, payment_confirmed=0 observé. Tous les 26 checkout_requested ont `journey_id`; aucun des 6 checkout_created/checkout_failed n'en a.
+- Dernier événement observé dans cet instantané : 2026-10-28T14:32:26.747Z. Ces valeurs sont des événements, pas des visiteurs uniques ; aucun taux de conversion paiement n'est justifié.
+- D1 de production précédemment lu en SELECT seulement : 11 commandes Mollie failed, 0 paid ; 5 bitcoin_manual paid, 8 pending_payment, 1 rejected ; 16 marqueurs webhook Mollie dont 5 orphelins ; 0 lignes deliveries ; 5 licences actives et 5 tokens. Aucun paiement Mollie perdu n'est déduit de ces agrégats.
+
+### Priorités révisées
+1. **P0 #13 :** rendre le webhook/fulfillment Mollie idempotent et récupérable après échec partiel ; ajouter le consommateur durable des livraisons pending.
+2. **P0 #59 / PR #60 :** faire examiner le diff et les tests de redaction, conserver la PR en brouillon jusqu'à approbation de l'envoi transactionnel, puis ne déployer qu'après autorisation.
+3. **P0 parcours commercial :** choisir une stratégie cohérente entre #53 et #54 ; corriger le message « disponibilité du paquet non vérifiable » tout en maintenant un blocage honnête de l'achat tant que le fulfillment n'est pas certifié.
+4. **P1 téléchargement/provenance :** porter les corrections utiles de #19/#44 sur une branche à jour ; ne pas servir le fallback historique.
+5. **P1 funnel/support/offre :** reproduire l'erreur d'attribution avant correction, construire un handoff support durable, et faire confirmer la politique commerciale d'activation (PRODUCT.md annonce une machine, Worker source configure deux activations).
+
+Aucune mutation D1/R2, aucun secret modifié, aucun paiement, remboursement, e-mail réel ou déploiement Worker n'a été effectué dans cette passe. Les contrôles GitHub Actions sont des preuves sur le SHA testé, pas une preuve de déploiement en production.
+
+---
+
 ## Revalidation opérationnelle — 2026-10-28 11:12 UTC
 
 - **Git / CI :** le HEAD de `main` est le commit documentaire `fe985fb169c31a302c2e1df14a12d081e8d382a3`. Les workflows `validate` [40672287285](https://github.com/aveca/bot-wow/actions/runs/40672287285) et `deploy` [40672287533](https://github.com/aveca/bot-wow/actions/runs/40672287533) sont verts sur ce SHA. Le code du Worker n'a pas été modifié par ces commits documentaires.
