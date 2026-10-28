@@ -2653,7 +2653,7 @@ async function handleMollieWebhook(request, env2) {
     try {
       await recordConversion(env2, payment, email, lang);
     } catch (e) {
-      console.error("Webhook conversion telemetry failed");
+      console.error("Webhook: mesure de conversion impossible");
     }
   } else {
     await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
