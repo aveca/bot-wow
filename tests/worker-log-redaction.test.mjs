@@ -168,7 +168,7 @@ try {
     /console\.log\(.Order fulfilled:.*email.*licenseKey/,
     /console\.log\(["']\[ADMIN\] Paid order:["'],\s*\{\s*email,\s*key/
   ];
-  forbiddenPatterns.push(/console\\.warn\\([^)]*RELEASE_STATUS\\s*=/);
+  forbiddenPatterns.push(/console\.warn\([^)]*RELEASE_STATUS\s*=/);
   check('source contains no known unsafe log patterns', forbiddenPatterns.every((pattern) => !pattern.test(workerSource)));
 } finally {
   globalThis.fetch = realFetch;
