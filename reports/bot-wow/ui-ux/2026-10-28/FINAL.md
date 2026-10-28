@@ -3,7 +3,7 @@
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
 **SHA de base :** `e02bb2a` (main)  
-**SHA final du commit Git :** `a0b50112ca9fdab58ac2157f9960938f41dc0c0e` (après merge avec origin/main et correction du rapport)  
+**SHA final du commit Git :** `5a8f7e54c8258fdbb4570226908b3e7d401613af` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -239,9 +239,16 @@ Les captures Playwright sont générées dans `artifacts/ui/` lors de l'exécuti
 **PR #54** — https://github.com/aveca/bot-wow/pull/54  
 **Titre :** `fix(checkout): bloquer le paiement tant que la livraison v1.2.0 n'est pas confirmée`  
 **Base :** `main`  
-**Head :** `botwow-p0-ui-ux-2026-10-28` (`a0b5011`)  
+**Head :** `botwow-p0-ui-ux-2026-10-28` (`5a8f7e54c8258fdbb4570226908b3e7d401613af`, certifié via `gh pr view 54`)  
 **État :** OPEN  
-**Vérification :** `gh pr view 54 --repo aveca/bot-wow` confirme l'existence et l'accessibilité de la PR.
+**Vérification :** `gh pr view 54 --repo aveca/bot-wow` confirme l'existence et l'accessibilité de la PR.  
+**Checks CI (tous passés) :**
+
+| Check | État | Détails |
+|-------|------|---------|
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933686/job/122562000175 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933421/job/122562067472 |
+| `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 La PR contient :
 - Le correctif P0 commercial (formulaire de paiement désactivé, CTA de démo, barre mobile de support)
@@ -250,7 +257,7 @@ La PR contient :
 - Le rapport FINAL.md et toutes les captures dans `artifacts/ui/`
 
 La PR n'est **pas encore fusionnée**. La fusion doit attendre :
-1. Que les checks CI passent sur le SHA de la PR
+1. Que les checks CI passent sur le SHA de la PR (fait — tous passés)
 2. Une revue humaine du diff
 3. Une autorisation explicite pour déployer sur `main` (le correctif modifie le comportement commercial du checkout)
 
@@ -321,3 +328,27 @@ La mission est considérée comme **terminée** pour les critères démontrés :
 Les déploiements, mutations de production (R2, D1, Worker), secrets et paiements réels restent en attente d'approbation explicite.
 
 **Rapport versionné et commité sur la branche `botwow-p0-ui-ux-2026-10-28` du dépôt `aveca/bot-wow`.**
+
+---
+
+## 13. Décision finale — READY_FOR_REVIEW
+
+**Décision :** `READY_FOR_REVIEW`
+
+**SHA final certifié :** `5a8f7e54c8258fdbb4570226908b3e7d401613af`
+
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "5a8f7e54c8258fdbb4570226908b3e7d401613af"`, correspondant exactement au commit attendu.
+
+**Résultat des checks requis :**
+
+| Check | État | Lien vers le run/logs |
+|-------|------|----------------------|
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933686/job/122562000175 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40610933421/job/122562067472 |
+| `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
+
+**Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
+
+**Reviews et protections de branche :** aucune review humaine enregistrée (`reviewDecision: ""`). La protection de branche GitHub n'a pas encore été levée. La fusion nécessite une revue humaine.
+
+**Décision :** `READY_FOR_REVIEW` — tous les checks requis sont passés, le SHA est certifié, la PR est ouverte et mergeable. Aucune correction supplémentaire n'est nécessaire. La PR est prête à être examinée par un humain puis fusionnée, mais la fusion et le déploiement en production restent bloqués par l'absence d'autorisation explicite.
