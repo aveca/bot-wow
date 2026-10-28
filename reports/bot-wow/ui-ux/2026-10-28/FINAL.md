@@ -2,8 +2,8 @@
 
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
-**SHA de base :** `e02bb2a` (main)  
-**SHA final du commit Git :** `561174831f3f4c14b0df1d5fa40efdece82b5e77` (certifié via `gh pr view 54`, headRefOid)  
+**SHA de base (main) :** `e02bb2a`  
+**SHA de tête de la PR #54 (commit certifié) :** `17791185eea08233d12aa7c1b5f2d33ffce8ecba` (certifié via `gh pr view 54`, headRefOid)  
 **SHA de base après merge avec origin/main :** `7371947` (merge de `docs/p0.13-production-verification-report-2026-10-27.md`)  
 **Stamp des assets après build `_site/` :** `d69aae13` (différent du SHA Git — empreinte de contenu, non l'identifiant de commit)  
 **Date :** 2026-10-28  
@@ -335,16 +335,16 @@ Les déploiements, mutations de production (R2, D1, Worker), secrets et paiement
 
 **Décision :** `READY_FOR_REVIEW`
 
-**SHA final certifié :** `561174831f3f4c14b0df1d5fa40efdece82b5e77`
+**SHA final certifié :** `17791185eea08233d12aa7c1b5f2d33ffce8ecba`
 
-**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "561174831f3f4c14b0df1d5fa40efdece82b5e77"`, correspondant exactement au commit attendu.
+**Vérification du SHA :** `gh pr view 54 --repo aveca/bot-wow` retourne `headRefOid: "17791185eea08233d12aa7c1b5f2d33ffce8ecba"`, correspondant exactement au commit attendu.
 
 **Résultat des checks requis :**
 
 | Check | État | Lien vers le run/logs |
 |-------|------|----------------------|
-| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40614066033/job/122572306261 |
-| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40614065926/job/122572306287 |
+| `validate` | pass | https://github.com/aveca/bot-wow/actions/runs/40613837538/job/122571564344 |
+| `ui-quality` | pass | https://github.com/aveca/bot-wow/actions/runs/40613837374/job/122571563785 |
 | `GitGuardian Security Checks` | pass | https://dashboard.gitguardian.com |
 
 **Corrections supplémentaires poussées :** aucune (tous les tests passent sur le SHA initial).
