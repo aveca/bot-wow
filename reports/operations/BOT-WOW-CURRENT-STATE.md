@@ -2,9 +2,9 @@
 
 **Dépôt :** https://github.com/aveca/bot-wow  
 **Branche :** `main`  
-**SHA actuel de main :** `7d6cc4e` (après `git pull --ff-only`, vérifié localement)  
-**PR #54 :** **MERGED** sur main (SHA `ff55666` de la branche, merge commit dans `7d6cc4e`)  
-**Dernière mise à jour de ce document :** 2026-10-28 (post-merge PR #54)
+**SHA actuel de main :** [c71e91338f477516905871ba933dadbd2ddc9ca5](https://github.com/aveca/bot-wow/commit/c71e91338f477516905871ba933dadbd2ddc9ca5) (PR #63 fusionnée)
+**PR #63 :** **MERGED** — correction de largeur de la section comparative EN/FR ; commit `c71e91338f477516905871ba933dadbd2ddc9ca5`. PR #54 reste une correction antérieure.
+**Dernière mise à jour de ce document :** 2026-10-28 (post-merge PR #63)
 
 ---
 
@@ -12,10 +12,10 @@
 
 | Élément | Valeur | Preuve |
 |---------|--------|--------|
-| SHA de `main` | `7d6cc4e` | `git log main -1`, `git pull --ff-only` depuis origin |
-| PR #54 | MERGED | `gh pr view 54` : state=MERGED, headRefOid=`ff55666` |
+| SHA de `main` | `c71e91338f477516905871ba933dadbd2ddc9ca5` | [commit](https://github.com/aveca/bot-wow/commit/c71e91338f477516905871ba933dadbd2ddc9ca5) |
+| PR #63 | MERGED | [Pull request #63](https://github.com/aveca/bot-wow/pull/63) |
 | Checks CI sur PR #54 | `validate` SUCCESS, `ui-quality` SUCCESS, `GitGuardian` SUCCESS | Runs 40654318060, 40654318065, GitGuardian |
-| Tests Playwright e2e | 156 passés | 6 suites : demo-quality, accessibility, checkout-flow, responsive, i18n, visual-inspection |
+| Tests Playwright e2e | 158 passés | [UI quality run #40788245563](https://github.com/aveca/bot-wow/actions/runs/40788245563), y compris le nouveau test de largeur du comparatif |
 | `node scripts/validate.mjs` | PASS | Exécuté localement |
 | `node tests/link-check.test.mjs` | OK | 44 pages, aucun lien mort, aucune ancre morte |
 | `node tests/release-availability.test.mjs` | OK | Garde-fou présent sur buy.html et fr/buy.html |
@@ -84,13 +84,21 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 
 ---
 
-## 7. Prochaine action directement exécutable
+## 7. Correctif UI comparatif — PR #63 (2026-10-28)
 
-**Immédiatement (sans autorisation) :** Aucune mutation de production n'est autorisée. Le code de la PR #54 est mergé dans main (`7d6cc4e`) et vérifié par CI.
+- **Cause :** collision entre la classe CSS historique `.compare` (grille à deux colonnes, largeur maximale 880 px) et la section comparative entière des pages d’accueil EN/FR.
+- **Correction :** `.compare-section` dans `index.html` et `fr/index.html`.
+- **Tests :** assertions statiques EN/FR et test Playwright desktop ; 158 tests e2e réussis, validation, audit CSS et build réussis.
+- **PR :** [#63](https://github.com/aveca/bot-wow/pull/63), fusionnée dans `main`.
+- **Commit :** [`c71e91338f477516905871ba933dadbd2ddc9ca5`](https://github.com/aveca/bot-wow/commit/c71e91338f477516905871ba933dadbd2ddc9ca5).
+- **Déploiement :** Cloudflare Pages production `99f19d96-74f3-4c64-a20d-460fb7493669`, étape deploy SUCCESS ; GitHub Pages [run #40788542470](https://github.com/aveca/bot-wow/actions/runs/40788542470) SUCCESS.
+- **Rapport :** [BOT-WOW-UI-COMPARE-WIDTH-FIX-2026-10-28.md](https://github.com/aveca/bot-wow/blob/main/reports/operations/BOT-WOW-UI-COMPARE-WIDTH-FIX-2026-10-28.md).
+- **Réserve de vérification live :** le commit de production contient les deux locales et les tests couvrent les pages FR ; le DOM FR servi en temps réel n’a pas pu être relu indépendamment, car la copie web indexée était ancienne et l’API de rendu a répondu HTTP 429.
 
-**Après autorisation humaine explicite :**
-1. Déployer le Worker `botwow-api` (`wrangler deploy` depuis main) — avec rollback vérifiable.
-2. Vérifier le déploiement Pages automatiquement déclenché sur main.
-3. Lever le garde-fou commercial (décision distincte, nécessite autorisation séparée).
+**Garde-fous :** aucun changement de checkout, prix, paiements, secrets, Worker ou objets R2. Le checkout reste bloqué jusqu’à confirmation de la livraison.
 
-**Blocage restant :** Aucune autorisation de déploiement ni d'ouverture commerciale n'a été obtenue. Le garde-fou commercial reste actif.
+## 8. Prochaine action directement exécutable
+
+**Immédiatement :** aucune autre action nécessaire pour cette correction visuelle ; ne rouvrir qu’en cas de défaut reproduit.
+
+**Prochaine priorité distincte :** poursuivre la réconciliation de la disponibilité de la livraison v1.2.0 sans activer le checkout ni modifier les paiements sans autorisation explicite.
