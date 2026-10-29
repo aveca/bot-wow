@@ -2331,7 +2331,7 @@ async function handleDownload(request, env2) {
     }
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": `attachment; filename="casinobabe-fishing-1.2.0.zip"`,
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
