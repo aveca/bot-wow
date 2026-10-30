@@ -50,7 +50,7 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expect(page.locator('h1')).toContainText('Le bot de pêche');
-  await expect(page.locator('#buyBtn')).toContainText('livraison à confirmer');
+  await expect(page.locator('#buyBtn')).toContainText('vente suspendue');
   await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
   await expect(page.locator('#release-availability-notice')).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
 
