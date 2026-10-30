@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "method": "Playwright 1.64.1 sur le build local _site (serve.mjs 8099), 66 tests E2E (desktop 1440x900, mobile 390x844, tablette 768x1024 via sale-readiness). Collecte des erreurs JS (pageerror), console.error, réponses HTTP ≥ 400 et requêtes réseau échouées (hors /api/track inexistant en local, documenté). Tous les tests passent : 0 erreur.",
+  "summary": {
+    "totalTests": 66,
+    "passed": 66,
+    "failed": 0,
+    "jsErrorsTotal": 0,
+    "httpErrorsTotal": 0,
+    "networkFailuresTotal": 0,
+    "consoleErrorsTotal": 0
+  },
+  "javascriptErrors": [],
+  "httpErrors": [],
+  "networkFailures": [],
+  "consoleErrors": [],
+  "detailsByPage": [
+    {
+      "page": "/ (EN home)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Aucune erreur JS/console/réseau."
+    },
+    {
+      "page": "/fr/ (FR home)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Aucune erreur JS/console/réseau."
+    },
+    {
+      "page": "/demo.html (EN)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Aucune requête de checkout (checkoutRequests vide), pas d'erreur console."
+    },
+    {
+      "page": "/fr/demo.html (FR)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Aucune erreur."
+    },
+    {
+      "page": "/modules.html, /compare.html, /features.html, /faq.html (EN+FR)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Réponses HTTP 200, h1 visible, pas d'erreur JS."
+    },
+    {
+      "page": "14 pages legacy (404, cancel, compatibility, fishing, getting-started, roadmap, success × EN/FR)",
+      "viewports": ["desktop"],
+      "errors": [],
+      "note": "Pas de legacy wordmark (.mark absent), pas d'erreur."
+    },
+    {
+      "page": "Baselines production (bot-wow.com)",
+      "viewports": ["desktop", "mobile"],
+      "errors": [],
+      "note": "Captures baselines production effectuées quand reachable, sans erreur bloquante."
+    }
+  ],
+  "localEndpointNote": "Le serveur statique local n'implémente pas /api/track (404). Ces 404 sont exclus des erreurs réelles (documenté dans sale-readiness.spec.mjs) car l'endpoint de télémétrie est assuré par le Worker en production et répond 202.",
+  "productionReachability": "Les baselines production (https://bot-wow.com/) ont été tentées ; captures conservées quand reachable. Aucun échec bloquant rapporté.",
+  "nodeTestSuites": {
+    "count": 17,
+    "result": "TOUTES PASSÉES (validate, route-planner-parity, modules-parity, distribution-package, payment-flow, checkout-security, site-artifact, link-check, action-bar, conversion-path, telemetry, telemetry-source-allowlist, analytics-source, release-availability, ab-variants, migrations, d1-order-id-regression, d1-order-id-migration)"
+  },
+  "paymentWorkerBugDocumented": {
+    "id": "BE-001",
+    "severity": "high",
+    "category": "Paiement / Worker",
+    "description": "Sur le schéma de production actuel (orders.id = INTEGER/rowid), le webhook Mollie 'paid' plante avec 'datatype mismatch' : aucune commande, aucune licence, aucune conversion n'est créée. Le client payeur est bloqué (rejeu = échec définitif).",
+    "evidence": "tests/d1-order-id-regression.test.mjs : 'Mollie paid : la livraison ECHOUE sur le schéma de production (datatype mismatch)', 'Bitcoin : la création de commande ÉCHOUE (500)'.",
+    "rootCause": "orders.id est un alias rowid INTEGER ; le worker tente d'insérer un id TEXT (ord_*) incompatible.",
+    "fix": "Appliquer la migration 0004 (reconcile_order_ids.sql) qui convertit orders.id et licenses.order_id en TEXT. Post-migration, le webhook Mollie fonctionne (commande ord_*, licence créée, idempotence). Vérifié par d1-order-id-migration.test.mjs.",
+    "status": "CORRECTION PRÉPARÉE (migration 0004 existe, non appliquée en prod) — voir rapport final"
+  },
+  "secrets": {
+    "note": "Aucun secret n'est affiché dans ce rapport. 4 secrets Cloudflare 'À VÉRIFIER' (MOLLIE_API_KEY, MOLLIE_WEBHOOK_SECRET, RESEND_API_KEY, ADMIN_PASSWORD) d'après AUDIT_INCOHERENCES.md et wrangler.toml. wrangler secret list a échoué (pas d'accès API)."
+  }
+}

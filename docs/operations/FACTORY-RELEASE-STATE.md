@@ -1,10 +1,10 @@
 # BOT-WOW — État opérationnel Factory V3 (mémoire persistante)
 
-**Date de dernière vérification :** 2026-10-28  
+**Date de dernière vérification :** 2026-10-30  
 **Dépôt :** https://github.com/aveca/bot-wow  
-**Branche de travail :** `botwow-p0-ui-ux-2026-10-28`  
-**SHA HEAD :** `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23`  
-**PR associée :** #54 (https://github.com/aveca/bot-wow/pull/54)
+**Branche de travail :** `fix/botwow-p05-compliance-pivot`  
+**SHA HEAD :** `2edd74b` (origin/main)  
+**PR associée :** #54 (mergée dans main) + PR P0.5 à ouvrir sur `fix/botwow-p05-compliance-pivot`  
 
 ---
 
@@ -12,27 +12,26 @@
 
 | Projet | Dépôt | Branche | SHA | État |
 |--------|-------|---------|-----|------|
-| BOT-WOW pages | aveca/bot-wow | `botwow-p0-ui-ux-2026-10-28` | `d38d01e356c73b6c887ca6d5c570aac1b6f0ab23` | PR #54 ouverte, mergeable, CI verte |
+| BOT-WOW pages | aveca/bot-wow | `fix/botwow-p05-compliance-pivot` | `2edd74b` (base main) + commits P0.5 | Branche P0.5 prête, PR à ouvrir |
 
 ---
 
-## Dernière étape terminée et preuves
+## Dernière étape terminée et preuves (mission P0.5 — 2026-10-30)
 
-**Tâche :** Corrections UI/UX (accessibilité, checkout bloquant, responsive, i18n) + 70 tests Playwright ajoutés, puis correction du bouton d'achat activé sur compare.html + 26 tests d'inspection visuelle.
+**Tâche :** Sécuriser le parcours de paiement (garde-fou serveur), assainir les affirmations marketing, documenter la conformité plateforme Blizzard, proposer un pivot non-automatisant, réconciliier les rapports QA sur une branche propre depuis main.
 
 **Preuves :**
-- 156 tests e2e passés (130 initiaux + 26 nouveaux d'inspection visuelle) — `tests/e2e/demo-quality.spec.mjs`, `accessibility.spec.mjs`, `checkout-flow.spec.mjs`, `responsive.spec.mjs`, `i18n.spec.mjs`, `visual-inspection.spec.mjs`
-- Captures d'écran : `artifacts/ui/` (incluant `visual-inspection/`)
-- Fichiers modifiés : `assets/app.js`, `buy.html`, `fr/buy.html`, `fr/index.html`, `index.html`, `compare.html`, `fr/compare.html`
-- Commit : `d38d01e` — `fix(ui/ux): bouton d'achat desactive sur compare.html (EN + FR) + tests d'inspection visuelle`
-- Commit : `68f5e2e` — `docs(release): ajouter memoire operationnelle et rapport release-readiness P0.3`
-- Commit : `e5c8530` — `fix(ui/ux): ajouter id=hero aux pages buy pour le skip link (ancre interne)`
-- Commit : `dbe1442` — `feat(ui/ux): accessibilite, checkout bloquant, responsive et i18n (Playwright)`
+- `npm run validate` : PASS
+- `node tests/payment-flow.test.mjs` : OK (inclut test 13 : vente suspendue → 409 `sales_suspended`, aucun paiement Mollie, aucune commande/licence)
+- `node tests/checkout-security.test.mjs` : OK (rate limit, locale Mollie, fuites, entrées invalides)
+- `node tests/release-availability.test.mjs` : OK (contradiction hero__facts corrigée sur buy.html et fr/buy.html)
+- `node tests/link-check.test.mjs` : OK (44 pages, aucun lien mort)
+- `npm test` : toutes les suites OK sauf `conversion-path` (stamp mismatch préexistant sur main, sans lien avec P0.5)
+- Fichiers modifiés : `worker/index.js`, `tests/payment-flow.test.mjs`, `tests/checkout-security.test.mjs`, `tests/release-availability.test.mjs`, `buy.html`, `fr/buy.html`
+- Rapports créés : `reports/compliance/marketing-claims.json` (21 claims: 13 VERIFIED, 7 UNVERIFIED, 1 CONTRADICTED), `reports/compliance/PLATFORM-COMPLIANCE-REPORT.md`, `reports/compliance/PIVOT_NON_AUTOMATISANT.md`, `reports/qa/*` (route-inventory, visual-findings, browser-errors, accessibility, performance, BOTWOW-AUTONOMOUS-QA-FINAL), `reports/operations/BOT-WOW-CURRENT-STATE.md`
+- Garde-fou serveur : `worker/index.js` refuse tout checkout quand `RELEASE_STATUS` n'est pas `"open"` (409, aucun appel Mollie, fail-closed)
 
-**Liens CI sur SHA d38d01e :**
-- Validate : https://github.com/aveca/bot-wow/actions/runs/40653802623/job/122699889261 (SUCCESS)
-- UI quality : https://github.com/aveca/bot-wow/actions/runs/40653802611/job/122699889363 (SUCCESS)
-- GitGuardian : https://dashboard.gitguardian.com (SUCCESS)
+**Branche :** `fix/botwow-p05-compliance-pivot` (basée sur `origin/main` `2edd74b`), prête pour PR.
 
 ---
 
@@ -136,13 +135,14 @@ Les secrets suivants sont configurés en production (présence vérifiée via `w
 
 ## Garde-fou commercial — État
 
-Le checkout est **désactivé** sur toutes les pages de vente :
-- `buy.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked` visible
-- `fr/buy.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked` visible
-- `index.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked` ajouté
-- `fr/index.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked` ajouté
+Le checkout est **bloqué côté serveur** (`RELEASE_STATUS` != `"open"` → 409 `sales_suspended`, aucun appel Mollie, fail-closed) ET le bouton HTML est désactivé (PR #54) sur toutes les pages de vente.
 
-**Règle :** les achats restent bloqués tant que le parcours de livraison complet n'est pas vérifié en production. L'upload R2 et le déploiement Worker ne constituent pas à eux seuls une autorisation d'ouvrir les ventes.
+- `buy.html` : bouton `#buyBtn` désactivé, message "vente suspendue"
+- `fr/buy.html` : bouton `#buyBtn` désactivé, message "vente suspendue"
+- `index.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked`
+- `fr/index.html` : bouton `#buyBtn` désactivé, message `.checkout-blocked`
+
+**Règle :** les achats restent bloqués tant que le parcours de livraison complet n'est pas vérifié en production ET qu'une autorisation d'ouverture commerciale est obtenue. Le déploiement Worker et l'upload R2 ne constituent pas à eux seuls une autorisation d'ouvrir les ventes. Aucun paiement réel n'a été effectué.
 
 ---
 
@@ -165,26 +165,36 @@ Le checkout est **désactivé** sur toutes les pages de vente :
 
 | Tâche | Statut | Blocage | Action requise |
 |-------|--------|---------|----------------|
-| Merge PR #54 sur `main` | `WAITING_FOR_REVIEW` | `reviewDecision` vide (aucune revue humaine) | Un administrateur doit reviewer et approuver la PR #54 |
+| Merge PR #54 sur `main` | `MERGED` | — | Déjà mergé dans main (`2edd74b`) |
+| Branche P0.5 `fix/botwow-p05-compliance-pivot` | `PR_A_OUVRIR` | — | Ouvrir une PR ciblée, inspectable |
 | Déploiement Worker `botwow-api` | `NOT_STARTED` | Pas d'autorisation explicite pour mutation de production | Autorisation requise avant `wrangler deploy` |
 | Ouverture commerciale (levée du garde-fou) | `BLOCKED` | Décision distincte, nécessite autorisation explicite | Pas d'action automatique, même après déploiement |
-| Rapport final P0.3 | `IN_PROGRESS` | À publier sur GitHub | `reports/bot-wow/release-readiness/2026-10-28/FINAL.md` |
+| Rapport final P0.5 | `FAIT` | — | `reports/operations/BOT-WOW-CURRENT-STATE.md` + rapports QA/compliance |
+| Conformité Blizzard (ancien produit d'automatisation) | `EN_ATTENTE_DECISION` | Aucune autorisation Blizzard trouvée | Décider du sort (maintenu/suspendu/retiré) |
+| Migration D1 0004 (paiement) | `NON_APPLIQUEE` | Pas d'autorisation pour mutation de production | Appliquer uniquement avec autorisation et vérification des doublons |
 
 ---
 
 ## Décisions humaines nécessaires
 
-1. **Review et merge de la PR #54** — `reviewDecision` est vide. Une revue humaine est obligatoire avant toute fusion.
+1. **Ouvrir et reviewer la PR P0.5** sur `fix/botwow-p05-compliance-pivot` — PR ciblée, inspectable (rapports, tests, garde-fou serveur, nettoyage i18n, corrections de contenu).
 2. **Déploiement du Worker** — autorisation explicite requise pour `wrangler deploy` (mutation de production).
 3. **Ouverture commerciale** — décision séparée, ne doit pas être liée automatiquement au déploiement.
+4. **Sort de l'ancien produit d'automatisation** — aucune autorisation Blizzard trouvée ; décider (maintenu/suspendu/retiré) sur base d'une analyse juridique des ToS/EULA.
 
 ---
 
 ## Prochaine action directement exécutable
 
-**Immédiatement (sans autorisation) :** Publier le rapport final P0.3 (`reports/bot-wow/release-readiness/2026-10-28/FINAL.md`) sur une branche dédiée, pousser, et vérifier les CI.
+**Immédiatement (sans autorisation) :** Committer et pousser la branche `fix/botwow-p05-compliance-pivot`, ouvrir une PR ciblée sur GitHub, publier ce document et les rapports (QA + compliance) sur GitHub, vérifier les CI.
 
-**Après autorisation humaine :** Merger la PR #54, déployer le Worker, puis (décision séparée) lever le garde-fou commercial.
+**Après autorisation humaine explicite :** Merger la PR P0.5, déployer le Worker `botwow-api` (avec rollback vérifiable), puis (décision séparée) lever le garde-fou commercial et appliquer la migration D1 0004.
+
+---
+
+## Statut global
+
+`PRÊTE_POUR_PR` — toutes les préparations techniques P0.5 sont terminées (garde-fou serveur testé, affirmations marketing nettoyées, rapports de conformité et de QA produits, proposition de pivot rédigée). Une revue humaine de la PR et une autorisation de déploiement restent nécessaires.
 
 ---
 

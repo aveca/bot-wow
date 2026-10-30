@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "method": "Playwright 1.64.1 contre le build local _site (serve.mjs 8099), 3 viewports (desktop 1440x900, mobile 390x844, tablette 768x1024 via sale-readiness), 66 tests E2E exécutés et passés. Captures viewport + fullPage pour chaque page, modales et états interactifs. Aucune capture demandée à l'utilisateur.",
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 900 },
+    { "name": "mobile", "width": 390, "height": 844, "isMobile": true, "hasTouch": true },
+    { "name": "tablette", "width": 768, "height": 1024 }
+  ],
+  "pagesAudited": [
+    "/ (EN home)", "/fr/ (FR home)", "/demo.html (EN demo)", "/fr/demo.html (FR demo)",
+    "/modules.html (EN)", "/fr/modules.html (FR)", "/compare.html (EN)", "/fr/compare.html (FR)",
+    "/features.html (EN)", "/fr/features.html (FR)", "/faq.html (EN)", "/fr/faq.html (FR)",
+    "/404.html", "/fr/404.html", "/cancel.html", "/fr/cancel.html", "/compatibility.html",
+    "/fr/compatibility.html", "/fishing.html", "/fr/fishing.html", "/getting-started.html",
+    "/fr/getting-started.html", "/roadmap.html", "/fr/roadmap.html", "/success.html",
+    "/fr/success.html"
+  ],
+  "findings": [
+    {
+      "id": "VF-001",
+      "severity": "info",
+      "category": "Responsive",
+      "page": "toutes",
+      "viewport": "desktop + mobile + tablette",
+      "observation": "Aucun débordement horizontal sur aucun viewport (test expectNoHorizontalOverflow passé sur tous les E2E).",
+      "evidence": "tests/e2e/demo-quality.spec.mjs + sale-readiness.spec.mjs : scrollWidth <= clientWidth + 1 sur 66 tests.",
+      "status": "CORRECTÉ / CONFORME"
+    },
+    {
+      "id": "VF-002",
+      "severity": "info",
+      "category": "Navigation",
+      "page": "toutes",
+      "viewport": "tous",
+      "observation": "Navigation, menus, liens internes, ancres (#offre, #buy) fonctionnels. Aucun lien mort (44 pages vérifiées par tests/link-check.test.mjs).",
+      "evidence": "tests/link-check.test.mjs : aucun lien vers fichier inexistant, aucune ancre morte, #offre et #buy présents sur les deux accueils.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-003",
+      "severity": "info",
+      "category": "CTA / Interaction",
+      "page": "index.html, fr/index.html, buy.html",
+      "viewport": "tous",
+      "observation": "CTA hero principal (btn-gold) pointe vers #buy, visible au-dessus de la ligne de flottaison sur mobile (≤ 360px). CTA demo secondaire (btn-ghost) pas doré.",
+      "evidence": "tests/e2e/sale-readiness.spec.mjs : heroOffer visible, href #buy, clic navigue vers #buy, buyForm visible. CTA demo pas btn-gold.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-004",
+      "severity": "info",
+      "category": "Modale / État interactif",
+      "page": "index.html (section cycle, heroStage)",
+      "viewport": "desktop + mobile",
+      "observation": "État de la démo (SIMULATED), replay du cycle, sélecteur de mode (prudent/équilibre/exploration), planificateur fonctionnel. Données clairement marquées simulées.",
+      "evidence": "tests/e2e/demo-quality.spec.mjs : sim-banner contient SIMULATED DATA, #m-spots rempli, #oasis .node présent, changement de mode exploration, maxspots=3 appliqué, steps rendus (1-3).",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-005",
+      "severity": "info",
+      "category": "Formulaire",
+      "page": "buy.html (section #buy)",
+      "viewport": "tous",
+      "observation": "Formulaire d'achat : email type=email avec label associé, bouton Pay €20.00, états de chargement (spinner), erreur (buyErr), succès (buyOk). Montant fixé côté serveur.",
+      "evidence": "tests/e2e/sale-readiness.spec.mjs : #buyForm, #email, #buyBtn visibles ; amount 20,00 EUR. tests/checkout-security.test.mjs : rejet montant client invalide.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-006",
+      "severity": "info",
+      "category": "États de chargement / erreurs",
+      "page": "buy.html",
+      "viewport": "tous",
+      "observation": "Bouton de paiement affiche un état de chargement (spinner animé) pendant la soumission. Aucun message d'erreur fictif.",
+      "evidence": "index.html buyBtn : .btn-loading avec svg spinner animateTransform. tests/e2e : pas d'erreur console sur le formulaire.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-007",
+      "severity": "info",
+      "category": "Typographie / Hiérarchie",
+      "page": "toutes",
+      "viewport": "tous",
+      "observation": "Exactly one <h1> par page, sections titulées (10 sections sur l'accueil sans section sans titre).",
+      "evidence": "tests/conversion-path.test.mjs : 'aucune section sans titre (10 sections)' EN et FR. validate.mjs structure.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-008",
+      "severity": "info",
+      "category": "Images / Preuves",
+      "page": "index.html, buy.html",
+      "viewport": "tous",
+      "observation": "Capture réelle (fishing-real-capture.jpg / .webp) avec alt text, légendée 'REAL CAPTURE · Lushwater Oasis · 76 KB · instrumented session'.",
+      "evidence": "HTML : alt attribut présent, picture webp + jpg fallback, loading=lazy sur le prix.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-009",
+      "severity": "info",
+      "category": "Contraste / Visuel",
+      "page": "toutes",
+      "viewport": "tous",
+      "observation": "Pas d'image brève, pas de contenu invisible détecté par les tests E2E (éléments reveal passent en is-in).",
+      "evidence": "demo-quality.spec.mjs capture après reveal : tous les .js .reveal contiennent is-in.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-010",
+      "severity": "info",
+      "category": "Footer / Header",
+      "page": "toutes",
+      "viewport": "tous",
+      "observation": "Header et footer présents, logo unique (.logo-mark), pas de legacy wordmark carré (.mark absent).",
+      "evidence": "tests/e2e : legacyLogoRoutes vérifient .mark count 0 et .logo-mark count 1 sur 14 pages.",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-011",
+      "severity": "info",
+      "category": "Barre d'action mobile (mbar)",
+      "page": "index.html, fr/index.html, compare.html, fr/compare.html",
+      "viewport": "mobile",
+      "viewport": "mobile",
+      "observation": "Barre d'action rapide visible en permanence sur mobile, masquée par défaut sur desktop (.is-on), pointe vers #buy, instrumentée (data-track/data-cta-id), pas de fausse urgence.",
+      "evidence": "tests/action-bar.test.mjs : 24 vérifications OK (CSS + JS).",
+      "status": "CONFORME"
+    },
+    {
+      "id": "VF-012",
+      "severity": "warning",
+      "category": "Contradiction commerciale (contenu)",
+      "page": "buy.html",
+      "viewport": "desktop",
+      "observation": "Contradiction interne : le bloc release-availability-notice annonce 'v1.2.0 is the current release ... verified' alors que les hero-facts (ligne 63-64) disent 'delivery to be confirmed' et 'No delivery timing is promised until the package is verified'.",
+      "evidence": "buy.html lignes 62-65 ('delivery to be confirmed' / 'No delivery timing is promised') vs lignes 141-148 ('current release' / 'verified' / SHA-256). release-availability.test.mjs exige 'current release' et interdit la mention de non-confirmation.",
+      "status": "À CORRIGER (contenu) — voir rapport final"
+    },
+    {
+      "id": "VF-013",
+      "severity": "warning",
+      "category": "Preuve sociale non vérifiée",
+      "page": "bundle i18n du Worker (worker/index.js)",
+      "viewport": "n/a",
+      "observation": "tb4 '4,9/5 • 2 847 reviews' (EN) / '4,9/5 • 2 847 avis' (FR) présent dans toutes les langues du bundle Worker, sans preuve vérifiable dans le dépôt. PRODUCT.md interdit de fabriquer des compteurs/preuves sociales.",
+      "evidence": "worker/index.js i18n EN/DE/ES/PT/RU/fr tb4. Aucun fichier d'avis, compteur ou source tierce.",
+      "status": "À CORRIGER (supprimer tb4) — voir rapport final"
+    },
+    {
+      "id": "VF-014",
+      "severity": "warning",
+      "category": "Incohérence prix cross-langue (Worker)",
+      "page": "bundle i18n du Worker (worker/index.js)",
+      "viewport": "n/a",
+      "observation": "FR: '20€ via Bitcoin' ; EN/DE/ES/PT/RU: '100% free, forever'. Incohérence avec le prix payant €20 affiché sur les pages statiques.",
+      "evidence": "worker/index.js i18n fr hc1 'Lifetime access — {PRICE}' / pr1 '20€ via Bitcoin...' vs EN '100% free, forever'.",
+      "status": "À CORRIGER (aligner le Worker sur €20) — voir rapport final"
+    }
+  ],
+  "screenshots": {
+    "directory": "artifacts/ui/",
+    "count": "viewport + fullPage pour chaque page et chaque projet (desktop/mobile) + baselines production",
+    "baselinesCaptured": ["production-homepage-baseline", "production-demo-baseline"],
+    "note": "Les captures sont des artefacts Playwright (artifacts/ui/). Aucune capture n'a été demandée à l'utilisateur."
+  },
+  "traces": {
+    "status": "trace: 'off' dans playwright.config.mjs (captures manuelles via captureScreenshot, pas de trace automatique)",
+    "note": "Traces non activées par config existante. Captures viewport/fullPage produites pour chaque page testée."
+  },
+  "result": "Aucun défaut visuel fonctionnel détecté sur les pages statiques. 2 avertissements de contenu (contradiction buy.html, preuve sociale non vérifiée, incohérence prix Worker) documentés à la section corrections."
+}

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "method": "Performance audité avec les outils existants (pas de Lighthouse ajouté, pas de dépendance runtime). Budget gzip : ≤ 210 Ko pour les assets de code (CSS, JS, JSON, SVG). Mesure actuelle : ≈ 67 Ko gzip (FACTORY.md). Ressources : preconnect Google Fonts, cache-control HTML max-age=0 must-revalidate, assets 600s, pas de JS de tiers, pas d'IDs pub, pas de secrets en frontend. Pas de ressources bloquantes critiques identifiées (CSS en tête, module JS en fin de body, animations composite-only).",
+  "budget": {
+    "gzipCodeAssetsLimitKo": 210,
+    "gzipCodeAssetsCurrentKo": 67,
+    "status": "CONFORME",
+    "evidence": "FACTORY.md §Performance constraints ; scripts/validate.mjs ne mesure pas le gzip mais la contrainte est documentée et respectée (≈ 67 Ko)."
+  },
+  "metrics": {
+    "note": "Aucune mesure Lighthouse/Chrome DevTools n'a été exécutée (pas d'outil ajouté, pas de mesure réelle de LCP/CLI/INP/FCP/TBT). Les métriques ci-dessous sont des constats structurels, pas des mesures réelles.",
+    "LCP": "non mesuré (héro texte + CSS critique en tête, image en lazy/fetchpriority high sur l'image principale)",
+    "CLS": "non mesuré (pas de contenu injecté en décalage, reveal au scroll géré)",
+    "INP": "non mesuré (pas de JS lourd sur le thread principal, animations composite-only)",
+    "FCP": "non mesuré (HTML servi sans revalidation longue, cache-control 0s)",
+    "TBT": "non mesuré (pas de tasks longues identifiées)",
+    "JSWeight": "faible (vanilla JS, modules ES, pas de framework, pas de dépendance runtime)",
+    "images": "optimisées (jpg + webp, loading=lazy sur le prix, capture réelle 76 Ko)",
+    "fonts": "Google Fonts Sora + JetBrains Mono via preconnect (ressource externe, pas de blocage bloquant critique)",
+    "network": "pas de requêtes tiers sauf Google Fonts ; pas d'appels de télémétrie bloquants (tampon borné, degrade gracieux)",
+    "cache": "HTML 0s (toujours frais), assets 600s, /worker/* no-store",
+    "renderBlocking": "CSS dans <head>, module JS en fin de </body> (async via type=module), pas de render-blocking JS critique"
+  },
+  "issues": [],
+  "recommendations": [
+    "Exécuter Lighthouse (CLI ou CI) pour obtenir des mesures réelles de LCP, CLS, INP, FCP, TBT et les comparer aux seuils Core Web Vitals.",
+    "Vérifier que la préconnexion Google Fonts ne génère pas de blocage de rendu sur les connexions lentes (considérer font-display: swap, déjà implicite via Google).",
+    "Maintenir le budget gzip ≤ 210 Ko lors de l'ajout de tout nouvel asset (backlog FACTORY : nettoyer variant-a.css / variant-b.css inutilisés, -LOW-)."
+  ],
+  "result": "Aucun défaut de performance bloquant détecté par la structure du site et les tests existants. Budget gzip respecté (67 Ko < 210 Ko)."
+}

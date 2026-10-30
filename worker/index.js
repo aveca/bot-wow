@@ -176,7 +176,6 @@ var require_fr = __commonJS({
         tb1: "joueurs actifs",
         tb2: "Livraison email apr\xE8s validation",
         tb3: "Licence \xE0 vie",
-        tb4: "4,9/5 \xB7 2 847 avis",
         nv1: "Pourquoi nous",
         nv6: "Comparatif",
         nv3: "Fonctions",
@@ -196,7 +195,6 @@ var require_fr = __commonJS({
         pms: "Licence \xE0 vie \xB7 tous modules \xB7 livraison email apr\xE8s validation",
         pmp: "Acc\xE8s \xE0 vie \xB7 20\u20AC Bitcoin",
         pml1: "Tous les modules (Gold, XP, Item, BG)",
-        pml2: "Anti-d\xE9tection pixel-based",
         pml3: "Mises \xE0 jour \xE0 vie",
         pml4: "Livraison email apr\xE8s validation admin",
         pmg: "Paiement Bitcoin unique \xB7 sans carte \xB7 sans abonnement",
@@ -215,7 +213,6 @@ var require_fr = __commonJS({
         mb2: "Acheter avec Bitcoin",
         pl1: "Tous les modules : Gold, XP, Item, BG",
         pl2: "Combat IA pour toutes les classes",
-        pl3: "Anti-d\xE9tection pixel-based",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 serveurs priv\xE9s",
         pl5: "Mises \xE0 jour \xE0 vie apr\xE8s chaque patch",
         pl6: "Support par email prioritaire",
@@ -231,7 +228,7 @@ var require_en = __commonJS({
     module.exports = {
       meta: {
         title: "WoW Automation Bot \u2014 World of Warcraft Gold Farming Bot",
-        desc: "The simplest WoW bot: auto gold farming, XP, items & battlegrounds. Pixel-based, no memory injection, all-inclusive lifetime access. 100% free, delivered to your email. \u26A0\uFE0F Automation violates Blizzard's ToS and may get your account banned \u2014 use at your own risk.",
+        desc: "The simplest WoW bot: auto gold farming, XP, items & battlegrounds. Pixel-based, no memory injection, all-inclusive lifetime access. delivered to your email. \u26A0\uFE0F Automation violates Blizzard's ToS and may get your account banned \u2014 use at your own risk.",
         keywords: "wow bot, world of warcraft bot, wow gold bot, wow farming bot, wow gold farming bot, world of warcraft gold bot, wow retail bot, wow classic bot, wow sod bot, wow automation bot, pixel wow bot, automatic wow gold"
       },
       L: {
@@ -246,7 +243,6 @@ var require_en = __commonJS({
         hsoc: "",
         ht1: "No card required",
         ht2: "Without leaving the site",
-        ht3: "100% free",
         mt1: "Gold",
         mt2: "XP",
         mt3: "BG",
@@ -259,7 +255,6 @@ var require_en = __commonJS({
         st2: "",
         st3: "High uptime",
         st4: "",
-        tl0: "100% free, forever",
         tl1: "No subscription",
         wy0: "Why BOT-WOW",
         wy1: "Other bots are complicated.",
@@ -314,12 +309,10 @@ var require_en = __commonJS({
         f6h: "Email support",
         f6p: "A real email address to help you. No Discord needed, no support bot, just real humans.",
         gs0: "FREE",
-        gs1: "100% free, no commitment",
         gs2: "BOT-WOW is completely free. No card, no payment, no catch \u2014 just download it, keep it for life, and if it's not for you, simply stop using it. You have nothing to lose.",
         pr0: "Pricing",
         pr1: "Free. Forever.",
         pr2: "No subscription, no hidden modules, no nasty surprises. It's {PRICE} and it's yours forever.",
-        pt: "\u2B50 100% FREE",
         pc0: "Full lifetime access",
         pc1: "Free \xB7 delivered by email",
         vk1: "Automatic gold farming",
@@ -357,7 +350,6 @@ var require_en = __commonJS({
         q5: "What if it's not for me?",
         a5: "No problem \u2014 it's free. Just stop using it, no strings attached. And our email support is here if you need a hand.",
         q6: "Do I have to pay or enter a card?",
-        a6: "No. BOT-WOW is 100% free. Just enter your email and we instantly send the bot + your license key. No card, no payment, ever.",
         cf0: "",
         cf1: "Ready to",
         cf2: "dominate?",
@@ -366,13 +358,11 @@ var require_en = __commonJS({
         cmprole: "/ role",
         cmpmonth: "/ month",
         lifeshort: "lifetime",
-        ur1: "100% free \u2014 launch offer",
         ur2: "ends in",
         ur3: "\xB7 grab it now",
         tb1: "active players",
         tb2: "Instant email delivery",
         tb3: "Lifetime access",
-        tb4: "4.9/5 \xB7 2,847 reviews",
         nv1: "Why us",
         nv6: "Comparison",
         nv3: "Features",
@@ -392,13 +382,10 @@ var require_en = __commonJS({
         pms: "BOT-WOW \u2014 everything included, forever",
         pmp: "Lifetime access \xB7 all modules",
         pml1: "All modules (Gold, XP, Item, BG)",
-        pml2: "Pixel-based anti-detection",
         pml3: "Lifetime updates",
         pml4: "Instant email delivery",
-        pmg: "100% free \xB7 no card \xB7 no subscription",
         pme: "Your email (to receive the bot)",
         pmpay: "Get the bot free",
-        pmsec: "Instant email delivery \xB7 100% free \xB7 no card",
         pss1: "You're all set! \u{1F389}",
         pss2: "Your free lifetime access to BOT-WOW is active.",
         pss3: "You'll receive the bot by email at",
@@ -411,11 +398,9 @@ var require_en = __commonJS({
         mb2: "Get free",
         pl1: "All modules: Gold, XP, Item, BG",
         pl2: "Combat AI for every class",
-        pl3: "Pixel-based anti-detection",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 private servers",
         pl5: "Lifetime updates after every patch",
         pl6: "Priority email support",
-        pl7: "100% free \xB7 no credit card"
       }
     };
   }
@@ -427,7 +412,7 @@ var require_de = __commonJS({
     module.exports = {
       meta: {
         title: "BOT-WOW \u2014 World of Warcraft Bot #1 \xB7 Gold Farming, XP & Pixel-Erkennung 2026",
-        desc: "Der einfachste WoW-Bot: automatisches Gold-Farming, XP, Items, Schlachtfelder. Pixel-basiert, keine Speicher-Injection, alles inklusive, lebenslanger Zugang. 100% kostenlos, per E-Mail geliefert. \u26A0\uFE0F Automatisierung verst\xF6\xDFt gegen Blizzards Nutzungsbedingungen und kann zum Account-Bann f\xFChren \u2014 Nutzung auf eigenes Risiko.",
+        desc: "Der einfachste WoW-Bot: automatisches Gold-Farming, XP, Items, Schlachtfelder. Pixel-basiert, keine Speicher-Injection, alles inklusive, lebenslanger Zugang. per E-Mail geliefert. \u26A0\uFE0F Automatisierung verst\xF6\xDFt gegen Blizzards Nutzungsbedingungen und kann zum Account-Bann f\xFChren \u2014 Nutzung auf eigenes Risiko.",
         keywords: "wow bot, world of warcraft bot, wow gold bot, wow farming bot, bot world of warcraft, gold farming wow, wow retail bot, wow classic bot, wow sod bot, wow automation bot, pixel wow bot, automatisches wow gold"
       },
       L: {
@@ -442,7 +427,6 @@ var require_de = __commonJS({
         hsoc: "",
         ht1: "Keine Karte erforderlich",
         ht2: "Ohne die Seite zu verlassen",
-        ht3: "100% kostenlos",
         mt1: "Gold",
         mt2: "XP",
         mt3: "BG",
@@ -455,7 +439,6 @@ var require_de = __commonJS({
         st2: "",
         st3: "Hohe Verf\xFCgbarkeit",
         st4: "",
-        tl0: "100% kostenlos, f\xFCr immer",
         tl1: "Kein Abonnement",
         wy0: "Warum BOT-WOW",
         wy1: "Andere Bots sind kompliziert.",
@@ -510,12 +493,10 @@ var require_de = __commonJS({
         f6h: "E-Mail-Support",
         f6p: "Eine echte E-Mail-Adresse die hilft. Kein Discord n\xF6tig, kein Support-Bot, echte Menschen.",
         gs0: "KOSTENLOS",
-        gs1: "100% kostenlos, ohne Verpflichtung",
         gs2: "BOT-WOW ist komplett kostenlos. Keine Karte, keine Zahlung, kein Haken \u2014 l\xE4dst es runter, beh\xE4ltst es f\xFCr immer, und wenn's nicht passt, h\xF6rst du einfach auf. Du hast nichts zu verlieren.",
         pr0: "Preis",
         pr1: "Kostenlos. F\xFCr immer.",
         pr2: "Kein Abo, keine versteckten Module, keine b\xF6sen \xDCberraschungen. Es ist {PRICE} und geh\xF6rt dir f\xFCr immer.",
-        pt: "\u2B50 100% KOSTENLOS",
         pc0: "Vollst\xE4ndiger lebenslanger Zugang",
         pc1: "Kostenlos \xB7 per E-Mail geliefert",
         vk1: "Automatisches Gold-Farming",
@@ -553,7 +534,6 @@ var require_de = __commonJS({
         q5: "Was wenn es mir nicht gef\xE4llt?",
         a5: "Kein Problem \u2014 es ist kostenlos. H\xF6r einfach auf es zu nutzen, ohne Verpflichtungen. Und unser E-Mail-Support ist da falls du Hilfe brauchst.",
         q6: "Muss ich zahlen oder eine Karte angeben?",
-        a6: "Nein. BOT-WOW ist 100% kostenlos. Gib nur deine E-Mail ein und wir schicken sofort Bot + Lizenzschl\xFCssel. Keine Karte, keine Zahlung, nie.",
         cf0: "",
         cf1: "Bereit zu",
         cf2: "dominieren?",
@@ -562,13 +542,11 @@ var require_de = __commonJS({
         cmprole: "/ Rolle",
         cmpmonth: "/ Monat",
         lifeshort: "lebenslang",
-        ur1: "100% kostenlos \u2014 Startangebot",
         ur2: "endet in",
         ur3: "\xB7 jetzt zugreifen",
         tb1: "aktive Spieler",
         tb2: "Sofortige E-Mail-Lieferung",
         tb3: "Lebenslanger Zugang",
-        tb4: "4,9/5 \xB7 2.847 Bewertungen",
         nv1: "Warum wir",
         nv6: "Vergleich",
         nv3: "Funktionen",
@@ -588,13 +566,10 @@ var require_de = __commonJS({
         pms: "BOT-WOW \u2014 alles inklusive, f\xFCr immer",
         pmp: "Lebenslanger Zugang \xB7 alle Module",
         pml1: "Alle Module (Gold, XP, Item, BG)",
-        pml2: "Pixel-basierte Anti-Erkennung",
         pml3: "Lebenslange Updates",
         pml4: "Sofortige E-Mail-Lieferung",
-        pmg: "100% kostenlos \xB7 keine Karte \xB7 kein Abo",
         pme: "Deine E-Mail (um den Bot zu erhalten)",
         pmpay: "Bot kostenlos erhalten",
-        pmsec: "Sofortige E-Mail-Lieferung \xB7 100% kostenlos \xB7 keine Karte",
         pss1: "Alles klar! \u{1F389}",
         pss2: "Dein kostenloser lebenslanger Zugang zu BOT-WOW ist aktiv.",
         pss3: "Du erh\xE4ltst den Bot per E-Mail an",
@@ -607,11 +582,9 @@ var require_de = __commonJS({
         mb2: "Kostenlos erhalten",
         pl1: "Alle Module: Gold, XP, Item, BG",
         pl2: "Kampf-KI f\xFCr jede Klasse",
-        pl3: "Pixel-basierte Anti-Erkennung",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 Private Server",
         pl5: "Lebenslange Updates nach jedem Patch",
         pl6: "Priorisierter E-Mail-Support",
-        pl7: "100% kostenlos \xB7 keine Kreditkarte"
       }
     };
   }
@@ -623,7 +596,7 @@ var require_es = __commonJS({
     module.exports = {
       meta: {
         title: "Bot WoW \u2014 Automatizaci\xF3n World of Warcraft #1 \xB7 Gold Farming, XP & Anti-detecci\xF3n 2026",
-        desc: "El bot WoW m\xE1s simple: farming de oro autom\xE1tico, XP, items, campos de batalla. Anti-detecci\xF3n pixel-based, todo incluido, acceso de por vida. 100% gratis, entregado por email. \u26A0\uFE0F La automatizaci\xF3n infringe los T\xE9rminos de Uso de Blizzard y puede conllevar suspensi\xF3n o baneo permanente \u2014 uso bajo tu propio riesgo.",
+        desc: "El bot WoW m\xE1s simple: farming de oro autom\xE1tico, XP, items, campos de batalla. Anti-detecci\xF3n pixel-based, todo incluido, acceso de por vida. entregado por email. \u26A0\uFE0F La automatizaci\xF3n infringe los T\xE9rminos de Uso de Blizzard y puede conllevar suspensi\xF3n o baneo permanente \u2014 uso bajo tu propio riesgo.",
         keywords: "bot wow, wow bot, farming bot wow, wow gold bot, bot world of warcraft, gold farming wow, bot wow retail, bot wow classic, bot wow sod, anti ban wow, bot wow 2026, mejor bot wow, bot pixel wow, wow farming autom\xE1tico"
       },
       L: {
@@ -638,7 +611,6 @@ var require_es = __commonJS({
         hsoc: "",
         ht1: "Sin tarjeta requerida",
         ht2: "Sin salir del sitio",
-        ht3: "100% gratis",
         mt1: "Oro",
         mt2: "XP",
         mt3: "CB",
@@ -651,7 +623,6 @@ var require_es = __commonJS({
         st2: "",
         st3: "Alta disponibilidad",
         st4: "",
-        tl0: "100% gratis, para siempre",
         tl1: "Sin suscripci\xF3n",
         wy0: "Por qu\xE9 BOT-WOW",
         wy1: "Los otros bots son complicados.",
@@ -706,12 +677,10 @@ var require_es = __commonJS({
         f6h: "Soporte por email",
         f6p: "Una direcci\xF3n de email real para ayudarte. No hace falta Discord, no bot de soporte, humanos de verdad.",
         gs0: "GRATIS",
-        gs1: "100% gratis, sin compromiso",
         gs2: "BOT-WOW es completamente gratis. Sin tarjeta, sin pago, sin trampa \u2014 te lo descargas, lo guardas de por vida, y si no te conviene, simplemente dejas de usarlo. No tienes nada que perder.",
         pr0: "Precio",
         pr1: "Gratis. Para siempre.",
         pr2: "Sin suscripci\xF3n, sin m\xF3dulos ocultos, sin sorpresas. Es {PRICE} y es tuyo para siempre.",
-        pt: "\u2B50 100% GRATIS",
         pc0: "Acceso completo de por vida",
         pc1: "Gratis \xB7 entregado por email",
         vk1: "Farmeo autom\xE1tico de oro",
@@ -749,7 +718,6 @@ var require_es = __commonJS({
         q5: "\xBFY si no me convence?",
         a5: "Ning\xFAn problema \u2014 es gratis. Dejas de usarlo simplemente, sin compromiso. Y nuestro soporte email est\xE1 ah\xED si necesitas ayuda.",
         q6: "\xBFTengo que pagar o meter tarjeta?",
-        a6: "No. BOT-WOW es 100% gratis. Solo introduces tu email y te enviamos instant\xE1neamente el bot + tu clave de licencia. Sin tarjeta, sin pago, nunca.",
         cf0: "",
         cf1: "Listo para",
         cf2: "dominar?",
@@ -758,13 +726,11 @@ var require_es = __commonJS({
         cmprole: "/ rol",
         cmpmonth: "/ mes",
         lifeshort: "de por vida",
-        ur1: "100% gratis \u2014 oferta lanzamiento",
         ur2: "termina en",
         ur3: "\xB7 aprov\xE9chalo ya",
         tb1: "jugadores activos",
         tb2: "Entrega email instant\xE1nea",
         tb3: "Acceso de por vida",
-        tb4: "4,9/5 \xB7 2.847 rese\xF1as",
         nv1: "Por qu\xE9 nosotros",
         nv6: "Comparativa",
         nv3: "Funciones",
@@ -784,13 +750,10 @@ var require_es = __commonJS({
         pms: "BOT-WOW \u2014 todo incluido, para siempre",
         pmp: "Acceso de por vida \xB7 todos m\xF3dulos",
         pml1: "Todos los m\xF3dulos (Oro, XP, Item, CB)",
-        pml2: "Anti-detecci\xF3n pixel-based",
         pml3: "Actualizaciones de por vida",
         pml4: "Entrega por email instant\xE1nea",
-        pmg: "100% gratis \xB7 sin tarjeta \xB7 sin suscripci\xF3n",
         pme: "Tu email (para recibir el bot)",
         pmpay: "Recibir el bot gratis",
-        pmsec: "Entrega instant\xE1nea por email \xB7 100% gratis \xB7 sin tarjeta",
         pss1: "\xA1Listo! \u{1F389}",
         pss2: "Tu acceso de por vida gratis a BOT-WOW est\xE1 activado.",
         pss3: "Recibes el bot por email en",
@@ -803,11 +766,9 @@ var require_es = __commonJS({
         mb2: "Obtener gratis",
         pl1: "Todos los m\xF3dulos: Oro, XP, Item, CB",
         pl2: "Combate IA para todas las clases",
-        pl3: "Anti-detecci\xF3n pixel-based",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 servidores privados",
         pl5: "Actualizaciones de por vida tras cada parche",
         pl6: "Soporte email prioritario",
-        pl7: "100% gratis \xB7 sin tarjeta bancaria"
       }
     };
   }
@@ -819,7 +780,7 @@ var require_pt = __commonJS({
     module.exports = {
       meta: {
         title: "Bot WoW \u2014 Automatiza\xE7\xE3o World of Warcraft #1 \xB7 Gold Farming, XP & Anti-dete\xE7\xE3o 2026",
-        desc: "O bot WoW mais simples: farming de ouro autom\xE1tico, XP, itens, campos de batalha. Anti-dete\xE7\xE3o pixel-based, tudo inclu\xEDdo, acesso vital\xEDcio. 100% gr\xE1tis, entregue por email. \u26A0\uFE0F A automa\xE7\xE3o viola os Termos de Servi\xE7o da Blizzard e pode resultar em suspens\xE3o ou banimento permanente \u2014 uso por sua conta e risco.",
+        desc: "O bot WoW mais simples: farming de ouro autom\xE1tico, XP, itens, campos de batalha. Anti-dete\xE7\xE3o pixel-based, tudo inclu\xEDdo, acesso vital\xEDcio. entregue por email. \u26A0\uFE0F A automa\xE7\xE3o viola os Termos de Servi\xE7o da Blizzard e pode resultar em suspens\xE3o ou banimento permanente \u2014 uso por sua conta e risco.",
         keywords: "bot wow, wow bot, farming bot wow, wow gold bot, bot world of warcraft, gold farming wow, bot wow retail, bot wow classic, bot wow sod, anti ban wow, bot wow 2026, melhor bot wow, bot pixel wow, wow farming autom\xE1tico"
       },
       L: {
@@ -834,7 +795,6 @@ var require_pt = __commonJS({
         hsoc: "",
         ht1: "Sem cart\xE3o necess\xE1rio",
         ht2: "Sem sair do site",
-        ht3: "100% gr\xE1tis",
         mt1: "Ouro",
         mt2: "XP",
         mt3: "CB",
@@ -847,7 +807,6 @@ var require_pt = __commonJS({
         st2: "",
         st3: "Alta disponibilidade",
         st4: "",
-        tl0: "100% gr\xE1tis, para sempre",
         tl1: "Sem subscri\xE7\xE3o",
         wy0: "Porqu\xEA BOT-WOW",
         wy1: "Os outros bots s\xE3o complicados.",
@@ -902,12 +861,10 @@ var require_pt = __commonJS({
         f6h: "Suporte por email",
         f6p: "Um endere\xE7o de email real para te ajudar. N\xE3o precisas de Discord, n\xE3o bot de suporte, humanos de verdade.",
         gs0: "GR\xC1TIS",
-        gs1: "100% gr\xE1tis, sem compromisso",
         gs2: "BOT-WOW \xE9 completamente gr\xE1tis. Sem cart\xE3o, sem pagamento, sem armadilha \u2014 sacas, guardas para a vida, e se n\xE3o te serve, simplesmente paras de usar. N\xE3o tens nada a perder.",
         pr0: "Pre\xE7o",
         pr1: "Gr\xE1tis. Para sempre.",
         pr2: "Sem subscri\xE7\xE3o, sem m\xF3dulos escondidos, sem surpresas. \xC9 {PRICE} e \xE9 teu para sempre.",
-        pt: "\u2B50 100% GR\xC1TIS",
         pc0: "Acesso completo vital\xEDcio",
         pc1: "Gr\xE1tis \xB7 entregue por email",
         vk1: "Farmeio autom\xE1tico de ouro",
@@ -945,7 +902,6 @@ var require_pt = __commonJS({
         q5: "E se n\xE3o me servir?",
         a5: "Nenhum problema \u2014 \xE9 gr\xE1tis. Simplesmente paras de usar, sem compromisso. E o nosso suporte email est\xE1 l\xE1 se precisares de ajuda.",
         q6: "Tenho de pagar ou meter cart\xE3o?",
-        a6: "N\xE3o. BOT-WOW \xE9 100% gr\xE1tis. S\xF3 introduzes o teu email e enviamos-te instantaneamente o bot + a tua chave de licen\xE7a. Sem cart\xE3o, sem pagamento, nunca.",
         cf0: "",
         cf1: "Pronto para",
         cf2: "dominar?",
@@ -954,13 +910,11 @@ var require_pt = __commonJS({
         cmprole: "/ fun\xE7\xE3o",
         cmpmonth: "/ m\xEAs",
         lifeshort: "vital\xEDcio",
-        ur1: "100% gr\xE1tis \u2014 oferta lan\xE7amento",
         ur2: "termina em",
         ur3: "\xB7 aproveita j\xE1",
         tb1: "jogadores ativos",
         tb2: "Entrega email instant\xE2nea",
         tb3: "Acesso vital\xEDcio",
-        tb4: "4,9/5 \xB7 2.847 avalia\xE7\xF5es",
         nv1: "Porqu\xEA n\xF3s",
         nv6: "Compara\xE7\xE3o",
         nv3: "Fun\xE7\xF5es",
@@ -980,13 +934,10 @@ var require_pt = __commonJS({
         pms: "BOT-WOW \u2014 tudo inclu\xEDdo, para sempre",
         pmp: "Acesso vital\xEDcio \xB7 todos m\xF3dulos",
         pml1: "Todos os m\xF3dulos (Ouro, XP, Item, CB)",
-        pml2: "Anti-dete\xE7\xE3o pixel-based",
         pml3: "Atualiza\xE7\xF5es vital\xEDcias",
         pml4: "Entrega por email instant\xE2nea",
-        pmg: "100% gr\xE1tis \xB7 sem cart\xE3o \xB7 sem subscri\xE7\xE3o",
         pme: "O teu email (para receber o bot)",
         pmpay: "Receber o bot gr\xE1tis",
-        pmsec: "Entrega instant\xE2nea por email \xB7 100% gr\xE1tis \xB7 sem cart\xE3o",
         pss1: "Est\xE1 bom! \u{1F389}",
         pss2: "O teu acesso vital\xEDcio gr\xE1tis ao BOT-WOW est\xE1 ativado.",
         pss3: "Recebes o bot por email em",
@@ -999,11 +950,9 @@ var require_pt = __commonJS({
         mb2: "Obter gr\xE1tis",
         pl1: "Todos os m\xF3dulos: Ouro, XP, Item, CB",
         pl2: "Combate IA para todas as classes",
-        pl3: "Anti-dete\xE7\xE3o pixel-based",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 servidores privados",
         pl5: "Atualiza\xE7\xF5es vital\xEDcias ap\xF3s cada patch",
         pl6: "Suporte email priorit\xE1rio",
-        pl7: "100% gr\xE1tis \xB7 sem cart\xE3o banc\xE1rio"
       }
     };
   }
@@ -1015,7 +964,7 @@ var require_ru = __commonJS({
     module.exports = {
       meta: {
         title: "BOT-WOW \u2014 \u0411\u043E\u0442 World of Warcraft #1 \xB7 Gold Farming, XP & \u041F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430 2026",
-        desc: "\u0421\u0430\u043C\u044B\u0439 \u043F\u0440\u043E\u0441\u0442\u043E\u0439 \u0431\u043E\u0442 \u0434\u043B\u044F WoW: \u0430\u0432\u0442\u043E\u0444\u0430\u0440\u043C \u0437\u043E\u043B\u043E\u0442\u0430, XP, \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u044B, \u043F\u043E\u043B\u044F \u0431\u043E\u044F. \u041F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0435\u043D\u0438\u044F, \u0432\u0441\u0451 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u043F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F. 100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E, \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043D\u0430 email. \u26A0\uFE0F \u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0437\u0430\u0446\u0438\u044F \u043D\u0430\u0440\u0443\u0448\u0430\u0435\u0442 \u0423\u0441\u043B\u043E\u0432\u0438\u044F \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F Blizzard \u0438 \u043C\u043E\u0436\u0435\u0442 \u043F\u0440\u0438\u0432\u0435\u0441\u0442\u0438 \u043A \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0435 \u0438\u043B\u0438 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E\u043C\u0443 \u0431\u0430\u043D\u0443 \u2014 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435 \u043D\u0430 \u0432\u0430\u0448 \u0441\u0442\u0440\u0430\u0445 \u0438 \u0440\u0438\u0441\u043A.",
+        desc: "\u0421\u0430\u043C\u044B\u0439 \u043F\u0440\u043E\u0441\u0442\u043E\u0439 \u0431\u043E\u0442 \u0434\u043B\u044F WoW: \u0430\u0432\u0442\u043E\u0444\u0430\u0440\u043C \u0437\u043E\u043B\u043E\u0442\u0430, XP, \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u044B, \u043F\u043E\u043B\u044F \u0431\u043E\u044F. \u041F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0435\u043D\u0438\u044F, \u0432\u0441\u0451 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u043F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F. \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043D\u0430 email. \u26A0\uFE0F \u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0437\u0430\u0446\u0438\u044F \u043D\u0430\u0440\u0443\u0448\u0430\u0435\u0442 \u0423\u0441\u043B\u043E\u0432\u0438\u044F \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F Blizzard \u0438 \u043C\u043E\u0436\u0435\u0442 \u043F\u0440\u0438\u0432\u0435\u0441\u0442\u0438 \u043A \u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0435 \u0438\u043B\u0438 \u043D\u0435\u043E\u0431\u0440\u0430\u0442\u0438\u043C\u043E\u043C\u0443 \u0431\u0430\u043D\u0443 \u2014 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435 \u043D\u0430 \u0432\u0430\u0448 \u0441\u0442\u0440\u0430\u0445 \u0438 \u0440\u0438\u0441\u043A.",
         keywords: "\u0431\u043E\u0442 wow, wow \u0431\u043E\u0442, \u0444\u0430\u0440\u043C\u0438\u043D\u0433 \u0431\u043E\u0442 wow, wow gold \u0431\u043E\u0442, \u0431\u043E\u0442 world of warcraft, gold farming wow, \u0431\u043E\u0442 wow retail, \u0431\u043E\u0442 wow classic, \u0431\u043E\u0442 wow sod, \u0430\u043D\u0442\u0438 \u0431\u0430\u043D wow, \u0431\u043E\u0442 wow 2026, \u043B\u0443\u0447\u0448\u0438\u0439 \u0431\u043E\u0442 wow, \u043F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u044B\u0439 \u0431\u043E\u0442 wow, wow \u0444\u0430\u0440\u043C\u0438\u043D\u0433 \u0430\u0432\u0442\u043E"
       },
       L: {
@@ -1030,7 +979,6 @@ var require_ru = __commonJS({
         hsoc: "",
         ht1: "\u041A\u0430\u0440\u0442\u0430 \u043D\u0435 \u043D\u0443\u0436\u043D\u0430",
         ht2: "\u041D\u0435 \u043F\u043E\u043A\u0438\u0434\u0430\u044F \u0441\u0430\u0439\u0442",
-        ht3: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E",
         mt1: "\u0417\u043E\u043B\u043E\u0442\u043E",
         mt2: "XP",
         mt3: "\u041F\u0411",
@@ -1043,7 +991,6 @@ var require_ru = __commonJS({
         st2: "",
         st3: "\u0412\u044B\u0441\u043E\u043A\u0430\u044F \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C",
         st4: "",
-        tl0: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E, \u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430",
         tl1: "\u0411\u0435\u0437 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0438",
         wy0: "\u041F\u043E\u0447\u0435\u043C\u0443 BOT-WOW",
         wy1: "\u0414\u0440\u0443\u0433\u0438\u0435 \u0431\u043E\u0442\u044B \u0441\u043B\u043E\u0436\u043D\u044B\u0435.",
@@ -1098,12 +1045,10 @@ var require_ru = __commonJS({
         f6h: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u043F\u043E email",
         f6p: "\u041D\u0430\u0441\u0442\u043E\u044F\u0449\u0438\u0439 email \u0434\u043B\u044F \u043F\u043E\u043C\u043E\u0449\u0438. \u041D\u0435 \u043D\u0443\u0436\u0435\u043D Discord, \u043D\u0435 \u0431\u043E\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438, \u0436\u0438\u0432\u044B\u0435 \u043B\u044E\u0434\u0438.",
         gs0: "\u0411\u0415\u0421\u041F\u041B\u0410\u0422\u041D\u041E",
-        gs1: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E, \u0431\u0435\u0437 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u0441\u0442\u0432",
         gs2: "BOT-WOW \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u0435\u043D. \u041D\u0438\u043A\u0430\u043A\u043E\u0439 \u043A\u0430\u0440\u0442\u044B, \u043D\u0438\u043A\u0430\u043A\u043E\u0439 \u043E\u043F\u043B\u0430\u0442\u044B, \u043D\u0438\u043A\u0430\u043A\u043E\u0433\u043E \u043F\u043E\u0434\u0432\u043E\u0445\u0430 \u2014 \u043A\u0430\u0447\u0430\u0435\u0448\u044C, \u0434\u0435\u0440\u0436\u0438\u0448\u044C \u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430, \u0438 \u0435\u0441\u043B\u0438 \u043D\u0435 \u043D\u0440\u0430\u0432\u0438\u0442\u0441\u044F, \u043F\u0440\u043E\u0441\u0442\u043E \u043F\u0435\u0440\u0435\u0441\u0442\u0430\u0435\u0448\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F. \u0422\u0435\u0431\u0435 \u043D\u0435\u0447\u0435\u0433\u043E \u0442\u0435\u0440\u044F\u0442\u044C.",
         pr0: "\u0426\u0435\u043D\u0430",
         pr1: "\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E. \u041D\u0430\u0432\u0441\u0435\u0433\u0434\u0430.",
         pr2: "\u041D\u0438\u043A\u0430\u043A\u043E\u0439 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0438, \u043D\u0438\u043A\u0430\u043A\u0438\u0445 \u0441\u043A\u0440\u044B\u0442\u044B\u0445 \u043C\u043E\u0434\u0443\u043B\u0435\u0439, \u043D\u0438\u043A\u0430\u043A\u0438\u0445 \u043D\u0435\u043F\u0440\u0438\u044F\u0442\u043D\u044B\u0445 \u0441\u044E\u0440\u043F\u0440\u0438\u0437\u043E\u0432. \u042D\u0442\u043E {PRICE} \u0438 \u044D\u0442\u043E \u0442\u0432\u043E\u0451 \u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430.",
-        pt: "\u2B50 100% \u0411\u0415\u0421\u041F\u041B\u0410\u0422\u041D\u041E",
         pc0: "\u041F\u043E\u043B\u043D\u044B\u0439 \u043F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F",
         pc1: "\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \xB7 \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043F\u043E email",
         vk1: "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u0444\u0430\u0440\u043C \u0437\u043E\u043B\u043E\u0442\u0430",
@@ -1141,7 +1086,6 @@ var require_ru = __commonJS({
         q5: "\u0410 \u0435\u0441\u043B\u0438 \u043D\u0435 \u043F\u043E\u043D\u0440\u0430\u0432\u0438\u0442\u0441\u044F?",
         a5: "\u041D\u0438\u043A\u0430\u043A\u043E\u0439 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u044B \u2014 \u044D\u0442\u043E \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E. \u041F\u0440\u043E\u0441\u0442\u043E \u043F\u0435\u0440\u0435\u0441\u0442\u0430\u043D\u0435\u0448\u044C \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F, \u0431\u0435\u0437 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u0441\u0442\u0432. \u0418 \u043D\u0430\u0448\u0430 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u043F\u043E email \u0442\u0443\u0442, \u0435\u0441\u043B\u0438 \u043D\u0443\u0436\u043D\u0430 \u043F\u043E\u043C\u043E\u0449\u044C.",
         q6: "\u041D\u0430\u0434\u043E \u043F\u043B\u0430\u0442\u0438\u0442\u044C \u0438\u043B\u0438 \u0432\u0432\u043E\u0434\u0438\u0442\u044C \u043A\u0430\u0440\u0442\u0443?",
-        a6: "\u041D\u0435\u0442. BOT-WOW 100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u0435\u043D. \u041F\u0440\u043E\u0441\u0442\u043E \u0432\u0432\u043E\u0434\u0438\u0448\u044C email \u0438 \u043C\u044B \u043C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u043E \u0448\u043B\u0451\u043C \u0431\u043E\u0442\u0430 + \u043A\u043B\u044E\u0447 \u043B\u0438\u0446\u0435\u043D\u0437\u0438\u0438. \u0411\u0435\u0437 \u043A\u0430\u0440\u0442\u044B, \u0431\u0435\u0437 \u043E\u043F\u043B\u0430\u0442\u044B, \u043D\u0438\u043A\u043E\u0433\u0434\u0430.",
         cf0: "",
         cf1: "\u0413\u043E\u0442\u043E\u0432",
         cf2: "\u0434\u043E\u043C\u0438\u043D\u0438\u0440\u043E\u0432\u0430\u0442\u044C?",
@@ -1150,13 +1094,11 @@ var require_ru = __commonJS({
         cmprole: "/ \u0440\u043E\u043B\u044C",
         cmpmonth: "/ \u043C\u0435\u0441",
         lifeshort: "\u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430",
-        ur1: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \u2014 \u0437\u0430\u043F\u0443\u0441\u043A",
         ur2: "\u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437",
         ur3: "\xB7 \u0443\u0441\u043F\u0435\u0439 \u0437\u0430\u0431\u0440\u0430\u0442\u044C",
         tb1: "\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0438\u0433\u0440\u043E\u043A\u043E\u0432",
         tb2: "\u041C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u0430\u044F \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043F\u043E email",
         tb3: "\u041F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F",
-        tb4: "4,9/5 \xB7 2 847 \u043E\u0442\u0437\u044B\u0432\u043E\u0432",
         nv1: "\u041F\u043E\u0447\u0435\u043C\u0443 \u043C\u044B",
         nv6: "\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435",
         nv3: "\u0424\u0443\u043D\u043A\u0446\u0438\u0438",
@@ -1176,13 +1118,10 @@ var require_ru = __commonJS({
         pms: "BOT-WOW \u2014 \u0432\u0441\u0451 \u0432\u043A\u043B\u044E\u0447\u0435\u043D\u043E, \u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430",
         pmp: "\u041F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F \xB7 \u0432\u0441\u0435 \u043C\u043E\u0434\u0443\u043B\u0438",
         pml1: "\u0412\u0441\u0435 \u043C\u043E\u0434\u0443\u043B\u0438 (\u0417\u043E\u043B\u043E\u0442\u043E, XP, \u041F\u0440\u0435\u0434\u043C\u0435\u0442, \u041F\u0411)",
-        pml2: "\u041F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0435\u043D\u0438\u044F",
         pml3: "\u041F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F",
         pml4: "\u041C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u0430\u044F \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043F\u043E email",
-        pmg: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \xB7 \u0431\u0435\u0437 \u043A\u0430\u0440\u0442\u044B \xB7 \u0431\u0435\u0437 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0438",
         pme: "\u0422\u0432\u043E\u0439 email (\u0447\u0442\u043E\u0431\u044B \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0431\u043E\u0442\u0430)",
         pmpay: "\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0431\u043E\u0442\u0430 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E",
-        pmsec: "\u041C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u0430\u044F \u0434\u043E\u0441\u0442\u0430\u0432\u043A\u0430 \u043F\u043E email \xB7 100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \xB7 \u0431\u0435\u0437 \u043A\u0430\u0440\u0442\u044B",
         pss1: "\u0413\u043E\u0442\u043E\u0432\u043E! \u{1F389}",
         pss2: "\u0422\u0432\u043E\u0439 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F \u043A BOT-WOW \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D.",
         pss3: "\u0422\u044B \u043F\u043E\u043B\u0443\u0447\u0438\u0448\u044C \u0431\u043E\u0442\u0430 \u043F\u043E email \u043D\u0430",
@@ -1195,11 +1134,9 @@ var require_ru = __commonJS({
         mb2: "\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E",
         pl1: "\u0412\u0441\u0435 \u043C\u043E\u0434\u0443\u043B\u0438: \u0417\u043E\u043B\u043E\u0442\u043E, XP, \u041F\u0440\u0435\u0434\u043C\u0435\u0442, \u041F\u0411",
         pl2: "\u0411\u043E\u0435\u0432\u0430\u044F \u0418\u0418 \u0434\u043B\u044F \u0432\u0441\u0435\u0445 \u043A\u043B\u0430\u0441\u0441\u043E\u0432",
-        pl3: "\u041F\u0438\u043A\u0441\u0435\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0435\u043D\u0438\u044F",
         pl4: "Retail \xB7 Classic \xB7 SoD \xB7 \u043F\u0440\u0438\u0432\u0430\u0442\u043D\u044B\u0435 \u0441\u0435\u0440\u0432\u0435\u0440\u044B",
         pl5: "\u041F\u043E\u0436\u0438\u0437\u043D\u0435\u043D\u043D\u044B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043F\u043E\u0441\u043B\u0435 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u043F\u0430\u0442\u0447\u0430",
         pl6: "\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u043D\u0430\u044F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u043F\u043E email",
-        pl7: "100% \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \xB7 \u0431\u0435\u0437 \u0431\u0430\u043D\u043A\u043E\u0432\u0441\u043A\u043E\u0439 \u043A\u0430\u0440\u0442\u044B"
       }
     };
   }
@@ -2312,8 +2249,7 @@ async function handleDownload(request, env2) {
     // puis la version courante du paquet, puis l'ancien nom (repli).
     const candidates = [
       env2.R2_OBJECT_KEY,
-      "casinobabe-fishing-1.2.0.zip",
-      "Casinobabe-v1.0.38.zip"
+      "casinobabe-fishing-1.2.0.zip"
     ].filter(Boolean);
     let objectKey = candidates[0];
     let r2Object = null;
@@ -2331,7 +2267,7 @@ async function handleDownload(request, env2) {
     }
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": `attachment; filename="casinobabe-fishing-1.2.0.zip"`,
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
@@ -2455,6 +2391,14 @@ var PRICE_TABLE = {
 var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
 var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
+// Garde-fou commercial : la vente est ouverte uniquement lorsque
+// RELEASE_STATUS est explicitement "open". Toute autre valeur (y compris
+// l'absence de la variable) signifie "suspendue". Le refus est cote
+// serveur, ne depend pas du bouton HTML, ne contacte pas Mollie et ne
+// journalise aucune donnee personnelle (IP seulement).
+function isSalesOpen2(env2) {
+  return String(env2.RELEASE_STATUS || "").toLowerCase() === "open";
+}
 async function handleCheckout(request, env2) {
   const ip = getClientIp2(request);
   const rl = await checkRateLimit2(env2.RATE_LIMIT, "checkout", ip, CHECKOUT_RATE_LIMIT);
@@ -2462,6 +2406,10 @@ async function handleCheckout(request, env2) {
     return jsonResponse2({ ok: false, error: "rate_limited" }, 429, {
       "Retry-After": String(rl.retryAfter || 300)
     });
+  }
+  if (!isSalesOpen2(env2)) {
+    console.warn("Checkout: vente suspendue, commande refusee (ip=" + ip + ")");
+    return jsonResponse2({ ok: false, error: "sales_suspended" }, 409);
   }
   let body;
   try {
@@ -5691,7 +5639,7 @@ function getMinimalDict() {
   return {
     meta: {
       title: "BOT-WOW \u2014 World of Warcraft Bot",
-      desc: "Free WoW automation bot with pixel-based anti-detection.",
+      desc: "BOT-WOW automation bot for World of Warcraft. Pixel-based, no memory injection. Paid lifetime licence.",
       keywords: "wow bot, world of warcraft bot, gold farming bot"
     },
     L: {
@@ -5699,14 +5647,13 @@ function getMinimalDict() {
       h1a: "Farm your",
       h1b: "WoW gold",
       h1c: "while you live.",
-      hs: "The simplest WoW bot. Free lifetime access, delivered by email.",
-      hc1: "Lifetime access \u2014 Free",
+      hs: "The simplest WoW bot. Lifetime access, delivered by email.",
+      hc1: "Lifetime access",
       hc2: "\u25B6 How it works",
       ht1: "No card required",
       ht2: "Without leaving the site",
-      ht3: "100% free",
-      pcta: "Get BOT-WOW free",
-      pnote: "Instant email delivery. No card, no payment."
+      pcta: "Get BOT-WOW licence",
+      pnote: "Licence and download link sent by email after payment."
     }
   };
 }

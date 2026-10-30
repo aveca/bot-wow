@@ -22,3 +22,7 @@ captures/
 # Captures et releves de QA visuelle (scripts/qa-*-cdp.mjs) : artefacts
 # locaux de verification, regeneres a la demande, jamais versionnes.
 .qa-captures/
+
+# Resultats et captures des tests Playwright : regeneres a la demande.
+artifacts/ui/
+test-results/
