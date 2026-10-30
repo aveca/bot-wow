@@ -5,16 +5,28 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=e37e617b';
-import './analytics.js?v=e37e617b';
-import './journey.js?v=e37e617b';
-import './session.js?v=e37e617b';
-import './film.js?v=e37e617b';
+import { planRound } from './route-planner.js?v=e131a91a';
+import './analytics.js?v=e131a91a';
+import './journey.js?v=e131a91a';
+import './session.js?v=e131a91a';
+import './film.js?v=e131a91a';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
 // AVANT toute peinture pour eviter un flash de contenu non anime.
 document.documentElement.classList.add('js');
+
+/* Identifiant de parcours anonyme pour l'attribution du tunnel d'achat.
+   Recupere l'identifiant genere par analytics.js (sessionStorage) ou en
+   genere un nouveau. Aucune donnee personnelle : identifiant opaque de
+   session uniquement, jamais relie a une personne. */
+if (!window.botwowJourneyId) {
+  try { window.botwowJourneyId = sessionStorage.getItem('botwow_journey_id'); } catch (e) { /* stockage indisponible */ }
+}
+if (!window.botwowJourneyId) {
+  window.botwowJourneyId = 'j_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+  try { sessionStorage.setItem('botwow_journey_id', window.botwowJourneyId); } catch (e) { /* stockage indisponible */ }
+}
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 

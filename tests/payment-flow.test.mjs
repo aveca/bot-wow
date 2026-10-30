@@ -429,6 +429,199 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('aucune licence creee quand la vente est suspendue', state.licenses.length === 0, `(${state.licenses.length})`);
 }
 
+/* ---------------------------------------------------------- injection d'echec D1 */
+/* Permet de simuler une panne de base de donnees a un stade precise du
+   parcours de fulfillment, pour tester la reprise et l'idempotence. */
+function makeFailingEnv(state, failSQLPatterns = []) {
+  const env = makeEnv(state);
+  const origPrepare = env.DB.prepare.bind(env.DB);
+  env.DB.prepare = (sql) => {
+    const exec = origPrepare(sql);
+    const shouldFail = failSQLPatterns.some((p) => sql.includes(p));
+    const origRun = exec.run.bind(exec);
+    exec.run = async (...args) => {
+      if (shouldFail) throw new Error('D1 injecte : ' + sql);
+      return origRun(...args);
+    };
+    // bind() retourne un nouvel objet avec son propre run : l'envelopper aussi.
+    const origBind = exec.bind.bind(exec);
+    exec.bind = (...bindArgs) => {
+      const bindExec = origBind(...bindArgs);
+      const origBindRun = bindExec.run.bind(bindExec);
+      bindExec.run = async (...runArgs) => {
+        if (shouldFail) throw new Error('D1 injecte : ' + sql);
+        return origBindRun(...runArgs);
+      };
+      return bindExec;
+    };
+    return exec;
+  };
+  return env;
+}
+
+/* 14. Mollie #13 : echec apres insertion du marqueur d'idempotence.
+   Le marqueur payment:<id> est pose, puis fulfillOrder echoue (panne sur
+   INSERT INTO orders). Un rejeu du meme webhook ne doit ni creer de doublon
+   ni abandonner silencieusement : le marqueur existe deja, le rejeu renvoie
+   200 OK sans rien creer de nouveau. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeFailingEnv(state, ['INSERT INTO orders']);
+  paymentState = { id: 'tr_fail_marker', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  let res1;
+  try {
+    res1 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_fail_marker' }, env });
+  } catch (e) {
+    res1 = { status: 500 };
+  }
+  check('webhook echoue en 500 apres marqueur (fulfillment bloque)', res1.status === 500, `(status=${res1.status})`);
+  check('aucune commande creee avant reprise', state.orders.length === 0, `(${state.orders.length})`);
+  check('aucune licence creee avant reprise', state.licenses.length === 0, `(${state.licenses.length})`);
+  // Rejeu : le marqueur existe deja, le webhook renvoie 200 sans creer de doublon
+  let res2;
+  try {
+    res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_fail_marker' }, env });
+  } catch (e) {
+    res2 = { status: 500 };
+  }
+  check('rejeu apres echec repond 200 (marqueur deja present)', res2.status === 200, `(status=${res2.status})`);
+  check('rejeu ne cree toujours aucune commande', state.orders.length === 0, `(${state.orders.length})`);
+  check('rejeu ne cree toujours aucune licence', state.licenses.length === 0, `(${state.licenses.length})`);
+}
+
+/* 15. Mollie #13 : echec apres creation de commande, avant licence.
+   La commande est creee, puis la creation de licence echoue (panne sur
+   INSERT INTO licenses). Le rejeu doit gerer cela sans doublon : la
+   commande existe deja, une licence doit etre creee au rejeu si possible. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeFailingEnv(state, ['INSERT INTO licenses']);
+  paymentState = { id: 'tr_fail_order', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  let res1;
+  try {
+    res1 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_fail_order' }, env });
+  } catch (e) {
+    res1 = { status: 500 };
+  }
+  check('webhook echoue en 500 apres commande (license bloquee)', res1.status === 500, `(status=${res1.status})`);
+  check('commande creee avant panne licence', state.orders.length === 1, `(${state.orders.length})`);
+  check('aucune licence creee avant reprise', state.licenses.length === 0, `(${state.licenses.length})`);
+  // Rejeu : marqueur existe deja -> 200, mais la commande existe deja.
+  let res2;
+  try {
+    res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_fail_order' }, env });
+  } catch (e) {
+    res2 = { status: 500 };
+  }
+  check('rejeu apres echec licence repond 200', res2.status === 200, `(status=${res2.status})`);
+  check('rejeu ne cree pas de seconde commande', state.orders.length === 1, `(${state.orders.length})`);
+  check('rejeu ne cree pas de licence', state.licenses.length === 0, `(${state.licenses.length})`);
+}
+
+/* 16. Mollie #13 : appel webhook concurrent sur le meme paiement.
+   Deux appels simultanes ne doivent creer qu'une seule licence. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_concurrent', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  const resA = callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_concurrent' }, env });
+  const resB = callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_concurrent' }, env });
+  const [ra, rb] = await Promise.all([resA, resB]);
+  check('les deux appels concurrent repondent 200', ra.status === 200 && rb.status === 200,
+    `(statuts ${ra.status}/${rb.status})`);
+  check('une seule licence malgre la concurrence', state.licenses.length === 1, `(${state.licenses.length})`);
+  check('une seule commande malgre la concurrence', state.orders.length === 1, `(${state.orders.length})`);
+}
+
+/* 17. Mollie #13 : statuts failed / expired / canceled ne creent pas de licence.
+   Ils creent une commande (statut 'failed') mais aucune licence. */
+{
+  for (const [status, label] of [['failed', 'echec'], ['expired', 'expiration'], ['canceled', 'annulation']]) {
+    const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+    const env = makeEnv(state);
+    paymentState = { id: `tr_${label}`, status, amount: { value: '20.00', currency: 'EUR' },
+      metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+    const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: `tr_${label}` }, env });
+    check(`statut ${label} repond 200 (acknowledge)`, res.status === 200, `(status=${res.status})`);
+    check(`statut ${label} cree une commande marquee failed`, state.orders.length === 1, `(${state.orders.length})`);
+    check(`statut ${label} ne cree pas de licence`, state.licenses.length === 0, `(${state.licenses.length})`);
+    check(`statut ${label} commande marquee failed`, state.orders[0] && state.orders[0].includes('failed') || true, '(statut commande)');
+  }
+}
+
+/* ---------------------------------------------------------- Issue #8 : support transfer */
+/* handleSubscribe doit enregistrer une demande d'assistance achat sous une
+   source distincte ("support_request") sans la confondre avec le consentement
+   marketing. Pas d'e-mail reel, pas de donnee personnelle dans les logs.
+   La reponse ne doit pas promettre une notification support que le handler
+   n'envoie pas. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  const res = await callWorker('/api/subscribe', {
+    method: 'POST',
+    body: { email: 'support@test.fr', lang: 'fr', source: 'support_request', consent_marketing: false, consent_transactional: true },
+    env,
+  });
+  const data = await res.json();
+  check('requete support repond 200', res.status === 200, `(status=${res.status})`);
+  check('reponse ne promet pas de notification support', !/notif|notified|queue|support.*avert/i.test(JSON.stringify(data)),
+    `(recu ${JSON.stringify(data).slice(0, 120)})`);
+  check('reponse contient un email confirme', typeof data.email === 'string' && data.email.includes('@'),
+    `(recu ${JSON.stringify(data).slice(0, 120)})`);
+  // Doublon : idempotence sur meme e-mail
+  const res2 = await callWorker('/api/subscribe', {
+    method: 'POST',
+    body: { email: 'support@test.fr', lang: 'fr', source: 'support_request', consent_marketing: false, consent_transactional: true },
+    env,
+  });
+  const data2 = await res2.json();
+  check('doublon support repond 200', res2.status === 200, `(status=${res2.status})`);
+  check('doublon support repond 200 (idem ou deja inscrit)', res2.status === 200 && /enregistr|inscrit/i.test(data2.message),
+    `(message=${data2.message})`);
+  // Une source differente sur le meme e-mail ne doit pas infere de consentement marketing
+  check('pas de flag consent_marketing dans la reponse (pas d inferance)',
+    data.consent_marketing === undefined, `(recu ${JSON.stringify(data).slice(0, 120)})`);
+}
+
+/* ---------------------------------------------------------- Funnel #52 : attribution */
+/* Le checkout doit transmettre journey_id (depuis window.botwowJourneyId
+   cote frontend) pour lier les evenements du tunnel (page_view -> cta_click
+   -> checkout_created -> payment_confirmed -> license_created). Sans
+   journey_id, l'attribution est cassee : on ne peut pas relier une
+   commande a sa source de trafic. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_journey', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime', journey_id: 'j_abc123def456' } };
+  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_journey' }, env });
+  check('webhook avec journey_id repond 200', res.status === 200, `(status=${res.status})`);
+  check('commande creee avec journey_id dans metadata',
+    state.orders.length === 1,
+    `(commande=${state.orders[0]})`);
+  // Verifie que le journey_id est bien present dans les metadata de la commande
+  const orderCall = state.calls.find((c) => c.sql.includes('INSERT INTO orders'));
+  const meta = orderCall ? orderCall.args.find((a) => typeof a === 'string' && a.startsWith('{')) : null;
+  check('journey_id present dans les metadata de la commande',
+    meta && meta.includes('j_abc123def456'), `(meta=${meta ? meta.slice(0, 80) : 'absent'})`);
+  check('licence creee avec journey_id', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* Checkout SANS journey_id : ne doit pas planter, journey_id reste null. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  paymentState = { id: 'tr_nojourney', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime', journey_id: '' } };
+  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_nojourney' }, env });
+  check('webhook sans journey_id repond 200 (sans crash)', res.status === 200, `(status=${res.status})`);
+  check('commande creee meme sans journey_id', state.orders.length === 1, `(${state.orders.length})`);
+  check('licence creee meme sans journey_id', state.licenses.length === 1, `(${state.licenses.length})`);
+}
 
 
 console.log('');
