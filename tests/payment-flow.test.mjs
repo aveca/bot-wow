@@ -132,6 +132,7 @@ function makeEnv(state) {
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
+    RELEASE_STATUS: 'open',
     state,
   };
 }
@@ -403,6 +404,29 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
   check('le rejeu du webhook de remboursement reste sans effet (200)', res2.status === 200, `(status=${res2.status})`);
   check('aucune seconde licence n\'est creee, aucun crash', state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* 13. Garde-fou commercial : la vente suspendue bloque le checkout cote serveur.
+   Aucun RELEASE_STATUS => vente suspendue par defaut (fail-closed).
+   Le refus ne depend pas du bouton HTML, ne contacte pas Mollie, ne cree
+   aucune commande ni licence, et ne journalise pas de donnee personnelle. */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state);
+  delete env.RELEASE_STATUS; // vente suspendue par defaut (fail-closed)
+  mollieCalls = [];
+  const res = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env,
+  });
+  const data = await res.json();
+  check('vente suspendue refuse le checkout en 409', res.status === 409, `(status=${res.status})`);
+  check('statut explicite sales_suspended', data && data.error === 'sales_suspended',
+    `(recu ${JSON.stringify(data).slice(0, 120)})`);
+  check('aucun paiement Mollie cree quand la vente est suspendue',
+    mollieCalls.filter((c) => c.url.endsWith('/payments') && c.method === 'POST').length === 0,
+    `(appels ${mollieCalls.length})`);
+  check('aucune commande creee quand la vente est suspendue', state.orders.length === 0, `(${state.orders.length})`);
+  check('aucune licence creee quand la vente est suspendue', state.licenses.length === 0, `(${state.licenses.length})`);
 }
 
 

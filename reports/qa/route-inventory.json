@@ -1,0 +1,477 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "domains": [
+    "bot-wow.com",
+    "www.bot-wow.com",
+    "api.bot-wow.com"
+  ],
+  "languages": ["en", "fr"],
+  "urls": [
+    {
+      "url": "https://bot-wow.com/",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "index.html",
+      "justification": "Page d'accueil EN (canonique, hreflang en/fr, sitemap). Hero v13, offre €20, demo, parcours, télémétrie, modules, comparaison, tarifs, docs, CTA final."
+    },
+    {
+      "url": "https://bot-wow.com/fr/",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/index.html",
+      "justification": "Page d'accueil FR (canonique, hreflang en/fr, sitemap). Traduction FR du hero v13."
+    },
+    {
+      "url": "https://bot-wow.com/demo.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "demo.html",
+      "justification": "Démo navigateur EN : carte simulée, planificateur de rondes. Banner « SIMULATED DATA », interactions planificateur."
+    },
+    {
+      "url": "https://bot-wow.com/fr/demo.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/demo.html",
+      "justification": "Démo navigateur FR : carte simulée, planificateur de rondes. Banner « DONNÉES SIMULÉES »."
+    },
+    {
+      "url": "https://bot-wow.com/features.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "features.html",
+      "justification": "Liste des fonctionnalités EN avec statuts réels (available/in development/planned/out of scope)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/features.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/features.html",
+      "justification": "Liste des fonctionnalités FR avec statuts réels."
+    },
+    {
+      "url": "https://bot-wow.com/fishing.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "fishing.html",
+      "justification": "Page dédiée pêche EN."
+    },
+    {
+      "url": "https://bot-wow.com/fr/fishing.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/fishing.html",
+      "justification": "Page dédiée pêche FR."
+    },
+    {
+      "url": "https://bot-wow.com/getting-started.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "getting-started.html",
+      "justification": "Guide de démarrage EN."
+    },
+    {
+      "url": "https://bot-wow.com/fr/getting-started.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/getting-started.html",
+      "justification": "Guide de démarrage FR."
+    },
+    {
+      "url": "https://bot-wow.com/compatibility.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "compatibility.html",
+      "justification": "Matrice de compatibilité EN (versions WoW, Windows, Python)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/compatibility.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/compatibility.html",
+      "justification": "Matrice de compatibilité FR."
+    },
+    {
+      "url": "https://bot-wow.com/roadmap.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "roadmap.html",
+      "justification": "Feuille de route EN."
+    },
+    {
+      "url": "https://bot-wow.com/fr/roadmap.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/roadmap.html",
+      "justification": "Feuille de route FR."
+    },
+    {
+      "url": "https://bot-wow.com/modules.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "modules.html",
+      "justification": "Registre honnête des modules EN (8 modules : fish available, 3 development, 4 planned), généré depuis assets/modules.json."
+    },
+    {
+      "url": "https://bot-wow.com/fr/modules.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/modules.html",
+      "justification": "Registre honnête des modules FR."
+    },
+    {
+      "url": "https://bot-wow.com/compare.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "compare.html",
+      "justification": "Comparaison EN vs bots tout-en-un (prix, modules, honnêteté)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/compare.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/compare.html",
+      "justification": "Comparaison FR vs bots tout-en-un."
+    },
+    {
+      "url": "https://bot-wow.com/faq.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "faq.html",
+      "justification": "FAQ EN (paiement, ban, compatibilité, remboursement, livraison)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/faq.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/faq.html",
+      "justification": "FAQ FR."
+    },
+    {
+      "url": "https://bot-wow.com/buy.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "buy.html",
+      "justification": "Page d'achat EN : offre €20, formulaire Mollie, notice de disponibilité, limites honnêtes, FAQ intégrée."
+    },
+    {
+      "url": "https://bot-wow.com/fr/buy.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/buy.html",
+      "justification": "Page d'achat FR : offre 20,00 €, formulaire Mollie, notice de disponibilité."
+    },
+    {
+      "url": "https://bot-wow.com/success.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "success.html",
+      "justification": "Page de confirmation de paiement EN (noindex, follow)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/success.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/success.html",
+      "justification": "Page de confirmation de paiement FR (noindex, follow)."
+    },
+    {
+      "url": "https://bot-wow.com/cancel.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "cancel.html",
+      "justification": "Page d'annulation de paiement EN (noindex, follow)."
+    },
+    {
+      "url": "https://bot-wow.com/fr/cancel.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/cancel.html",
+      "justification": "Page d'annulation de paiement FR (noindex, follow)."
+    },
+    {
+      "url": "https://bot-wow.com/404.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "404.html",
+      "justification": "Page d'erreur 404 EN."
+    },
+    {
+      "url": "https://bot-wow.com/fr/404.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "fr/404.html",
+      "justification": "Page d'erreur 404 FR."
+    },
+    {
+      "url": "https://bot-wow.com/docs/index.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "docs/index.html",
+      "justification": "Documentation EN (index)."
+    },
+    {
+      "url": "https://bot-wow.com/docs/install.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "docs/install.html",
+      "justification": "Guide d'installation EN."
+    },
+    {
+      "url": "https://bot-wow.com/docs/changelog.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "docs/changelog.html",
+      "justification": "Notes de version EN."
+    },
+    {
+      "url": "https://bot-wow.com/docs/known-issues.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "docs/known-issues.html",
+      "justification": "Problèmes connus EN."
+    },
+    {
+      "url": "https://bot-wow.com/docs/license.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "docs/license.html",
+      "justification": "Récupération de licence EN."
+    },
+    {
+      "url": "https://bot-wow.com/docs/fr/index.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "docs/fr/index.html",
+      "justification": "Documentation FR (index)."
+    },
+    {
+      "url": "https://bot-wow.com/docs/fr/install.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "docs/fr/install.html",
+      "justification": "Guide d'installation FR."
+    },
+    {
+      "url": "https://bot-wow.com/docs/fr/changelog.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "docs/fr/changelog.html",
+      "justification": "Notes de version FR."
+    },
+    {
+      "url": "https://bot-wow.com/docs/fr/known-issues.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "docs/fr/known-issues.html",
+      "justification": "Problèmes connus FR."
+    },
+    {
+      "url": "https://bot-wow.com/docs/fr/license.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "docs/fr/license.html",
+      "justification": "Récupération de licence FR."
+    },
+    {
+      "url": "https://bot-wow.com/legal/terms.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "legal/terms.html",
+      "justification": "Conditions de vente EN (prix €20, livraison, activation 1 machine, durée illimitée, risque de ban)."
+    },
+    {
+      "url": "https://bot-wow.com/legal/privacy.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "legal/privacy.html",
+      "justification": "Confidentialité EN (données collectées, conservation, droits RGPD)."
+    },
+    {
+      "url": "https://bot-wow.com/legal/refund.html",
+      "type": "page",
+      "language": "en",
+      "sourceFile": "legal/refund.html",
+      "justification": "Remboursements EN (14 jours, non activé, procédure 7 jours ouvrés)."
+    },
+    {
+      "url": "https://bot-wow.com/legal/fr/terms.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "legal/fr/terms.html",
+      "justification": "Conditions de vente FR."
+    },
+    {
+      "url": "https://bot-wow.com/legal/fr/privacy.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "legal/fr/privacy.html",
+      "justification": "Confidentialité FR."
+    },
+    {
+      "url": "https://bot-wow.com/legal/fr/refund.html",
+      "type": "page",
+      "language": "fr",
+      "sourceFile": "legal/fr/refund.html",
+      "justification": "Remboursements FR."
+    },
+    {
+      "url": "https://bot-wow.com/sitemap.xml",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "sitemap.xml",
+      "justification": "Sitemap XML canonique avec hreflang EN/FR. Résultat de paiement volontairement EXCLU (noindex)."
+    },
+    {
+      "url": "https://bot-wow.com/robots.txt",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "robots.txt",
+      "justification": "Robots.txt : Disallow /api/, /worker/, /backups/, /migrations/, /tests/."
+    },
+    {
+      "url": "https://bot-wow.com/version.txt",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "version.txt",
+      "justification": "Fichier de version produit (1.2.0)."
+    },
+    {
+      "url": "https://api.bot-wow.com/",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleLanding)",
+      "justification": "Worker Cloudflare : page d'atterrissage générée dynamiquement (i18n fr/en/de/es/pt/ru), JSON-LD price:0, /api/claim (désactivé 410)."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/checkout",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleCheckout)",
+      "justification": "Création de paiement Mollie, montant fixé côté serveur (20,00 EUR), rate limit 5/5min/IP."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/mollie-webhook",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleMollieWebhook)",
+      "justification": "Webhook Mollie : création licence, idempotence, remboursement → révocation."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/bitcoin/checkout",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleBitcoinCheckout)",
+      "justification": "Création commande Bitcoin manuelle (id TEXT ord_*), attente validation admin."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/admin/orders/*/approve",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleAdminApproveOrder)",
+      "justification": "Validation admin de commande (JWT requis, 401 sinon)."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/admin/orders/*/reject",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleAdminRejectOrder)",
+      "justification": "Rejet admin de commande (JWT requis, 401 sinon)."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/download",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleDownload)",
+      "justification": "Téléchargement du paquet binaire R2 (casinobabe-fishing-1.2.0.zip)."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/config",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js (handleConfigWithBitcoin)",
+      "justification": "Configuration publique du checkout."
+    },
+    {
+      "url": "https://api.bot-wow.com/health",
+      "type": "endpoint",
+      "language": "n/a",
+      "sourceFile": "worker/index.js",
+      "justification": "Health check Worker."
+    },
+    {
+      "url": "https://bot-wow.com/assets/og-botwow.jpg",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/og-botwow.jpg",
+      "justification": "Image Open Graph."
+    },
+    {
+      "url": "https://bot-wow.com/assets/favicon.svg",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/favicon.svg",
+      "justification": "Favicon."
+    },
+    {
+      "url": "https://bot-wow.com/assets/evidence/fishing-real-capture.jpg",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/evidence/fishing-real-capture.jpg",
+      "justification": "Capture réelle du produit (76 KB, session instrumentée)."
+    },
+    {
+      "url": "https://bot-wow.com/assets/evidence/fishing-real-capture.webp",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/evidence/fishing-real-capture.webp",
+      "justification": "Version WebP de la capture réelle."
+    },
+    {
+      "url": "https://bot-wow.com/assets/demo-map.json",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/demo-map.json",
+      "justification": "Carte de démonstration simulée (simulated: true, spots avec observations)."
+    },
+    {
+      "url": "https://bot-wow.com/assets/modules.json",
+      "type": "resource",
+      "language": "n/a",
+      "sourceFile": "assets/modules.json",
+      "justification": "Registre des modules source (8 modules, version 1.2.0)."
+    },
+    {
+      "url": "https://aveca.github.io/bot-wow/",
+      "type": "mirror",
+      "language": "en",
+      "sourceFile": "GitHub Pages (pages.yml)",
+      "justification": "Miroir GitHub Pages du site statique (déploiement automatique sur push main)."
+    }
+  ],
+  "excluded": [
+    {
+      "url": "https://bot-wow.com/success.html",
+      "reason": "Page de résultat de paiement : volontairement exclue du sitemap (noindex, follow)."
+    },
+    {
+      "url": "https://bot-wow.com/cancel.html",
+      "reason": "Page de résultat de paiement : volontairement exclue du sitemap (noindex, follow)."
+    },
+    {
+      "url": "https://api.bot-wow.com/api/claim",
+      "reason": "Désactivé (410) — canal de licences gratuites retiré. Ne doit pas être exposé."
+    }
+  ],
+  "abVariants": {
+    "note": "Variantes A/B isolées dans /ab/, non publiées dans l'artefact statique, absentes du sitemap et de _redirects. Couvertes par tests/ab-variants.test.mjs uniquement.",
+    "paths": ["ab/a/buy.html", "ab/a/fr/buy.html", "ab/b/buy.html", "ab/b/fr/buy.html"]
+  },
+  "workerGeneratedPages": {
+    "note": "Pages générées dynamiquement par le Worker (api.bot-wow.com) — pas de fichier source statique, i18n 6 langues, JSON-LD price:0.",
+    "paths": ["/", "/fr/", "/de/", "/es/", "/pt/", "/ru/", "/robots.txt", "/sitemap.xml"]
+  },
+  "discoveryMethods": ["sitemap.xml", "robots.txt", "hreflang", "canonical URLs", "fichiers sources HTML", "worker/index.js routes", "tests/e2e routes", "scripts/validate.mjs PUBLIC_PAGES"]
+}

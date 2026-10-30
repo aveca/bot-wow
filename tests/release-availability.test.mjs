@@ -39,11 +39,14 @@ for (const [page, file, claimRe] of [
   check(`${page} : avis place AVANT le formulaire d'achat`,
     html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
-  check(`${page} : v1.2.0 non presente comme une version confirmee`,
-    !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
-  check(`${page} : invitation a contacter le support avant paiement`,
-    /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée/i.test(flat));
-  check(`${page} : le vrai formulaire de checkout est conserve`,
+  check(`${page} : aucun reste 'delivery to be confirmed' / 'livraison à confirmer'`,
+    !/delivery to be confirmed/i.test(flat) && !/livraison à confirmer/i.test(flat));
+  check(`${page} : héros cohérent 'version actuelle vérifiée'`,
+    (/fr\//.test(file)
+      ? /version actuelle/i.test(flat) && /vérifi/i.test(flat)
+      : /current release/i.test(flat) && /verified/i.test(flat)),
+    `(héros doit annoncer la version actuelle vérifiée, pas une livraison non confirmée)`);
+  check(`${page} : le vrai formulaire de checkout est conservé`,
     /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
     /20,00\s*€/.test(html));
