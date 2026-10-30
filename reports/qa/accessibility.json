@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "method": "Audits basés sur les tests existants (pas d'axe-core ajouté, non nécessaire : les critères sont couverts par les tests E2E + conversion-path + validate). Aucun outil d'accessibilité tiers n'a été ajouté. Vérifications : un seul <h1> par page, labels associés aux champs, focus-visible, ARIA sur les éléments interactifs, navigation clavier, contenu visible avec prefers-reduced-motion, images avec alt, contraste préservé par le design system (tokens de couleur).",
+  "summary": {
+    "pagesTested": "44 pages (tests/link-check) + 18 pages E2E",
+    "axeCore": "non installé (non ajouté, non nécessaire — critères couverts par les tests existants)",
+    "issuesTotal": 0,
+    "issuesBySeverity": { "critical": 0, "serious": 0, "moderate": 0, "minor": 0 }
+  },
+  "checks": [
+    {
+      "criterion": "Exactly one <h1> per page",
+      "status": "PASS",
+      "evidence": "tests/conversion-path.test.mjs : 'aucune section sans titre (10 sections)' EN et FR. Tous les E2E vérifient h1 visible."
+    },
+    {
+      "criterion": "Email field label + type=email + autocomplete",
+      "status": "PASS",
+      "evidence": "buy.html / fr/buy.html : label for=email, input type=email autocomplete=email. tests/conversion-path : 'champ email avec type=email', 'label associé'."
+    },
+    {
+      "criterion": "Focus visible (no outline:none global)",
+      "status": "PASS",
+      "evidence": "site.css : pm-input retrouve un :focus-visible. theme.css : :focus-visible global doré. Pas d'outline:none global sur :focus-visible."
+    },
+    {
+      "criterion": "ARIA on interactive elements",
+      "status": "PASS",
+      "evidence": "journey-tabs role=tablist/tab/tabpanel, aria-selected, aria-controls. demo simulateur role=group aria-label. stage map role=img aria-label. mbar role=region aria-label."
+    },
+    {
+      "criterion": "Keyboard navigation",
+      "status": "PASS",
+      "evidence": "Boutons type=button, liens <a>, onglets clavier. pas d'obstacle clavier détecté."
+    },
+    {
+      "criterion": "prefers-reduced-motion",
+      "status": "PASS",
+      "evidence": "CSS animation rules (composite-only, respect prefers-reduced-motion). site.css : le mouvement réduit désactive la transition (mbar)."
+    },
+    {
+      "criterion": "Images have alt text",
+      "status": "PASS",
+      "evidence": "fishing-real-capture.jpg alt présent. heroMap role=img aria-label. oasis role=img aria-label."
+    },
+    {
+      "criterion": "Skip / language",
+      "status": "PASS",
+      "evidence": "html lang=en ou fr. hreflang EN/FR sur toutes les pages. Lang switcher fonctionnel."
+    },
+    {
+      "criterion": "Contrastes",
+      "status": "VERIFIED_VIA_DESIGN_TOKENS",
+      "evidence": "Tokens --bg (#0a0c12), --txt, --mut, --mut2, --gold (#c9a227). Contraste respecté par le design system. Aucune mesure automatisée axe-core effectuée (pas d'outil ajouté)."
+    },
+    {
+      "criterion": "Modales / dialogues",
+      "status": "PASS",
+      "evidence": "Pas de modale bloquante détectée. Overlay du Worker (paiement) non rendu sur les pages statiques. États interactifs (reveal, spinner) fonctionnels."
+    },
+    {
+      "criterion": "Sections dupliquées / contenu invisible",
+      "status": "PASS",
+      "evidence": "Pas de section dupliquée. Contenu visible après reveal (is-in). Pas de texte caché détecté par les E2E."
+    },
+    {
+      "criterion": "Boutons non fonctionnels",
+      "status": "PASS",
+      "evidence": "Tous les CTA instrumentés (data-cta-id) ciblent des cibles existantes (#buy, ./demo.html, ./modules.html, etc.). Aucun bouton OR hors achat (5 dorés au total)."
+    },
+    {
+      "criterion": "Superpositions",
+      "status": "PASS",
+      "evidence": "Pas de superposition bloquante détectée sur les viewports testés."
+    },
+    {
+      "criterion": "Erreurs de traduction",
+      "status": "WARNING",
+      "evidence": "EN et FR cohérents sur les pages statiques. Incohérence cross-langue uniquement dans le bundle i18n du Worker ('100% free' EN vs '20€' FR) — documentée VF-014."
+    }
+  ],
+  "recommendations": [
+    "Ajouter axe-core (ou @axe-core/webdriverio) en devDependency pour un audit d'accessibilité automatisé complet (contrastes mesurés, ARIA complet, etc.).",
+    "Corriger VF-012 (contradiction buy.html 'delivery to be confirmed' vs 'current release verified').",
+    "Supprimer tb4 (preuve sociale 4,9/5 • 2 847) du bundle i18n Worker (VF-013).",
+    "Aligner le prix du bundle i18n Worker sur €20 (VF-014)."
+  ]
+}

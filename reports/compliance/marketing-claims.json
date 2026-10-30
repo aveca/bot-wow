@@ -1,0 +1,167 @@
+{
+  "generatedAt": "2026-10-29",
+  "repository": "https://github.com/aveca/bot-wow.git",
+  "branch": "fix/botwow-autonomous-qa-20261029",
+  "method": "Chaque affirmation est recherchée dans les fichiers sources (pages HTML, bundle i18n du Worker, assets/modules.json, tests). Aucun chiffre, client ou statistique n'est inventé. Les preuves proviennent exclusivement du dépôt et des tests exécutés.",
+  "claims": [
+    {
+      "claim": "Prix : 20,00 € (EUR), paiement unique, licence à vie. Aucun abonnement, aucun module caché.",
+      "source": "PRODUCT.md §Offer ; index.html hero__price (€20.00 / one-time, lifetime licence) ; buy.html (20,00 €, one-time payment · no renewal, ever) ; fr/index.html (20,00 € / licence à vie, paiement unique) ; legal/terms.html (§Price : €20.00 incl. tax, one-time payment).",
+      "evidence": "Test release-availability : /20,00\s*€/ présent sur buy.html et fr/buy.html. Test modules-parity : version 1.2.0 cohérente. Paiement serveur-side fixé à 2000 centimes (payment-flow.test.mjs : montant envoyé à Mollie 20.00 EUR).",
+      "status": "VERIFIED",
+      "risk": "Faible. Cohérent EN/FR sur les pages statiques. Le bundle i18n du Worker (fr) affiche aussi 20€ mais EN/DE/ES/PT/RU affichent '100% free' (incohérence cross-langue du Worker, voir claim #14).",
+      "recommendation": "Aligner le bundle i18n du Worker sur le prix payant €20 (actuellement '100% free' pour EN/DE/ES/PT/RU)."
+    },
+    {
+      "claim": "Licence à vie (lifetime access), pas d'abonnement.",
+      "source": "PRODUCT.md §Offer ('licence à vie (20 €)', 'Aucun abonnement') ; index.html hero__price-label ('one-time, lifetime licence') ; legal/terms.html (§Duration : 'The licence is granted without time limit; updates of the 1.x branch are included').",
+      "evidence": "Textes présents sur les pages. Aucun test automatique ne contredit.",
+      "status": "VERIFIED",
+      "risk": "Faible sur les pages statiques. Moyen sur le Worker (bundle i18n EN/DE/ES/PT/RU dit '100% free, forever').",
+      "recommendation": "Corriger le bundle i18n du Worker pour cohérence avec le prix payant."
+    },
+    {
+      "claim": "Mises à jour de la branche 1.x incluses, à vie.",
+      "source": "PRODUCT.md §Offer ('Mises à jour de la branche 1.x incluses') ; buy.html price-includes ('The full fishing bot, v1.2.0, and future updates of the 1.x branch') ; legal/terms.html (§Duration).",
+      "evidence": "Textes présents. Aucun test ne contredit.",
+      "status": "VERIFIED",
+      "risk": "Faible.",
+      "recommendation": "Aucune."
+    },
+    {
+      "claim": "Livraison : e-mail contenant la clé de licence et le lien de téléchargement après validation du paiement. Pas de livraison instantanée promise.",
+      "source": "buy.html release-availability-notice ('Your licence key and download link are emailed after payment') ; legal/terms.html (§Delivery : 'sent by email once payment is confirmed by the payment provider') ; success.html ('You receive an email with your licence key and your download link') ; release-availability.test.mjs interdit la promesse de livraison instantanée.",
+      "evidence": "Textes présents sur buy.html, success.html, legal/terms.html. Le test release-availability vérifie l'absence de promesse de livraison instantanée.",
+      "status": "VERIFIED",
+      "risk": "Faible. La livraison dépend du webhook Mollie et de l'envoi e-mail (RESEND_API_KEY non configuré en prod → échec de l'envoi réel, voir AUDIT_INCOHERENCES).",
+      "recommendation": "Confirmer la configuration RESEND_API_KEY avant mise en production (découverte AUDIT_INCOHERENCES : 4 secrets 'À VÉRIFIER')."
+    },
+    {
+      "claim": "Garantie 14 jours, remboursable tant que la licence n'est pas activée.",
+      "source": "index.html hero__guarantee ('Refundable: within 14 days, as long as the licence has not been activated') ; fr/index.html ('Remboursable : sous 14 jours, tant que la licence n'est pas activée') ; legal/refund.html ('within 14 days of purchase, as long as the software has not been activated on a machine') ; FAQ buy.html ('Refunds are handled case by case — excludes already-activated licences').",
+      "evidence": "Textes présents EN et FR sur la home, buy, et legal/refund.html.",
+      "status": "VERIFIED",
+      "risk": "Faible. Condition d'activation clairement mentionnée (pas de garantie inconditionnelle).",
+      "recommendation": "Aucune."
+    },
+    {
+      "claim": 'Nombre de clients : "4,9/5 • 2 847 avis / reviews" (tb4 dans le bundle i18n du Worker, toutes les langues).',
+      "source": "worker/index.js bundle i18n : tb4 = '4,9/5 • 2 847 avis' (fr), '4.9/5 • 2,847 reviews' (en), équivalent de/es/pt/ru/de. Appelé dans le rendu Worker comme preuve sociale.",
+      "evidence": "Aucune preuve dans le dépôt : pas de fichier d'avis, pas de compteur, pas de source tierce. PRODUCT.md §Constraints interdit formellement de fabriquer 'nombres d'utilisateurs, compteurs, preuve sociale'.",
+      "status": "UNVERIFIED",
+      "risk": "Élevé. Affirmation commerciale non prouvée, interdite par la contrainte produit elle-même. Présente uniquement dans le bundle Worker (non rendu sur les pages statiques actuelles).",
+      "recommendation": "Supprimer tb4 (et tout compteur d'avis) du bundle i18n du Worker et de tout rendu, tant qu'aucune preuve vérifiable n'existe."
+    },
+    {
+      "claim": 'Nombre d\'avis vérifiés : lié au claim 4,9/5 • 2 847 (même source).',
+      "source": "worker/index.js bundle i18n tb4.",
+      "evidence": "Aucune preuve d'avis vérifiés dans le dépôt.",
+      "status": "UNVERIFIED",
+      "risk": "Élevé.",
+      "recommendation": "Supprimer tant qu'aucune preuve n'existe."
+    },
+    {
+      "claim": "Uptime annoncé : 'High uptime' / 'Disponibilité élevée' (st1/st3 dans le bundle i18n).",
+      "source": "worker/index.js bundle i18n (st1 'Gold farmed', st3 'High uptime' / 'Disponibilité élevée'), st2/st4 vides.",
+      "evidence": "Aucune donnée d'uptime, pas de statut page, pas de SLA.",
+      "status": "UNVERIFIED",
+      "risk": "Moyen. Affirmation de performance non démontrée.",
+      "recommendation": "Supprimer ou remplacer par une mention factuelle, ou documenter une source d'uptime."
+    },
+    {
+      "claim": "Promesse de support : 'Support par email', 'une vraie adresse email', 'humains', support@bot-wow.com.",
+      "source": "index.html docs strip ('Support — Une vraie adresse email') ; legal/privacy.html (droits : support@bot-wow.com) ; FAQ ; PRODUCT.md §Offer ('Support par email prioritaire').",
+      "evidence": "Adresse e-mail support@bot-wow.com présente sur les pages. Aucun test ne vérifie la réactivité réelle.",
+      "status": "UNVERIFIED",
+      "risk": "Moyen. L'existence de l'adresse est vérifiée, la qualité/délai de support n'est pas démontré.",
+      "recommendation": "Préciser les délais de réponse attendus (actuellement aucun SLA affiché)."
+    },
+    {
+      "claim": "Performance : médiane bite → click 308 ms, instrumentée.",
+      "source": "index.html hero__proof ('308ms median bite → click') ; telemetry section ('median bite → click 308 ms · Instrumented sessions, per-cycle logs') ; PRODUCT.md §Assets ('instrumented session').",
+      "evidence": "Test route-planner-parity et modules-parity passent. La valeur 308 ms est annoncée comme mesurée. Aucune donnée brute de session n'est fournie dans le dépôt public pour vérification indépendante.",
+      "status": "UNVERIFIED",
+      "risk": "Moyen. Affirmation de mesure présentée comme factuelle, mais les logs bruts ne sont pas publiés.",
+      "recommendation": "Indiquer explicitement qu'il s'agit d'une mesure interne instrumentée (déjà fait partiellement : 'Instrumented sessions')."
+    },
+    {
+      "claim": "Parité planificateur JS/Python 12/12.",
+      "source": "index.html hero__proof ('12/12 planner parity JS / Python') ; telemetry ('planner parity JS ↔ Python 12/12 · route-planner-parity.test.mjs, every build').",
+      "evidence": "Test route-planner-parity.test.mjs vérifie les 3 modes (prudent, équilibre, exploration) sur coût, ordre, rendement, segments — OK.",
+      "status": "VERIFIED",
+      "risk": "Faible. Test automatisé à chaque build.",
+      "recommendation": "Aucune."
+    },
+    {
+      "claim": "Compatibilité : WoW Retail (The War Within), Classic Era, Season of Discovery, et la majorité des serveurs privés. Windows 10/11, Python 3.11+.",
+      "source": "PRODUCT.md §Offer ; worker/index.js i18n q2/a2 (toutes les langues) ; topbar ('Windows 10/11 · Python 3.11+').",
+      "evidence": "CONTRADICTION : buy.html FAQ ('Does it work on my client?') répond 'Tested on WoW Classic 1.13 (anniversary) and on private servers... Retail and other Classic versions are not tested and therefore not supported.' modules.json summary clients : 'Classic 1.13 is the tested scope today.'",
+      "status": "CONTRADICTED",
+      "risk": "Élevé. Le site annonce Retail/SoD compatibles (offre, i18n) alors que la FAQ et le registre disent que seul Classic 1.13 est testé/supporté.",
+      "recommendation": "Aligner l'offre et l'i18n sur le périmètre réellement testé (Classic 1.13 + serveurs privés), ou ajouter une preuve de compatibilité Retail/SoD."
+    },
+    {
+      "claim": "Mises à jour cloud après chaque patch Blizzard, incluses à vie, jamais de surcoût. (f5h/f5p dans i18n).",
+      "source": "worker/index.js bundle i18n f5h ('24/7 updates'), f5p ('Cloud update after every Blizzard patch. Included for life...').",
+      "evidence": "Aucun mécanisme de mise à jour cloud publié dans le dépôt (pas de serveur d'update, pas de changelog automatisé).",
+      "status": "UNVERIFIED",
+      "risk": "Moyen. Promesse de mise à jour automatique non démontrée techniquement.",
+      "recommendation": "Préciser le mécanisme de mise à jour ou retirer la mention 'cloud after every patch'."
+    },
+    {
+      "claim": "Sécurité / anti-détection : 'Lecture pixel uniquement (aucune injection mémoire)', 'réduit l'empreinte technique mais ne garantit rien'.",
+      "source": "index.html f3p ; worker/index.js i18n f3p/cu5/vk3 ; features.html ('No automation tool is undetectable. Behaviour analysis can spot claims of undetectable operation... any promise that your account is safe from sanctions').",
+      "evidence": "Le site débrouille lui-même l'indétectabilité (features.html). Le bundle Worker contient néanmoins 'Anti-detection pixel-based' (pml2/pl3) et 'Pixel-based anti-detection'.",
+      "status": "VERIFIED (avec réserve)",
+      "risk": "Moyen. Incohérence entre le débunk (features.html) et le terme 'anti-detection' dans le bundle Worker (pl3/pml2).",
+      "recommendation": "Retirer le terme 'anti-detection' du bundle Worker pour cohérence avec features.html et la conformité plateforme."
+    },
+    {
+      "claim": "Avertissement risque de bannissement : 'Automation violates Blizzard's ToS and may get your account banned — no tool can prevent that'.",
+      "source": "worker/index.js i18n q1/a1 (toutes langues) ; riskMap (toutes langues) ; footer index.html ; legal/terms.html (§Use : 'The buyer bears the risks of automation alone, including any suspension of their game account').",
+      "evidence": "Présent et cohérent sur toutes les langues et pages.",
+      "status": "VERIFIED",
+      "risk": "Faible. C'est une mention de risque honnête, conforme à l'attente Blizzard.",
+      "recommandation": "Aucune."
+    },
+    {
+      "claim": "Paiement par carte via Mollie, montant et devise fixés côté serveur.",
+      "source": "buy.html ('Payment by Mollie', 'The amount and currency are fixed server-side') ; topbar ('Card payments via Mollie') ; payment-flow.test.mjs (montant 20.00 EUR fixé serveur-side, refus d'un montant client différent).",
+      "evidence": "Test payment-flow vérifie le refus d'un montant différent et la fixation côté serveur.",
+      "status": "VERIFIED",
+      "risk": "Faible.",
+      "recommendation": "Aucune."
+    },
+    {
+      "claim": "Téléchargement du paquet vérifié, manifeste SHA-256.",
+      "source": "release-availability.test.mjs (paquet R2 casinobabe-fishing-1.2.0.zip, SHA-256 1c132f36... vérifié le 27/10/2026, 5 commandes/5 licences en production) ; buy.html release-availability-notice.",
+      "evidence": "Preuve rapportée dans le code du test (pas d'exécution réelle de téléchargement binaire non vérifié, conformément aux règles de mission).",
+      "status": "UNVERIFIED (preuve rapportée dans le code, non ré-exécutée ici par principe de précaution)",
+      "risk": "Moyen. La revendication repose sur une allégation dans un fichier de test, non re-vérifiée indépendamment dans le cadre de cette mission.",
+      "recommendation": "Re-vérifier l'existence et le SHA-256 du paquet R2 avant publication."
+    },
+    {
+      "claim": "Activation sur 1 machine, re-send de licence sur demande.",
+      "source": "legal/terms.html (§Activation : 'One licence activates one machine') ; buy.html price-includes ('Activation on one machine, licence re-send on request').",
+      "evidence": "Textes présents.",
+      "status": "VERIFIED",
+      "risk": "Faible.",
+      "recommendation": "Aucune."
+    },
+    {
+      "claim": "Démo navigateur : données simulées, ne contrôle pas le client de jeu.",
+      "source": "demo.html sim-banner ('SIMULATED DATA · NO LIVE GAMEPLAY', 'does not control the game client') ; fr/demo.html ('DONNÉES SIMULÉES') ; validate.mjs (demo.html doit contenir 'simul', demo-map.json simulated: true).",
+      "evidence": "Tests validate et demo-quality vérifient la mention simulée et l'absence de contrôle du client.",
+      "status": "VERIFIED",
+      "risk": "Faible.",
+      "recommandation": "Aucune."
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "verified": 9,
+    "unverified": 6,
+    "contradicted": 1,
+    "blockedCommercialClaims": ["4,9/5 • 2 847 avis", "High uptime", "24/7 updates cloud", "Anti-detection pixel-based (Worker)"]
+  }
+}

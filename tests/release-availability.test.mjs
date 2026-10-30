@@ -76,6 +76,13 @@ for (const [page, file, claimRe, unverifiedRe, verifiedRe] of [
     /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
     /20,00\s*€/.test(html));
+  check(`${page} : aucun reste 'delivery to be confirmed' / 'livraison à confirmer' (contradiction avec l'avis vérifié)`,
+    !/delivery to be confirmed/i.test(flat) && !/livraison à confirmer/i.test(flat));
+  check(`${page} : héros cohérent 'version actuelle vérifiée'`,
+    (/fr\//.test(file)
+      ? /version actuelle/i.test(flat) && /vérifi/i.test(flat)
+      : /current release/i.test(flat) && /verified/i.test(flat)),
+    `(héros doit annoncer la version actuelle vérifiée, pas une livraison non confirmée)`);
   check(`${page} : CTAs instrumentes pour la mesure`,
     (html.match(/data-cta-id="buy-/g) || []).length >= 3);
   check(`${page} : canal de support accessible`,
