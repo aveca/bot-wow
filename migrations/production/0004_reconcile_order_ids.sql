@@ -69,26 +69,28 @@ FROM downloads;
 -- 2. Build the replacement orders table while the original is still readable.
 -- Preserve provider uniqueness and all business columns.
 CREATE TABLE orders_reconciled (
-  id           TEXT PRIMARY KEY,
-  provider     TEXT NOT NULL DEFAULT 'mollie',
-  provider_id  TEXT UNIQUE,
-  email        TEXT NOT NULL,
-  amount       INTEGER NOT NULL DEFAULT 0,
-  currency     TEXT NOT NULL DEFAULT 'eur',
-  status       TEXT NOT NULL DEFAULT 'free',
-  metadata     TEXT,
-  created_at   INTEGER NOT NULL,
-  updated_at   INTEGER NOT NULL
+  id              TEXT PRIMARY KEY,
+  provider        TEXT NOT NULL DEFAULT 'mollie',
+  provider_id     TEXT UNIQUE,
+  email           TEXT NOT NULL,
+  amount          INTEGER NOT NULL DEFAULT 0,
+  currency        TEXT NOT NULL DEFAULT 'eur',
+  status          TEXT NOT NULL DEFAULT 'free',
+  metadata        TEXT,
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL,
+  fulfillment_status TEXT NOT NULL DEFAULT 'processing'
 );
 
 INSERT INTO orders_reconciled
-  (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+  (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at, fulfillment_status)
 SELECT
   CASE
     WHEN CAST(id AS TEXT) GLOB '[0-9]*' THEN 'ord_legacy_' || CAST(id AS TEXT)
     ELSE CAST(id AS TEXT)
   END,
-  provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at
+  provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at,
+  'processing'
 FROM orders;
 
 -- These production views reference the tables being rebuilt. Drop them before

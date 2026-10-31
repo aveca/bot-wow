@@ -54,9 +54,14 @@ function makeEnv(state) {
                   email,
                   amount: 2000, currency: 'eur',
                   status: /pending_payment/.test(key) ? 'pending_payment' : 'paid',
+                  fulfillment_status: /processing/.test(key) ? 'processing' : 'paid',
                   metadata: args.filter((a) => typeof a === 'string' && a.startsWith('{'))[0] || '{}',
                 };
               }
+            }
+            if (/UPDATE orders SET fulfillment_status/i.test(key) && state.orderRows) {
+              const row = state.orderRows[args[1]];
+              if (row) row.fulfillment_status = /completed/.test(key) ? 'completed' : /failed/.test(key) ? 'failed' : 'processing';
             }
             if (/UPDATE orders SET status = 'paid'/i.test(key) && state.orderRows) {
               const row = state.orderRows[args[1]];
