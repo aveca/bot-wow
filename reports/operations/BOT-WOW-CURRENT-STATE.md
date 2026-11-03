@@ -94,3 +94,30 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 3. Lever le garde-fou commercial (décision distincte, nécessite autorisation séparée).
 
 **Blocage restant :** Aucune autorisation de déploiement ni d'ouverture commerciale n'a été obtenue. Le garde-fou commercial reste actif.
+
+---
+
+## 8. Mise à jour 2026-11-03 — moteur de revenu v1 (livrée sur branche, PAS mergée)
+
+**État Git vérifié :** `origin/main` = `2edd74b` (`git rev-parse origin/main`). Branche dédiée `growth/revenue-engine-v1` (base `2edd74b`). Commit `e0dd64a`. **[PR #67](https://github.com/aveca/bot-wow/pull/67)** OUVERTE (base main). Rapport : [`reports/operations/2026-11-03-revenue-engine-v1.md`](./2026-11-03-revenue-engine-v1.md).
+
+### Livraison (priorité n°1) — TOUJOURS NON GARANTIE
+- **[V]** `node tests/payment-flow.test.mjs` : chemin paiement→licence OK (amount/currency serveur, webhook idempotent, refund/chargeback, BTC). Licence créée même si e-mail KO.
+- **[V]** Pas e-mail : `[EMAIL] Envoi impossible (aucun secret RESEND_API_KEY configure)` — livraison consignée pour rejeu.
+- **[R]** Production : 5 commandes payées → 5 licences mais **`deliveries=0`** (P0.22, [PR #65](https://github.com/aveca/bot-wow/pull/65)).
+- **[V]** Défauts Worker `handleDownload` (main, L2310-2340) : repli silencieux `Casinobabe-v1.0.38.zip` ; `Content-Disposition` codé en dur ; 404 au lieu de `503 artifact_unavailable` ; pas de porte `RELEASE_STATUS`. Corrigé par [PR #19](https://github.com/aveca/bot-wow/pull/19) (non dupliqué ici).
+- **→ Le checkout reste verrouillé. Aucune promesse de disponibilité.**
+
+### Mesure (cette livraison)
+- Client : ajout des événements `compatibility_view` (pages compat EN/FR) + `demo_interaction` (choix réel du mode planificateur). Worker de télémetrie : ajout à `EVENT_SPEC`. Tests : parité (§9) + `tests/funnel-events.test.mjs` (vm). `assets/analytics.js`, `telemetry-worker/index.js`, `package.json`, `tests/telemetry.test.mjs`. Stamp assets regénéré `727ea10a` (pur `?v=`).
+- **[V]** `npm test` EXIT=0 · `node scripts/validate.mjs` PASS · `node scripts/build-site.mjs _site` OK · CI PR #67 : validate ✓, ui-quality ✓, GitGuardian ✓.
+
+### Bloqueurs restants (autorisation requise, séquencés)
+1. Valider/déployer `RESEND_API_KEY` + rejeu des livraisons.
+2. Merger [PR #19](https://github.com/aveca/bot-wow/pull/19) + déployer Worker `botwow-api` ; ajouter porte `RELEASE_STATUS`/`delivery_unverified`.
+3. Prouver la livraison de bout en bout **avant** de lever le verrou commercial.
+4. Déployer le **Worker de télémetrie** pour stocker `compatibility_view`/`demo_interaction`.
+5. `pages.yml` `paths-ignore` ne couvre **pas** `reports/**` → merger cette PR à `main` déclenche un déploiement Pages (autorisée requise).
+
+### Prochaine action directement exécutable (sans autorisation)
+**Aucune.** PR #67 en attente de revue/merge ; le reste des actions est autorisation-requise.
