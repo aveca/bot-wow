@@ -12,6 +12,8 @@
  *   page_view      { step }                       affichage de page
  *   offer_view     { step }                       affichage de l'offre/prix
  *   demo_open      { step }                       ouverture de la demonstration
+ *   demo_interaction { cta, step }                interaction reelle dans la demo (mode de ronde, ...)
+ *   compatibility_view { step }                   affichage de la matrice de compatibilite
  *   cta_click      { cta, step }                  clic sur un CTA
  *   planner_mode   { mode }                       mode du planificateur
  *   ownership_view { years }                      horizon du cout de possession
@@ -187,11 +189,15 @@
     track(name, props);
   }, { passive: true });
 
-  /* 2. Mode du planificateur. */
+  /* 2. Mode du planificateur : signal fin (planner_mode) ET signal nomme
+        selon l'entonnoir demande (demo_interaction). Les deux cotes d'une
+        meme action reelle ; aucun compteur n'est invente. */
   document.addEventListener('click', function (ev) {
     var btn = ev.target.closest ? ev.target.closest('#plannerModes button[data-mode]') : null;
     if (!btn) return;
-    track('planner_mode', { mode: btn.getAttribute('data-mode') });
+    var mode = btn.getAttribute('data-mode');
+    track('planner_mode', { mode: mode });
+    track('demo_interaction', { cta: mode, step: 'planner' });
   }, { passive: true });
 
   /* 3. Horizon du calculateur de cout de possession. */
@@ -231,6 +237,11 @@
   /* Ouverture de la demonstration. */
   if (location.pathname === '/demo.html' || location.pathname === '/fr/demo.html') {
     track('demo_open', { step: 'demo_open' });
+  }
+
+  /* Affichage de la matrice de compatibilite (actif de decision P1/P2). */
+  if (location.pathname === '/compatibility.html' || location.pathname === '/fr/compatibility.html') {
+    track('compatibility_view', { step: 'compatibility_view' });
   }
 
   /* 7. Fin de page : on vide le tampon. */

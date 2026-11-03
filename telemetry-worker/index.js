@@ -42,6 +42,13 @@ const EVENT_SPEC = {
   checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
   offer_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
   demo_open: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  // Affichage de la matrice de compatibilite (actif d'acquisition/decision,
+  // P1/P2). Portee uniquement par le client, comme demo_open.
+  compatibility_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  // Interaction reelle dans la demonstration (ex. choix du mode de ronde).
+  // Complement de planner_mode : signal nomme selon le schema de l'entonnoir
+  // demande. `cta` porte l'identifiant du controle (mode choisi).
+  demo_interaction: { cta: 'cta', mode: null, years: null, step: 'step', source: 'source' },
 };
 
 /* Provenance du trafic : liste fermee. Une valeur inconnue ou forgee est
