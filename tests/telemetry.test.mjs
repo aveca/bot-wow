@@ -237,6 +237,7 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
     planner_mode: { mode: 'equilibre' }, ownership_view: { years: 1 },
     checkout_start: {}, checkout_requested: {}, offer_view: {},
     demo_open: {}, checkout_error: {},
+    compatibility_view: {}, demo_interaction: { cta: 'equilibre' },
   };
   for (const [name, extra] of Object.entries(emitted)) {
     const ev = validateEvent({ v: 1, event: name, page: '/', lang: 'en', props: { step: 'load', ...extra } });
