@@ -1,5 +1,85 @@
 # BOT-WOW — État courant Factory V3
 
+**Dernière mise à jour : 2026-11-04T17:22:59Z** — revalidation après fusion des PR #80 et #78, déploiements Cloudflare Pages, lecture seule de D1 et vérification du parcours public.
+
+---
+
+## 0.0.2 — Snapshot courant 2026-11-04T17:22:59Z
+
+### GitHub et déploiements
+
+| Élément | État |
+|---|---|
+| `main` | `db1a35e366091d372ac34778f4a3c27e4bb7a291` |
+| PR #79 | fusionnée ; correction de l'honnêteté des huit surfaces d'achat EN/FR + variantes A/B |
+| PR #80 | fusionnée à 17:19:38Z ; rapport de vérité revenue corrigé et documenté ; merge commit `a3499d7927353d97243cf52af989407607418457` |
+| PR #78 | fusionnée à 17:19:41Z ; revalidation GitHub/Cloudflare/D1 et mise à jour de l'état courant ; merge commit `db1a35e366091d372ac34778f4a3c27e4bb7a291` |
+| PR #77 | toujours draft/open ; correctif `profileId` conditionnel, sans séparation prouvée du profil Mollie BOT-WOW |
+| PR #66 | draft/open ; pivot conformité non automatisant non décidé |
+| Cloudflare Pages | dernier déploiement production `6135d6e6-f161-403d-b25c-aeb7988142f4`, 17:19:44Z, SUCCESS, source `main` = `db1a35e366091d372ac34778f4a3c27e4bb7a291` |
+| Worker `botwow-api` | inchangé depuis le 2026-10-27 ; aucun déploiement de la version Worker de main du 04/11 |
+
+**Important :** les merges documentaires #80 et #78 ont déclenché chacun un déploiement Cloudflare Pages (déploiements `d5a81ddf-a01f-4622-bd07-4a1b4a7cec14` puis `6135d6e6-f161-403d-b25c-aeb7988142f4`). Le `paths-ignore: reports/**` du workflow GitHub Pages n'empêche pas l'intégration GitHub → Cloudflare Pages de déployer. Ne pas considérer un commit documentaire comme sans effet sur le déploiement Cloudflare.
+
+### Site public — source et live
+
+- Le source `main` de la homepage, des pages d'achat EN/FR et des variantes A/B ne contient plus de badge Mollie actif, de promesse de redirection Mollie ou de promesse de livraison e-mail déjà certifiée. Les tests `release-availability.test.mjs` et `ab-variants.test.mjs` couvrent ces interdictions ; les recherches de ces anciennes chaînes dans le dépôt sont vides.
+- Le site affiche un avertissement de livraison v1.2.0 non confirmée et garde le checkout désactivé. Ne pas payer tant que l'artefact et le fulfillment ne sont pas certifiés.
+- L'extraction textuelle web de `/` et `/buy` retourne encore quelques fragments Mollie anciens, absents du source actuel et du commit déployé. C'est une **discordance cache/index vs source**, pas une preuve suffisante pour modifier le code. La réponse HTML réellement servie doit être comparée via GET no-cache et navigateur/Playwright avant toute correction ou purge.
+- Déploiement Pages SUCCESS ne signifie pas que le Worker API a été déployé : Pages et Worker sont deux cibles distinctes.
+
+### Worker, paiement et intégrations
+
+- Le Worker `botwow-api` n'a pas été mis à jour depuis le 27/10. Sa version de code observée (#49) n'est pas rattachée à un commit du dépôt ; la dernière activation de version du 27/10 était déclenchée par un changement de secret.
+- Les noms de bindings `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` et `RESEND_API_KEY` existent ; les valeurs sont masquées et leur validité n'est pas démontrée.
+- Les paiements Mollie historiques BOT-WOW ont été créés sous un profil partagé/non dédié à BOT-WOW. PR #77 ne traite que le transport du paramètre `profileId`, pas la séparation du profil et des credentials. **Ne pas réutiliser le profil existant pour encaisser BOT-WOW.**
+- Le code source garde le checkout en échec fermé par défaut (`RELEASE_STATUS=pending`). Aucune valeur secrète n'a été lue ou modifiée.
+
+### D1 production — lecture seule
+
+Les requêtes ont été exécutées en lecture seule ; `changed_db=false`, `rows_written=0`.
+
+| Mesure | Résultat |
+|---|---:|
+| Commandes totales | 25 |
+| `bitcoin_manual / paid` | 5 lignes, 100,00 € nominaux — données de test (`@example.com`, références de test et adresse BTC placeholder) |
+| `bitcoin_manual / pending_payment` | 8 lignes, 160,00 € nominaux |
+| `bitcoin_manual / rejected` | 1 ligne, 20,00 € nominaux |
+| `mollie / failed` | 11 lignes, 220,00 € nominaux ; Mollie `expired` 11/11, `mode=live`, `method=null`, `paidAt=null` |
+| Licences | 5, toutes liées aux commandes Bitcoin de test |
+| Activations | 0 |
+| Livraisons enregistrées / envoyées | 0 / 0 |
+| Webhooks | 16 ; 11 reliés à une commande après normalisation du préfixe `payment:`, 5 sans commande associée |
+| Revenu réellement encaissé et confirmé | **0,00 €** |
+
+Les cinq commandes `bitcoin_manual/paid` ne sont pas des ventes clients : elles sont rattachées à des données de test. Les onze paiements Mollie ont expiré sans moyen de paiement ni date de règlement. Aucun paiement réel n'est prouvé.
+
+### Funnel D1 Analytics — depuis le 2026-10-22, `test=0`
+
+| Événement | Nombre |
+|---|---:|
+| `page_view` | 1 554 |
+| `journey_view` | 596 |
+| `cta_click` | 48 |
+| `checkout_requested` | 29 |
+| `checkout_start` | 4 |
+| `checkout_created` | 6 |
+| `checkout_failed` | 6 |
+| `payment_confirmed`, `conversion`, `delivery_sent`, `activation` | 0 |
+
+Il s'agit de volumes d'événements, pas de visiteurs uniques. Les six `checkout_failed` historiques sont associés à des paiements Mollie expirés ; ils ne prouvent pas six rejets techniques.
+
+### Décision / prochaine action
+
+**Checkout maintenu fermé ; revenu confirmé : 0,00 €.** Priorité P0 : obtenir un profil et des credentials Mollie dédiés à BOT-WOW, vérifier l'artefact v1.2.0 et le parcours de livraison complet, puis préparer un test contrôlé uniquement après autorisation explicite. Ne pas envoyer de trafic payant vers un checkout fermé.
+
+Le risque de conformité du bot WoW est explicite dans `PRODUCT.md` et les pages publiques ; la PR #66 de pivot non automatisant reste à trancher avant toute accélération commerciale.
+
+Aucun prix, checkout, secret, paiement, e-mail, objet R2 ou Worker n'a été modifié pendant cette revalidation.
+
+---
+
+
 **Dernière mise à jour de ce document : 2026-11-04T16:52:07.707Z** (PR #79 fusionnée, Pages déployé, Mollie cross-profile confirmé) (profil Mollie croisé confirmé, D1 et PR #77/#79 revalidés) (réconciliation live GitHub, Cloudflare Pages, Worker et D1 après PR #76)
 
 ---
