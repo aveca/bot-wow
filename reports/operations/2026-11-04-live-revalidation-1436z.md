@@ -188,3 +188,10 @@ La lecture publique de `https://bot-wow.com/` et `https://bot-wow.com/buy` retou
 2. **P0 — Valider PR #77 :** attendre les checks du HEAD `502da4e`; corriger toute régression avant revue. Ne pas fusionner ou déployer le code paiement sans autorisation.
 3. **P0 — Valider PR #79 :** attendre UI quality sur le HEAD `85f6af3`, puis faire relire les pages et les six meta descriptions. Ne pas présenter le checkout comme disponible.
 4. **P1 — Conformité produit :** reprendre la PR #66 et son MVP non-automatisant avant acquisition de joueurs.
+
+
+### Source officielle — conformité Blizzard
+
+La version officielle de l'End User License Agreement de Blizzard, révisée le 21 mars 2024, interdit notamment de créer, utiliser, offrir, promouvoir, annoncer, mettre à disposition ou distribuer des bots non autorisés ; elle définit les bots comme des logiciels permettant le contrôle automatisé d'un jeu ou d'un personnage. Le comportement décrit publiquement par BOT-WOW (lecture du flotteur et clic automatisé) entre directement dans le périmètre de risque de cette règle. Ce n'est pas un avis juridique, mais cela rend la commercialisation auprès des joueurs du service Blizzard officiel non défendable sans autorisation explicite. Référence : https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement.
+
+Conséquence : donner la priorité à la PR #66 et à un MVP sans contrôle automatisé du jeu ; ne pas lancer d'acquisition ciblant les joueurs des serveurs officiels tant que l'autorisation n'est pas établie.
