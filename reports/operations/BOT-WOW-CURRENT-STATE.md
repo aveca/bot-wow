@@ -672,3 +672,98 @@ These are event counts, not unique visitors or sessions. Do not mix test events 
 - Its stated Worker gate uses `RELEASE_STATUS=open` to allow checkout. This must not be enabled before a verified artifact, dedicated BOT-WOW Mollie profile/credential, and end-to-end fulfillment proof exist.
 - Added a blocking review comment to PR #66 (comment ID `6641733281`) documenting these production contradictions and asking that the PR remain draft.
 - The pivot proposal `reports/compliance/PIVOT_NON_AUTOMATISANT.md` is a useful starting point: manual fishing-route planner, personal spot notebook, and offline yield simulator; no game-client reads, clicks, addon, process access, or bot binary. It is still a proposal, not an implemented or legally certified product. The next safe product-development step is a separate, non-deployed prototype of the manual planner, followed by a small demand test; do not market it as Blizzard-approved without legal review.
+
+
+---
+
+# P0.29 — vérification live et QA de la correction commerciale — 2026-11-04T21:12Z
+
+## GitHub — état vérifié
+
+- `main` : `83553e39d8d12c06f75d3f5ffee8f97109d8eec8` (inchangé pendant ce cycle).
+- 77 branches retournées par la recherche de branches (aucune page supplémentaire).
+- 18 PR ouvertes.
+- PR #83 reste ouverte, documentation opérationnelle.
+- PR #84 reste ouverte, non fusionnée : correction de cinq fichiers de copie EN/FR et tests.
+- PR #66 et #77 restent en draft ; aucune modification de leurs règles de vente ou de paiement.
+
+PR #84 :
+- Premier HEAD validé : `070da205053d0ba0c3b76c797c90ab22246fbdcc`.
+- Validate Bot-Wow : SUCCESS, run `41909760819`.
+- UI quality / Playwright / build / screenshots : SUCCESS, run `41909760921`.
+- Revue Codex automatique non terminée, la limite d'utilisation du service de revue a été atteinte ; ce n'est pas un résultat de test applicatif.
+- Revue manuelle de la nouvelle assertion de test : deux motifs regex de la page d'accueil étaient sur-échappés et le contrôle de périmètre prévu était trop permissif. Corrections poussées sur la même branche :
+  - `1c0074c739ebdae293e5aa7e24aad6ce13d7fbfb` : corrige les échappements des assertions.
+  - `b05c7a9a40b0ef0f6269e824025101e66dffcf02` : exige explicitement le texte de périmètre prévu.
+- Run UI quality du HEAD `b05c7a9` : `41913862099`, PENDING au dernier contrôle. Aucun résultat vert n'est encore revendiqué pour ce dernier HEAD.
+- La PR est mergeable au dernier contrôle, mais reste non fusionnée.
+
+## Site public — défaut commercial toujours live
+
+Vérification web du 2026-11-04 :
+- Accueil EN : l'avertissement indique que le paquet v1.2.0 n'est pas vérifié, mais le texte continue d'affirmer que la pêche « ships today ».
+- Achat EN : l'avis demande de ne pas acheter avant confirmation de livraison, mais le bloc « What ships today » affirme encore que tout est livré et fonctionne.
+- Prix affiché : 20,00 €.
+- Checkout : indisponible, formulaire/bouton désactivé, aucun paiement lancé.
+- La page FR /fr/buy n'a pas pu être lue par l'outil web pendant ce cycle ; son état live n'est pas confirmé.
+
+La PR #84 corrige précisément ces contradictions sur les quatre pages EN/FR. Aucun déploiement ni changement de production n'a eu lieu.
+
+## D1 production — lecture seule du 2026-11-04
+
+Les requêtes ont été exécutées via l'API Cloudflare D1 sur `botwow-production`. Toutes ont retourné `changed_db=false` et `rows_written=0`.
+
+- Commandes : 25 au total.
+  - Bitcoin manuel : 5 `paid` (les 5 adresses sont `@example.com`), 8 `pending_payment`, 1 `rejected`.
+  - Mollie : 11 `failed`.
+- Licences : 5.
+- Jetons de téléchargement : 5 (cela ne prouve pas un téléchargement).
+- Activations : 0.
+- Livraisons : 0.
+- Webhooks : 16 ; jointure correcte `webhook_events.id = 'payment:' || orders.provider_id` : 11 associés, 5 sans commande.
+- Aucun paiement commercial réel n'est démontré par ces données. CA commercial confirmé dans D1 : **0,00 €**.
+
+## Analytics production — événements, pas visiteurs uniques
+
+D1 `botwow-analytics`, `test=0`, au dernier relevé :
+- `page_view` : 1 593
+- `journey_view` : 621
+- `cta_click` : 48
+- `checkout_requested` : 29
+- `checkout_start` : 4
+- `checkout_created` : 6
+- `checkout_failed` : 6
+- `planner_mode` : 1
+- Aucun événement `payment_confirmed`, `conversion`, `delivery_sent` ou `activation` dans les résultats agrégés.
+
+Ce sont des événements bruts filtrés sur `test=0`, pas des sessions ou utilisateurs uniques.
+
+## Mollie — profil
+
+La lecture seule `ListProfiles` retourne un seul profil vérifié :
+- `pfl_t8KCk4Cm2C`
+- Site associé : `https://sargasses-martinique.com/`
+
+Aucun profil BOT-WOW dédié n'est visible. Ne pas réutiliser ce profil. Aucun registre de paiements Mollie n'a été interrogé et aucun paiement n'a été créé.
+
+## Worker
+
+L'API Cloudflare confirme que le dernier déploiement listé de `botwow-api` est :
+- Deployment : `36227a4d-00e7-4c9f-94e0-0913b29049bc`
+- Version : `c3dcc842-c422-42d3-9828-405f30d70b5f`
+- Créé le 2026-10-27T07:46:28Z.
+
+L'endpoint de contenu du Worker n'a pas fourni de bundle lisible via le connecteur Cloudflare durant ce cycle. Les marqueurs de code détaillés consignés dans la section P0.28 de cette PR restent des preuves antérieures ; ils ne sont pas revendiqués comme revérifiés aujourd'hui. Aucun déploiement Worker n'a eu lieu.
+
+## Conformité — précision importante sur le pivot
+
+La page officielle actuelle de l'EULA Blizzard, section 1.C.2, interdit notamment les bots non autorisés et les logiciels utilisables avec la plateforme qui changent ou facilitent le gameplay. Source : https://www.blizzard.com/en-us/legal/bfbbb648-bcc6-4b78-a5c7-e2fe20c135df/blizzard-end-user-license-agreement
+
+Conséquence : un planificateur explicitement conçu pour optimiser des rondes WoW ne peut pas être présenté comme « conforme » ou « sûr » simplement parce qu'il ne clique pas. Le pivot manuel WoW reste juridiquement non confirmé. Toute nouvelle offre doit être évaluée au regard de cette clause avant d'être commercialisée ; ne pas revendiquer une approbation Blizzard.
+
+## Décisions et prochaine action
+
+1. Terminer les contrôles CI sur le HEAD `b05c7a9` de PR #84. Si tous passent, intégrer la correction de copie par le processus autorisé et vérifier le site live.
+2. Garder le checkout fermé tant que le profil de paiement BOT-WOW, la livraison, le webhook, l'email et l'activation ne sont pas prouvés.
+3. Ne pas lancer le prototype de planificateur WoW comme pivot prétendument conforme ; d'abord cadrer un produit réellement indépendant du gameplay Blizzard ou obtenir une validation écrite.
+4. Ne pas compter les cinq commandes Bitcoin de test comme ventes.
