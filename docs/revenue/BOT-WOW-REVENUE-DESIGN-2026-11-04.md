@@ -136,3 +136,130 @@ Use a real first-payment mandate flow:
 ## Go-live requirements
 
 Use Mollie TEST mode and test email sink first. Once artifact integrity/install/delivery, first payment/mandate, renewal, cancellation, entitlement and rollback tests all pass, deploy the agreed three plans and checkout. Do not publish a subscription for a non-deliverable product. A production subscription charge is allowed only when all included benefits can be delivered and customer consent wording is explicit.
+
+
+## 10. SEO acquisition — technical and content plan
+
+### Existing SEO assets verified
+
+- sitemap.xml currently lists about 38 English/French URLs: home, features, fishing, demo, installation, compatibility, roadmap, modules, compare, FAQ, buy, documentation/changelog/known issues/license, and bilingual legal pages.
+- robots.txt allows public pages while disallowing /api/, /worker/, /backups/, /migrations/ and /tests/.
+- Homepage title currently targets WoW Classic fishing bot but the meta description and social snippets still advertise a €20 lifetime license.
+- buy.html and the site header also advertise €20 lifetime. This will conflict with the proposed monthly tier ladder unless updated consistently across all EN/FR pages and JSON-LD/sitemaps.
+- The existing sitemap is useful; do not create one thin page per keyword or replace the existing structure without reason.
+
+### Keyword intent clusters (hypotheses; no search-volume claims)
+
+High purchase intent:
+- WoW Classic fishing bot
+- WoW Classic fishing assistant
+- WoW Classic fishing automation
+- WoW Classic bot fishing
+- WoW Classic fishing bot Windows
+- Casinobabe fishing bot
+
+Research/consideration intent:
+- WoW Classic fishing guide
+- WoW Classic fishing spots by zone
+- how to level fishing in WoW Classic
+- WoW Classic float/bite detection
+- fishing route / fishing spot memory
+- install WoW Classic fishing addon
+
+Support / conversion assurance:
+- how to install Casinobabe
+- BOT-WOW compatibility WoW Classic 1.13
+- fishing bot setup and troubleshooting
+- update / licence / activation / refund questions
+
+Use Search Console impressions and actual queries to reorder these clusters. Do not invent keyword volumes, difficulty, positions or competitors' traffic. Do not publish content about Retail, Mac, expansion versions or private servers unless the exact tested scope is confirmed in the compatibility matrix.
+
+### Page architecture
+
+Create or improve only useful, differentiated pages:
+1. Main product / purchase page: one clear promise, real product screenshot, exact supported client, plan comparison and CTA.
+2. WoW Classic fishing assistant/bot page targeting purchase intent.
+3. WoW Classic fishing guide with useful and accurate progression advice.
+4. Fishing spots guide organized by tested zones and actual product capability.
+5. Setup/install/troubleshooting cluster with real screenshots and verified steps.
+6. Feature explanation pages: bite detection, spot memory, route planning — publish only when present in tested release.
+7. Comparison page clarifying what BOT-WOW does versus manual fishing and other addon categories; no unsupported competitor attacks or fake performance measurements.
+
+Every page needs unique title/H1/meta description, canonical, language alternate/hreflang, relevant internal links, date only when meaningfully updated, and a clear CTA matched to intent. Add breadcrumb and SoftwareApplication/Product structured data only when details and prices match the visible offer. Structured data does not guarantee enhanced search results.
+
+### Editorial proof standards
+
+- Use real screenshots, real release notes and measured results only.
+- Distinguish simulation from real in-game operation.
+- State exact WoW Classic client/build and Windows environment verified.
+- No "undetectable", "ban-safe", "zero risk", Blizzard endorsement or guarantee against penalties. Clearly state that automation may violate game terms and may lead to sanctions.
+- Do not fabricate testimonials, user counts, gold/hour results, download numbers, star ratings or availability dates.
+- Keep FR and EN articles genuinely localized, not duplicated machine translations.
+
+### Technical SEO checks
+
+- Validate robots.txt and sitemap.xml on production after build. Only canonical, indexable, HTTP 200 pages in sitemap.
+- Noindex checkout result, account, token, activation and utility endpoints.
+- Check canonical/hreflang reciprocity, duplicate EN/FR content, trailing-slash/redirect consistency, metadata, Open Graph, broken links and image alt text.
+- Keep page load fast, lazy-load media below fold, include intrinsic image dimensions and avoid heavy third-party scripts.
+- Preserve existing URL equity and redirects; do not rename all pages casually.
+- Use real video embeds with transcript/captions if video content exists; do not add VideoObject schema for a simulated demo.
+- Follow Google Search Central people-first and anti-spam guidance; no doorway pages, scaled low-value AI pages, hidden content, keyword stuffing, link schemes or fake reviews.
+
+## 11. Lead capture and early-access funnel
+
+The free browser demo should remain accessible without email. Do not force an email gate before the visitor sees the actual product value.
+
+Capture at high intent:
+- After demo completion: offer a "WoW fishing setup checklist" or early-access update signup.
+- On pricing selection: email capture for a saved quote or release availability.
+- If artifact is not verified: clearly named Early Access waitlist / preorder interest capture with a real delivery status and transparent refund terms.
+- If the artifact is verified: proceed to recurring checkout and deliver the install bundle after confirmed payment.
+- Ask for email and language only unless additional fields are necessary. Separate service updates from optional marketing consent and never pre-check.
+- Store consent version/time/source; support unsubscribe and deletion.
+- Do not email users from failed/pending orders unless they opted in to marketing or a legally valid transactional follow-up applies.
+
+Measure:
+- organic_landing_view;
+- feature_view / demo_start / demo_complete;
+- lead_form_view / lead_submit / email_verified;
+- tier_view / tier_select / recurring_consent;
+- first_payment_started / first_payment_paid / subscription_created;
+- download_started / download_completed / activation_success;
+- renewal_paid / renewal_failed / cancellation / access_expired.
+
+Never record paid conversion from browser redirect alone. Carry UTM parameters and the original landing page through checkout and webhook.
+
+## 12. Read-only production signals observed 2026-11-04
+
+Cloudflare D1 botwow-production:
+- 25 orders: 5 paid, 8 pending_payment, 11 failed and 1 rejected.
+- The five paid orders total €100 in the normalized EUR currency rows.
+- 5 licences.
+- 0 activations rows in the activations table.
+- 0 rows in the deliveries table.
+- 16 webhook_events.
+- The zero deliveries count does not prove no email was delivered; trace the real Resend delivery helper and provider response. Likewise, zero activations may indicate an unused path; reconcile with actual logs and licence API before claiming no users activated.
+- There are existing pending/failed orders worth investigating; do not send recovery messages without proper consent and do not expose customer email addresses in analytics.
+- R2 lists v1.2.0 zip 1,387,543 bytes; the actual checksum, archive integrity, Windows installation and customer delivery remain to be verified.
+
+## 13. Conversion funnel — one high-intent route
+
+Organic query → exact answer page → real product proof → demo → tier comparison → email / plan selection → disclosed recurring consent → Mollie first payment → confirmed subscription → verified download → activation → first successful use → renewal.
+
+Offer positioning:
+- ANGLER €4.99/month
+- PATHFINDER €7.99/month (recommend)
+- FOUNDER €9.99/month
+
+Monthly auto-renewal, cancel online, paid-through access retained. Do not collect recurring charges for a product that cannot be delivered. If package delivery is not ready, use a waitlist or transparent pre-order with refund terms and a substantiated delivery timeline; do not label that as instant access.
+
+## 14. Launch marketing loop
+
+- Publish one genuinely helpful topical page or tutorial at a time, tied to a verified capability.
+- Make short video demos from actual gameplay, each linking to the corresponding guide/plan page.
+- Reuse real support questions as FAQ/installation content.
+- Reach relevant WoW Classic communities and creators without unsolicited bulk promotion or spam.
+- Request honest feedback from actual users after activation; never manufacture reviews.
+- Build an organic referral mechanism only if it is measurable and does not reward fake signups.
+- Review organic query → demo → paid subscription weekly and update content based on GSC data, not guessed demand.
