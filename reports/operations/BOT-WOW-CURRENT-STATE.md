@@ -16,7 +16,7 @@
 
 | Élément | Valeur | Statut |
 |---|---|---|
-| `main` | `595e7acd` (merge PR #76, 2026-11-04T13:42:30Z) | MERGED |
+| `main` | `33becbf3` (merge PR #75, 2026-11-04T12:05:55Z) | MERGED |
 | PR #71 | « P0 — preuve de livraison v1.2.0 + garde + reprise idempotente » (`worker/index.js` **+185 / −72**, `tests/delivery-replay.test.mjs` 41 contrôles, intégration PR #19 + PR #44) | MERGED |
 | PR #73 | « retirer les règles www mortes et documenter la remediation zone-level » | MERGED (`dfc11582`, 08:18:44Z) |
 | GitHub Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** — en ligne |
@@ -24,7 +24,6 @@
 | GitHub Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** — en ligne |
 | PR #74 | « rafraîchir l'état courant après le merge de la PR #71 » — `reports/**` ajouté au `paths-ignore` de `pages.yml` | MERGED (`5fcaebe`, 11:34:39Z) |
 | PR #75 | « consigner la vérification du garde-fou commercial en production » | MERGED (`33becbf3`, 12:05:55Z) |
-| PR #76 | « recaler l'état courant sur les mesures du 2026-11-04T13:21:12Z » | MERGED (`595e7acd`, 13:42:30Z) |
 | **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on = 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — le code Worker de #70, #71 et #73 n'est pas en production |
 
 ### Mesures live du 2026-11-04T13:21:12Z (directement vérifiées, lecture seule)
@@ -160,12 +159,9 @@ n'a été créé, aucun email client envoyé.
 
 ## 0.8 Prochaine action (une seule)
 
-**Diagnostic du checkout Mollie (B1)** : établir la cause des 6 échecs du
-27/10 et débloquer le paiement — action de paiement réel, **autorisation
-explicite requise**. Tout le reste est déjà code, testé et mergé
-(#70, #71, #73) : Pages est à jour ; il reste le **déploiement Worker**, qui
-exige la même autorisation. Une seconde action, sans impact commercial, est
-**B11** (redirection `www` → apex au niveau zone Cloudflare).
+**P0 — preuve de paiement et de livraison** : les 11 commandes Mollie `failed/expired` n'expliquent pas à elles seules la cause initiale. Préparer un test contrôlé de bout en bout, puis le déploiement du Worker de #71 avec rollback ; paiement test, e-mail vers une boîte contrôlée et déploiement exigent une autorisation explicite. Voir les preuves D1 et Cloudflare du §0.9.
+
+**P0 — conformité produit** : PR #66 contient un audit et une proposition de pivot non-automatisant ; la commercialisation du bot de gameplay ne doit pas être promue auprès des joueurs de serveurs officiels tant que le périmètre d'autorisation n'est pas résolu.
 
 > Aucune offre n'est déclarée rentable : les données commerciales
 > sont insuffisantes (0,00 € encaissés, 0 client réel).
@@ -199,6 +195,12 @@ Comptes d'événements `test=0`, non assimilables à des visiteurs ou sessions u
 - Aucun événement `payment_confirmed`, `conversion`, `delivery_sent`, `delivery_failed` ou `activation` dans le regroupement courant.
 
 **Interprétation :** les 29 `checkout_requested` sont des intentions client, pas des paiements. Les événements serveur de checkout n'ont plus bougé depuis le 27 octobre ; aucun paiement confirmé ni fulfillment n'est mesuré.
+
+### Conformité plateforme — risque commercial P0
+- La page d'achat publique avertit explicitement que l'automatisation enfreint les conditions Blizzard et peut entraîner suspension ou bannissement.
+- La PR #66 est toujours ouverte en draft et contient le rapport de conformité du 2026-10-29 ainsi qu'une proposition de pivot non-automatisant : planificateur à saisie manuelle, carnet de spots et simulateur hors ligne, sans lecture d'écran, clic automatisé ni addon de contrôle.
+- Cette conclusion est un audit interne, pas un avis juridique ni une décision de Blizzard. Aucune autorisation explicite n'est identifiée dans le rapport ; le pivot n'est pas implémenté.
+- Ne pas promouvoir l'automatisation sur les serveurs officiels. Avant acquisition, décider entre une autorisation documentée pour un environnement qui permet explicitement l'automatisation et le pivot non-automatisant.
 
 ### Vérification publique et décision
 - `/buy` et `/fr/buy` affichent le blocage de disponibilité ; le formulaire est présenté comme indisponible.
