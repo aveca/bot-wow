@@ -57,6 +57,20 @@ for (const [page, file, claimRe] of [
     !/licence key and the download link are sent by email|la clé de licence et le lien de téléchargement sont envoyés par e-mail/i.test(flat));
 }
 
+for (const [page, file] of [
+  ['buy.html', 'buy.html'],
+  ['fr/buy.html', 'fr/buy.html'],
+  ['AB A buy.html', 'ab/a/buy.html'],
+  ['AB A fr/buy.html', 'ab/a/fr/buy.html'],
+  ['AB B buy.html', 'ab/b/buy.html'],
+  ['AB B fr/buy.html', 'ab/b/fr/buy.html'],
+]) {
+  const html = read(file);
+  const meta = (html.match(/<meta\s+(?:name|property)="(?:description|og:description)"[^>]*>/gi) || []).join(' ');
+  check(`${page} : les meta SEO ne promettent pas de livraison e-mail`,
+    !/delivered by email|sent by email|livr(?:é|ée) par e-mail|envoyé par e-mail/i.test(meta));
+}
+
 
 for (const [page, file, forbiddenClaim, blockedLabel] of [
   ['index.html', 'index.html', /Card payments via Mollie|Card payment is live through Mollie|Payment by <b[^>]*>Mollie<\/b>/i, /delivery not confirmed/i],
