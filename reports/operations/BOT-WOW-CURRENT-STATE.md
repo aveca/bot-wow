@@ -1,6 +1,6 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T18:20Z** (PR #78 et #80 fusionnées — CA BOT-WOW corrigé à 0,00 €, chemin de paiement réel mesuré, R18 fermé côté Sargasses)
+**Dernière mise à jour de ce document : 2026-11-04T23:48Z** (revalidation P0.32 — GitHub, Pages, Mollie, D1, Analytics et alias www) (PR #78 et #80 fusionnées — CA BOT-WOW corrigé à 0,00 €, chemin de paiement réel mesuré, R18 fermé côté Sargasses)
 
 ---
 
@@ -1014,3 +1014,112 @@ Comparaison de journalisation :
 Le bundle actif contient donc également des logs contenant des données personnelles et des clés de licence qui ont été redigés dans main.
 
 **Décision :** préparer le déploiement du Worker main avec un rollback vers la version 50, mais ne pas déployer dans ce cycle. Le Worker est le chemin paiement/livraison de production ; sa mise à niveau exige la confirmation d'un profil Mollie BOT-WOW dédié et une autorisation explicite. Ne pas réutiliser le profil Sargasses. Aucun POST, paiement, secret, binding ou déploiement n'a été effectué.
+
+
+---
+
+# P0.32 — Réconciliation live et blocages commerciaux — 2026-11-04T23:48Z
+
+## GitHub — état vérifié
+
+- Dépôt : `aveca/bot-wow`.
+- `main` : `3786bcec75a22a4a4af2c968c83ad39263cb7958` (merge PR #85).
+- Arbre Git récursif : 443 entrées, non tronqué.
+- Branches : 78.
+- PR ouvertes : 16.
+- PR #85 : MERGED ; son CI Validate + UI quality/Playwright est SUCCESS.
+- Run Validate sur le SHA main : `41927264705`, SUCCESS.
+- PR #81 : documentation ancienne, OPEN, non mergeable.
+- PR #77 : OPEN/DRAFT, `mergeable_state=dirty`; 3 fichiers, dont `worker/index.js` et `tests/payment-flow.test.mjs`.
+- PR #66 : OPEN/DRAFT, `mergeable_state=dirty`, 63 fichiers ; ne pas fusionner.
+- PR #67 : OPEN, `mergeable_state=dirty`, 56 fichiers ; instrumentation historique à réconcilier avant toute intégration.
+
+## Site public et Pages
+
+Lecture web directe du domaine apex :
+- `https://bot-wow.com/` : avertissement de livraison non vérifiée, prix unique 20 €, paiement unique, démo navigateur simulée.
+- `https://bot-wow.com/buy` : checkout indiqué temporairement indisponible ; le texte dit explicitement de ne pas payer tant que la livraison n'est pas confirmée.
+- `https://bot-wow.com/fr/buy.html` redirige vers `/fr/buy` et affiche le même état en français : 20,00 €, achat indisponible, livraison non confirmée.
+- Aucune preuve de checkout fonctionnel ou de paiement n'est déduite de la présence du formulaire HTML.
+
+Cloudflare Pages :
+- Projet `bot-wow`.
+- Déploiement production `5711fb21-f674-4bf2-9712-615a76ad4332`, commit `3786bcec75a22a4a4af2c968c83ad39263cb7958`, stage `deploy=success` à `2026-11-04T22:40:21Z`.
+- Domaines personnalisés apex et www : tous deux actifs.
+- Les previews sont désactivées.
+
+### Alias www — blocage de canonicalisation
+
+Lecture Cloudflare en lecture seule :
+- DNS `www.bot-wow.com` : CNAME vers `bot-wow.pages.dev`, `proxied=true`.
+- Le domaine www reste associé au projet Pages.
+- Aucun ruleset de redirection dynamique `http_request_dynamic_redirect` n'existe sur la zone ; l'endpoint d'entrypoint renvoie 404.
+- L'extraction web de `https://www.bot-wow.com/`, dont le crawl est daté de la semaine précédente, retourne une ancienne copie contenant encore des affirmations Mollie. Cette extraction n'est **pas** une preuve de la réponse d'origine actuelle : aucun GET no-cache ni en-tête CF-Cache-Status/Age/ETag n'a pu être obtenu dans cet environnement.
+
+Action préparée, non exécutée : créer une règle Cloudflare Single Redirect `www.bot-wow.com/*` vers l'apex en conservant chemin et query string, puis vérifier le domaine. Cela nécessite l'autorisation explicite prévue par AGENTS.md ; ne pas modifier DNS/rulesets ni retirer l'alias Pages sans cette autorisation.
+
+## Mollie — paiements BOT-WOW
+
+- `ListProfiles` retourne un seul profil vérifié : `pfl_t8KCk4Cm2C`, associé à `sargasses-martinique.com`.
+- Les 16 IDs Mollie référencés par les 11 commandes et 5 webhooks orphelins ont été relus individuellement via `GetPayment` en mode live, lecture seule.
+- Résultat : 16/16 `expired`, 16/16 montant `20.00 EUR`, 16/16 `method=null`, 16/16 `profile_id=pfl_t8KCk4Cm2C`.
+- Aucun profil BOT-WOW dédié n'est visible. Ne jamais utiliser le profil Sargasses pour BOT-WOW.
+
+### Correction d'un diagnostic de code
+
+Sur `main`, `createMolliePayment()` appelle `mollieFetch(..., true)` et `mollieFetch()` ajoute `profileId` dès que `MOLLIE_PROFILE_ID` est présent. Le code ne distingue donc pas encore une API Key Mollie (`test_*`/`live_*`) d'un token d'organisation.
+
+La PR #77 contient une proposition de distinction par type de credential, mais elle est en draft et en conflit. Les 16 paiements historiques sont tous rattachés au profil Sargasses ; cela établit la contamination de profil, pas la cause exacte de leur expiration.
+
+Les valeurs des secrets Cloudflare restent masquées. Le fait que les bindings existent ne prouve ni leur valeur ni leur validité.
+
+## D1 production — lecture seule
+
+Base `botwow-production` :
+- `bitcoin_manual/paid` : 5, toutes liées à des adresses `@example.com` ; commandes de test, pas des ventes.
+- `bitcoin_manual/pending_payment` : 8.
+- `bitcoin_manual/rejected` : 1.
+- `mollie/failed` : 11.
+- Licences : 5, toutes liées aux 5 commandes Bitcoin de test.
+- Jetons de téléchargement : 5 ; ils ne prouvent pas qu'un téléchargement a eu lieu.
+- `deliveries` : 0 ligne.
+- `activations` : 0 ligne.
+- `webhook_events` : 16 ; jointure `w.id = 'payment:' || o.provider_id` : 5 événements sans commande associée.
+- `botwow_emails` : 12 enregistrements, dont 11 adresses de test ; aucun n'établit une vente.
+
+Base `botwow-analytics`, événements (pas des utilisateurs/sessions uniques) :
+- `page_view` test=0 : 1 621 ; dernier événement `2026-11-04T22:39:12Z`.
+- `journey_view` test=0 : 635 ; dernier `22:39:09Z`.
+- `cta_click` test=0 : 48 ; dernier `02:47:00Z`.
+- `checkout_requested` test=0 : 29 ; dernier `02:47:00Z`.
+- `checkout_start` : 4 ; `checkout_created` : 6 ; `checkout_failed` : 6.
+- Aucun événement `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Les 235 page_view et 128 journey_view du 4 novembre sont des événements, pas des visiteurs uniques.
+
+Toutes les requêtes D1 de ce relevé sont des SELECT/PRAGMA : `changed_db=false`, `rows_written=0`.
+
+## Worker — état et divergence
+
+- Worker actif `botwow-api` : version 50, ID `c3dcc842-c422-42d3-9828-405f30d70b5f`.
+- Déploiement actif `36227a4d-00e7-4c9f-94e0-0913b29049bc`, créé le `2026-10-27T07:46:28.277Z`.
+- Aucun nouveau déploiement depuis cette version ; aucune annotation `workers/commit_sha`.
+- Les bindings `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` et `RESEND_API_KEY` existent par nom ; valeurs non visibles.
+- Le source main contient `resumeFulfillment` et les logs redigés. La dernière comparaison directe du bundle actif, consignée dans P0.31, indiquait que la version 50 n'avait pas `resumeFulfillment` et journalisait encore e-mail/clé de licence. La version active est inchangée ; le bundle brut n'a pas pu être relu par le connecteur Cloudflare pendant P0.32, donc cette comparaison reste la dernière preuve disponible.
+- Le statut effectif du secret `RELEASE_STATUS` n'est pas vérifié. Le checkout public reste fermé ; aucun POST n'a été envoyé.
+
+## Sécurité et cohérence d'offre — nouveaux points
+
+- Le source main génère les clés de licence avec `Math.random()`, alors que les jetons de téléchargement utilisent `crypto.getRandomValues()`. La génération des clés de licence devrait être durcie avec un CSPRNG et un test de régression. C'est un changement de sécurité : préparer le correctif dans une PR séparée, ne pas fusionner/déployer sans autorisation.
+- `DEFAULT_MAX_ACTIVATIONS = 2` dans le Worker, tandis que les pages annoncent une activation sur une machine. Décision produit requise ; ne pas modifier silencieusement la limite ni la promesse.
+- La commercialisation du bot automatisant le gameplay reste suspendue à une revue de conformité contractuelle. Ne pas supposer qu'un serveur privé ou un planificateur associé au gameplay est automatiquement autorisé.
+
+## Chiffre d'affaires et décision
+
+- Ventes commerciales payées et vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Aucun téléchargement client, e-mail client ou activation commerciale démontré.
+- Checkout public toujours fermé.
+
+## Une prochaine action prioritaire
+
+Préparer un correctif Mollie minimal et isolé (distinction API Key vs token d'organisation, tests unitaires) sur une branche propre depuis ce main, en laissant la PR en draft. Ne pas le déployer et ne pas créer de paiement tant qu'un profil BOT-WOW dédié et une credential BOT-WOW ne sont pas disponibles. Ensuite seulement, préparer le test contrôlé de bout en bout et le déploiement Worker avec rollback, sous autorisation explicite.
