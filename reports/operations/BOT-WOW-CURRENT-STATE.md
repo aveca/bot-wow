@@ -664,3 +664,11 @@ These are event counts, not unique visitors or sessions. Do not mix test events 
 1. Correct the contradictory purchase-page copy and add a regression test (safe, reversible, code-only PR).
 2. Keep the checkout blocked until a dedicated BOT-WOW Mollie profile/credential and a verified fulfillment artifact exist.
 3. Keep acquisition for the automated bot paused until the Blizzard compliance decision / non-automating product pivot is resolved.
+
+
+## PR #66 — safety review and pivot opportunity — 2026-11-04T20:48Z
+
+- PR #66 remains a 63-file draft and is **not safe to merge as-is**. Its purchase-page patch changes the v1.2.0 hero to “current release, download package verified” and promises email delivery after payment, while live EN/FR pages and production D1 still show release delivery unverified, 11 Mollie orders expired, and zero deliveries.
+- Its stated Worker gate uses `RELEASE_STATUS=open` to allow checkout. This must not be enabled before a verified artifact, dedicated BOT-WOW Mollie profile/credential, and end-to-end fulfillment proof exist.
+- Added a blocking review comment to PR #66 (comment ID `6641733281`) documenting these production contradictions and asking that the PR remain draft.
+- The pivot proposal `reports/compliance/PIVOT_NON_AUTOMATISANT.md` is a useful starting point: manual fishing-route planner, personal spot notebook, and offline yield simulator; no game-client reads, clicks, addon, process access, or bot binary. It is still a proposal, not an implemented or legally certified product. The next safe product-development step is a separate, non-deployed prototype of the manual planner, followed by a small demand test; do not market it as Blizzard-approved without legal review.
