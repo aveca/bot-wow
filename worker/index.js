@@ -2384,7 +2384,11 @@ async function handleResend(request, env2) {
     `).bind(email).first();
     if (license && license.token) {
       const downloadUrl = `https://api.bot-wow.com/api/download?t=${license.token}`;
-      await sendDeliveryEmail(env2, email, license.key, downloadUrl, license.lang || DEFAULT_LANG);
+      /* FIX P0 : l'endpoint de renvoi appelait un helper qui ne faisait que
+         LOGGER l'e-mail. Le client qui n'a pas recu sa licence et demande
+         un renvoi au support n'obtenait donc RIEN. On appelle maintenant le
+         VRAI envoyeur, en mode force (la demande est explicite). */
+      await sendDeliveryEmail2(env2, email, license.key, downloadUrl, license.lang || DEFAULT_LANG, null, { force: true });
     }
     return jsonResponse({ ok: true });
   } catch (error) {
@@ -2393,17 +2397,15 @@ async function handleResend(request, env2) {
   }
 }
 __name(handleResend, "handleResend");
-async function sendDeliveryEmail(env2, email, key, downloadUrl, lang) {
-  console.log("[EMAIL] Delivery email would be sent to:", email);
-  console.log("[EMAIL] Key:", key);
-  console.log("[EMAIL] Download URL:", downloadUrl);
-  console.log("[EMAIL] Language:", lang);
-}
-__name(sendDeliveryEmail, "sendDeliveryEmail");
-async function sendAdminNotification(env2, email, key) {
-  console.log("[ADMIN] New registration:", { email, key });
-}
-__name(sendAdminNotification, "sendAdminNotification");
+/* SUPPRIME (P0) : `sendDeliveryEmail` et `sendAdminNotification` ne
+   faisaient QUE LOGGER un envoi (« would be sent to: … »). Aucun e-mail
+   n'etait envoye. Ces deux helpers etaient utilises par :
+     - /api/resend          (demande de renvoi du client) ;
+     - /api/admin/licenses/resend (renvoi manuel depuis l'admin) ;
+   Les deux routes appellent maintenant `sendDeliveryEmail2`, le VRAI
+   envoyeur (Resend), avec consignation du resultat dans `deliveries`.
+   Conserver un faux « envoyer » accessible par erreur est un risque
+   commercial : on le supprime. */
 function jsonResponse(data, status = 200, extraHeaders = {}) {
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
@@ -3133,7 +3135,7 @@ function getClientIp2(request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
 __name(getClientIp2, "getClientIp");
-async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId) {
+async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId, options = {}) {
   // FIX 2026-10-21 : la livraison etait un simple console.log -> le client
   // ne recevait JAMAIS sa cle. On envoie reellement l'e-mail si une cle
   // d'envoi est configuree (Resend), sinon on conserve la commande et la
@@ -3141,20 +3143,24 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
   // dupliquer.
   // REJEU : si un envoi REUSSI est deja constate pour cette licence, on ne
   // renvoie pas un second e-mail au client. La reprise du webhook complete
-  // ce qui manque, elle ne spamme pas.
-  try {
-    const alreadySent = await env2.DB.prepare(
-      "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
-    ).bind(`%${key}%`).first();
-    if (alreadySent) {
-      console.log("[EMAIL] licence deja livree, aucun renvoi");
-      return { sent: true, reason: "already_sent" };
+  // ce qui manque, elle ne spamme pas. `force: true` (demande explicite du
+  // client via /api/resend) ignore ce garde-fou : le client a demande le
+  // renvoi, il doit l'obtenir.
+  if (!options.force) {
+    try {
+      const alreadySent = await env2.DB.prepare(
+        "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
+      ).bind(`%${key}%`).first();
+      if (alreadySent) {
+        console.log("[EMAIL] licence deja livree, aucun renvoi");
+        return { sent: true, reason: "already_sent" };
+      }
+    } catch (e) {
+      // La verification est un garde-fou, jamais un bloqueur : au pire, un
+      // e-mail en double peut partir, ce qui reste preferable a une licence
+      // jamais livree.
+      console.error("[EMAIL] verification de l'envoi precedent impossible", e && e.message);
     }
-  } catch (e) {
-    // La verification est un garde-fou, jamais un bloqueur : au pire, un
-    // e-mail en double peut partir, ce qui reste preferable a une licence
-    // jamais livree.
-    console.error("[EMAIL] verification de l'envoi precedent impossible", e && e.message);
   }
   const subject = lang === "en" ? "Your BOT-WOW licence and download link" : "Votre licence BOT-WOW et votre lien de téléchargement";
   const text = lang === "en" ? [
@@ -5617,8 +5623,19 @@ async function handleResendLicense(request, env2, corsHeaders2) {
   if (!license || !license.token) {
     return jsonError("not_found", "License or download token not found", 404, corsHeaders2);
   }
-  const downloadUrl = `https://botwow-api-staging.m4ngo.workers.dev/api/download?t=${license.token}`;
-  await sendDeliveryEmail(env2, license.email, license.key, downloadUrl, license.lang || "fr");
+  /* FIX P0 : deux defauts corriges ici.
+     1) l'URL pointait vers le Worker de STAGING
+        (botwow-api-staging.m4ngo.workers.dev) : le client recevait un lien
+        de telechargement qui ne fonctionne pas en production ;
+     2) l'envoi etait un simple console.log : le renvoi manuel depuis
+        l'interface d'administration n'envoyait RIEN au client.
+     On appelle donc le VRAI envoyeur, en mode force (demande explicite de
+     l'administrateur), avec le meme lien que la livraison d'origine. */
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${license.token}`;
+  const status = await sendDeliveryEmail2(env2, license.email, license.key, downloadUrl, license.lang || DEFAULT_LANG, null, { force: true });
+  if (!status.sent) {
+    return jsonError("send_failed", "Delivery email could not be sent: " + (status.reason || "unknown"), 502, corsHeaders2);
+  }
   return jsonResponse4({ ok: true, message: "Email resent" }, 200, corsHeaders2);
 }
 __name(handleResendLicense, "handleResendLicense");

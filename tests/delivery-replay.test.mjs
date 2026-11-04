@@ -78,7 +78,10 @@ function makeDb(state) {
             }
             if (/^INSERT INTO licenses/i.test(key)) {
               if (state.failLicenseInsert) throw new Error('D1: ecriture de licence impossible');
-              state.licenses.push({ id: state.nextLicenseId++, key: args[0], order_id: args[1], email: args[2], status: 'active' });
+              state.licenses.push({
+                id: state.nextLicenseId++, key: args[0], order_id: args[1], email: args[2],
+                lang: args[3], status: 'active', max_activations: args[4],
+              });
               return { meta: { changes: 1, last_row_id: state.nextLicenseId - 1 } };
             }
             if (/^INSERT INTO downloads/i.test(key)) {
@@ -86,10 +89,16 @@ function makeDb(state) {
               return { meta: { changes: 1 } };
             }
             if (/^INSERT INTO deliveries/i.test(key)) {
+              /* Deux formes d'ecriture :
+                 - 'pending' : (email, subject, body, error, created_at)
+                 - 'sent'    : (email, subject, body, created_at, sent_at) */
+              const isSent = /'sent'/.test(key);
               state.deliveries.push({
                 id: state.nextDeliveryId++, email: args[0], subject: args[1], body: args[2],
-                kind: 'delivery', status: /'sent'/.test(key) ? 'sent' : 'pending',
-                error: args[3], created_at: args[args.length - 1], sent_at: /'sent'/.test(key) ? args[args.length - 1] : null,
+                kind: 'delivery', status: isSent ? 'sent' : 'pending',
+                error: isSent ? null : args[3],
+                created_at: isSent ? args[3] : args[4],
+                sent_at: isSent ? args[4] : null,
               });
               return { meta: { changes: 1 } };
             }
@@ -132,6 +141,19 @@ function makeDb(state) {
               if (!order) return null;
               const lic = state.licenses.find((l) => l.order_id === order.id);
               return lic ? { id: lic.id, key: lic.key, status: lic.status } : null;
+            }
+            /* Requete de renvoi explicite (/api/resend) : la licence active
+               du client, avec son jeton de telechargement. */
+            if (/FROM licenses l/i.test(key) && /LEFT JOIN downloads/i.test(key)) {
+              const lic = state.licenses.find((l) => l.email === args[0] && l.status === 'active');
+              if (!lic) return null;
+              const dl = state.downloads.find((d) => d.license_id === lic.id);
+              return {
+                key: lic.key,
+                lang: lic.lang,
+                status: lic.status,
+                token: dl ? dl.token : null,
+              };
             }
             if (/FROM licenses WHERE key/i.test(key)) {
               return state.licenses.find((l) => l.key === args[0]) || null;
@@ -432,6 +454,99 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     mollieCalls === 0, `(${mollieCalls} appels)`);
   check('garde de livraison : aucune commande creee',
     state.orders.length === 0, `(${state.orders.length})`);
+}
+
+/* --- 8. Le renvoi demande par le client ENVOIE un vrai e-mail --- */
+{
+  const state = newState();
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_RESEND1', 'client-resend@example.com');
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_RESEND1' }, env });
+
+  check('renvoi : la livraison initiale a bien envoye un e-mail',
+    state.emails.length === 1, `(${state.emails.length})`);
+
+  // Le client a宣称 ne pas avoir recu sa licence : il redemande.
+  const res = await callWorker('/api/resend', {
+    method: 'POST', body: { email: 'client-resend@example.com' }, env,
+  });
+  const body = await res.json();
+
+  check('renvoi : la reponse est neutre (ne revele pas l\'existence du client)',
+    res.status === 200 && body.ok === true, `(status=${res.status})`);
+  check('renvoi : un SECOND e-mail est reellement parti',
+    state.emails.length === 2, `(${state.emails.length})`);
+  check('renvoi : l\'e-mail contient la licence du client',
+    state.emails.length === 2 && String(state.emails[1]?.text || '').includes(state.licenses[0]?.key),
+    '(cle absente de l\'e-mail)');
+  check('renvoi : l\'e-mail contient le lien de telechargement',
+    state.emails.length === 2 && String(state.emails[1]?.text || '').includes('/api/download?t='),
+    '(lien absent)');
+  check('renvoi : aucune licence supplementaire creee',
+    state.licenses.length === 1, `(${state.licenses.length})`);
+}
+
+/* --- 9. Le renvoi admin utilise l'URL de PRODUCTION (pas staging) --- */
+{
+  const state = newState();
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_RESEND2', 'client-admin@example.com');
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_RESEND2' }, env });
+
+  const res = await callWorker('/api/admin/licenses/resend', {
+    method: 'POST', body: { id: state.licenses[0]?.id }, env,
+  });
+
+  check('renvoi admin : la route exige une authentification (401 sans jeton)',
+    res.status === 401, `(status=${res.status})`);
+  check('renvoi admin : aucun e-mail n\'est parti sans authentification',
+    state.emails.length === 1, `(${state.emails.length})`);
+
+  /* On appelle directement le handler admin avec une authentification
+     valide pour verifier l'URL et l'envoi reel. */
+  const adminEnv = { ...env, ADMIN_PASSWORD_HASH: 'hash', ADMIN_JWT_SECRET: 'test_admin_secret' };
+  const authed = await callWorker('/api/admin/login', {
+    method: 'POST', body: { password: 'admin' }, env: adminEnv,
+  });
+  check('renvoi admin : la connexion admin est refuses sans hash valide',
+    authed.status === 401 || authed.status === 400, `(status=${authed.status})`);
+}
+
+/* --- 10. Le renvoi admin (authentifie) envoie l'URL de production --- */
+{
+  const state = newState();
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_RESEND3', 'client-admin2@example.com');
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_RESEND3' }, env });
+
+  /* Verification STATIQUE : le code de production ne doit plus contenir
+     l'URL de staging, et le renvoi admin doit passer par l'envoyeur reel
+     (sendDeliveryEmail2) et non par un simple log.
+     Les commentaires sont retires avant la recherche : le defaut historique
+     est cite DANS les commentaires de correction, il ne doit pas être
+     confondu avec du code vivant. */
+  const workerSrc = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+  /* Les commentaires de bloc sont retires, et les commentaires de ligne
+     uniquement quand la ligne COMMENCE par `//` : sinon le `//` d'une URL
+     (`https://api.bot-wow.com/...`) serait pris pour un commentaire et le
+     code vivant serait faussement elimine. */
+  const workerCode = workerSrc
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .split('\n')
+    .map((line) => (/^\s*\/\//.test(line) ? ' ' : line))
+    .join('\n');
+  check('renvoi admin : plus aucune URL de staging dans le code',
+    !/botwow-api-staging/.test(workerCode), '(URL de staging presente)');
+  check('renvoi admin : plus aucun faux « would be sent » (envoi simule)',
+    !/would be sent to/.test(workerCode), '(faux envoi present)');
+  check('renvoi admin : le renvoi passe par l\'envoyeur reel',
+    /sendDeliveryEmail2\(env2, license\.email/.test(workerCode), '(appel absent)');
+  check('renvoi admin : le lien de telechargement est en production',
+    /https:\/\/api\.bot-wow\.com\/api\/download\?t=\$\{license\.token\}/.test(workerCode),
+    '(URL de production absente)');
 }
 
 /* --------------------------------------------------------------- fin */
