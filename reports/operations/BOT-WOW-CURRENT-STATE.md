@@ -960,6 +960,7 @@ Structure ZIP :
 - `MANIFEST.json` décompressé : `version=1.2.0`, `builtAt=2026-10-21T00:42:58`.
 - 26 fichiers répertoriés dans le manifeste.
 - 26/26 fichiers présents ; SHA-256 et taille décompressée correspondent exactement au manifeste.
+- 30/30 entrées ZIP décompressées ; CRC32 et tailles non compressées correspondent au répertoire central pour les 30 entrées.
 - Aucun écart de hash ou de taille.
 
 **Conclusion limitée mais positive : l'objet actuellement présent dans le bucket BOT-WOW est intègre par rapport à son manifeste interne et à l'empreinte SHA-256 de référence.**
