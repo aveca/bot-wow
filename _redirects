@@ -29,12 +29,39 @@
 # renvoyaient TOUS DEUX 200 avec un contenu identique (40 340 octets). Le
 # canonical declare dans les pages pointait bien vers l'apex, mais aucune
 # redirection HTTP n'existait : le signal de consolidation etait uniquement
-# declaratif. Redirection 301 explicite, permanente, sans effet sur le
-# contenu ni sur le checkout.
+# declaratif.
 #
-# Cloudflare Pages applique les redirections meme quand un asset existe :
-# la regle gagne sur le cache. Le site est aussi publie sur GitHub Pages,
-# qui n'applique PAS ce fichier : le www y reste servi en 200 (limite
-# documentee dans reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md).
-https://www.bot-wow.com/*  https://bot-wow.com/:splat  301
-https://www.bot-wow.com  https://bot-wow.com/  301
+# CORRECTION 2026-11-04 (apres deploiement reel) : les deux regles
+# "https://www.bot-wow.com/*" ajoutees en PR #70 sont INOPERANTES et ont
+# ete RETIREES. Cloudflare Pages ne supporte PAS les redirections par
+# domaine dans ce fichier : la documentation officielle indique
+# explicitement "Domain-level redirects : non supporte" (tableau des
+# capacites, https://developers.cloudflare.com/pages/configuration/redirects/).
+# La source d'une regle doit etre un CHEMIN de fichier, pas un nom d'hote.
+#
+# Verification en production, apres le deploiement Pages du merge e2a9338 :
+#   GET https://www.bot-wow.com/  ->  HTTP 200 (toujours pas de 301)
+#   GET https://bot-wow.com/       ->  HTTP 200
+#   les deux pages servent le meme contenu (stamp d'assets cb3925b6)
+#   -> la regle etait bien ignoree, sans effet de bord.
+#
+# REMEDIATION (hors depot, necessite une autorisation explicite) :
+# la consolidation www -> apex doit etre fait au niveau de la ZONE
+# Cloudflare, pas dans ce fichier :
+#   1. creer une regle "Single Redirect" (Redirect Rules) sur la zone
+#      bot-wow.com :
+#      source  = http(s)://www.bot-wow.com/*
+#      cible   = https://bot-wow.com/:splat
+#      statut  = 301 ;
+#   2. faire pointer le DNS "www" vers l'apex via un enregistrement
+#      proxied (A 192.0.2.0 / CNAME apex), comme decrit par la
+#      documentation Cloudflare "Redirect between www and root domain" ;
+#   3. supprimer www.bot-wow.com comme "custom domain"/alias du projet
+#      Pages pour eviter que Pages continue de servir le www en 200.
+# Rollback : supprimer la regle Redirect Rules et re-pointer le DNS.
+#
+# En attendant, le signal SEO repose sur <link rel="canonical"> (apex) et
+# sur le sitemap, qui pointent deja vers https://bot-wow.com/.
+#
+# Note : le deploiement GitHub Pages n'applique pas non plus ce fichier
+# (limite documentee dans reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md).

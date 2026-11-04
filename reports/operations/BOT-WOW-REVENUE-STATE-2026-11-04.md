@@ -69,15 +69,53 @@ non-API répond désormais **308 → `https://bot-wow.com/<chemin>`**.
 Taille du Worker : **244 178 → 116 431 octets**. Aucune promesse interdite
 ne subsiste dans l'artefact déployé (vérifié par `tests/legacy-landing.test.mjs`).
 
-### 1.4 www et redirections
+### 1.4 www et redirections — CORRECTION PARTIELLE, puis CORRECTION DE LA CORRECTION
 
-**[V]** `https://www.bot-wow.com/` et `https://bot-wow.com/` renvoyaient
+**[V, avant]** `https://www.bot-wow.com/` et `https://bot-wow.com/` renvoyaient
 **tous deux 200** avec un contenu **identique** (40 340 octets). Le canonical
 déclaratif pointait vers l'apex, mais **aucune redirection HTTP n'existait**.
 
-**Correction :** règle 301 `www.bot-wow.com/* → bot-wow.com/:splat` ajoutée
-dans `_redirects`. Cloudflare Pages l'applique ; **GitHub Pages n'applique pas
-`_redirects`** — le www y reste servi en 200 (limite documentée, §6).
+**Première correction (PR #70)** : règle 301 `www.bot-wow.com/* →
+bot-wow.com/:splat` ajoutée dans `_redirects`.
+
+**[V, après déploiement réel]** — **la règle est INOPÉRANTE**. Après le
+merge de la PR #70 (`e2a9338`) et le déploiement Cloudflare Pages
+correspondant (`36477d7d-d656-4df8-9ab2-2b86797aaf56`, production) :
+
+| Requête | Résultat mesuré |
+|---|---|
+| `GET https://www.bot-wow.com/` | **HTTP 200** (pas de 301) |
+| `GET https://bot-wow.com/` | HTTP 200 |
+| `GET https://36477d7d.bot-wow.pages.dev/` | HTTP 200 |
+| stamp d'assets des 3 réponses | `cb3925b6` → **le nouveau déploiement est bien en production** |
+
+**Cause (documentée, pas devinée) :** Cloudflare Pages **ne supporte pas les
+redirections par domaine** dans `_redirects`. La table des capacités de la
+documentation officielle indique explicitement
+« Domain-level redirects : ❌ » : la source d'une règle doit être un
+**chemin de fichier**, pas un nom d'hôte
+(https://developers.cloudflare.com/pages/configuration/redirects/).
+GitHub Pages n'applique pas `_redirects` du tout.
+
+**Conséquence :** les deux règles `https://www.bot-wow.com/*` ont été
+**retirées** de `_redirects` (une configuration morte qui laisse croire à
+une consolidation qui n'existe pas est pire que son absence). La
+consolidation www → apex doit être faite **au niveau de la zone
+Cloudflare** :
+
+1. une règle **Single Redirect** (Redirect Rules) sur la zone :
+   `www.bot-wow.com/*` → `https://bot-wow.com/:splat`, statut **301** ;
+2. un enregistrement DNS **proxied** pour `www` pointant vers l'apex
+   (A `192.0.2.0` / CNAME apex) — procédure Cloudflare
+   « Redirect between www and root domain » ;
+3. le retrait de `www.bot-wow.com` comme alias du projet Pages, sinon
+   Pages continue de servir le www en 200.
+
+Rollback : suppression de la règle + re-pointage du DNS. **Cette action est
+hors dépôt et exige une autorisation explicite** (production).
+
+En attendant, le signal SEO repose sur `<link rel="canonical">` (apex) et sur
+le `sitemap.xml`, qui pointent déjà vers `https://bot-wow.com/`.
 
 ### 1.5 Contradiction de garantie restante — NON corrigée (décision requise)
 
@@ -213,8 +251,8 @@ Aucune conclusion de rentabilité n'est possible sur ce jeu de données.
 |---|---|---|---|---|
 | **B1** | **Checkout Mollie en échec systématique (6/6)** | D1 analytics : `checkout_created`=6, `checkout_failed`=6 | **Bloqueur total** : aucun euro ne peut entrer | **NON — autorisation requise** |
 | **B2** | Aucune donnée client (commandes = `example.com`) | D1 `botwow-production` | Aucun marché, aucune preuve de valeur | Non (business) |
-| **B3** | Pages legacy live sur `api.bot-wow.com/{de,en,es,pt,ru}/` | HTTP 200 + contenu mesuré | Risque SEO + promesse « 0 € » en data structurée | **OUI** (code) — déploiement à confirmer |
-| **B4** | `www` dupliqué sans redirection 301 | HTTP 200 identique sur les deux hôtes | Signal de consolidation déclaratif seulement | **OUI** (code) |
+| **B3** | Pages legacy live sur `api.bot-wow.com/{de,en,es,pt,ru}/` | HTTP 200 + contenu mesuré | Risque SEO + promesse « 0 € » en data structurée | **OUI** (code, PR #70) — **NON déployé** : le Worker n'a pas été redéployé (autorisation) |
+| **B4** | `www` dupliqué sans redirection 301 | HTTP 200 identique sur les deux hôtes | Signal de consolidation déclaratif seulement | **NON résolu** — la règle `_redirects` est inopérante (Pages ne supporte pas les redirections par domaine, §1.4) ; correctif **zone-level** hors dépôt, **autorisation requise** |
 | **B5** | Tunnel non dédupliqué | Schéma `events` sans unicité | Taux d'intention inexploitables | **OUI** |
 | **B6** | Test et réel indiscernables | `test` toujours à 0 | Revenu potentiellement faux | **OUI** |
 | **B7** | Activation jamais mesurée | `activations` = 0 ligne | Dernière étape du tunnel invisible | **OUI** (code) |
@@ -241,14 +279,20 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 
 | Élément | Valeur |
 |---|---|
-| Commits | voir §7 (section « Branche / PR » de `BOT-WOW-CURRENT-STATE.md`) |
+| PR | **#70 — MERGED** le 2026-11-04T07:57:11Z, merge commit `e2a93384ff499b8364d2f78f4f0ec1d3dcfab26c` |
+| Branche | `revenue/offre-unique-funnel-dedup-20261104` (base `origin/main` @ `2edd74b`) |
+| Commits | `34b8ac8` (code + tests) · `cbcbf3b` (rapport) · `b164102` (état courant) · `e3bc7a2` (spec reprise de #69) |
+| CI sur `e3bc7a2` | `validate` **pass** (10 s) · `ui-quality` **pass** (2 min 13 s) · GitGuardian **pass** |
+| CI sur `e2a9338` (main) | `Validate Bot-Wow` **success** · `Deploy Bot-Wow to GitHub Pages` **success** |
 | Tests ajoutés | `tests/legacy-landing.test.mjs` (34 assertions) · `tests/payment-mode.test.mjs` (15) · `tests/funnel-dedup.test.mjs` (9) |
 | Tests réparés | `tests/funnel.test.mjs` — 36 assertions, **0 échec** (8 échecs avant, jamais exécuté par la CI) |
 | `npm test` | **exit 0** — 21 suites, dont les 4 tests de tunnel |
 | `npm run validate` | **exit 0** |
 | `git diff --check` | PASS |
-| Déploiement Worker | `c3dcc842-c422-42d3-9828-405f30d70b5f` = version **active avant** déploiement → **cible de rollback** |
-| Statut production | cf. `BOT-WOW-CURRENT-STATE.md` §« Branche / PR » |
+| **Pages — production** | Cloudflare Pages deployment `36477d7d-d656-4df8-9ab2-2b86797aaf56` (production, source `e2a9338`) **en ligne** ; GitHub Pages run `41795832840` **success** |
+| **Worker — production** | **inchangé** : `c3dcc842-c422-42d3-9828-405f30d70b5f` (27/10 07:46) → **cible de rollback** ; **non redéployé** (autorisation requise, AGENTS.md) |
+| **Vérification live après déploiement** | `https://bot-wow.com/` → 200, stamp `cb3925b6` (nouveau build) · `https://bot-wow.com/worker/index.js` → **404** (pas d'exposition de source) · `https://bot-wow.com/package.json` → **404** · `https://api.bot-wow.com/api/config` → `priceEur: 20` **inchangé** · `https://api.bot-wow.com/de/` → **200 + contenu legacy** (Worker non redéployé, attendu) · `https://www.bot-wow.com/` → **200** (redirection www inopérante, §1.4) |
+| Statut production | cf. `BOT-WOW-CURRENT-STATE.md` §0 |
 
 ---
 
@@ -260,14 +304,19 @@ Ce diagnostic est donc laissé documenté, pas contourné.
   `worker/index.js` entre le 22/10 et `main` est de **+103 / −112 lignes**.
   Le schéma D1 production est à jour (migrations `0001`→`0004` appliquées
   le 23/10 ; `0003` analytics appliquée) : le risque de schéma est écarté.
+  **Le correctif §1.3 (308 sur les routes legacy), §2.3 (test/live,
+  activation) et la redaction des logs ne sont donc PAS en production** :
+  ils exigent le déploiement du Worker, qui embarque le delta non revu du
+  22/10 → 27/10 (chemin de paiement) → **autorisation explicite requise**.
 - **[N]** Aucun paiement réel n'a été créé ni vérifié (ni checkout, ni
   webhook). Les tests Mollie sont **simulés** par interception de `fetch`.
 - **[N]** Aucun e-mail n'a été envoyé. `RESEND_API_KEY` est présent comme
   secret ; la table `deliveries` ne conserve que les échecs : il n'existe
   **aucun reçu durable** de livraison.
-- **[N]** Le `www` restera en 200 sur GitHub Pages (qui n'applique pas
-  `_redirects`) tant qu'une redirection n'est pas configurée au niveau de
-  l'hôte.
+- **[N]** Le `www` reste servi en **200** : la redirection doit être
+  configurée **au niveau de la zone Cloudflare** (règle Redirect Rules +
+  DNS proxied), pas dans `_redirects` (§1.4). Ni Cloudflare Pages ni
+  GitHub Pages n'appliquent une redirection par domaine.
 - **[N]** `demo_open` / `offer_view` à 0 ligne : cause non établie (page
   réellement visitée ? bloqueur d'`IntersectionObserver` ? collecte
   désactivée par Do Not Track ?).
