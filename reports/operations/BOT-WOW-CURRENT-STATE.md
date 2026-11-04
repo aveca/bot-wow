@@ -1,5 +1,84 @@
 # BOT-WOW — État courant Factory V3
 
+**Dernière mise à jour : 2026-11-04T17:14Z** — revalidation de main, Cloudflare Pages, Worker, D1 et parcours public après PR #79 ; réconciliation du chiffre d'affaires dans la PR #80.
+
+---
+
+## 0.0.1 — Snapshot opérationnel vérifié, 2026-11-04T17:14Z
+
+### GitHub et livraison Pages
+
+| Élément | État vérifié |
+|---|---|
+| Dépôt | `aveca/bot-wow` uniquement |
+| `main` | `657921ea892130019e2eb17518d8bc36e6a2c60d` |
+| PR #79 | fusionnée le 2026-11-04T16:50:27Z ; correction des huit surfaces d'achat EN/FR et variantes A/B |
+| Cloudflare Pages | déploiement production `68191ea2-542a-44e7-bb32-3e9705c316e0`, créé à 16:50:29Z, étape `deploy=success`, commit source = SHA de main ci-dessus |
+| PR #80 | ouverte, documentation revenue + présent snapshot ; CI du HEAD précédent : Validate et UI quality SUCCESS |
+| PR #78 | ouverte, documentation opérationnelle ; CI SUCCESS ; branche basée sur l'ancien main `595e7acd`, aucune fusion effectuée |
+| PR #77 | draft/open ; CI SUCCESS ; correctif de transport `profileId` uniquement, pas une séparation de profil/compte |
+| PR #66 | draft/open ; pivot conformité non automatisant non décidé |
+
+Le workflow Pages ignore `reports/**` : ce snapshot documentaire ne doit pas provoquer un nouveau déploiement applicatif. Aucun merge sur main n'est effectué ici.
+
+### Pages publiques — source et vérification live à distinguer
+
+- Le déploiement Cloudflare Pages du commit `657921e` est directement confirmé SUCCESS.
+- Le code de main ne contient plus de badge Mollie actif, de promesse de redirection Mollie ni de promesse de livraison e-mail déjà certifiée sur les huit surfaces EN/FR et A/B. Les tests `release-availability.test.mjs` et `ab-variants.test.mjs` couvrent ces interdictions ; la recherche du dépôt pour les anciennes chaînes de paiement actif ne retourne aucun résultat.
+- La lecture textuelle web disponible de la homepage et de `/buy` retourne toutefois encore des fragments anciens (« Payment by Mollie », redirection Mollie, paiement prétendument actif) alors que le source et le commit déployé les ont supprimés. Cette lecture peut être un cache/index périmé ; **l'HTML réellement servi après GET no-cache / navigateur n'est pas encore départagé**. Ne pas modifier de nouveau le code avant cette vérification directe.
+- Le message de sécurité actuel reste : checkout désactivé, livraison v1.2.0 non confirmée, ne pas payer.
+
+### Worker et intégrations
+
+- Worker de production : `botwow-api`. Dernier événement de déploiement observé : 2026-10-27T07:46:28Z ; aucune version Worker liée au commit main du 04/11 n'a été déployée.
+- La version de code observée dans le rapport revenue est la version #49 du 27/10, sans annotation `commit_sha` rattachable au dépôt.
+- Les noms de bindings `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` et `RESEND_API_KEY` sont présents dans les paramètres Worker. **Leurs valeurs sont masquées et leur validité n'est pas démontrée** par leur seule présence.
+- Les objets Mollie historiques de BOT-WOW portent un profil partagé/non dédié à BOT-WOW. La PR #77 corrige le transport conditionnel de `profileId`, mais ne crée ni ne prouve un profil BOT-WOW séparé. **Ne pas réutiliser ce profil pour encaisser BOT-WOW.**
+- Le code de main garde `RELEASE_STATUS` en échec fermé par défaut (`pending`) et refuse le checkout tant que le statut serveur n'est pas explicitement `confirmed`. Aucune valeur secrète n'a été lue ou modifiée.
+
+### D1 production — lecture seule, aucun changement écrit
+
+Requêtes Cloudflare D1 en lecture seule ; réponses : `changed_db=false`, `rows_written=0`.
+
+| Mesure | Résultat |
+|---|---:|
+| Commandes | 25 |
+| `bitcoin_manual / paid` | 5 lignes, 100,00 € nominaux — données de test (`@example.com`, TXID de test et adresse BTC placeholder) |
+| `bitcoin_manual / pending_payment` | 8 lignes, 160,00 € nominaux |
+| `bitcoin_manual / rejected` | 1 ligne, 20,00 € nominaux |
+| `mollie / failed` | 11 lignes, 220,00 € nominaux ; statut Mollie `expired` sur 11/11, mode `live`, `method=null`, `paidAt=null` |
+| Licences | 5, toutes reliées aux 5 commandes Bitcoin de test |
+| Activations | 0 |
+| Livraisons enregistrées / envoyées | 0 / 0 |
+| Webhooks | 16 traités ; 11 reliés à une commande après normalisation de l'identifiant `payment:`, 5 sans commande associée |
+| Revenu réellement encaissé et confirmé | **0,00 €** |
+
+Les 100,00 € des cinq lignes `paid` ne sont pas du revenu : les cinq adresses e-mail sont des données `example.com`, les références de transaction sont des valeurs de test et l'adresse BTC est un placeholder. Les 11 paiements Mollie ont expiré sans moyen de paiement ni date de règlement. Aucun paiement réel n'est prouvé.
+
+### Funnel — D1 Analytics, depuis le 2026-10-22, `test=0`
+
+| Événement | Nombre |
+|---|---:|
+| `page_view` | 1 554 |
+| `journey_view` | 596 |
+| `cta_click` | 48 |
+| `checkout_requested` | 29 |
+| `checkout_start` | 4 |
+| `checkout_created` | 6 |
+| `checkout_failed` | 6 |
+| `payment_confirmed`, `conversion`, `delivery_sent`, `activation` | 0 |
+
+Ces valeurs sont des volumes d'événements, pas des visiteurs uniques ni des ventes. Les six événements `checkout_failed` sont historiques et associés à des paiements Mollie expirés ; ils ne prouvent pas six paiements techniques rejetés.
+
+### Décision et prochain verrou
+
+**Checkout maintenu fermé. Revenu confirmé : 0,00 €.** La priorité n'est pas d'acheter du trafic : elle est de séparer le compte/profil Mollie BOT-WOW, de certifier l'artefact v1.2.0 et la livraison post-paiement, puis d'obtenir une autorisation explicite pour un test de paiement de bout en bout. Aucune création de paiement, aucun e-mail, aucune modification de secret, aucun changement de prix et aucun déploiement Worker n'ont été effectués.
+
+Le produit automatise des actions dans WoW ; le risque de non-conformité aux conditions de Blizzard est explicite dans les pages publiques et `PRODUCT.md`. La décision de conformité/pivot documentée dans la PR #66 doit rester visible avant toute accélération commerciale.
+
+---
+
+
 **Dernière mise à jour de ce document : 2026-11-04T13:21Z** (revérification
 post-merge PR #71, #73, #74 et #75 — preuve de livraison v1.2.0 + garde commercial)
 
