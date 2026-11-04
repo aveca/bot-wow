@@ -49,6 +49,12 @@ for (const [page, file, claimRe] of [
     /20,00\s*€/.test(html));
   check(`${page} : CTAs instrumentes pour la mesure`,
     (html.match(/data-cta-id="buy-/g) || []).length >= 3);
+  check(`${page} : aucun badge ne suggère un paiement Mollie actif`,
+    !/Payment by <b[^>]*>Mollie<\/b>|Paiement par <b[^>]*>Mollie<\/b>/i.test(flat));
+  check(`${page} : aucune redirection Mollie n’est promise`,
+    !/you are redirected to Mollie|vous êtes redirigé vers Mollie/i.test(flat));
+  check(`${page} : aucun e-mail de livraison n’est présenté comme déjà certifié`,
+    !/licence key and the download link are sent by email|la clé de licence et le lien de téléchargement sont envoyés par e-mail/i.test(flat));
 }
 
 
