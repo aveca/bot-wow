@@ -709,6 +709,12 @@ Vérification web du 2026-11-04 :
 
 La PR #84 corrige précisément ces contradictions sur les quatre pages EN/FR. Aucun déploiement ni changement de production n'a eu lieu.
 
+Configuration Cloudflare Pages relue en lecture seule :
+- Projet `bot-wow`, branche de production `main`.
+- Déploiements de production activés ; previews désactivées (`preview_deployment_setting=none`).
+- Dernier déploiement production : `afa6e83a-de94-4d4e-a118-8c61f61bb11a`, commit `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`, statut `success`, terminé le 2026-11-04T18:28:42Z.
+- Une fusion de PR #84 sur `main` déclenchera donc le déploiement de production Pages. Le rollback applicatif est possible par revert du commit de merge, suivi d'une nouvelle vérification live.
+
 ## D1 production — lecture seule du 2026-11-04
 
 Les requêtes ont été exécutées via l'API Cloudflare D1 sur `botwow-production`. Toutes ont retourné `changed_db=false` et `rows_written=0`.
