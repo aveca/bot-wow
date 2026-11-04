@@ -88,5 +88,36 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
     !forbiddenClaim.test(flat));
 }
 
+
+for (const [page, file, oldClaim, newDisclosure, newHeading] of [
+  ['buy.html', 'buy.html',
+    /Everything below is delivered and working now/i,
+    /The list below describes the intended product scope; package availability and delivery are not yet verified/i,
+    /What the intended v1\.2\.0 build includes/i],
+  ['fr/buy.html', 'fr/buy.html',
+    /Tout ce qui suit est livré et fonctionne maintenant/i,
+    /La liste ci-dessous décrit le périmètre prévu du produit ; la disponibilité du paquet et sa livraison ne sont pas encore vérifiées/i,
+    /Périmètre prévu du build v1\.2\.0/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  check(`${page} : aucune affirmation de livraison déjà vérifiée`, !oldClaim.test(flat));
+  check(`${page} : périmètre explicitement présenté comme prévu et non vérifié`,
+    newDisclosure.test(flat) && newHeading.test(flat));
+}
+
+for (const [page, file, oldClaims, newScope] of [
+  ['index.html', 'index.html',
+    /The one role BOT-WOW ships today|Fishing ships today|BOT-WOW ships one role|1 shipped \+ 3 in development|packaged build, delivered with a SHA-256 manifest/i,
+    /The intended v1\.2\.0 scope is one role: fishing/i],
+  ['fr/index.html', 'fr/index.html',
+    /Le seul rôle que BOT-WOW livre aujourd'hui|La pêche livre aujourd'hui|BOT-WOW livre un seul rôle|1 livré \+ 3 en développement|paquet de livraison, avec un manifeste SHA-256/i,
+    /Le périmètre prévu de la v1\.2\.0 couvre un seul rôle : la pêche/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\\s+/g, ' ');
+  check(`${page} : aucune affirmation que le produit est déjà livré`, !oldClaims.test(flat));
+  check(`${page} : périmètre prévu et disponibilité non vérifiée clairement indiqués`, newScope.test(flat));
+}
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
