@@ -5,6 +5,11 @@ on:
     paths-ignore:
       - 'AGENTS.md'
       - '.github/workflows/pages.yml'
+      # Un commit documentaire ne doit pas déclencher un déploiement applicatif
+      # inutile (AGENTS.md § « Rapport obligatoire »). PR #71 l'annonçait dans
+      # son corps, mais la modification n'avait pas été appliquée au fichier
+      # mergé.
+      - 'reports/**'
   workflow_dispatch:
 permissions:
   contents: read

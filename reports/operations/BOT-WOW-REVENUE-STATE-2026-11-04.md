@@ -239,16 +239,63 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 
 ## 5. Tests, commit, PR, production
 
+### 5.1 Commits et PR
+
 | Élément | Valeur |
 |---|---|
-| Commits | voir §7 (section « Branche / PR » de `BOT-WOW-CURRENT-STATE.md`) |
-| Tests ajoutés | `tests/legacy-landing.test.mjs` (34 assertions) · `tests/payment-mode.test.mjs` (15) · `tests/funnel-dedup.test.mjs` (9) |
+| Branche | `docs/current-state-refresh-20261104` (base `origin/main` @ `084e2bd`) |
+| **PR #70 — ONE CORE OFFER** | **MERGED** 2026-11-04T07:57:11Z — merge commit `e2a93384ff499b8364d2f78f4f0ec1d3dcfab26c` |
+| **PR #71 — preuve de livraison v1.2.0** | **MERGED** 2026-11-04T08:57:50Z — merge commit `084e2bd` (`worker/index.js` **+185 / −72**) : garde `RELEASE_STATUS` (409 avant encaissement), reprise idempotente de la livraison, journal `deliveries`, mesure `license_activated`, renvoi opérationnel, intégration PR #19 + PR #44 |
+| **PR #73 — redirections `www`** | **MERGED** 2026-11-04T08:18:44Z — merge commit `dfc11582` : retrait des règles `_redirects` `www` **inopérantes** (Cloudflare Pages n'applique pas les redirections par domaine), remédiation **zone-level** documentée |
+| Tests ajoutés | `tests/legacy-landing.test.mjs` (34 assertions) · `tests/payment-mode.test.mjs` (15) · `tests/funnel-dedup.test.mjs` (9) · `tests/delivery-replay.test.mjs` (41, PR #71) |
 | Tests réparés | `tests/funnel.test.mjs` — 36 assertions, **0 échec** (8 échecs avant, jamais exécuté par la CI) |
+
+### 5.2 Contrôles locaux (exécution réelle)
+
+| Commande | Résultat |
+|---|---|
 | `npm test` | **exit 0** — 21 suites, dont les 4 tests de tunnel |
 | `npm run validate` | **exit 0** |
 | `git diff --check` | PASS |
-| Déploiement Worker | `c3dcc842-c422-42d3-9828-405f30d70b5f` = version **active avant** déploiement → **cible de rollback** |
-| Statut production | cf. `BOT-WOW-CURRENT-STATE.md` §« Branche / PR » |
+
+### 5.3 Déploiement — état vérifié le 2026-11-04T11:10Z
+
+| Élément | Valeur | Statut |
+|---|---|---|
+| Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** |
+| Pages (PR #73) | deployment `7541341864` (sha `dfc11582`) | **success** |
+| Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** |
+| **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — cible de rollback ; le code #70/#71/#73 n'est pas en production |
+
+Mesures live du 2026-11-04T11:10Z (directement vérifiées) :
+
+| Requête | Résultat |
+|---|---|
+| `GET https://bot-wow.com/` | **200**, stamp `cb3925b6` |
+| `GET https://bot-wow.com/buy.html` | **308** → `/buy` |
+| `GET https://bot-wow.com/fr/buy.html` | **308** → `/fr/buy` |
+| `GET https://bot-wow.com/worker/index.js` | **404** |
+| `GET https://bot-wow.com/package.json` | **404** |
+| `GET https://api.bot-wow.com/api/config` | **200** — `priceEur: 20`, `product: bot-wow-lifetime` — **prix inchangé** |
+| `GET https://api.bot-wow.com/de/` | **200** + legacy — **attendu** (Worker non redéployé) |
+| `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **inopérante** (B11) |
+
+> L'API est servie par `api.bot-wow.com` (Worker) et **non** par
+> `bot-wow.com/api/` — le dépôt `bot-wow.com` n'a aucun dossier `api/`, et
+> `assets/app.js` documente que `/api/config` y renvoie 404. Un 404 sur
+> `bot-wow.com/api/config` est donc **attendu**, pas une régression.
+
+### 5.4 Correctif de trigger deploy (appliqué dans cette branche)
+
+PR #71 annonçait dans son corps « Exclut `reports/**` de `pages.yml`
+(`paths-ignore`) » — **la modification n'a jamais été appliquée** : le
+`pages.yml` mergé ne contenait que `AGENTS.md` et
+`.github/workflows/pages.yml`. Un commit documentaire en `reports/**`
+déclenchait donc **inutilement** un déploiement Pages.
+
+**Correction appliquée :** `'reports/**'` ajouté au `paths-ignore` de
+`.github/workflows/pages.yml`. Aucun workflow de CI utile n'est désactivé
+(`validate.yml` et `ui-quality.yml` continuent de tourner sur `main`).
 
 ---
 
