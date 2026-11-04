@@ -104,3 +104,18 @@ A read-only Mollie `ListProfiles` call returned exactly one verified profile: `p
 ### Revenue verification boundary
 
 D1 still shows no confirmed customer payment, no payment-confirmed event, no delivery and no activation. This cycle did **not** inspect Mollie's profile-scoped payment ledger; therefore the €0.00 figure is the application/D1-confirmed revenue, not an independently reconciled Mollie settlement statement.
+
+
+## 9. CI closeout — 2026-11-04T15:32Z
+
+PR #79 latest head `e75101c83f70dba9ee9d26b177b723f27db12b80` is fully green:
+- Validate Bot-Wow: SUCCESS, run 41858094767.
+- UI quality and visual evidence: SUCCESS, run 41858094806.
+- Playwright: 158 passed, 0 failed.
+- CSS audit, static build, unit/integration tests and evidence upload: SUCCESS.
+
+PR #77 remains fully green on `e25781fd0d10f0bffedaca982fdf4ed5bd74313a` (runs 41857130935 and 41857130846).
+
+PR #78 documentation branch latest head `15e552678ce8d0aa8bde43ab835c25aad4eb4314`: Validate SUCCESS (41858615131); UI quality still IN_PROGRESS (41858615189).
+
+PR #79 is ready for review but not merged or deployed. The repository deployment gate still applies: merging its homepage changes would trigger Cloudflare Pages production deployment. No production deployment was authorized or performed.
