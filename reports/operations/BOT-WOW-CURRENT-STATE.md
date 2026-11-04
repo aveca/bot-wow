@@ -521,3 +521,100 @@ The test-only rows currently include 8 `cta_click` and 2 `checkout_requested` ev
 ## Inertie
 
 No price changes, checkout reopening, payment rules changed, real payments, customer emails, secret/binding changes, D1/R2 writes, Worker/Pages configuration changes, or production Worker deployment.
+
+
+---
+
+# Correction P0.28 — deployed Worker bundle and revenue recheck — 2026-11-04T19:17Z
+
+This addendum supersedes the incorrect P0.27 statement that the active Worker bundle lacked the server-side checkout guard. The actual deployed script content was fetched directly from Cloudflare; this is stronger evidence than inferring code from the version date.
+
+## Worker — exact deployed-code comparison
+
+Cloudflare read-only API confirms:
+
+- Active deployment: `36227a4d-00e7-4c9f-94e0-0913b29049bc`.
+- Active version: **50**, ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, created `2026-10-27T07:46:28Z`.
+- Version 50 has no `workers/commit_sha` annotation.
+- Binding names include `RELEASE_STATUS` and `MOLLIE_PROFILE_ID`; secret values remain masked.
+
+Direct `GET /workers/scripts/botwow-api/content/v2` inspection of the active bundle found:
+
+- **Present:** `RELEASE_STATUS`, `delivery_unverified`, and the guard that rejects checkout unless the effective release status is exactly `confirmed`. The compiled default is `pending`.
+- **Absent:** `resumeFulfillment`, which is present in current `main:worker/index.js`.
+- **Still present:** legacy download fallback `Casinobabe-v1.0.38.zip`, removed from current `main:worker/index.js`.
+- The active bundle contains delivery-queue writes, but that alone does not prove the newer replay/idempotency flow from PR #71 is deployed.
+
+**Correction:** the server-side checkout guard code is present in production version 50. The previous claim that the guard markers were absent is withdrawn. However, the actual secret value controlling the gate is not readable, so the effective runtime setting is not independently verified. No checkout POST was sent. The deployed Worker is still behind current main for the newer fulfillment replay and legacy-download-fallback corrections; its code is also not tied to a Git commit SHA.
+
+No Worker deployment, secret change, payment, webhook POST, email, or checkout mutation was performed.
+
+## D1 production — corrected joins and current counts
+
+All statements below are from read-only Cloudflare D1 API queries; every query reported `changed_db=false` and `rows_written=0`.
+
+| Table / state | Current count |
+|---|---:|
+| orders | 25 |
+| licenses | 5 |
+| downloads (tokens recorded, not proof of completed downloads) | 5 |
+| activations | 0 |
+| deliveries | 0 |
+| webhook_events | 16 |
+| botwow_emails | 12 |
+
+Order states remain:
+
+- `bitcoin_manual/paid`: 5; all five use `@example.com` addresses, and four contain placeholder metadata. These are not accepted as commercial sales.
+- `bitcoin_manual/pending_payment`: 8.
+- `bitcoin_manual/rejected`: 1.
+- `mollie/failed`: 11; all 11 have provider status `expired`, amount EUR 20, profile `pfl_t8KCk4Cm2C`, `method=null`, and `paidAt=null`.
+
+**Webhook join correction:** `webhook_events.id` is stored as `payment:<paymentId>`, not as the raw Mollie payment ID. The correct read-only join is `webhook_events.id = 'payment:' || orders.provider_id`. It yields **11 matched and 5 unmatched** webhook events. The earlier raw-ID join that yielded 16 unmatched rows was incorrect; the five unmatched events remain unresolved.
+
+Email-table correction: 11 of 12 `botwow_emails` rows use `@example.com`; the remaining row's commercial relevance is unknown. It is not treated as evidence of a customer. No paid order has a non-`example.com` address.
+
+Application/D1-confirmed commercial revenue remains **€0.00**. Mollie's independent payment ledger was not queried: the connected Mollie action requires explicit confirmation of a profile ID before profile-scoped payment searches. No profile was assumed or confirmed.
+
+## Analytics — latest read-only snapshot
+
+The analytics database contains 2,291 total events (2,260 with `test=0`); latest observed event timestamp: `2026-11-04T18:46:32Z`.
+
+Production event counts (`test=0)):
+
+| Event | Count |
+|---|---:|
+| `page_view` | 1,564 |
+| `journey_view` | 602 |
+| `cta_click` | 48 |
+| `checkout_requested` | 29 |
+| `checkout_start` | 4 |
+| `checkout_created` | 6 |
+| `checkout_failed` | 6 |
+| `planner_mode` | 1 |
+| `payment_confirmed`, `conversion`, `delivery_sent`, `activation` | 0 |
+
+These are event counts, not unique people or sessions. There is no verified paid conversion.
+
+## Public site and compliance
+
+- Current public English `/buy` page says checkout is temporarily unavailable, the purchase form is disabled, delivery is unconfirmed, and users should not pay until delivery is confirmed.
+- The web reader could not retrieve `/fr/buy` in this pass; French live state is therefore **not reverified**.
+- The live English page still describes an automated WoW fishing bot. Blizzard's EULA, last revised 21 March 2024, defines unauthorized bots as software enabling automated control of a Game/character and prohibits creating, using, offering, promoting, advertising, making available, or distributing them. No Blizzard authorization has been identified. Do not market the automation to official Blizzard-service players while this remains unresolved. This is a platform-terms risk assessment, not legal advice. Official source: https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement
+
+## GitHub / CI
+
+- `main`: `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`.
+- PR #71 is merged; PR #82 is merged.
+- PR #83 remains open. Its Validate and UI-quality workflows passed on the original head; this addendum is a new documentation commit and must receive fresh CI.
+- PR #77 remains open/draft and non-mergeable; its two reported checks passed on head `077de609f6746e780ff17912cacc22c6e62be834`. Do not merge a stale/conflicting branch.
+- PR #66 remains open/draft for compliance and pivot review.
+
+## Next actions, ranked
+
+1. **P0 — compliance decision / product scope:** keep acquisition paused for the automated client-control product on official Blizzard services. Review the non-automating alternative in PR #66, but do not assume that a WoW-specific planner is automatically compliant; it must not control the client or make unsupported compliance claims, and its intended use needs review.
+2. **P0 — payment separation:** obtain a dedicated BOT-WOW Mollie profile and credential. The only profile currently visible is the Sargasses profile; never reuse it. No Mollie payment search or profile-scoped ledger reconciliation was performed.
+3. **P0 — fulfillment release:** prepare a versioned Worker package from current main that includes `resumeFulfillment` and removes the legacy fallback; include `workers/commit_sha`, a tested non-production plan, and rollback to version 50. Production deployment remains prohibited until explicit authorization under `AGENTS.md`.
+4. Keep the public checkout closed until the compliance decision, dedicated payment routing, and end-to-end fulfillment proof are complete.
+
+No prices, checkout rules, secrets, bindings, D1/R2 data, payments, emails, Worker deployments, Pages settings, or production content were changed in this revalidation.
