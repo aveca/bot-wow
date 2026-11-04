@@ -263,3 +263,42 @@ Monthly auto-renewal, cancel online, paid-through access retained. Do not collec
 - Request honest feedback from actual users after activation; never manufacture reviews.
 - Build an organic referral mechanism only if it is measurable and does not reward fake signups.
 - Review organic query → demo → paid subscription weekly and update content based on GSC data, not guessed demand.
+
+
+## 15. Codex review resolutions — 2026-11-04
+
+### 15.1 Recoverable webhook idempotency after partial failure
+
+A unique `webhook_events` key is necessary but is not sufficient if it permanently marks a payment as handled before fulfilment has committed. Process each provider payment using a durable state machine:
+
+- Fetch the canonical Mollie payment server-to-server; never trust the browser return or webhook payload as the payment status.
+- Track `processing`, `processed` and `retryable_failed` (plus attempt count, timestamps and a recoverable lease) against a unique provider event/payment key.
+- Commit the order transition, entitlement/licence changes and a unique durable delivery-outbox item together in one database transaction/batch wherever possible. External email delivery must happen from the committed outbox, not before it.
+- A duplicate already marked `processed` may return HTTP 200. A retryable failure or stale `processing` lease must be reclaimed and processed; do not return 200 merely because a marker row exists. Return a retryable non-2xx response when durable processing cannot complete, so Mollie can retry.
+- Make outbox delivery independently idempotent. Record provider result, attempt count and failure reason; do not let an email timeout repeat licence creation or paid-through extension.
+
+Failure-injection tests are mandatory at each boundary: after event reservation, after order update, after licence write, after outbox commit, and during email-provider timeout. A replay must eventually complete the paid order exactly once, with no duplicate licence, entitlement extension or delivery. Mollie's current webhook documentation says non-2xx/timeouts are retried up to 10 attempts over 26 hours: https://docs.mollie.com/reference/webhooks
+
+### 15.2 Supported Mollie mandate states
+
+Do not require a mandate to be `valid` only. Mollie's current recurring-payments guide explicitly permits both `pending` and `valid` mandate statuses when creating a subscription; when neither exists, initiate the required first payment: https://docs.mollie.com/docs/recurring-payments
+
+After the first payment is confirmed paid, fetch the customer's mandates from Mollie and permit the documented `pending` or `valid` states. Keep the subscription creation idempotent. Add test-mode coverage for both mandate states and for the no-eligible-mandate path. Do not grant an entitlement from a pending first payment.
+
+### 15.3 Reversed renewals, refunds and chargebacks
+
+Maintain a payment-level entitlement ledger so a later reversal can remove only the period supported by that payment, rather than blindly revoking unrelated older paid access.
+
+- `refund.pending` / `refund.processing`: record the refund in progress; do not treat it as a completed reversal.
+- `refund.refunded`: mark the associated payment period reversed and recompute `paid_through` from successful, non-reversed payments.
+- `chargeback.received`: mark the payment disputed/reversed for entitlement purposes and suspend access only beyond the latest unaffected paid-through boundary. Preserve older, independently paid periods.
+- `chargeback.reversed`: record the reversal of the dispute and restore the entitlement only after fetching and reconciling the authoritative payment/chargeback state.
+- `refund.failed` / `refund.canceled`: retain the original entitlement unless another authoritative status requires a change.
+
+Use unique provider event IDs (or a stable event-type + payment/refund/chargeback identifier) and idempotent recomputation. Do not extend access twice, revoke unrelated licences, or let an out-of-order older event overwrite a newer provider state. Test duplicate, delayed and out-of-order refund/chargeback events, including chargeback reversal. Mollie documents payment webhooks for refunds and chargebacks, and the newer event catalogue includes `chargeback.received` and `chargeback.reversed`: https://docs.mollie.com/reference/webhooks and https://docs.mollie.com/reference/create-webhook
+
+### 15.4 Evidence and freshness of production facts
+
+The production counts and deployment details in section 12 are a **read-only point-in-time snapshot observed on 2026-11-04**, not a persisted signed audit artifact or a guarantee that the environment is unchanged. Treat them as historical clues only. Before implementation or release, re-query the live Cloudflare Pages deployment, Worker version/bindings, R2 object metadata and D1 counts; attach the resulting timestamped evidence (or CI artifact) to the implementation PR. Do not infer successful delivery, activation, archive integrity or end-user installation from object/table counts alone.
+
+The code reference for the repository baseline used in that snapshot is https://github.com/aveca/bot-wow/commit/2edd74be83f272672b303ccdb316d52137109076. The snapshot values remain provisional until refreshed directly from the control plane.
