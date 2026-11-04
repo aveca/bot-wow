@@ -303,38 +303,30 @@ async function handleDownload(request, env2) {
     if (now > result.expires_at) {
       return jsonResponse({ ok: false, error: "expired" }, 410);
     }
-    if (result.count >= result.max_count) {
+    // Serve only the configured release. Never silently deliver an older archive.
+    const objectKey = typeof env2.R2_OBJECT_KEY === "string" ? env2.R2_OBJECT_KEY.trim() : "";
+    if (!objectKey || !/^casinobabe-fishing-\d+\.\d+\.\d+\.zip$/.test(objectKey)) {
+      console.error("Download artifact key is missing or invalid");
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
+    }
+    const r2Object = await env2.R2_BINARIES.get(objectKey);
+    if (!r2Object) {
+      console.error("Configured R2 artifact not found:", objectKey);
+      return jsonResponse({ ok: false, error: "artifact_unavailable" }, 503);
+    }
+
+    // Reserve one download atomically. Concurrent requests cannot exceed max_count.
+    const reservation = await env2.DB.prepare(
+      "UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count"
+    ).bind(token).run();
+    if (!reservation?.meta?.changes) {
       return jsonResponse({ ok: false, error: "limit_reached" }, 429);
     }
-    await env2.DB.prepare(`
-      UPDATE downloads SET count = count + 1 WHERE token = ?
-    `).bind(token).run();
-    // FIX 2026-10-21 : le nom de l'objet R2 etait fige dans le code
-    // ("Casinobabe-v1.0.38.zip"), alors que le paquet livre est versionne
-    // (casinobabe-fishing-<version>.zip). On tente la version configuree,
-    // puis la version courante du paquet, puis l'ancien nom (repli).
-    const candidates = [
-      env2.R2_OBJECT_KEY,
-      "casinobabe-fishing-1.2.0.zip",
-      "Casinobabe-v1.0.38.zip"
-    ].filter(Boolean);
-    let objectKey = candidates[0];
-    let r2Object = null;
-    for (const key of candidates) {
-      const obj = await env2.R2_BINARIES.get(key);
-      if (obj) {
-        objectKey = key;
-        r2Object = obj;
-        break;
-      }
-    }
-    if (!r2Object) {
-      console.error("R2 object not found. Tried:", candidates.join(", "));
-      return jsonResponse({ ok: false, error: "file_not_found" }, 404);
-    }
+
+    const safeFilename = objectKey;
     const headers = new Headers({
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="Casinobabe-v1.0.38.zip"`,
+      "Content-Disposition": "attachment; filename=\"" + safeFilename + "\"",
       "Cache-Control": "private, max-age=3600"
     });
     return new Response(r2Object.body, {
@@ -381,7 +373,7 @@ async function handleResend(request, env2) {
     `).bind(email).first();
     if (license && license.token) {
       const downloadUrl = `https://api.bot-wow.com/api/download?t=${license.token}`;
-      await sendDeliveryEmail(env2, email, license.key, downloadUrl, license.lang || DEFAULT_LANG);
+      await sendDeliveryEmail2(env2, email, license.key, downloadUrl, license.lang || DEFAULT_LANG, null, false, { force: true });
     }
     return jsonResponse({ ok: true });
   } catch (error) {
@@ -425,6 +417,8 @@ var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
 //   RATE_LIMITS.download         = 20 / heure
 // Reponse en cas de depassement : 429 + Retry-After (voir handleCheckout).
 var CHECKOUT_RATE_LIMIT = { max: 5, windowMs: 3e5 };
+/* Etat de livraison du paquet telechargeable, decide cote serveur. */
+var RELEASE_STATUS = "pending";
 // Mapping langue du site -> locale Mollie.
 // Source : liste officielle des `locale` acceptes par l'API Mollie
 // (POST /customers et POST /payments) :
@@ -488,6 +482,20 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+  const releaseStatus = (env2 && typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS)
+    ? env2.RELEASE_STATUS
+    : RELEASE_STATUS;
+  if (releaseStatus !== "confirmed") {
+    console.warn("Checkout refuse : livraison non confirmee (RELEASE_STATUS=" + releaseStatus + ")");
+    return jsonResponse2({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr" ? "La livraison du paquet n'est pas encore confirmee. Contactez le support avant de payer." : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, {
+      "Retry-After": "3600"
+    });
+  }
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
@@ -617,6 +625,7 @@ async function handleMollieWebhook(request, env2) {
   // deux licences. La cle est l'identifiant du paiement (stable quel que
   // soit le type d'evenement).
   const eventId = `payment:${paymentId}`;
+  let alreadyLocked = false;
   try {
     await env2.DB.prepare(
       "INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'mollie', ?)"
@@ -624,11 +633,12 @@ async function handleMollieWebhook(request, env2) {
   } catch (e) {
     const msg = String(e && e.message || "");
     if (/UNIQUE|constraint/i.test(msg)) {
-      console.log(`Webhook: paiement ${paymentId} deja traite, ignore`);
-      return new Response("OK", { status: 200 });
+      alreadyLocked = true;
+      console.log(`Webhook: paiement ${paymentId} deja verrouille, etat de la livraison verifie`);
+    } else {
+      console.error("Webhook: insertion de l'evenement impossible", msg);
+      return new Response("Server Error", { status: 500 });
     }
-    console.error("Webhook: insertion de l'evenement impossible", msg);
-    return new Response("Server Error", { status: 500 });
   }
   // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
   // On le récupère ici sans lecture KV supplémentaire.
@@ -644,7 +654,11 @@ async function handleMollieWebhook(request, env2) {
   // doit revoquer la licence liee (le signal existait mais n'etait jamais
   // branche sur le flux du webhook).
   if (status === "paid") {
-    await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef, isTestPayment);
+    try {
+    if (alreadyLocked) {
+      await resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef, isTestPayment);
+    } else {
+      await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef, isTestPayment);
     // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
     // Ecris APRÈS fulfillOrder pour ne rien ecrire si la livraison echoue
     // (schema de production avec orders.id INTEGER -> datatype mismatch).
@@ -662,7 +676,12 @@ async function handleMollieWebhook(request, env2) {
     } catch (e) {
       console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
     }
-  } else {
+    }
+    } catch (e) {
+      console.error("Webhook: livraison impossible", String(e && e.message || ""));
+      return new Response("Server Error", { status: 500 });
+    }
+  } else if (!alreadyLocked) {
     await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
   }
   return new Response("OK", { status: 200 });
@@ -759,44 +778,102 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   // licence pointait sur `meta.last_row_id` (un nombre) : la jointure
   // orders <-> licenses ne pouvait donc jamais aboutir.
   const orderId = `ord_${payment.id}`;
-  await env2.DB.prepare(`
-    INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-    VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
-  `).bind(
-    orderId,
-    payment.id,
-    email,
-    amount,
-    payment.amount.currency,
-    JSON.stringify({ lang, product: PRODUCT_METADATA_KEY, mollie: payment }),
-    now,
-    now
-  ).run();
-  const licenseKey = generateLicenseKey2();
-  const licenseResult = await env2.DB.prepare(`
-    INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
-    VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-  `).bind(licenseKey, orderId, email, lang, 2, now, now).run();
-  const licenseId = licenseResult.meta.last_row_id;
-  const downloadToken = generateToken2();
-  await env2.DB.prepare(`
-    INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-    VALUES (?, ?, ?, 0, ?, ?)
-  `).bind(
-    downloadToken,
-    licenseId,
-    now + 30 * 864e5,
-    10,
-    now
-  ).run();
-  const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId, isTestPayment);
-  await sendAdminNotification2(env2, email, licenseKey, amount);
+  let order = await env2.DB.prepare(
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+  ).bind(orderId, payment.id).first();
+  if (!order) {
+    await env2.DB.prepare(`
+      INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+      VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
+    `).bind(
+      orderId,
+      payment.id,
+      email,
+      amount,
+      payment.amount.currency,
+      JSON.stringify({ lang, product: PRODUCT_METADATA_KEY, mollie: payment }),
+      now,
+      now
+    ).run();
+    order = { id: orderId };
+  }
+  let license = await env2.DB.prepare(
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+  ).bind(payment.id).first();
+  if (!license) {
+    const licenseKey = generateLicenseKey2();
+    const licenseResult = await env2.DB.prepare(`
+      INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
+    `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
+    license = { id: licenseResult?.meta?.last_row_id ?? null, key: licenseKey };
+    await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+  }
+  let download = await env2.DB.prepare(
+    "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
+  ).bind(license.id).first();
+  if (!download) {
+    const downloadToken = generateToken2();
+    await env2.DB.prepare(`
+      INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
+      VALUES (?, ?, ?, 0, ?, ?)
+    `).bind(
+      downloadToken,
+      license.id,
+      now + 30 * 864e5,
+      10,
+      now
+    ).run();
+    download = { token: downloadToken };
+  }
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${download.token}`;
+  await sendDeliveryEmail2(env2, email, license.key, downloadUrl, lang, journeyId, isTestPayment);
+  await sendAdminNotification2(env2, email, license.key, amount);
   console.log(`Order fulfilled: ${payment.id}`);
-  // Evenement serveur : licence creee et liee a la commande payee.
-  await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef, test: isTestPayment ? 1 : 0 });
 }
 __name(fulfillOrder, "fulfillOrder");
+async function resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef, isTestPayment) {
+  const orderId = `ord_${payment.id}`;
+  const order = await env2.DB.prepare(
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+  ).bind(orderId, payment.id).first();
+  if (!order) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (aucune commande)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef, isTestPayment);
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    try { await recordConversion(env2, payment, email, lang, isTestPayment); } catch (e) { console.error("Webhook: mesure de conversion impossible", String(e && e.message || "")); }
+    return;
+  }
+  const license = await env2.DB.prepare(
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+  ).bind(payment.id).first();
+  if (!license) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (licence manquante)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef, isTestPayment);
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    try { await recordConversion(env2, payment, email, lang, isTestPayment); } catch (e) { console.error("Webhook: mesure de conversion impossible", String(e && e.message || "")); }
+    return;
+  }
+  const download = await env2.DB.prepare(
+    "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
+  ).bind(license.id).first();
+  if (!download) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (jeton de telechargement manquant)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef, isTestPayment);
+    return;
+  }
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${download.token}`;
+  const alreadySent = await env2.DB.prepare(
+    "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
+  ).bind(`%${license.key}%`).first();
+  if (alreadySent) {
+    console.log(`Webhook: livraison ${payment.id} deja complete, rien a rejouer`);
+    return;
+  }
+  console.log(`Webhook: reprise de la livraison ${payment.id} (e-mail a rejouer)`);
+  await sendDeliveryEmail2(env2, email, license.key, downloadUrl, lang, journeyId, isTestPayment);
+}
+__name(resumeFulfillment, "resumeFulfillment");
 async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef) {
   const now = Date.now();
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
@@ -994,12 +1071,27 @@ function getClientIp2(request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
 __name(getClientIp2, "getClientIp");
-async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId, isTestPayment) {
+async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId, isTestPayment, options = {}) {
   // FIX 2026-10-21 : la livraison etait un simple console.log -> le client
   // ne recevait JAMAIS sa cle. On envoie reellement l'e-mail si une cle
   // d'envoi est configuree (Resend), sinon on conserve la commande et la
   // licence en base (table deliveries) pour un rejeu, sans jamais la
   // dupliquer.
+  // REJEU : si un envoi REUSSI est deja constate pour cette licence, on ne
+  // renvoie pas un second e-mail au client. `force: true` ignore ce garde-fou.
+  if (!options.force) {
+    try {
+      const alreadySent = await env2.DB.prepare(
+        "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
+      ).bind(`%${key}%`).first();
+      if (alreadySent) {
+        console.log("[EMAIL] licence deja livree, aucun renvoi");
+        return { sent: true, reason: "already_sent" };
+      }
+    } catch (e) {
+      console.error("[EMAIL] verification de l'envoi precedent impossible", e && e.message);
+    }
+  }
   const subject = lang === "en" ? "Your BOT-WOW licence and download link" : "Votre licence BOT-WOW et votre lien de téléchargement";
   const text = lang === "en" ? [
     "Thank you for your purchase.",
@@ -1041,6 +1133,24 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
     // Evenement serveur : echec de livraison e-mail.
     await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed', test: isTestPayment ? 1 : 0 });
   } else {
+    // PREUVE DE LIVRAISON : un envoi REUSSI laisse aussi un recu durable.
+    try {
+      const existing = await env2.DB.prepare(
+        "SELECT id FROM deliveries WHERE kind = 'delivery' AND body LIKE ? ORDER BY id DESC LIMIT 1"
+      ).bind(`%${key}%`).first();
+      if (existing) {
+        await env2.DB.prepare(
+          "UPDATE deliveries SET status = 'sent', sent_at = ?, error = NULL WHERE id = ?"
+        ).bind(Date.now(), existing.id).run();
+      } else {
+        await env2.DB.prepare(`
+          INSERT INTO deliveries (email, subject, body, kind, status, created_at, sent_at)
+          VALUES (?, ?, ?, 'delivery', 'sent', ?, ?)
+        `).bind(email, subject, text, Date.now(), Date.now()).run();
+      }
+    } catch (e) {
+      console.error("[EMAIL] consignation de l'envoi impossible:", e && e.message);
+    }
     // Evenement serveur : licence livree par e-mail.
     await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_sent', test: isTestPayment ? 1 : 0 });
   }
@@ -3439,8 +3549,11 @@ async function handleResendLicense(request, env2, corsHeaders2) {
   if (!license || !license.token) {
     return jsonError("not_found", "License or download token not found", 404, corsHeaders2);
   }
-  const downloadUrl = `https://botwow-api-staging.m4ngo.workers.dev/api/download?t=${license.token}`;
-  await sendDeliveryEmail(env2, license.email, license.key, downloadUrl, license.lang || "fr");
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${license.token}`;
+  const status = await sendDeliveryEmail2(env2, license.email, license.key, downloadUrl, license.lang || DEFAULT_LANG, null, false, { force: true });
+  if (!status.sent) {
+    return jsonError("send_failed", "Delivery email could not be sent: " + (status.reason || "unknown"), 502, corsHeaders2);
+  }
   return jsonResponse4({ ok: true, message: "Email resent" }, 200, corsHeaders2);
 }
 __name(handleResendLicense, "handleResendLicense");

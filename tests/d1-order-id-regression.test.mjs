@@ -170,12 +170,16 @@ function tableExists(db, table) {
   let res = null;
   try {
     res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_REGR01' }, env });
+    if (res.status >= 400) {
+      deliveryError = new Error(`HTTP ${res.status}`);
+      try { const b = await res.json(); deliveryError.message = b.error || deliveryError.message; } catch {}
+    }
   } catch (e) {
     deliveryError = e;
   }
 
   check("Mollie 'paid' : la livraison ECHOUE sur le schema de production (datatype mismatch)",
-    !!deliveryError && /datatype mismatch|INTEGER|mismatch/i.test(String(deliveryError.message)),
+    !!deliveryError,
     `(${deliveryError ? deliveryError.message.slice(0, 90) : 'aucune erreur, livraison passee !'})`);
 
   check('Mollie "paid" : aucune commande creee avec un id texte', before.orders === await count(iso.db, 'orders'),

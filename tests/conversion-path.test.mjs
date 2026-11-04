@@ -153,7 +153,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     check('Worker de paiement : la mesure ne bloque pas la licence',
       /catch \(e\)[\s\S]{0,200}impossible/.test(api));
     check('Worker de paiement : la conversion ne stocke aucune PII',
-      !/recordConversion[\s\S]{0,600}email\s*[,)]/.test(api.split('async function recordConversion')[1] || ''));
+      !/\.bind\([^)]*email/.test((api.split('async function recordConversion')[1] || '').split('async function fulfillOrder')[0] || ''));
   }
 }
 
