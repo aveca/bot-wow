@@ -288,9 +288,12 @@ async function call(path, { method = 'GET', body = null } = {}) {
   check('post-migration : un jeton de telechargement est cree', dl === 1, `(${dl})`);
   /* `deliveries` n'est renseignée qu'en cas d'echec d'envoi (rejeu possible).
      Si l'envoi reussit, il n'y a rien a rejouer : on le verifie explicitement. */
-  const deliveriesOk = iso2.db.prepare('SELECT COUNT(*) c FROM deliveries').get().c;
+  const deliveriesPending = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'pending'").get().c;
   check('post-migration : envoi reussi -> aucune livraison en attente de rejeu',
-    deliveriesOk === 0, `(${deliveriesOk})`);
+    deliveriesPending === 0, `(${deliveriesPending})`);
+  const deliveriesSent = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'sent'").get().c;
+  check('post-migration : envoi reussi -> un recu de livraison est consigne',
+    deliveriesSent === 1, `(${deliveriesSent})`);
 
   /* le rejeu ne doit PAS creer de seconde licence (idempotence preservee) */
   const res2 = await call('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_AFTER01' } });

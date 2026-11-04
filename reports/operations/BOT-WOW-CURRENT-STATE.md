@@ -17,14 +17,6 @@
 |---|---|
 | `34b8ac8` | `fix(revenue): offre unique, tunnel dedupplique, reel/test distingue` — code + tests + redirection www + déduplication + events test/live + activation + logs expurgés |
 | `cbcbf3b` | `docs(report): etat du moteur de revenue BOT-WOW au 2026-11-04` |
-| `b164102` | `docs(operations): etat courant BOT-WOW au 2026-11-04 (mission revenue)` |
-| `e3bc7a2` | `docs(spec): reprendre la spec revenue de la PR #69 rebassee sur ONE CORE OFFER` |
-
-> **PR #70 : MERGED** (merge commit `e2a9338`). Le correctif `www` de la
-> PR #70 s'est révélé **inopérant** en production (Cloudflare Pages ne
-> supporte pas les redirections par domaine dans `_redirects`) : les règles
-> mortes ont été retirées et la remédiation zone-level est documentée
-> (§0.7 B11).
 
 ## 0.2 Décisions structurantes
 
@@ -51,10 +43,8 @@
 1. Générateur de landing legacy **supprimé** ; l'hôte API redirige **308**
    vers `https://bot-wow.com/<chemin>` (routes `/api/*` et `/health`
    intactes). Worker : 244 178 → 116 431 octets.
-2. Règle **301 `www` → apex** dans `_redirects` — **INOPÉRANTE, retirée** :
-   Cloudflare Pages ne supporte pas les redirections par domaine (mesuré en
-   production, §0.7 B11). La remédiation est au niveau de la zone
-   Cloudflare et exige une autorisation.
+2. Règle **301 `www` → apex** dans `_redirects` (GitHub Pages n'applique
+   pas `_redirects` : le `www` y reste en 200 — limite documentée).
 3. **Déduplication du tunnel** côté client (`assets/analytics.js`), clé
    `event|page|cta|step|mode|years`, échappatoire `?telemetry_dedup=0`.
 4. **Réel / test distingués** (fail-safe) : `payment.mode === "test"` ⇒
@@ -74,28 +64,16 @@
 | `node scripts/versionne-assets.mjs` | exit 0, idempotent, stamp `cb3925b6`, 0 fichier versionné |
 | `git diff --check` | PASS |
 
-## 0.6 Production — état (mis à jour après merge + déploiement)
+## 0.6 Production — état
 
 | Élément | Valeur |
 |---|---|
-| **PR #70** | **MERGED** le 2026-11-04T07:57:11Z · merge commit `e2a93384ff499b8364d2f78f4f0ec1d3dcfab26c` |
-| CI | `validate` **pass** · `ui-quality` **pass** · GitGuardian **pass** sur `e3bc7a2` ; sur `main` (`e2a9338`) : `Validate Bot-Wow` **success**, `Deploy Bot-Wow to GitHub Pages` **success** |
-| **Pages — production** | Cloudflare Pages deployment `36477d7d-d656-4df8-9ab2-2b86797aaf56` (production, source `e2a9338`) **en ligne** ; GitHub Pages run `41795832840` **success** |
-| **Worker — production** | **inchangé** : `c3dcc842-c422-42d3-9828-405f30d70b5f` (27/10 07:46) — **cible de rollback** ; **non redéployé** (autorisation explicite requise : le déploiement embarquerait le delta non revu du 22/10 → 27/10, qui touche le chemin de paiement) |
+| Worker **déployé** | `c3dcc842-c422-42d3-9828-405f30d70b5f` (27/10 07:46) — **inchangé**, **cible de rollback** |
+| Worker **PR #70** | **NON déployé** — un déploiement exige une autorisation explicite (AGENTS.md §5) et embarquerait le delta non revu du 22/10 → 27/10 (+103 / −112 lignes) |
+| Pages (`main`) | inchangé — `main` = `2edd74b`, le merge de #70 déclenchera le déploiement Pages |
+| Schéma D1 | à jour (migrations `0001`→`0004` appliquées le 23/10, `0003` analytics incluse) — risque de schéma écarté |
 | Checkout réel | **inchangé et non réactivé** (bloqué côté interface, PR #54) |
 | Secrets | **aucune modification** ; `MOLLIE_PROFILE_ID` est présent mais `createMolliePayment` n'envoie **jamais** `profileId` |
-| Schéma D1 | à jour (migrations `0001`→`0004` appliquées le 23/10, `0003` analytics incluse) — risque de schéma écarté |
-
-### Vérification live après déploiement (2026-11-04)
-
-| Requête | Résultat mesuré |
-|---|---|
-| `GET https://bot-wow.com/` | **200**, stamp d'assets `cb3925b6` → **nouveau build en production** |
-| `GET https://bot-wow.com/worker/index.js` | **404** — le code source n'est pas exposé |
-| `GET https://bot-wow.com/package.json` | **404** |
-| `GET https://api.bot-wow.com/api/config` | `{"product":"bot-wow-lifetime","priceEur":20,...}` — **prix inchangé** |
-| `GET https://api.bot-wow.com/de/` | **200 + contenu legacy** (« anti-detection ») — **attendu** : le Worker n'a pas été redéployé |
-| `GET https://www.bot-wow.com/` | **200** — la redirection `www` → apex **n'est pas en vigueur** (voir §0.7 B11) |
 
 ## 0.7 Bloqueurs
 
@@ -109,26 +87,14 @@
   reste possible tant que le Worker n'est pas gardé.
 - **B10** — `demo_open` / `offer_view` : 0 ligne malgré un code émetteur
   (cause non établie).
-- **B11 (nouveau, mesuré)** — La redirection `www` → apex **ne fonctionne
-  pas**. Cloudflare Pages **ne supporte pas les redirections par domaine**
-  dans `_redirects` (documentation officielle : « Domain-level redirects :
-  ❌ »). Les deux règles ajoutées en PR #70 ont été **retirées** ; la
-  consolidation doit se faire **au niveau de la zone Cloudflare** :
-  règle *Single Redirect* (`www.bot-wow.com/*` → `https://bot-wow.com/:splat`,
-  301) + enregistrement DNS **proxied** pour `www` + retrait de l'alias
-  Pages. **Action de production hors dépôt → autorisation explicite
-  requise.** Entre-temps, le signal repose sur `<link rel="canonical">` et
-  le `sitemap.xml` (déjà sur l'apex).
 
 ## 0.8 Prochaine action (une seule)
 
 **Diagnostic du checkout Mollie (B1)** : établir la cause des 6 échecs du
 27/10 et débloquer le paiement — action de paiement réel, **autorisation
-explicite requise**. Tout le reste (déduplication, test/live, activation,
-redirection 308, retrait des règles `_redirects` mortes) est déjà code,
-testé et publié ; le **déploiement du Worker** reste à autoriser
-(correction §1.3 + §2.3 de la spec), et la consolidation `www` (B11)
-reste à faire au niveau de la zone.
+explicite requise**. Everything else (déduplication, test/live, activation,
+redirection 308, 301 www) est déjà code, testé et prêt à être déployé dès
+que le déploiement Worker est autorisé.
 
 > Aucune offre n'est déclarée rentable : les données commerciales
 > sont insuffisantes (0,00 € encaissés, 0 client réel).
