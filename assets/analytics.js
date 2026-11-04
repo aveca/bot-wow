@@ -150,8 +150,41 @@
     } catch (e) { /* la collecte ne doit jamais casser l'interface */ }
   }
 
+  /* DEDUPLICATION DES EVENEMENTS.
+   *
+   * La table `events` n'a aucune contrainte d'unicite : sans deduplication,
+   * un double-clic, un double chargement de page, un retry de beacon ou un
+   * rejeu de page gonflerait le tunnel. On n'enregistre donc qu'UNE
+   * occurrence par cle et par session de navigation.
+   *
+   * Cle = event | page | cta | step | mode | years
+   *   - la PAGE entre dans la cle : deux pages differentes de la meme
+   *     session comptent chacune (sinon `page_view` ne compterait qu'une
+   *     fois par session et le trafic multi-pages serait invisible) ;
+   *   - les identifiants (cta / step / mode / years) distinguent les
+   *     variantes : deux CTA differents ou deux sections differentes
+   *     comptent separement ;
+   *   - un meme evenement, meme page, meme identifiant : UNE seule fois.
+   *
+   * Echappatoire QA : ?telemetry_dedup=0 desactive la deduplication.
+   */
+  var DEDUP_ENABLED = (function () {
+    try { return !/[?&]telemetry_dedup=0(?:&|$)/.test(location.search || ''); } catch (e) { return true; }
+  })();
+  var seenEvents = Object.create(null);
+
+  function dedupKey(event, props) {
+    var p = (props && typeof props === 'object') ? props : {};
+    return event + '|' + page() + '|' + (p.cta || '') + '|' + (p.step || '') + '|' + (p.mode || '') + '|' + (p.years || '');
+  }
+
   function track(event, props) {
     if (!enabled) return;
+    if (DEDUP_ENABLED) {
+      var key = dedupKey(event, props);
+      if (seenEvents[key]) return;
+      seenEvents[key] = true;
+    }
     var payload = build(event, props);
     buffer.push(payload);
     if (buffer.length > MAX_BUFFER) buffer.shift();

@@ -83,7 +83,9 @@ function makeEnv(state) {
               state.events.add(args[0]);
             }
             if (/INSERT INTO orders/i.test(key)) {
-              state.orders.push(args[0]);
+              // On conserve TOUS les arguments : les assertions lisent
+              // args[0] = order_id, args[1] = provider_id, etc.
+              state.orders.push(args);
               if (state.orderRows) {
                 state.orderRows[args[0]] = {
                   id: args[0],
@@ -95,11 +97,22 @@ function makeEnv(state) {
                 };
               }
             }
-            if (/INSERT INTO licenses/i.test(key)) state.licenses.push(args[1]);
+            // args[0] = cle de licence, args[1] = order_id.
+            if (/INSERT INTO licenses/i.test(key)) state.licenses.push(args);
             if (/INSERT INTO downloads/i.test(key)) state.downloads.push(args[1]);
             if (/INSERT INTO deliveries/i.test(key)) state.deliveries.push(args[1]);
             return { meta: { last_row_id: state.orders.length } };
           },
+          // `getOrCreateMollieCustomer` fait un SELECT puis un INSERT sur
+          // mollie_customers : sans `first` sur l'objet lie, le checkout
+          // echouait en 500 et les assertions de parcours ne pouvaient
+          // jamais passer.
+          first: async () => {
+            state.calls.push({ sql: key, args });
+            if (/FROM webhook_events/i.test(key)) return state.events.has(args[0]) ? { id: args[0] } : null;
+            return null;
+          },
+          all: async () => [],
         }),
         run: async () => { state.calls.push({ sql: key }); return { meta: { last_row_id: 0 } }; },
         first: async () => {
@@ -148,7 +161,7 @@ function makeEnv(state) {
 }
 
 /* --------------------------------------------------------------- appel */
-async function call(path, { method = 'GET', body = null, env } = {}) {
+async function callWorker(path, { method = 'GET', body = null, env } = {}) {
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
@@ -306,14 +319,19 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
+  // `mollieCalls` est global et accumule les appels des blocs precedents :
+  // on ne compte que les APPELS NOUVEAUX de ce bloc, sinon l'assertion
+  // verrait les paiements crees par les blocs anterieurs.
+  const mollieCallsBefore = mollieCalls.length;
   // montant refuse
   const bad = await callWorker('/api/checkout', { method: 'POST', body: { email: 'x@t.fr', amount: 999, currency: 'EUR' }, env });
-  check('montant different refuse', res.status === 400);
+  check('montant different refuse', bad.status === 400, `(status=${bad.status})`);
   // email invalide
   const badEmail = await callWorker('/api/checkout', { method: 'POST', body: { email: 'not-an-email', lang: 'fr' }, env });
   check('email invalide refuse', badEmail.status === 400);
   // aucun paiement cree
-  check('aucun paiement Mollie pour requete invalide', !mollieCalls.some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
+  check('aucun paiement Mollie pour requete invalide',
+    !mollieCalls.slice(mollieCallsBefore).some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
   // aucun achat cree
   check('aucune commande creee pour requete invalide', state.orders.length === 0);
 }
