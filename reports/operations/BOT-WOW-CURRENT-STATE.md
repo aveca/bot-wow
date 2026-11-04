@@ -317,3 +317,17 @@ Latest evidence is recorded in [`2026-11-04-live-revalidation-1526z.md`](./2026-
 - PR #66 compliance/pivot decision remains open. Do not spend on acquisition or market the current automation to official-server players until platform compliance is resolved.
 
 **Next action:** review PR #77; run the complete validation and browser suite on PR #79's exact head; keep the Worker deployment and checkout reopening gated on explicit authorization and a controlled end-to-end fulfillment test.
+
+
+---
+
+# Addendum — Mollie profile separation and CI — 2026-11-04T15:30Z
+
+- Read-only Mollie `ListProfiles` returned exactly one verified profile: `pfl_t8KCk4Cm2C`, website `https://sargasses-martinique.com/`. No BOT-WOW profile was visible. **Never reuse the Sargasses profile or its API key for BOT-WOW.** The hidden Worker `MOLLIE_API_KEY` value/profile association remains unknown.
+- A dedicated BOT-WOW Mollie profile and test API key are required before any test payment. No payment-list query was made because the Mollie connector requires the user to confirm the profile before profile-scoped payment searches.
+- PR #77 remains draft/open and its two workflows passed on `e25781fd0d10f0bffedaca982fdf4ed5bd74313a`; the new API-key/profileId assertions are visible as passing in the test log.
+- PR #79 latest head is now `e75101c83f70dba9ee9d26b177b723f27db12b80`. Validate SUCCESS (41858094767); UI quality still IN_PROGRESS (41858094806). The previous failure from a stale homepage section class was corrected by rebuilding the two homepage files from current main and applying only the copy changes. Latest validation passes the site-artifact, release-availability and A/B-variant tests.
+- PR #78 docs branch: Validate SUCCESS (41857931194); UI quality still IN_PROGRESS (41857931055).
+- D1 confirms no customer payment, payment-confirmed event, delivery or activation. Mollie's payment ledger was not independently reconciled; the `€0.00` value is application/D1-confirmed revenue only.
+
+**Next action:** wait for PR #79 and PR #78 UI quality runs to finish; then review the copy PR. Separately obtain explicit confirmation for a dedicated BOT-WOW Mollie profile and test key before any payment test or Worker deployment.
