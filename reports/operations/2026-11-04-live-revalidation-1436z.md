@@ -124,3 +124,67 @@ Aucune modification de paiement/checkout, aucun déploiement Worker, aucune écr
 | P2 | Reprendre SEO et acquisition qualifiée une fois le paiement et la livraison prouvés | Élevé | Moyen | Checkout commercial réellement prêt |
 
 **Décision de ce cycle :** pas de réouverture du checkout et pas de déploiement Worker. Le prochain progrès commercial utile est la preuve contrôlée de livraison de bout en bout, avec les autorisations requises ; optimiser le trafic avant cela risquerait seulement d'envoyer davantage de visiteurs vers une offre indisponible.
+
+
+## 9. Revalidation complémentaire — 2026-11-04T16:48:26.613Z
+
+### GitHub et CI
+
+- `main` reste à `595e7acd85996512d404a3f4b2b278ea2c4bfe35` ; aucun changement applicatif n'a été fusionné.
+- PR #77 (`p0.24/unblock-first-sale`) : correction conditionnelle Mollie et tests API Key / jeton organisation. HEAD courant au moment du contrôle : `502da4efb0f4b05a05ff560396160b929e68073c`. Les deux exécutions précédentes ont échoué sur un défaut du mock de test qui cherchait une URL finissant par `/payments` alors que le jeton organisation ajoute `?profileId=...`. Le matcher a été corrigé pour examiner le chemin URL. Les nouveaux checks de ce HEAD ne sont pas encore disponibles ; PR toujours en draft, non fusionnée.
+- PR #79 (`fix/checkout-copy-honesty-20261104`) : ajout de corrections des meta descriptions SEO sur les six pages d'achat EN/FR (pages principales et variantes A/B), plus six assertions empêchant de promettre une livraison e-mail non certifiée. HEAD `85f6af3948f399881c6dea027a1d6a02b6c2a057` : Validate Bot-Wow **success** (run 41870619388) ; UI quality encore en cours (run 41870619101). PR ouverte, non fusionnée.
+- PR #78 : les deux workflows du HEAD précédent `d0270bade3a6ccd88fc85891967d931ea6424b22` étaient verts ; cette mise à jour documentaire déclenchera ses propres contrôles.
+
+### Mollie — séparation de profils : constat critique confirmé
+
+- `ListProfiles` retourne un seul profil vérifié, dont le site est `https://sargasses-martinique.com/`. Aucun profil BOT-WOW n'est visible dans la liste.
+- Les 11 identifiants de paiement Mollie présents dans D1 ont été lus individuellement via `GetPayment` (lecture seule, mode live). **Les 11 objets sont tous rattachés à ce profil Sargasses**, chacun de 20,00 EUR et au statut `expired`. Aucun n'est `paid`; aucun mode de paiement n'est renseigné sur ces objets expirés.
+- Il s'agit donc d'un routage croisé confirmé : les tentatives de paiement enregistrées pour BOT-WOW ont été créées sous le profil Mollies de Sargasses. Cela ne prouve pas que ce routage est la cause technique des expirations ; la cause d'expiration reste non établie.
+- Les bindings Worker `MOLLIE_API_KEY` et `MOLLIE_PROFILE_ID` existent par nom, mais leurs valeurs sont masquées. Le type exact du credential BOT-WOW (API Key vs Advanced/OAuth token) n'est donc pas vérifié.
+- Documentation officielle Mollie : une API Key est liée à son profil et ne doit pas recevoir `profileId`; un Advanced access token ou OAuth/Organization token doit recevoir `profileId`. PR #77 a été ajustée pour demander le profil au helper sur création et lecture webhook ; le helper l'omet uniquement pour les clés préfixées `test_` ou `live_`. Les tests couvrent les deux branches.
+- **Garde-fou :** ne jamais réutiliser le profil Sargasses pour BOT-WOW. Ne créer aucun profil, ne changer aucun secret et ne lancer aucun paiement sans autorisation explicite. Préparer un profil BOT-WOW indépendant et une clé de test dédiée.
+
+### D1 — chiffres réinterrogés
+
+Commandes `orders` :
+
+| Fournisseur / statut | Nombre | Détail |
+|---|---:|---|
+| Mollie / failed | 11 | 20,00 EUR chacune ; mode live ; statut fournisseur `expired` ; toutes rattachées au profil Sargasses |
+| bitcoin_manual / paid | 5 | 100,00 EUR de données de test, domaine e-mail `example.com` ; non comptabilisées comme ventes |
+| bitcoin_manual / pending_payment | 8 | 7 domaine `gmail.com`, 1 `example.com` |
+| bitcoin_manual / rejected | 1 | Donnée de test `example.com` |
+
+- Licences actives : 5 (liées aux commandes de test déjà identifiées).
+- `deliveries` : 0 ligne ; `activations` : 0 ligne.
+- Revenu commercial confirmé : **0,00 EUR**.
+
+Funnel D1 (`test=0), comptage d'événements et non de visiteurs uniques :
+
+| Événement | Nombre |
+|---|---:|
+| page_view | 1 524 |
+| journey_view | 581 |
+| cta_click | 48 |
+| checkout_requested | 29 |
+| checkout_start | 4 |
+| checkout_created | 6 |
+| checkout_failed | 6 |
+| payment_confirmed / conversion / delivery_sent / activation | 0 |
+
+### Site public — contradiction toujours live
+
+La lecture publique de `https://bot-wow.com/` et `https://bot-wow.com/buy` retourne les anciennes pages de `main`. La page d'achat affiche bien « Checkout unavailable » et un bouton désactivé, mais conserve aussi « Payment by Mollie », « you are redirected to Mollie » et « Card payment is live through Mollie ». PR #79 corrige ces affirmations dans le code de branche, mais n'est pas encore fusionnée ni déployée. Les meta descriptions qui promettaient « delivered by email / livrée par e-mail » ont également été corrigées dans cette PR.
+
+### Opérations effectuées et limites
+
+- Lectures seules sur GitHub, Cloudflare D1, Worker metadata, Mollie profiles/payments et site public.
+- Modifications uniquement sur les branches de PR #77, #79 et #78 ; aucun changement sur `main`.
+- Aucun paiement créé, aucun e-mail envoyé, aucune modification de secret, aucun déploiement Worker/Pages, aucune écriture D1/R2.
+
+### Prochaine priorité
+
+1. **P0 — Séparer le compte marchand :** obtenir un profil Mollie BOT-WOW distinct et une clé API de test dédiée. Bloqué par l'absence de profil BOT-WOW et l'autorisation nécessaire pour créer/configurer un profil et des secrets.
+2. **P0 — Valider PR #77 :** attendre les checks du HEAD `502da4e`; corriger toute régression avant revue. Ne pas fusionner ou déployer le code paiement sans autorisation.
+3. **P0 — Valider PR #79 :** attendre UI quality sur le HEAD `85f6af3`, puis faire relire les pages et les six meta descriptions. Ne pas présenter le checkout comme disponible.
+4. **P1 — Conformité produit :** reprendre la PR #66 et son MVP non-automatisant avant acquisition de joueurs.
