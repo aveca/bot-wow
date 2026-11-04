@@ -49,6 +49,43 @@ for (const [page, file, claimRe] of [
     /20,00\s*€/.test(html));
   check(`${page} : CTAs instrumentes pour la mesure`,
     (html.match(/data-cta-id="buy-/g) || []).length >= 3);
+  check(`${page} : aucun badge ne suggère un paiement Mollie actif`,
+    !/Payment by <b[^>]*>Mollie<\/b>|Paiement par <b[^>]*>Mollie<\/b>/i.test(flat));
+  check(`${page} : aucune redirection Mollie n’est promise`,
+    !/you are redirected to Mollie|vous êtes redirigé vers Mollie/i.test(flat));
+  check(`${page} : aucun e-mail de livraison n’est présenté comme déjà certifié`,
+    !/licence key and the download link are sent by email|la clé de licence et le lien de téléchargement sont envoyés par e-mail/i.test(flat));
+}
+
+for (const [page, file] of [
+  ['buy.html', 'buy.html'],
+  ['fr/buy.html', 'fr/buy.html'],
+  ['AB A buy.html', 'ab/a/buy.html'],
+  ['AB A fr/buy.html', 'ab/a/fr/buy.html'],
+  ['AB B buy.html', 'ab/b/buy.html'],
+  ['AB B fr/buy.html', 'ab/b/fr/buy.html'],
+]) {
+  const html = read(file);
+  const meta = (html.match(/<meta\s+(?:name|property)="(?:description|og:description)"[^>]*>/gi) || []).join(' ');
+  check(`${page} : les meta SEO ne promettent pas de livraison e-mail`,
+    !/delivered by email|sent by email|livr(?:é|ée) par e-mail|envoyé par e-mail/i.test(meta));
+}
+
+
+for (const [page, file, forbiddenClaim, blockedLabel] of [
+  ['index.html', 'index.html', /Card payments via Mollie|Card payment is live through Mollie|Payment by <b[^>]*>Mollie<\/b>/i, /delivery not confirmed/i],
+  ['fr/index.html', 'fr/index.html', /Paiement par carte via Mollie|Le paiement par carte fonctionne via Mollie|Paiement par <b[^>]*>Mollie<\/b>/i, /livraison à confirmer/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  const button = (html.match(/<button\b[^>]*id="buyBtn"[^>]*disabled[^>]*>[\s\S]*?<\/button>/i) || [])[0] || '';
+  check(page + ' : avis de livraison présent avant le formulaire',
+    html.indexOf('id="release-availability-notice"') >= 0 &&
+    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
+  check(page + ' : bouton de checkout réellement désactivé', !!button);
+  check(page + ' : libellé du bouton explique le blocage', blockedLabel.test(button));
+  check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
+    !forbiddenClaim.test(flat));
 }
 
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);

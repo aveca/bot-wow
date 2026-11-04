@@ -28,7 +28,7 @@
 
 <div class="topbar">
   <div class="w"><span><b>v1.2.0</b> delivery status under verification</span><span>Windows 10/11 · Python 3.11+</span>
-    <span>Browser demo — <b>simulated data</b></span><span>Card payments via Mollie</span></div>
+    <span>Browser demo — <b>simulated data</b></span><span>Card checkout temporarily unavailable</span></div>
 </div>
 
 <nav>
@@ -485,7 +485,7 @@
         </form>
 
         <div class="pay-badges">
-          <span><svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="7" width="9.2" height="6.8" rx="1.6"/><path d="M5.7 7V5.3a2.3 2.3 0 0 1 4.6 0V7"/></svg> Payment by <b style="color:var(--mut)">Mollie</b></span>
+          <span><svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="7" width="9.2" height="6.8" rx="1.6"/><path d="M5.7 7V5.3a2.3 2.3 0 0 1 4.6 0V7"/></svg> Checkout temporarily unavailable</span>
           <span><a href="./legal/terms.html" style="color:inherit">Terms</a> · <a href="./legal/refund.html" style="color:inherit">Refunds</a> · <a href="./legal/privacy.html" style="color:inherit">Privacy</a></span>
         </div>
         <p class="pay-note">The amount and currency are fixed server-side; the browser only sends your email.</p>
@@ -528,13 +528,10 @@
       </div>
     </div>
 
-    <!-- Repli honnete : le paiement carte FONCTIONNE (montant et devise fixes
-         cote serveur, licence delivree par le webhook). Ce bloc ne doit donc
-         PAS annoncer "le paiement arrive" : il offre une porte de sortie REELLE
-         si le checkout echoue ou si vous voulez un autre rail de paiement. -->
+    <!-- Checkout remains unavailable until release delivery and post-payment fulfillment are verified. -->
     <div class="wl mt">
-      <h3 style="font-size:17px">Checkout failing, or another payment method?</h3>
-      <p>Card payment is live through Mollie, and the amount is fixed server-side. If checkout fails or you prefer another payment method, use the email link below to contact support directly.</p>
+      <h3 style="font-size:17px">Checkout temporarily unavailable</h3>
+      <p>Card checkout is temporarily unavailable while v1.2.0 delivery and post-payment fulfillment are verified. Try the browser demo or contact support; do not pay until availability is confirmed.</p>
       <a class="btn btn-ghost" href="mailto:support@bot-wow.com">Email support</a>
     </div>
   </div>
