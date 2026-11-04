@@ -280,6 +280,20 @@ Mesures live du 2026-11-04T11:10Z (directement vérifiées) :
 | `GET https://api.bot-wow.com/de/` | **200** + legacy — **attendu** (Worker non redéployé) |
 | `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **inopérante** (B11) |
 
+**Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T11:10Z**
+(lecture seule du HTML de `https://bot-wow.com/buy` et `https://bot-wow.com/fr/buy`) :
+
+| Contrôle | `/buy` | `/fr/buy` |
+|---|---|---|
+| Marqueur `checkout-blocked` | **présent** | **présent** |
+| Bouton d'achat `disabled` | **oui** | **oui** |
+| Prix 20 € | **oui** | **oui** |
+| Aucun palier (4,99 / 7,99 / 9,99) | **oui** | **oui** |
+| Aucune mention d'abonnement | **oui** | **oui** (« Pas d'abonnement, pas de module caché, pas de renouvellement surprise ») |
+
+→ **ONE CORE OFFER tient en production** et **le checkout réel reste bloqué**.
+Aucun paiement créé, aucun email client envoyé.
+
 > L'API est servie par `api.bot-wow.com` (Worker) et **non** par
 > `bot-wow.com/api/` — le dépôt `bot-wow.com` n'a aucun dossier `api/`, et
 > `assets/app.js` documente que `/api/config` y renvoie 404. Un 404 sur
