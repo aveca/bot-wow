@@ -335,3 +335,16 @@ The implementation follow-up is committed on PR #69 as `5ccb1e231e5f20bc15c1e506
 - Fulfillment sends through `sendDeliveryEmail2` → `sendEmail2` → `POST https://api.resend.com/emails`; a successful 2xx returns Resend's message ID in memory. The current database records failed sends for retry, but does not persist successful provider IDs or later delivered/bounced events. The older `/api/resend` handler still reaches a log-only helper and does not call Resend. Cloudflare's read-only Worker `script-settings` response returned `observability: null`, so this session could not retrieve historical provider logs. A zero `deliveries` count is not evidence that no emails were sent. No real email was sent by these checks. The PR also removes recipient emails, license keys and download tokens from Worker log statements and tests this guard.
 
 Local validation for the PR branch at `aca79ee4666e73eacc58bf86c5c258a4cdc88cd4`: `npm ci` completed with 0 reported vulnerabilities; `npm test` passed; `npm run validate` passed; `npx playwright test --reporter=line` passed 154/154; `git diff --check` passed. These local results are not a substitute for CI on the pushed PR head. The recurring subscription and recoverable webhook lifecycle remains a design requirement, not implemented billing code; it must be implemented and tested in Mollie TEST before any offer can open.
+
+### 15.7 Fresh public storefront and API GET — 2026-11-04T05:48:22Z
+
+This was a read-only public check; no checkout form or API POST was submitted.
+
+| Request | Direct result | Observed content |
+|---|---|---|
+| `GET https://bot-wow.com/buy.html` | 308, `Location: /buy`; following the redirect returned 200 | Final page contains the existing €20 copy. |
+| `GET https://bot-wow.com/fr/buy.html` | 308, `Location: /fr/buy`; following the redirect returned 200 | Final page contains the existing €20 copy. |
+| Four production `/ab/.../buy.html` URLs | 404 each | A/B checkout pages remain unavailable in production. |
+| `GET https://api.bot-wow.com/api/config` | 200 | `product=bot-wow-lifetime`, `priceEur=20`, `currency=eur`, `bitcoin.enabled=true`, `bitcoin.address=null`. |
+
+The public configuration still advertises Bitcoin as enabled while returning no address. This GET does not establish whether the live POST endpoint accepts an order; no POST was attempted. The stricter offer-specific check exists only in the un-deployed PR branch, and production secret/binding values were not inspected.

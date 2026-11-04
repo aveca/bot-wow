@@ -119,3 +119,18 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 Les tarifs mensuels proposés sont affichés comme indisponibles, sans formulaire, collecte d'e-mail, réservation ou checkout. Le prix API de 20 € ponctuel est inchangé. Aucun paiement, remboursement, envoi d'e-mail, modification de secret/binding, migration D1/R2 ou déploiement n'a eu lieu. Les tests locaux et les modifications de cette branche doivent encore passer CI et une revue Codex sur le nouveau SHA.
 
 **Prochaine action :** publier la branche et faire tourner CI/revue sur son SHA final; garder la caisse live fermée tant que l'installation Windows, l'activation, le fulfillment Resend et les tests récurrents n'ont pas de preuve vérifiable.
+
+### Suivi des retours Codex et verrou d'offre — 2026-11-04
+
+**PR #69 :** https://github.com/aveca/bot-wow/pull/69
+**Branche :** `revenue/early-access-monthly-499-20261104`
+**Dernier commit code poussé :** `4cf7b74b1b3c4da86e0878edae6573bf787aa509`
+**Déploiement :** aucun.
+
+- Les quatre observations Codex initiales sont documentées dans §15.1–15.4 de `docs/revenue/BOT-WOW-REVENUE-DESIGN-2026-11-04.md`: reprise des webhooks après échec partiel, états `pending`/`valid` des mandats, traitement idempotent des remboursements/chargebacks, et fraîcheur/liens d'évidence. Le flux d'abonnement correspondant n'est pas implémenté; ces sections sont des exigences de conception et de tests avant lancement.
+- Deux retours supplémentaires sur `aca79ee` sont traités au commit `4cf7b74`: l'étape 4 du lancement accepte `pending` ou `valid` après confirmation server-to-server du premier paiement; les caisses Worker Mollie et Bitcoin exigent désormais aussi `LEGACY_LIFETIME_OFFER_STATUS=confirmed`, en plus de `RELEASE_STATUS=confirmed`. Cette variable est absente du `wrangler.toml` de la branche; code et tests échouent donc fermés par défaut si elle n'est pas explicitement ajoutée. Les valeurs et noms des bindings de production n'ont pas été lus; aucun POST live n'a été fait.
+- Le tarif live reste confirmé comme `bot-wow-lifetime`, `priceEur=20`, `currency=eur`. Lors du GET public daté 2026-11-04T05:48:22Z (§15.7 de la conception), `bitcoin.enabled=true` et `bitcoin.address=null`; le JSON ne prouve pas l'état du POST de checkout. Les quatre routes A/B étaient 404; `/buy.html` et `/fr/buy.html` renvoyaient 308 vers `/buy` et `/fr/buy`, puis 200 avec le texte €20. Aucun POST n'a été fait. Aucun changement de prix, secret, binding, paiement ou déploiement n'a eu lieu.
+- Tests locaux du commit `4cf7b74`: `npm test` PASS; `npm run validate` PASS; `npx playwright test --reporter=line` PASS (154/154); `git diff --check` PASS. Le test isolé `tests/funnel.test.mjs`, non inclus dans `npm test`, a des erreurs préexistantes de harness (`callWorker` inexistant, `.first()` manquant dans le D1 simulé, référence `res` non définie); il n'a pas été modifié.
+- Sur ce SHA, GitHub `validate`, `ui-quality` et GitGuardian sont PASS. Le re-review Codex a été terminé le 2026-11-04 à 05:46:18Z sur `4cf7b74b1b`; le bot indique n'avoir trouvé aucun problème majeur.
+
+**Prochaine action :** garder le checkout live fermé jusqu'à preuve d'installation/activation, de fulfillment durable et d'implémentation/test du cycle récurrent; aucune action de déploiement n'est autorisée ou nécessaire pour cette mise à jour.
