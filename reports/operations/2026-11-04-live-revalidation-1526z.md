@@ -85,3 +85,22 @@ Do not buy traffic or market the current gameplay automation to official-server 
 5. **P1 / growth:** resume SEO and qualified acquisition only after compliance, payment, and fulfillment are proven.
 
 No production mutation, checkout reopening, payment, email, price change, secret change, D1/R2 write, or Worker deployment was performed.
+
+
+## 8. Addendum — 2026-11-04T15:30Z
+
+### Mollie profile separation (read-only)
+
+A read-only Mollie `ListProfiles` call returned exactly one verified profile: `pfl_t8KCk4Cm2C`, website `https://sargasses-martinique.com/`. No BOT-WOW profile was visible.
+
+**Do not reuse the Sargasses profile or its API key for BOT-WOW.** The Worker secret value cannot be read, so the exact profile associated with the hidden `MOLLIE_API_KEY` is not proven. The safest next step is a dedicated BOT-WOW Mollie profile and test API key, with explicit authorization before account configuration changes. No Mollie payment list was queried because the connector requires the user to confirm the profile before profile-scoped payment searches.
+
+### Latest CI status
+
+- PR #77 head `e25781fd0d10f0bffedaca982fdf4ed5bd74313a`: Validate SUCCESS and UI quality SUCCESS; the two new Mollie `profileId` regression assertions are present in the successful test log.
+- PR #79 latest head `e75101c83f70dba9ee9d26b177b723f27db12b80`: Validate SUCCESS (run 41858094767); UI quality still IN_PROGRESS (run 41858094806). The earlier run failed because the homepage files were copied from a stale branch with an old comparison-section class. The branch was corrected by reapplying the copy-only changes to current `main`, preserving `compare-section`; the latest Validate run confirms the site-artifact, release-availability and A/B-variant tests pass.
+- PR #78 docs branch: Validate SUCCESS (run 41857931194); UI quality still IN_PROGRESS (run 41857931055).
+
+### Revenue verification boundary
+
+D1 still shows no confirmed customer payment, no payment-confirmed event, no delivery and no activation. This cycle did **not** inspect Mollie's profile-scoped payment ledger; therefore the €0.00 figure is the application/D1-confirmed revenue, not an independently reconciled Mollie settlement statement.
