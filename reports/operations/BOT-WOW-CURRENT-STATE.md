@@ -827,3 +827,106 @@ Le code publié sur `main` est donc cohérent ; seule la réponse HTTP live du d
 1. Obtenir une vraie vérification HTTP no-cache du HTML sur `bot-wow.com` et `www.bot-wow.com` après le déploiement, sans purge non autorisée.
 2. Garder le checkout fermé jusqu'à séparation du profil Mollie et preuve complète paiement → webhook → livraison → activation.
 3. Ne pas commercialiser un planificateur WoW manuel comme conforme : la clause EULA sur les logiciels qui facilitent le gameplay reste un risque non résolu.
+
+
+---
+
+# P0.30 — réconciliation externe des 16 paiements Mollie et mesures fraîches — 2026-11-04T22:23Z
+
+## GitHub et branches
+
+- `main` confirmé : `9986fb635659981ba64945af71297a30b41d4e0e`, commit de merge PR #84 du 2026-11-04T21:16:47Z.
+- PR #84 : MERGED.
+- PR #83 : OPEN, branche `docs/p0.27-live-revalidation-20261104-1835z`, HEAD `2fc2024aaf07ef940386ca0320bd39e3f0e35f1e`, base SHA observé `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`, mergeable. Les trois checks de ce HEAD sont SUCCESS : Validate, UI quality/Playwright et GitGuardian.
+- Inventaire GitHub : 77 branches retournées après pagination terminée ; 17 PR ouvertes au relevé. Les branches historiques ne sont pas toutes des branches de travail actives.
+- Checks du commit main `9986fb` : Validate SUCCESS ; GitHub Pages deploy SUCCESS (run `41914592024`) ; Cloudflare Pages SUCCESS (deployment `d0c68582-ac24-448b-9f94-0e3ee2f0fc0c`).
+
+## Sources commerciales sur main
+
+Lecture GitHub directe des quatre sources :
+- `buy.html` blob `f47707aa76324303bcb31d99c185fd6ef34f561f`
+- `index.html` blob `f6647635e69aaac1696523b30a624ccf6b3f39b6`
+- `fr/buy.html` blob `4a7a33d01bfe0a38d067ab37ab643a5a510de290`
+- `fr/index.html` blob `33e92838d10444a436328d1b2acb1b39e5be65d6`
+
+Sur les quatre sources, les anciennes formulations « Everything below is delivered and working now », « What ships today, exactly », « ships today » et « livre aujourd'hui » sont absentes. Les marqueurs `checkout-blocked` et le bouton désactivé sont présents. Les formulations de livraison non confirmée sont présentes.
+
+## Cloudflare Pages — production et preview
+
+Lecture API Cloudflare :
+- Projet `bot-wow`, branche de production `main`.
+- Domaines `bot-wow.com` et `www.bot-wow.com` : statut `active`.
+- Dernier déploiement PRODUCTION : `d0c68582-ac24-448b-9f94-0e3ee2f0fc0c`, commit `9986fb`, stage `deploy=success`, terminé à `2026-11-04T21:17:11.902Z`.
+- La tentative de preview liée à la branche PR #83 (`df70095e`) est explicitement ignorée avec `preview_deployments_disabled` ; ce n'est pas un déploiement de production.
+- Le lecteur web a encore extrait l'ancien bloc « What ships today, exactly » sur `/buy`, alors que la source main et le déploiement Pages sont à jour. Les URLs avec cache-buster et le sous-domaine pages.dev n'ont pas pu être lus par cet outil. Aucun en-tête HTTP `CF-Cache-Status`, `Age` ou ETag n'a été obtenu. **La réponse HTTP d'origine reste donc non vérifiée** : ne pas conclure à un cache ou à une régression de déploiement, et ne pas purger le cache sans autorisation.
+
+## D1 production — relevé en lecture seule
+
+Requêtes via l'API Cloudflare D1, base `botwow-production`. Chaque requête a retourné `changed_db=false` et `rows_written=0`.
+
+Commandes :
+- `bitcoin_manual/paid` : 5 (100 € nominaux, données de test `@example.com`).
+- `bitcoin_manual/pending_payment` : 8 (160 € nominaux).
+- `bitcoin_manual/rejected` : 1 (20 € nominaux).
+- `mollie/failed` : 11 (220 € nominaux).
+- Total : 25 commandes ; les montants nominaux ne sont pas du revenu.
+
+Comptages :
+- licences 5 ; jetons `downloads` 5 ; livraisons `deliveries` 0 ; activations 0 ; webhooks 16 ; `botwow_emails` 12.
+- Les 5 licences et les 5 jetons correspondent aux commandes Bitcoin de test déjà identifiées ; un jeton n'est pas une preuve de téléchargement.
+- Webhooks non associés à une commande avec la jointure `webhook_events.id = 'payment:' || orders.provider_id` : 5.
+- Agrégation des domaines d'e-mail : 11 `example.com`, 1 autre domaine. Cette dernière ligne n'est pas une preuve de client ou de paiement ; aucune adresse n'est reproduite.
+
+## Mollie — vérification externe des 16 IDs connus
+
+`ListProfiles` retourne toujours un seul profil vérifié : `pfl_t8KCk4Cm2C`, site `sargasses-martinique.com`. Aucun profil BOT-WOW dédié n'est visible.
+
+Nouveauté P0.30 : les 11 `provider_id` Mollie présents dans `orders` ET les 5 IDs de webhook sans commande ont été interrogés individuellement via `GetPayment` en lecture seule, sans rechercher le registre global du profil Sargasses.
+
+Résultat sur les 16 objets Mollie référencés par BOT-WOW :
+- 16/16 `status=expired`.
+- 16/16 montant `20.00`.
+- 16/16 `method=null` et `paidAt=null`.
+- 16/16 rattachés au profil `pfl_t8KCk4Cm2C`.
+- Aucun de ces 16 paiements n'est payé ; les cinq webhooks orphelins ne cachent donc pas de paiement payé parmi les IDs vérifiés.
+
+La recherche globale des paiements du profil Sargasses n'a volontairement pas été effectuée : ce profil n'appartient pas à BOT-WOW et ne doit pas être utilisé pour attribuer des ventes BOT-WOW. La vérification couvre exactement les 16 IDs retrouvés dans D1, pas tout le compte Mollie.
+
+**Revenu commercial confirmé parmi les commandes et paiements BOT-WOW vérifiés : 0,00 €.**
+
+## Analytics production — relevé frais
+
+Base `botwow-analytics`, filtre `test='0'`, comptages d'événements (pas d'utilisateurs ni de sessions uniques) :
+- `page_view` 1 609
+- `journey_view` 629
+- `cta_click` 48
+- `checkout_requested` 29
+- `checkout_start` 4
+- `checkout_created` 6
+- `checkout_failed` 6
+- `planner_mode` 1
+- aucun événement observé `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Dernier événement `test=0` : `2026-11-04T21:22:34Z` (page view). Aucun nouvel événement de paiement n'apparaît dans l'agrégation.
+
+Toutes les requêtes D1 ci-dessus sont en lecture seule, `changed_db=false`, `rows_written=0`.
+
+## Worker — état versionné
+
+L'API Cloudflare confirme toujours le Worker `botwow-api` version 50 :
+- version `c3dcc842-c422-42d3-9828-405f30d70b5f`
+- déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`
+- créé le `2026-10-27T07:46:28.277Z`
+- aucune annotation `workers/commit_sha` sur ce déploiement.
+- les noms de bindings `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` et `RESEND_API_KEY` sont visibles ; leurs valeurs ne le sont pas et ne sont pas vérifiées.
+
+Le fichier `worker/index.js` sur main a le blob SHA `725d98e4595b27aa60e88758ecac20c711a38b6b` et contient notamment `resumeFulfillment`, `RELEASE_STATUS` et `delivery_unverified`. Le connecteur Cloudflare a fourni les métadonnées de la version active mais pas son bundle source lisible ; **aucune comparaison binaire du code actif avec main n'est revendiquée**. Le Worker n'a pas été déployé.
+
+## Décision et prochaine action
+
+1. Ne pas rouvrir le checkout : livraison non certifiée et profil de paiement BOT-WOW absent.
+2. Obtenir un profil Mollie BOT-WOW dédié et des credentials dédiés via l'opérateur du compte ; ne jamais utiliser le profil Sargasses.
+3. Après confirmation du profil dédié et autorisation explicite, préparer un test contrôlé (paiement test, webhook, licence, e-mail de test, téléchargement, activation) puis déployer le Worker avec rollback.
+4. Faire une vraie requête HTTP no-cache sur les quatre pages EN/FR depuis un environnement réseau navigateur/terminal pour trancher la discordance d'extraction ; aucune purge à ce stade.
+5. Garder la commercialisation du bot automatisant le gameplay suspendue tant que le risque contractuel Blizzard n'est pas résolu.
+
+Aucun prix, checkout, secret, binding, paiement, e-mail client, D1, R2, Worker ou production n'a été modifié pendant P0.30.
