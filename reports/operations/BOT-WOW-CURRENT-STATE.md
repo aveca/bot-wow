@@ -1,7 +1,6 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T13:21Z** (revérification
-post-merge PR #71, #73, #74 et #75 — preuve de livraison v1.2.0 + garde commercial)
+**Dernière mise à jour de ce document : 2026-11-04T14:36Z** (réconciliation live GitHub, Cloudflare Pages, Worker et D1 après PR #76)
 
 ---
 
@@ -9,7 +8,7 @@ post-merge PR #71, #73, #74 et #75 — preuve de livraison v1.2.0 + garde commer
 
 **Dépôt :** https://github.com/aveca/bot-wow
 **Branche de travail :** `docs/current-state-final-20261104` (base `origin/main` @ `33becbf3`)
-**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73 · https://github.com/aveca/bot-wow/pull/74 · https://github.com/aveca/bot-wow/pull/75
+**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73 · https://github.com/aveca/bot-wow/pull/74 · https://github.com/aveca/bot-wow/pull/75 · https://github.com/aveca/bot-wow/pull/76
 **Rapport d'évidence :** `reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md`
 **Rapport livraison :** `reports/operations/2026-11-04-p0-delivery-proof.md`
 
@@ -17,14 +16,15 @@ post-merge PR #71, #73, #74 et #75 — preuve de livraison v1.2.0 + garde commer
 
 | Élément | Valeur | Statut |
 |---|---|---|
-| `main` | `33becbf3` (merge PR #75, 2026-11-04T12:05:55Z) | MERGED |
+| `main` | `595e7acd` (merge PR #76, 2026-11-04T13:42:30Z) | MERGED |
 | PR #71 | « P0 — preuve de livraison v1.2.0 + garde + reprise idempotente » (`worker/index.js` **+185 / −72**, `tests/delivery-replay.test.mjs` 41 contrôles, intégration PR #19 + PR #44) | MERGED |
 | PR #73 | « retirer les règles www mortes et documenter la remediation zone-level » | MERGED (`dfc11582`, 08:18:44Z) |
-| Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** — en ligne |
-| Pages (PR #73) | deployment `7541341864` (sha `dfc11582`) | **success** — en ligne |
-| Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** — en ligne |
+| GitHub Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** — en ligne |
+| GitHub Pages (PR #73) | deployment `7541341864` (sha `dfc11582`) | **success** — en ligne |
+| GitHub Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** — en ligne |
 | PR #74 | « rafraîchir l'état courant après le merge de la PR #71 » — `reports/**` ajouté au `paths-ignore` de `pages.yml` | MERGED (`5fcaebe`, 11:34:39Z) |
 | PR #75 | « consigner la vérification du garde-fou commercial en production » | MERGED (`33becbf3`, 12:05:55Z) |
+| PR #76 | « recaler l'état courant sur les mesures du 2026-11-04T13:21:12Z » | MERGED (`595e7acd`, 13:42:30Z) |
 | **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on = 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — le code Worker de #70, #71 et #73 n'est pas en production |
 
 ### Mesures live du 2026-11-04T13:21:12Z (directement vérifiées, lecture seule)
@@ -77,6 +77,7 @@ n'a été créé, aucun email client envoyé.
 | `dfc11582` | merge PR #73 — retrait des règles `_redirects` `www` mortes, remédiation zone-level documentée |
 | `5fcaebe` | merge PR #74 — `reports/**` ajouté au `paths-ignore` de `pages.yml` (les commits documentaires ne redéploient plus Pages) |
 | `33becbf3` | merge PR #75 — vérification du garde-fou commercial consignée dans l'état courant |
+| `595e7acd` | merge PR #76 — réconciliation documentaire après les merges #73/#74/#75 |
 
 ## 0.2 Décisions structurantes
 
@@ -132,14 +133,15 @@ n'a été créé, aucun email client envoyé.
 |---|---|
 | Worker **déployé** | tag `20f5821adfeb465cae177120c9015f8f` (`modified_on 2026-10-27T07:46:02Z`) — **inchangé**, **cible de rollback** |
 | Worker **PR #70 / #71 / #73** | **NON déployé** — un déploiement exige une autorisation explicite (AGENTS.md §5) et embarquerait le delta non revu du 22/10 → 27/10 (+103 / −112 lignes) |
-| Pages (`main`) | `main` = `33becbf3` — dernier déploiement Pages `7542044619` (sha `084e2bd`) **success** (09:00:28Z). Les merges #74 et #75 (documentaires) n'ont déclenché **que** `Validate Bot-Wow` — **zéro** déploiement Pages |
+| GitHub Pages workflow | Le filtre `paths-ignore: reports/**` empêche le workflow GitHub Pages de traiter les commits documentaires ; sur PR #76, Validate et UI quality sont **success**. |
+| Cloudflare Pages (domaine public) | Déploiement `d9d79ad7-0d35-4bf4-a5db-8fae45f5de77`, commit `595e7acd`, stage `deploy` **success** le 2026-11-04T13:42:52Z — déclenché par `github:push`. Le filtre du workflow GitHub Pages ne s'applique pas à l'intégration Cloudflare Pages. |
 | Schéma D1 | à jour (migrations `0001`→`0004` appliquées le 23/10, `0003` analytics incluse) — risque de schéma écarté |
 | Checkout réel | **inchangé et non réactivé** (bloqué côté interface, PR #54) |
 | Secrets | **aucune modification** ; `MOLLIE_PROFILE_ID` est présent mais `createMolliePayment` n'envoie **jamais** `profileId` |
 
 ## 0.7 Bloqueurs
 
-- **B1** — Checkout Mollie **6/6 en échec** : bloqueur total (0 € possible).
+- **B1** — Checkout Mollie : la relecture D1 du 2026-11-04T14:36Z trouve **11 commandes failed**, toutes avec statut fournisseur `expired` ; aucune preuve de paiement. La cause initiale de l'expiration reste non établie.
   Le `createMolliePayment` n'envoie pas `profileId`. **La cause exacte exige
   de créer un vrai paiement Mollie → autorisation explicite requise.**
 - **B8** — `buy.html` dit « activates on one machine », le Worker applique
@@ -169,6 +171,42 @@ exige la même autorisation. Une seconde action, sans impact commercial, est
 > sont insuffisantes (0,00 € encaissés, 0 client réel).
 
 ---
+
+
+## 0.9 Réconciliation live du 2026-11-04T14:36Z
+
+### GitHub et CI
+- `main` = `595e7acd85996512d404a3f4b2b278ea2c4bfe35` (PR #76 fusionnée).
+- PR #71 et PR #76 sont fusionnées ; PR #19 est fusionnée via #71.
+- CI de la PR #76 sur HEAD `3c4d984cea8a94fd34f94eb5fedbb3c1bfb4009f` : Validate Bot-Wow run `41838459326` **success** ; UI quality run `41838459418` **success**.
+
+### Cloudflare — preuve indépendante
+- **Cloudflare Pages `bot-wow`** : deployment `d9d79ad7-0d35-4bf4-a5db-8fae45f5de77`, créé à `13:42:32.659Z`, stage deploy **success** à `13:42:52.505Z`, déclencheur `github:push`, commit `595e7acd`.
+- **Important :** `paths-ignore: reports/**` dans `.github/workflows/pages.yml` ne filtre que le workflow GitHub Actions Pages. Il ne filtre pas l'intégration GitHub → Cloudflare Pages ; un commit documentaire sur main peut donc encore déployer Cloudflare Pages.
+- **Worker `botwow-api`** : version active observée `c3dcc842-c422-42d3-9828-405f30d70b5f` (version 50), déployée le `2026-10-27T07:46:28.277Z`, tag `20f5821adfeb465cae177120c9015f8f`. Aucun déploiement postérieur à PR #71. Les bindings `RELEASE_STATUS`, `MOLLIE_PROFILE_ID` et `RESEND_API_KEY` sont présents par nom, mais leurs valeurs restent masquées et non vérifiées.
+
+### D1 — commandes et livraison (lecture seule)
+- `orders` : **11** Mollie `failed`, toutes avec `metadata.mollie.status = expired` ; **5** `bitcoin_manual/paid` sur adresses `example.com` ; 7 `bitcoin_manual/pending_payment` sur autres domaines ; 1 pending et 1 rejected sur `example.com`.
+- Jointure `orders → licenses` : les **5 licences** actives sont toutes liées aux 5 commandes manuelles de test `example.com`. Aucun autre groupe ne possède de licence.
+- `deliveries` : **0 ligne** ; `activations` : **0 ligne**.
+- **Ventes clients payées : 0 ; revenu réel confirmé : 0,00 €.**
+
+### D1 — funnel
+Comptes d'événements `test=0`, non assimilables à des visiteurs ou sessions uniques :
+- `page_view` 1 490 (dernier : `2026-11-04T14:27:26.550Z`) ; `journey_view` 563 (14:27:26.548Z).
+- `cta_click` 48 (dernier : `2026-11-04T02:47:00.736Z`) ; `checkout_requested` 29 (02:47:00.719Z).
+- `checkout_start` 4 (dernier : 27/10 01:49:23Z) ; `checkout_created` 6 (27/10 23:07:01Z) ; `checkout_failed` 6 (27/10 23:23:17Z).
+- Aucun événement `payment_confirmed`, `conversion`, `delivery_sent`, `delivery_failed` ou `activation` dans le regroupement courant.
+
+**Interprétation :** les 29 `checkout_requested` sont des intentions client, pas des paiements. Les événements serveur de checkout n'ont plus bougé depuis le 27 octobre ; aucun paiement confirmé ni fulfillment n'est mesuré.
+
+### Vérification publique et décision
+- `/buy` et `/fr/buy` affichent le blocage de disponibilité ; le formulaire est présenté comme indisponible.
+- Les quatre sources de vente `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html` ont le bloc de disponibilité et `buyBtn disabled`.
+- Aucun POST checkout, paiement, e-mail, changement de secret, écriture D1/R2 ou déploiement Worker n'a été effectué.
+- Le gate serveur de PR #71 est dans main mais pas encore livré sur le Worker de production.
+
+**Prochaine action P0 :** préparer un test contrôlé de bout en bout (paiement Mollie, webhook, licence, e-mail vers une boîte contrôlée, téléchargement), puis déployer le Worker avec rollback. Ces actions touchent aux paiements, e-mails et à la production : elles restent en attente d'une autorisation explicite. Ne pas rouvrir le checkout avant cette preuve.
 
 # Historique — snapshot du 2026-10-28 (PR #54 mergée)
 
