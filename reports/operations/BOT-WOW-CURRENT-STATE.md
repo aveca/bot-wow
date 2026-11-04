@@ -930,3 +930,60 @@ Le fichier `worker/index.js` sur main a le blob SHA `725d98e4595b27aa60e88758eca
 5. Garder la commercialisation du bot automatisant le gameplay suspendue tant que le risque contractuel Blizzard n'est pas résolu.
 
 Aucun prix, checkout, secret, binding, paiement, e-mail client, D1, R2, Worker ou production n'a été modifié pendant P0.30.
+
+
+---
+
+# P0.31 — intégrité du paquet v1.2.0 dans R2 — 2026-11-04T22:34Z
+
+## Objet de release BOT-WOW
+
+Lecture seule de l'objet configuré par le Worker BOT-WOW :
+- Bucket : `botwow-binaries`
+- Clé : `casinobabe-fishing-1.2.0.zip` (nom historique de l'archive BOT-WOW ; ne pas confondre avec un autre projet).
+- Dernière modification R2 : `2026-10-27T06:31:06.784Z`.
+- Taille : `1 387 543` octets.
+- ETag R2 : `d9d7ab22ec076873b8fed656a53460bc` (métadonnée uniquement, pas utilisé comme SHA-256).
+
+## Vérification cryptographique effectuée sur les octets réellement lus depuis R2
+
+Le corps binaire a été lu directement par l'API R2 en mémoire, sans téléchargement client ni écriture. Le SHA-256 a été calculé sur les octets retournés :
+
+`1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`
+
+Cette empreinte correspond exactement à la référence documentée dans `reports/operations/2026-10-28-p0.7-r2-sha256-verification.md`.
+
+Structure ZIP :
+- EOCD et répertoire central lisibles.
+- 30 entrées ZIP.
+- `VERSION` décompressé : `1.2.0`.
+- `MANIFEST.json` décompressé : `version=1.2.0`, `builtAt=2026-10-21T00:42:58`.
+- 26 fichiers répertoriés dans le manifeste.
+- 26/26 fichiers présents ; SHA-256 et taille décompressée correspondent exactement au manifeste.
+- Aucun écart de hash ou de taille.
+
+**Conclusion limitée mais positive : l'objet actuellement présent dans le bucket BOT-WOW est intègre par rapport à son manifeste interne et à l'empreinte SHA-256 de référence.**
+
+## Limite de provenance — non résolue
+
+Le manifeste indique un build daté du 2026-10-21. La recherche récursive de l'arbre GitHub `main` (`c11e84bcf59018a5020f3a64e335050eaf207941`) ne trouve pas les sources correspondantes du paquet (`scripts/fishing_bot.py`, `scripts/fishing_observer.py`, `runtime-addon/Casinobabe/Casinobabe.lua`, etc.). Le dépôt contient les pages et la logique Worker, mais pas ces sources de l'archive.
+
+Donc :
+- l'intégrité de l'archive R2 est vérifiée ;
+- la présence de `VERSION` et `MANIFEST.json` est vérifiée ;
+- la reproductibilité du paquet depuis le `main` actuel n'est pas démontrée ;
+- la provenance des fichiers par rapport à un commit source BOT-WOW n'est pas démontrée ;
+- aucune validation fonctionnelle du bot empaqueté n'a été exécutée dans ce cycle.
+
+## Effet commercial
+
+Ce contrôle lève uniquement le doute sur l'existence et l'intégrité interne de l'objet R2. Il ne certifie pas encore :
+- le téléchargement via le Worker et un jeton client valide ;
+- l'envoi réel de l'e-mail de livraison ;
+- la création de licence après paiement confirmé ;
+- l'activation client ;
+- la conformité contractuelle du produit.
+
+Le checkout reste fermé. Les 16 paiements Mollie BOT-WOW référencés dans D1 ont été vérifiés individuellement dans P0.30 : 16/16 expirés, aucun `paidAt`, aucun moyen de paiement, tous rattachés au profil Sargasses. Le revenu commercial confirmé reste `0,00 €`.
+
+Aucun objet R2 n'a été modifié, aucun Worker déployé, aucun secret/binding modifié, aucun paiement créé, aucun e-mail envoyé, aucune écriture D1 effectuée.
