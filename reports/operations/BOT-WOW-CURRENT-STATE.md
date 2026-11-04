@@ -1,15 +1,49 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04** (mission revenue — offre unique + tunnel)
+**Dernière mise à jour de ce document : 2026-11-04T11:10Z** (revérification
+post-merge PR #71 — preuve de livraison v1.2.0)
 
 ---
 
 # 0. État au 2026-11-04 — Mission revenue (ONE CORE OFFER)
 
 **Dépôt :** https://github.com/aveca/bot-wow
-**Branche de travail :** `revenue/offre-unique-funnel-dedup-20261104` (base `origin/main` @ `2edd74b`)
-**PR :** https://github.com/aveca/bot-wow/pull/70
+**Branche de travail :** `docs/current-state-refresh-20261104` (base `origin/main` @ `084e2bd`)
+**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73
 **Rapport d'évidence :** `reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md`
+**Rapport livraison :** `reports/operations/2026-11-04-p0-delivery-proof.md`
+
+## 0.0 Revérification du 2026-11-04T11:10Z (après le merge de la PR #71)
+
+| Élément | Valeur | Statut |
+|---|---|---|
+| `main` | `084e2bd` (merge PR #71, 2026-11-04T08:57:50Z) | MERGED |
+| PR #71 | « P0 — preuve de livraison v1.2.0 + garde + reprise idempotente » (`worker/index.js` **+185 / −72**, `tests/delivery-replay.test.mjs` 41 contrôles, intégration PR #19 + PR #44) | MERGED |
+| PR #73 | « retirer les règles www mortes et documenter la remediation zone-level » | MERGED (`dfc11582`, 08:18:44Z) |
+| Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** — en ligne |
+| Pages (PR #73) | deployment `7541341864` (sha `dfc11582`) | **success** — en ligne |
+| Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** — en ligne |
+| **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on = 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — le code Worker de #70, #71 et #73 n'est pas en production |
+
+### Mesures live du 2026-11-04T11:10Z (directement vérifiées)
+
+| Requête | Résultat mesuré |
+|---|---|
+| `GET https://bot-wow.com/` | **200**, stamp d'assets `cb3925b6` |
+| `GET https://bot-wow.com/buy.html` | **308** → `/buy` |
+| `GET https://bot-wow.com/fr/buy.html` | **308** → `/fr/buy` |
+| `GET https://bot-wow.com/worker/index.js` | **404** — code source non exposé |
+| `GET https://bot-wow.com/package.json` | **404** |
+| `GET https://api.bot-wow.com/api/config` | **200** — `{"product":"bot-wow-lifetime","priceEur":20,"currency":"eur",...}` — **prix inchangé** |
+| `GET https://api.bot-wow.com/de/` | **200 + contenu legacy** — **attendu** : le Worker n'a pas été redéployé |
+| `GET https://api.bot-wow.com/` | **200** (racine Worker) |
+| `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **toujours inopérante** (B11) |
+
+> Rappel de méthode : l'API ne vit **pas** sous `bot-wow.com/api/` (le dépôt
+> `bot-wow.com` n'a aucun dossier `api/` — `assets/app.js` le documente : « vérifie :
+> /api/config sur bot-wow.com renvoie 404 »). L'API est servie par le Worker sur
+> `api.bot-wow.com`. Vérifier `bot-wow.com/api/config` donne un **404 attendu** et
+> ne doit pas être lu comme une régression.
 
 ## 0.1 Commits
 
@@ -17,6 +51,9 @@
 |---|---|
 | `34b8ac8` | `fix(revenue): offre unique, tunnel dedupplique, reel/test distingue` — code + tests + redirection www + déduplication + events test/live + activation + logs expurgés |
 | `cbcbf3b` | `docs(report): etat du moteur de revenue BOT-WOW au 2026-11-04` |
+| `e2a93384` | merge PR #70 — ONE CORE OFFER, tunnel dedup, réel/test, activation, logs expurgés |
+| `084e2bd` | merge PR #71 — preuve de livraison v1.2.0, garde `RELEASE_STATUS` (409), reprise idempotente, journal `deliveries`, `license_activated`, renvoi opérationnel |
+| `dfc11582` | merge PR #73 — retrait des règles `_redirects` `www` mortes, remédiation zone-level documentée |
 
 ## 0.2 Décisions structurantes
 
@@ -68,9 +105,9 @@
 
 | Élément | Valeur |
 |---|---|
-| Worker **déployé** | `c3dcc842-c422-42d3-9828-405f30d70b5f` (27/10 07:46) — **inchangé**, **cible de rollback** |
-| Worker **PR #70** | **NON déployé** — un déploiement exige une autorisation explicite (AGENTS.md §5) et embarquerait le delta non revu du 22/10 → 27/10 (+103 / −112 lignes) |
-| Pages (`main`) | inchangé — `main` = `2edd74b`, le merge de #70 déclenchera le déploiement Pages |
+| Worker **déployé** | tag `20f5821adfeb465cae177120c9015f8f` (`modified_on 2026-10-27T07:46:02Z`) — **inchangé**, **cible de rollback** |
+| Worker **PR #70 / #71 / #73** | **NON déployé** — un déploiement exige une autorisation explicite (AGENTS.md §5) et embarquerait le delta non revu du 22/10 → 27/10 (+103 / −112 lignes) |
+| Pages (`main`) | `main` = `084e2bd` — déploiement Pages `7542044619` **success** (09:00:28Z) |
 | Schéma D1 | à jour (migrations `0001`→`0004` appliquées le 23/10, `0003` analytics incluse) — risque de schéma écarté |
 | Checkout réel | **inchangé et non réactivé** (bloqué côté interface, PR #54) |
 | Secrets | **aucune modification** ; `MOLLIE_PROFILE_ID` est présent mais `createMolliePayment` n'envoie **jamais** `profileId` |
@@ -87,14 +124,21 @@
   reste possible tant que le Worker n'est pas gardé.
 - **B10** — `demo_open` / `offer_view` : 0 ligne malgré un code émetteur
   (cause non établie).
+- **B11** — `www.bot-wow.com` sert encore en **200** (contenu identique à
+  l'apex). Les règles `_redirects` de la PR #70 étaient **inopérantes**
+  (Cloudflare Pages n'applique pas les redirections par domaine) : elles ont
+  été **retirées** par la PR #73. **Remédiation = niveau zone Cloudflare**
+  (Single Redirect `www` → apex + DNS proxied + retrait de l'alias Pages)
+  → **autorisation explicite requise** (AGENTS.md §5).
 
 ## 0.8 Prochaine action (une seule)
 
 **Diagnostic du checkout Mollie (B1)** : établir la cause des 6 échecs du
 27/10 et débloquer le paiement — action de paiement réel, **autorisation
-explicite requise**. Everything else (déduplication, test/live, activation,
-redirection 308, 301 www) est déjà code, testé et prêt à être déployé dès
-que le déploiement Worker est autorisé.
+explicite requise**. Tout le reste est déjà code, testé et mergé
+(#70, #71, #73) : Pages est à jour ; il reste le **déploiement Worker**, qui
+exige la même autorisation. Une seconde action, sans impact commercial, est
+**B11** (redirection `www` → apex au niveau zone Cloudflare).
 
 > Aucune offre n'est déclarée rentable : les données commerciales
 > sont insuffisantes (0,00 € encaissés, 0 client réel).
