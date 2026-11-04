@@ -574,7 +574,7 @@ async function handleMollieWebhook(request, env2) {
   }
   let payment;
   try {
-    payment = await fetchMolliePayment(env2, paymentId, true);
+    payment = await fetchMolliePayment(env2, paymentId, false);
   } catch (e) {
     console.error("Webhook: lecture du paiement impossible", e && e.message);
     return new Response("Server Error", { status: 500 });
@@ -950,7 +950,11 @@ async function createMolliePayment(env2, params) {
     method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24"],
     locale: toMollieLocale(params.metadata.lang)
   };
-  return mollieFetch(env2, "POST", "/payments", body, true);
+  // Mollie API Key (test_* / live_*) est liee a son profil : envoyer profileId
+  // avec une API Key provoque un 400 "Invalid Authorization header" /
+  // "Bad Request". Seuls les tokens OAuth / organisation necessitent
+  // profileId. On ne l'envoie donc jamais pour une cle API.
+  return mollieFetch(env2, "POST", "/payments", body, false);
 }
 __name(createMolliePayment, "createMolliePayment");
 async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
@@ -959,7 +963,14 @@ async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
 __name(fetchMolliePayment, "fetchMolliePayment");
 async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   let url = `${MOLLIE_API_BASE}${path}`;
-  if (includeProfileId && env2.MOLLIE_PROFILE_ID) {
+  // Mollie : une API Key (test_* / live_*) est liee a son profil. Envoyer
+  // profileId avec une API Key provoque un 400. Seuls les tokens OAuth /
+  // organisation necessitent profileId. On ne l'envoie donc que si la cle
+  // n'est PAS une API Key (et si includeProfileId est demande).
+  const key = String(env2.MOLLIE_API_KEY || "");
+  const isApiKey = /^test_|^live_/.test(key);
+  const sendProfileId = includeProfileId && !isApiKey && env2.MOLLIE_PROFILE_ID;
+  if (sendProfileId) {
     const separator = url.includes("?") ? "&" : "?";
     url += `${separator}profileId=${encodeURIComponent(env2.MOLLIE_PROFILE_ID)}`;
   }
