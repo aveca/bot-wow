@@ -1,120 +1,138 @@
-# BOT-WOW — REVENUE + DESIGN SPEC (2026-11-04)
-
+# BOT-WOW — REVENUE, PRICING & DESIGN SPEC
+Date: 2026-11-04
 Branch: revenue/early-access-monthly-499-20261104
 Base: main @ 2edd74be83f272672b303ccdb316d52137109076
 
-## Commercial offer
+## Commercial decision: three monthly subscriptions
 
-New-customer offer ladder, recurring monthly, no free trial:
+For new customers, replace the one-time €20 lifetime proposition with three monthly plans:
 
-| Plan | Price | Audience |
+| Plan | EUR / month | Promise |
 |---|---:|---|
-| Angler | €4.99/month | The player who wants the core fishing assistant |
-| Pathfinder | €7.99/month | The player who wants memory, route planning and more profiles |
-| Founder | €9.99/month | The committed early adopter with extra seats and priority access |
+| ANGLER | €4.99 | Core fishing assistant, one PC |
+| PATHFINDER (recommended) | €7.99 | ANGLER + spot memory, route planner and up to 5 profiles where verified |
+| FOUNDER | €9.99 | PATHFINDER + 2 devices, priority support and beta channel |
 
-All monthly subscriptions auto-renew and can be canceled online. Make first payment timing, renewal price, cancellation path and Early Access status clear before payment. Preserve existing paid lifetime licenses and old orders; do not migrate them or remove access.
+Auto-renew every month. First charge at signup; next monthly charge one month later. Cancel online at any time; retain access through the paid-through date. No trial, no lifetime claim for new plans, no hidden annual commitment.
 
-The three tiers only become purchasable when the actual Early Access service being sold is available. If the build cannot yet be delivered, use a clearly labeled reservation/waitlist or pre-order with a real delivery commitment and refund terms; do not silently charge a recurring membership for a download that does not exist.
+Old paid lifetime licences and existing orders remain honoured; never migrate or revoke existing customers without explicit consent. Price, monthly cadence, first charge and cancellation route visible beside every CTA and at checkout.
 
-## Product positioning
+## Honest Early Access positioning
 
-Sell what BOT-WOW actually is today: a WoW Classic fishing assistant, not a generic combat/XP/battleground bot.
+This is a premium Early Access launch, not a fake ready-software claim. The current R2 bucket does contain an object named casinobabe-fishing-1.2.0.zip (1,387,543 bytes, modified 2026-10-27) and an older v1.0.38 zip (1,229,709 bytes). Existence is verified; integrity, compatibility, clean Windows install, SHA-256 manifest and end-to-end customer delivery are NOT verified yet.
+
+The current main buy.html shows a hard warning and disables checkout because delivery was unconfirmed. Remove the frightening blocker copy and replace it with a strong conversion-first Early Access product story, but only enable recurring charges after the R2 artifact passes integrity/install tests and paid members can receive it.
+
+If the package is verified:
+- Sell ANGLER as access to the working current fishing assistant build.
+- Add PATHFINDER/FOUNDER entitlements only after their actual features and licensing limits pass tests.
+- Display in-validation or planned features as "en préparation"; do not sell them as already shipped.
+
+If the package cannot be delivered yet:
+- Present a premium Early Access waitlist/reservation or a clearly documented pre-order with an honest delivery window, terms and refund mechanics.
+- Do not take an automatic recurring subscription charge for a service that has not begun and cannot be accessed.
+- Do not make up a release date, support capacity, testimonials, customer count, gold/hour results or compatibility.
+
+## Design — replace the current warning-heavy purchase page
+
+Retain BOT-WOW's recognizable charcoal/black, warm-gold CTA, Sora and JetBrains Mono, compact gaming-product energy. Make the experience persuasive and direct.
 
 Hero:
-- Eyebrow: "WOW CLASSIC · FISHING ASSISTANT"
+- Eyebrow: WOW CLASSIC · FISHING ASSISTANT
 - H1: "Le compagnon de pêche qui apprend tes spots."
-- Subheadline: "Détecte les touches, garde la mémoire de tes spots et aide à organiser tes tournées — en accès anticipé."
-- Primary CTA: "Choisir mon accès"
+- Subheadline: "Détecte les touches, garde la mémoire de tes spots et organise tes tournées — en accès anticipé."
+- Main CTA: "Choisir mon accès"
 - Secondary CTA: "Voir la démo"
-- Trust line: "À partir de 4,99 €/mois · Résiliable à tout moment"
+- Price line: "À partir de 4,99 €/mois · Résiliable en ligne"
+- Use a real capture from a verified gameplay session. The browser demo is simulated; label it as simulation.
 
-Use a real gameplay capture, not a synthetic fake screenshot. The browser demo is simulated; label it honestly and distinguish it from in-game bot operation.
+Page flow:
+1. Hero with actual gameplay capture/video and a clear CTA.
+2. Three proof steps: détecter la touche → mémoriser le spot → organiser la tournée. Use only features verified in build.
+3. Working-feature strip: "Disponible maintenant / En validation / En préparation", accurate and low-drama.
+4. Three plan cards with monthly price and cancellation terms, PATHFINDER visually recommended.
+5. Product evidence: real session capture, installation steps and actual changelog.
+6. Compatibility: only tested WoW client/build and Windows configurations.
+7. FAQ: what is included today, installation, updates, payment, renewal, cancellation, refund.
+8. Clear note that automation can violate Blizzard's terms and may lead to account sanctions. No "zero ban", "undetectable", "safe" or Blizzard-affiliation claims.
+9. Footer with support, terms, privacy, refunds, billing and cancellation.
 
-## Three pricing cards
+Plan cards:
+ANGLER €4.99/month:
+- Core fishing loop (cast, float/bite detection, click) only if verified in packaged artifact.
+- One PC activation.
+- Stable releases while paid.
+- Standard email support.
 
-### Angler — €4.99/month
-- Core fishing loop: cast, bite/float detection and click only when verified in the distributed build.
-- One Windows PC activation.
-- Standard stable updates during an active subscription.
-- Email support.
+PATHFINDER €7.99/month:
+- All ANGLER.
+- Persistent spot memory + JSON import/export once verified.
+- Route planner/optimized rounds once verified.
+- Up to five saved profiles/characters (enforce server-side).
+- Standard support.
 
-### Pathfinder — €7.99/month (recommended)
-- Everything in Angler.
-- Persistent fishing-spot memory and JSON import/export, once verified.
-- Route planning between saved spots, once verified.
-- Up to five saved fishing profiles/characters (enforce server-side).
-- Standard support and updates.
-
-### Founder — €9.99/month
-- Everything in Pathfinder.
+FOUNDER €9.99/month:
+- All PATHFINDER.
 - Two device activations (enforce server-side).
-- Unlimited profiles (only once implemented).
 - Priority support.
-- Preview/beta builds clearly marked as beta, with release notes and rollback.
-- Early adopter feedback channel; do not promise feature delivery on demand.
+- Preview/beta channel with clear beta labels and release notes.
+- Unlimited profiles only if implemented and enforced.
 
-No tier promises anti-ban protection, undetectability, Blizzard approval, or safety from penalties. State clearly that automation may violate Blizzard's terms and can lead to account sanctions. Never say "zero ban", "undetected", or "safe".
+CTA labels:
+- "Rejoindre ANGLER · 4,99 €/mois"
+- "Choisir PATHFINDER · 7,99 €/mois"
+- "Accéder à FOUNDER · 9,99 €/mois"
 
-## Design / sales page rebuild
+No fake urgency, fake reviews, fake "players online", fake sales counters or fake star ratings. Replace dead checkout styling with attractive, reassuring Early Access framing. Don't obscure the state of the downloadable build or the real delivery commitment.
 
-Keep BOT-WOW's recognizable visual direction: black/charcoal, warm gold CTA, Sora/JetBrains Mono, compact gamer-product feel. Replace warning-heavy / BTC-conflicting legacy copy with a confident, premium and truthful Early Access storefront.
+## Technical facts verified
 
-1. Hero: headline, one sentence value proposition, real screenshot/video, primary CTA and starting monthly price.
-2. Three-step proof: detect a bite → remember productive spots → organize next round. Only show steps verified in current build; mark unreleased elements "en préparation".
-3. Interactive browser demo clearly labeled as simulation; CTA back to the real product plan.
-4. "What works now / In validation / Planned" status strip with exact verified capabilities. Never hide material limitations.
-5. Pricing cards: Angler, Pathfinder, Founder. Pathfinder recommended. Monthly price and cancellation wording directly under each price.
-6. Compatibility section restricted to verified WoW client/version and Windows configurations.
-7. Risk / fair-use notice with plain language about game rules and possible account sanctions.
-8. FAQ: download timing, install, version support, billing/cancellation, updates, refunds, support.
-9. Footer with terms, privacy, refund policy, support and product status.
-
-Pricing CTA examples:
-- "Rejoindre Angler · 4,99 €/mois"
-- "Choisir Pathfinder · 7,99 €/mois"
-- "Accéder à Founder · 9,99 €/mois"
-
-Show a clean, low-friction checkout: email → plan/cadence/price confirmation → hosted Mollie payment. The plan price and billing interval must be selected and validated server-side.
-
-## Important code findings
-
-- buy.html currently sells a €20 lifetime license and says the v1.2.0 package is unconfirmed; it disables checkout.
-- The page states spot-to-spot movement is still in validation and combat/XP/quests/BG automation are not shipped.
-- Main's worker/index.js currently contains webhook idempotency, but still has download fallback candidates and hardcoded old filename. The P0.99 branch was not visible in GitHub at the last check.
-- Earlier direct Cloudflare inspection found the live Worker expects RELEASE_STATUS=confirmed while a later proposed contract says open. Recheck exact main, branch and production Worker before changing any gate.
-- Never read or expose secret values.
+- Latest main SHA: 2edd74be83f272672b303ccdb316d52137109076.
+- Main buy.html currently advertises €20 lifetime and disables checkout because delivery is not confirmed. It still says spot-to-spot movement is in validation; combat/XP/quests/BG are not shipped.
+- Cloudflare production Pages canonical deploy: 2026-10-30 01:01:32Z, commit 2edd74be83f272672b303ccdb316d52137109076.
+- botwow-api latest production Worker deployment: 2026-10-27 07:46:28Z, version c3dcc842-c422-42d3-9828-405f30d70b5f. Main source and production Worker have previously shown a RELEASE_STATUS contract mismatch: production checks for confirmed while proposed P0.99/P0.5 code refers to open. Reconcile the exact Worker source before altering the gate. Never guess or reveal secret values.
+- R2 bucket botwow-binaries has casinobabe-fishing-1.2.0.zip (1,387,543 bytes) and Casinobabe-v1.0.38.zip (1,229,709 bytes). Verify object bytes/checksum and actual install before enabling delivery.
+- Cloudflare D1 botwow-production: orders 25, licenses 5, activations 0, deliveries table 0, webhook_events 16 at 2026-11-04 read-only check. A zero deliveries row count does not prove no email was sent; trace the actual mail helper and confirm provider result. Never send real customer email in tests.
+- D1 table licenses currently max_activations default 2; change only with migration and tests preserving old licences.
+- Main Worker code has webhook idempotency via webhook_events; keep it.
 
 ## Mollie subscription implementation
 
-Inspect Mollie current recurring-payment docs and existing repository integrations. Implement a proper first payment/mandate, then subscription:
-1. Customer selects plan; explicit consent spells out recurring monthly cost.
+Follow current Mollie API docs:
+- https://docs.mollie.com/docs/recurring-payments
+- https://docs.mollie.com/reference/create-customer-payment
+- https://docs.mollie.com/reference/create-subscription
+- https://docs.mollie.com/reference/list-subscription-payments
+
+Use a real first-payment mandate flow:
+1. Customer selects plan and sees explicit monthly renewal consent.
 2. Create/find Mollie customer.
-3. Create first payment with customerId and sequenceType=first.
-4. Verify paid result server-to-server and mandate validity.
-5. Create monthly subscription with first renewal after one month, never double-charge signup.
-6. Store subscription, customer, plan, payment, current paid-through date, renewal state.
-7. Renewal webhook retrieves authoritative payment from Mollie, correlates subscriptionId, extends entitlement once.
-8. Failed renewal does not extend entitlement.
-9. Cancellation stops future charges but keeps access until paid-through date.
-10. Self-service cancellation and billing recovery.
-11. Enforce device and profile limits server-side.
-12. Never grant based only on the browser redirect or localStorage.
+3. Create first payment at exact plan price with customerId and sequenceType=first.
+4. Verify payment paid and valid mandate server-to-server.
+5. Create one monthly subscription with first renewal at the next billing period.
+6. Store durable subscription/license plan state, current paid-through, next due and provider IDs.
+7. Renewal webhooks arrive as new payment IDs with subscriptionId; retrieve canonical payment from Mollie and correlate idempotently.
+8. Successful renewals extend entitlement once. Failed attempts do not extend; Mollie may retry up to five times depending on failure reason.
+9. Cancellation must stop future billing but keep access to the already-paid period.
+10. Self-service cancellation, billing recovery and access recovery.
+11. Enforce device/profile entitlements server-side.
+12. Browser return URL, localStorage or a payment-start event never grants access.
+13. Existing lifetime licences, historic paid orders and licenses remain valid.
 
-## Conversion / implementation tests
+## Launch tests
 
-- Correct EUR 4.99/7.99/9.99 amount and monthly interval.
-- Tampered tier / amount rejected.
-- Failed or pending first payment creates no active subscription.
-- Duplicate webhook never creates duplicate subscriptions or entitlement periods.
-- Paid renewal extends access once.
-- Failed renewal does not extend access.
-- Cancellation keeps access through paid period and prevents next charge.
-- Angler one device, Pathfinder one device/five profiles, Founder two devices/unlimited profiles.
-- Legacy lifetime licences still work.
-- Package integrity SHA-256, clean Windows installation, activation and email delivery all tested before promising a download.
-- Test mail sink only; no real customer communications.
+- Validate EUR plan allowlist and monthly interval; reject tampering.
+- First payment paid creates exactly one subscription; pending/failed creates none.
+- No double charge on signup.
+- Duplicate first payment / renewal webhook cannot create duplicate order/licence or extend twice.
+- Renewal success extends paid-through; failure does not.
+- Cancel stops next charge but preserves paid-through access.
+- Expiry disables licence and protected downloads.
+- Angler one device; Pathfinder one device/five profiles; Founder two devices.
+- Verify ZIP SHA-256 against manifest, archive contents, Windows 10/11 install, activation, download authorization, and actual email delivery to a test sink.
+- Confirm live R2 object key binding and Worker RELEASE_STATUS semantics agree with the code.
+- Preserve old lifetime customers and checkout history.
 
-## Launch gates
+## Go-live requirements
 
-Mollie TEST lifecycle and the real download/activation path must pass before activating real recurring charges. Do not turn on checkout for access that cannot be delivered. Live billing, RELEASE_STATUS change, Worker deployment, production secrets and actual customer charging require the owner's explicit authorization.
+Use Mollie TEST mode and test email sink first. Once artifact integrity/install/delivery, first payment/mandate, renewal, cancellation, entitlement and rollback tests all pass, deploy the agreed three plans and checkout. Do not publish a subscription for a non-deliverable product. A production subscription charge is allowed only when all included benefits can be delivered and customer consent wording is explicit.
