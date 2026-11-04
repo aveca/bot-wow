@@ -29,10 +29,9 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.locator('h1')).toContainText('The fishing bot');
-  await expect(page.locator('#buyBtn')).toContainText('delivery not confirmed');
-  await expect(page.locator('.checkout-blocked')).toContainText('Checkout unavailable');
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('h1')).toContainText('A fishing companion');
+  await expect(page.locator('#early-access-status')).toContainText('Not available to purchase');
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
 
   // Les liens legaux pointent vers /legal/ (pas /legal/fr/)
   await expect(page.locator('a[href="./legal/terms.html"]').first()).toBeAttached();
@@ -49,10 +48,9 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(page.locator('h1')).toContainText('Le bot de pêche');
-  await expect(page.locator('#buyBtn')).toContainText('livraison à confirmer');
-  await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
-  await expect(page.locator('#release-availability-notice')).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
+  await expect(page.locator('h1')).toContainText('Un compagnon de pêche');
+  await expect(page.locator('#early-access-status')).toContainText('Achat indisponible');
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
 
   // Les liens legaux FR pointent vers /legal/fr/ (pas /legal/)
   await expect(page.locator('a[href="../legal/fr/terms.html"]').first()).toBeAttached();
@@ -88,14 +86,18 @@ test('i18n: language switcher links are correct on buy pages', async ({ page }, 
    I18N — price consistency
    ───────────────────────────── */
 
-test('i18n: price is 20,00 EUR on both EN and FR', async ({ page }, testInfo) => {
+test('i18n: proposed monthly plans and terms are consistent on EN and FR', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   for (const path of ['/buy.html', '/fr/buy.html']) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
 
-    await expect(page.locator('.price-card .amt b')).toContainText('20,00 €');
+    await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
+    await expect(page.locator('.plans-grid')).toContainText('4,99 €');
+    await expect(page.locator('.plans-grid')).toContainText('7,99 €');
+    await expect(page.locator('.plans-grid')).toContainText('9,99 €');
+    await expect(page.locator('#early-access-status')).toBeVisible();
   }
   expect(errors).toEqual([]);
 });

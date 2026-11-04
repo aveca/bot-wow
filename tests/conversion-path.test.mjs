@@ -7,8 +7,8 @@
  *  2. le radar interactif a une sortie vers la demonstration ;
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
- *  4. le formulaire d'achat est present, avec email + validation ;
- *  5. la liste d'attente reste proposee en repli ;
+ *  4. les formules d'accès anticipé sont visibles, sans paiement ni collecte ;
+ *  5. les demandes de contact restent explicites et volontaires ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
  */
@@ -58,11 +58,11 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : sortie du radar vers la demonstration', /class="radar-next-link" href="\.\/demo\.html"/.test(t));
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
-  check('accueil : CTA final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-buy"/.test(t));
-  check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
-  check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
-  check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
-  check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
+  check('accueil : CTA final vers les formules proposées', /id="final"[\s\S]{0,900}href="\.\/buy\.html#buy"[^>]*data-cta-id="final-buy"/.test(t));
+  check('accueil : état de disponibilité des formules visible', /id="release-availability-notice"/.test(t) && /not available|not available for purchase/.test(t));
+  check('accueil : aucun formulaire ou bouton de paiement', !/<form id="buyForm"|id="buyBtn"|pay-badges/.test(t));
+  check('accueil : les trois tarifs proposés sont indiqués', ['€4.99', '€7.99', '€9.99'].every((price) => t.includes(price)));
+  check('accueil : canal volontaire vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
 // 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
@@ -176,8 +176,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const t = read('index.html');
   const prices = [...new Set([...t.matchAll(/(\d+[.,]\d\d\s?€|€\s?\d+[.,]\d\d)/g)].map((m) => m[0].replace(/\s/g, ' ')))];
-  check('accueil : un seul prix annonce', prices.length <= 2, `(prix : ${prices.join(', ')})`);
-  check('accueil : prix de 20 EUR present', /20,00\s?€/.test(t));
+  check('accueil : seuls les trois prix mensuels proposes sont annonces',
+    prices.length === 3 && prices.includes('€4.99') && prices.includes('€7.99') && prices.includes('€9.99'), `(prix : ${prices.join(', ')})`);
+  check('accueil : aucun ancien prix lifetime de 20 EUR', !/20,00\s?€|€20(?:\.00)?\s*(?:lifetime|once)/i.test(t));
 }
 
 // 8. Le stamp des assets est a jour (regression observee en production :
@@ -197,19 +198,15 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
 }
 
-// 8. La promesse de remboursement doit rester conforme aux conditions publiees.
-// Le hero doit annoncer la verite (14 jours, sauf licence activee) et jamais
-// une garantie inconditionnelle.
+// 8. Do not imply a refund promise for a plan that is not available to purchase.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
   const heroGuarantee = (html.match(/hero__guarantee-text">([\s\S]*?)<\/span>/) || ['', ''])[1]
     .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-  check(`${file} : le hero lie la politique de remboursement`,
-    /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
-  check(`${file} : aucune garantie de remboursement inconditionnelle`,
-    !/No catch|Sans piège/i.test(heroGuarantee), `("${heroGuarantee}")`);
-  check(`${file} : la condition d'activation est mentionnee`,
-    /activée|activated/i.test(heroGuarantee), `("${heroGuarantee}")`);
+  check(`${file} : le hero indique que le paiement n'est pas disponible`,
+    /No payment|Aucun paiement/i.test(heroGuarantee), `("${heroGuarantee}")`);
+  check(`${file} : aucune promesse de remboursement ou de livraison`,
+    !/refund|rembours|livraison|delivery/i.test(heroGuarantee), `("${heroGuarantee}")`);
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
@@ -225,7 +222,7 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
 // 11. Hierarchie visuelle : l OR est reserve aux CTA d achat. Si tout est
 // doré, plus rien ne ressort et l action d achat devient invisible.
 {
-  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy', 'hero-offer'];
+  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy', 'hero-offer', 'home-proposed-plans'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
@@ -264,12 +261,11 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
-// 13. Accessibilite du champ email : un outline:none global rend le champ
-// invisible a la navigation clavier. Le clavier doit retrouver un anneau.
+// 13. No email capture is exposed while purchase plans are unavailable.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : champ email avec type="email"`, /id="email"[^>]*type="email"/.test(html));
-  check(`${file} : label associe au champ email`, /<label[^>]*for="email"/.test(html));
+  check(`${file} : aucun champ d'email sans flux de collecte déclaré`,
+    !/<form id="buyForm"|id="email"|data-waitlist/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));

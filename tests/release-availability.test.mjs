@@ -1,14 +1,5 @@
 #!/usr/bin/env node
-/**
- * release-availability.test.mjs — garde-fou commercial.
- *
- * Probleme demontre : le site vend la v1.2.0 alors que le paquet de
- * telechargement correspondant n'est pas verifiable dans R2 (issue #18,
- * PR #26). Les pages de vente ne doivent donc PAS promettre de livraison
- * immediate ni presenter v1.2.0 comme une version confirmee.
- *
- * Ce test est un garde-fou statique : il lit le code publie, pas R2.
- */
+/** Static guard for the proposed Early Access pricing pages. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,33 +14,42 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-const EN_CLAIM = /Delivered\s+<b>by email<\/b>\s+in minutes/i;
-const FR_CLAIM = /Livré\s+<b>par e-mail<\/b>\s+en quelques minutes/i;
-
-for (const [page, file, claimRe] of [
-  ['buy.html', 'buy.html', EN_CLAIM],
-  ['fr/buy.html', 'fr/buy.html', FR_CLAIM],
+for (const [page, file, unavailableText] of [
+  ['buy.html', 'buy.html', 'not available to purchase'],
+  ['fr/buy.html', 'fr/buy.html', 'Achat indisponible'],
 ]) {
   const html = read(file);
-  // Les retours a la ligne du HTML ne sont pas significatifs : on compare
-  // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
-  check(`${page} : avis de disponibilite present`,
-    /id="release-availability-notice"/.test(html) && /role="alert"/.test(html));
-  check(`${page} : avis place AVANT le formulaire d'achat`,
-    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
-  check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
-  check(`${page} : v1.2.0 non presente comme une version confirmee`,
-    !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
-  check(`${page} : invitation a contacter le support avant paiement`,
-    /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée/i.test(flat));
-  check(`${page} : le vrai formulaire de checkout est conserve`,
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
-  check(`${page} : prix 20,00 EUR inchange`,
-    /20,00\s*€/.test(html));
-  check(`${page} : CTAs instrumentes pour la mesure`,
-    (html.match(/data-cta-id="buy-/g) || []).length >= 3);
+  check(`${page}: availability status is visible`,
+    /id="early-access-status"/.test(html) && /role="status"/.test(html));
+  check(`${page}: status says the plans are unavailable`, flat.toLowerCase().includes(unavailableText.toLowerCase()));
+  check(`${page}: all three proposed monthly prices appear`,
+    ['4,99 €', '7,99 €', '9,99 €'].every((price) => flat.includes(price)) && /\/ month|\/ mois/.test(flat));
+  check(`${page}: no checkout form, payment button or Mollie claim`,
+    !/id="buyForm"|id="buyBtn"|Mollie/i.test(html));
+  check(`${page}: install and customer delivery remain disclosed`,
+    /clean Windows install|installation Windows propre/i.test(flat) && /customer email delivery|e-mail client/i.test(flat));
+  check(`${page}: plan entitlements are not presented as active`,
+    /not implemented|pas implément/i.test(flat));
+  check(`${page}: existing lifetime licences remain honoured`,
+    /existing lifetime licences remain honoured|licences à vie déjà accordées restent honorées/i.test(flat));
+  check(`${page}: old €20 lifetime offer is absent`,
+    !/20,00\s*€/.test(flat) && !/€20(?:\.00)?\s*(?:once|lifetime)/i.test(flat));
+  check(`${page}: plan CTAs remain instrumented`,
+    (html.match(/data-cta-id="buy-/g) || []).length >= 4);
 }
 
-console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
+const redirects = read('_redirects');
+for (const [source, target] of [
+  ['/ab/a/buy.html', '/buy.html'],
+  ['/ab/b/buy.html', '/buy.html'],
+  ['/ab/a/fr/buy.html', '/fr/buy.html'],
+  ['/ab/b/fr/buy.html', '/fr/buy.html'],
+]) {
+  const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  check(`${source}: legacy purchase entry redirects to unavailable Early Access`,
+    new RegExp(`^${escaped}\\s+${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+301$`, 'm').test(redirects));
+}
+
+console.log(failures === 0 ? '\nEARLY ACCESS PRICING : OK' : `\nEARLY ACCESS PRICING : ${failures} FAILURE(S)`);
 process.exit(failures === 0 ? 0 : 1);

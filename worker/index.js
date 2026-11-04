@@ -2382,20 +2382,17 @@ async function handleResend(request, env2) {
     }
     return jsonResponse({ ok: true });
   } catch (error) {
-    console.error("Resend error:", error);
+    console.error("Resend endpoint failed");
     return jsonResponse({ ok: true });
   }
 }
 __name(handleResend, "handleResend");
 async function sendDeliveryEmail(env2, email, key, downloadUrl, lang) {
-  console.log("[EMAIL] Delivery email would be sent to:", email);
-  console.log("[EMAIL] Key:", key);
-  console.log("[EMAIL] Download URL:", downloadUrl);
-  console.log("[EMAIL] Language:", lang);
+  console.log("[EMAIL] Legacy resend path reached; provider delivery is not implemented");
 }
 __name(sendDeliveryEmail, "sendDeliveryEmail");
 async function sendAdminNotification(env2, email, key) {
-  console.log("[ADMIN] New registration:", { email, key });
+  console.log("[ADMIN] Registration notification helper reached");
 }
 __name(sendAdminNotification, "sendAdminNotification");
 function jsonResponse(data, status = 200, extraHeaders = {}) {
@@ -2488,6 +2485,22 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+  // Keep the production release gate in source: if delivery is not confirmed,
+  // direct API callers must not be able to reach Mollie. Missing configuration
+  // fails closed. Do not log the secret value.
+  const releaseStatus = typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS
+    ? env2.RELEASE_STATUS
+    : "pending";
+  if (releaseStatus !== "confirmed") {
+    return jsonResponse2({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr"
+        ? "La livraison du paquet n'est pas encore confirmée. Contactez le support avant de payer."
+        : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, { "Retry-After": "3600" });
+  }
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
@@ -2782,7 +2795,7 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
   await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId);
   await sendAdminNotification2(env2, email, licenseKey, amount);
-  console.log(`Order fulfilled: ${payment.id} -> ${email} (${licenseKey})`);
+  console.log(`Order fulfilled: ${payment.id}`);
   // Evenement serveur : licence creee et liee a la commande payee.
   await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef });
 }
@@ -2803,7 +2816,7 @@ async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, p
     now,
     now
   ).run();
-  console.log(`Order failed: ${payment.id} -> ${email}`);
+  console.log(`Order failed: ${payment.id}`);
   // Evenement serveur : echec de paiement confirme par Mollie.
   await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/mollie-webhook', lang, { step: 'checkout_failed', ref: paymentRef });
 }
@@ -2820,7 +2833,7 @@ async function revokeLicense(env2, payment, email, eventId) {
       env2.DB.prepare("UPDATE licenses SET status = ? WHERE id = ?").bind("revoked", license.id),
       env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id)
     ]);
-    console.log(`License revoked: ${license.key} (refund/chargeback for ${payment.id})`);
+    console.log(`License revoked for payment ${payment.id}`);
   } else {
     console.log(`No license to revoke for ${payment.id} (refund/chargeback)`);
   }
@@ -3050,12 +3063,12 @@ async function sendEmail2(env2, to, subject, text, html) {
       body: JSON.stringify({ from, to: [to], subject, text, html })
     });
     if (!res.ok) {
-      const err = await res.text();
-      console.error("[EMAIL] Resend a repondu", res.status, err.slice(0, 200));
+      await res.text();
+      console.error("[EMAIL] Resend rejected delivery", res.status);
       return { sent: false, reason: "resend_" + res.status };
     }
     const data = await res.json().catch(() => ({}));
-    console.log("[EMAIL] envoi accepte par le provider pour", to);
+    console.log("[EMAIL] Resend accepted provider message", data && data.id ? { providerMessageId: data.id } : {});
     return { sent: true, id: data && data.id };
   } catch (e) {
     console.error("[EMAIL] echec reseau", e && e.message);
@@ -3065,7 +3078,7 @@ async function sendEmail2(env2, to, subject, text, html) {
 __name(sendEmail2, "sendEmail2");
 __name(sendDeliveryEmail2, "sendDeliveryEmail");
 async function sendAdminNotification2(env2, email, key, amount) {
-  console.log("[ADMIN] Paid order:", { email, key, amount });
+  console.log("[ADMIN] Paid order recorded");
 }
 __name(sendAdminNotification2, "sendAdminNotification");
 function jsonResponse2(data, status = 200, extraHeaders = {}) {
@@ -3105,6 +3118,21 @@ async function handleBitcoinCheckout(request, env2) {
   const lang = validateLang(body.lang || "fr");
   if (!email || !validateEmail(email)) {
     return jsonResponse3({ ok: false, error: "invalid_email" }, 400);
+  }
+  // The manual-payment rail is also a purchase. Keep it closed until the same
+  // release gate used by the Mollie route confirms that delivery is ready.
+  const releaseStatus = typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS
+    ? env2.RELEASE_STATUS
+    : "pending";
+  if (releaseStatus !== "confirmed") {
+    return jsonResponse3({
+      ok: false,
+      error: "delivery_unverified",
+      message: lang === "fr"
+        ? "La livraison du paquet n'est pas encore confirmée. Contactez le support avant de payer."
+        : "Package delivery is not confirmed yet. Contact support before paying.",
+      support: "support@bot-wow.com"
+    }, 409, { "Retry-After": "3600" });
   }
   try {
     const now = Date.now();

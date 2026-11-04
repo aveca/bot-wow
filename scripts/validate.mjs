@@ -172,8 +172,13 @@ const forbidden = [/\bzero ban\b/i, /\bzéro ban\b/i, /24\/7/i, /garanti/i,
 for (const re of forbidden) {
   if (re.test(commercial)) failures.push(`section commerciale : promesse a ne pas prouver : ${re}`);
 }
-// Le prix annonce doit correspondre a celui du serveur (20 EUR).
-if (!home.includes("20,00 €")) failures.push("index.html : le prix de l'offre doit etre affiche (20,00 EUR)");
+// Les tarifs de la nouvelle offre sont proposals only while checkout stays closed.
+if (!home.includes("€4.99") || !home.includes("€7.99") || !home.includes("€9.99")) {
+  failures.push("index.html : les trois tarifs mensuels proposes doivent etre affiches");
+}
+if (/<form id="buyForm"|id="buyBtn"/.test(home)) {
+  failures.push("index.html : aucun formulaire de paiement ne doit etre expose pendant la validation de la livraison");
+}
 
 // --- Migrations D1 : le schema doit etre reproductible --------------------
 // FIX 2026-10-23 : les migrations sont separees par base de donnees.

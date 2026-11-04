@@ -5,8 +5,7 @@
  * CE QUI EST TESTE
  * ----------------
  * 1. la barre existe dans les deux langues et pointe vers la section d'achat ;
- * 2. le prix affiche est le prix REEL (20,00 / 20.00) — jamais un prix invente
- *    ou une remise ;
+ * 2. le prix affiche est clairement marque comme propose et non disponible ;
  * 3. le CSS la rend visible sur desktop UNIQUEMENT via .is-on (donc invisible
  *    a l'ouverture, visible apres le hero) ;
  * 4. mobile : visible en permanence (media query max-width:760px) ;
@@ -46,22 +45,22 @@ function extractMbar(html) {
 for (const [name, html] of [['EN', en], ['FR', fr]]) {
   const mbar = extractMbar(html);
   check(`${name} : la barre d'action existe`, !!mbar);
-  check(`${name} : le lien pointe vers la section d'achat (#buy)`,
-    !!mbar && /href="#buy"/.test(mbar));
+  check(`${name} : le lien pointe vers la page des formules (#buy)`,
+    !!mbar && /href="\.\/buy\.html#buy"/.test(mbar));
   check(`${name} : le lien est instrumenté (data-track + data-cta-id)`,
     !!mbar && /data-track="cta_click"/.test(mbar) && /data-cta-id="mbar-buy"/.test(mbar));
   check(`${name} : la barre porte un role/aria pour les lecteurs d'ecran`,
     !!mbar && /role="region"/.test(mbar) && /aria-label=/.test(mbar));
 }
 
-/* 2. le prix affiche est le prix REEL, jamais invente */
+/* 2. Le tarif reste marqué comme proposé, pas comme une offre active. */
 for (const [name, html] of [['EN', en], ['FR', fr]]) {
   const mbar = extractMbar(html) || '';
-  check(`${name} : la barre annonce 20,00 €`, /20,00\s*€/.test(mbar), `(${mbar.slice(0, 80)})`);
+  check(`${name} : la barre affiche un prix proposé par mois`, /(?:4[.,]99\s*€|€\s*4[.,]99)/.test(mbar) && /propos|proposed/i.test(mbar), `(${mbar.slice(0, 100)})`);
 }
 const priceInBar = extractMbar(en) || '';
-check('EN : aucun autre montant que 20,00 dans la barre',
-  (priceInBar.match(/\d+[,.]\d{2}/g) || []).every((p) => p.startsWith('20,')), `(${priceInBar.match(/\d+[,.]\d{2}/g)})`);
+check('EN : un seul tarif est annoncé dans la barre mobile',
+  (priceInBar.match(/\d+[,.]\d{2}/g) || []).length === 1, `(${priceInBar.match(/\d+[,.]\d{2}/g)})`);
 
 /* 3. aucune fausse urgence (compte a rebours, stock, "plus que X") */
 for (const [name, html] of [['EN', en], ['FR', fr]]) {

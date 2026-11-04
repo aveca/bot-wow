@@ -23,132 +23,72 @@ async function captureScreenshot(page, testInfo, name) {
    CHECKOUT FLOW — garde-fou
    ───────────────────────────── */
 
-test('checkout: buy button is disabled on buy.html (EN)', async ({ page }, testInfo) => {
+test('early access: proposed plans are visible without checkout (EN)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
 
-  // Le bouton est desactive
-  const buyBtn = page.locator('#buyBtn');
-  await expect(buyBtn).toBeDisabled();
+  await expect(page.locator('#early-access-status')).toContainText('Not available to purchase');
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
+  await expect(page.locator('.plans-grid')).toContainText('4,99 €');
+  await expect(page.locator('.plans-grid')).toContainText('7,99 €');
+  await expect(page.locator('.plans-grid')).toContainText('9,99 €');
+  await expect(page.locator('#buyForm, #buyBtn, .pay-badges')).toHaveCount(0);
+  await expect(page.locator('a[data-cta-id="buy-angler-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+  await expect(page.locator('a[data-cta-id="buy-pathfinder-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+  await expect(page.locator('a[data-cta-id="buy-founder-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
 
-  // Le message de blocage est visible
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('.checkout-blocked')).toContainText('Checkout unavailable');
-
-  // L'avertissement de disponibilite est present
-  await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
-
-  // Le formulaire existe mais le bouton est desactive
-  await expect(page.locator('#buyForm')).toBeAttached();
-  await expect(page.locator('#email')).toBeAttached();
-
-  await captureScreenshot(page, testInfo, 'checkout-blocked-en');
+  await captureScreenshot(page, testInfo, 'early-access-plans-en');
   expect(errors).toEqual([]);
 });
 
-test('checkout: buy button is disabled on fr/buy.html (FR)', async ({ page }, testInfo) => {
+test('early access: proposed plans are visible without checkout (FR)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
 
-  const buyBtn = page.locator('#buyBtn');
-  await expect(buyBtn).toBeDisabled();
+  await expect(page.locator('#early-access-status')).toContainText('Achat indisponible');
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
+  await expect(page.locator('.plans-grid')).toContainText('4,99 €');
+  await expect(page.locator('.plans-grid')).toContainText('7,99 €');
+  await expect(page.locator('.plans-grid')).toContainText('9,99 €');
+  await expect(page.locator('#buyForm, #buyBtn, .pay-badges')).toHaveCount(0);
+  await expect(page.locator('a[data-cta-id="buy-angler-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+  await expect(page.locator('a[data-cta-id="buy-pathfinder-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+  await expect(page.locator('a[data-cta-id="buy-founder-question"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
 
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
-
-  await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
-
-  await expect(page.locator('#buyForm')).toBeAttached();
-  await expect(page.locator('#email')).toBeAttached();
-
-  await captureScreenshot(page, testInfo, 'checkout-blocked-fr');
+  await captureScreenshot(page, testInfo, 'early-access-plans-fr');
   expect(errors).toEqual([]);
 });
 
-test('checkout: buy button is disabled on index.html (EN homepage)', async ({ page }, testInfo) => {
+test('homepage: proposed plans do not expose checkout (EN)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
 
-  const buyBtn = page.locator('#buyBtn');
-  await expect(buyBtn).toBeDisabled();
-  await expect(buyBtn).toContainText('delivery not confirmed');
-
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('#release-availability-notice').first()).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText('no payment or reservation is available');
+  await expect(page.locator('#buyForm, #buyBtn')).toHaveCount(0);
+  await expect(page.locator('a[data-cta-id="home-proposed-plans"]')).toHaveAttribute('href', './buy.html#buy');
 
   await captureScreenshot(page, testInfo, 'checkout-blocked-index-en');
   expect(errors).toEqual([]);
 });
 
-test('checkout: buy button is disabled on fr/index.html (FR homepage)', async ({ page }, testInfo) => {
+test('homepage: proposed plans do not expose checkout (FR)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/fr/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
 
-  const buyBtn = page.locator('#buyBtn');
-  await expect(buyBtn).toBeDisabled();
-  await expect(buyBtn).toContainText('livraison à confirmer');
-
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('#release-availability-notice').first()).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
+  await expect(page.locator('#release-availability-notice')).toContainText("aucun paiement ni réservation n'est disponible");
+  await expect(page.locator('#buyForm, #buyBtn')).toHaveCount(0);
+  await expect(page.locator('a[data-cta-id="home-proposed-plans"]')).toHaveAttribute('href', './buy.html#buy');
 
   await captureScreenshot(page, testInfo, 'checkout-blocked-index-fr');
   expect(errors).toEqual([]);
 });
 
 /* ─────────────────────────────
-   CHECKOUT FLOW — validation
-   ───────────────────────────── */
-
-test('checkout: invalid email shows error and aria-invalid', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
-  expect(response && response.ok()).toBeTruthy();
-
-  const email = page.locator('#email');
-  const err = page.locator('#buyErr');
-
-  // Saisie d'un email invalide
-  await email.fill('not-an-email');
-  await email.press('Tab'); // quitter le champ pour declencher le blur si besoin
-
-  // Le bouton reste desactive (delivery not confirmed)
-  await expect(page.locator('#buyBtn')).toBeDisabled();
-
-  // Soumission bloquee : pas de redirection, pas d'erreur de redirect
-  await page.press('#email', 'Enter');
-  await expect(err).not.toContainText('redirect');
-
-  await captureScreenshot(page, testInfo, 'checkout-invalid-email');
-  expect(errors).toEqual([]);
-});
-
-test('checkout: Enter key does not submit when button disabled', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
-  expect(response && response.ok()).toBeTruthy();
-
-  // Remplir un email valide
-  await page.fill('#email', 'test@example.com');
-
-  // Appuyer sur Entree : le formulaire ne doit pas etre soumis (bouton desactive)
-  await page.press('#email', 'Enter');
-
-  // Aucun message de succes ni de redirection
-  await expect(page.locator('#buyOk')).not.toContainText('redirect');
-  await expect(page.locator('#buyErr')).not.toContainText('redirect');
-
-  await captureScreenshot(page, testInfo, 'checkout-enter-key');
-  expect(errors).toEqual([]);
-});
-
-/* ─────────────────────────────
-   CHECKOUT FLOW — sticky CTA
+   EARLY ACCESS — sticky CTA
    ───────────────────────────── */
 
 test('checkout: mobile sticky CTA bar is visible on buy pages', async ({ page }, testInfo) => {
@@ -161,10 +101,11 @@ test('checkout: mobile sticky CTA bar is visible on buy pages', async ({ page },
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
 
-    // La barre mobile est visible (position fixe en bas)
+    // La barre mobile indique les tarifs envisagés, sans acheter.
     const mbar = page.locator('.mbar');
     await expect(mbar).toBeVisible();
-    await expect(mbar).toContainText('20,00 €');
+    await expect(mbar).toContainText(lang === 'fr' ? 'Dès 4,99 €' : 'From 4,99 €');
+    await expect(mbar).toContainText(lang === 'fr' ? 'proposé / mois' : 'proposed / month');
 
     await captureScreenshot(page, testInfo, `mobile-cta-${lang}`);
   }

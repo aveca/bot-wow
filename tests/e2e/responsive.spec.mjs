@@ -47,7 +47,7 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeAttached();
+    await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
     await expectNoHorizontalOverflow(page);
 
     await captureScreenshot(page, testInfo, `responsive-buy-${vp.name}`);
@@ -61,7 +61,7 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeAttached();
+    await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
     await expectNoHorizontalOverflow(page);
 
     await captureScreenshot(page, testInfo, `responsive-buy-fr-${vp.name}`);
@@ -107,7 +107,7 @@ test('responsive: mobile nav hides nav-links and shows lang switcher', async ({ 
    RESPONSIVE — price card
    ───────────────────────────── */
 
-test('responsive: price card shows blocked state on all viewports', async ({ page }, testInfo) => {
+test('responsive: proposed plans show unavailable state on narrow viewports', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   for (const vp of viewports.slice(0, 3)) { // mobile, iphone-se, ipad
@@ -115,9 +115,9 @@ test('responsive: price card shows blocked state on all viewports', async ({ pag
     const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
 
-    await expect(page.locator('.checkout-blocked')).toBeVisible();
-    await expect(page.locator('#release-availability-notice')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('#early-access-status')).toBeVisible();
+    await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
+    await expect(page.locator('#buyForm, #buyBtn')).toHaveCount(0);
 
     await captureScreenshot(page, testInfo, `responsive-blocked-${vp.name}`);
   }

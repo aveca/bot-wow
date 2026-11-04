@@ -94,3 +94,27 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 3. Lever le garde-fou commercial (décision distincte, nécessite autorisation séparée).
 
 **Blocage restant :** Aucune autorisation de déploiement ni d'ouverture commerciale n'a été obtenue. Le garde-fou commercial reste actif.
+
+---
+
+## 8. Revenue Factory — suivi du 2026-11-04
+
+**PR suivie :** [#69 — BOT-WOW monthly Early Access tiers + sales redesign](https://github.com/aveca/bot-wow/pull/69)
+**Branche :** `revenue/early-access-monthly-499-20261104`
+**Dernier SHA publié avant ce suivi :** `ce746010ed6b7aa2f14bbf9f5edc4a6492b405da`
+**État production vérifié :** aucun déploiement n'a été déclenché par cette mission.
+
+### Preuves fraîches et limites
+
+- R2 `casinobabe-fishing-1.2.0.zip` téléchargé en lecture seule avec Wrangler 4.127.1 : 1 387 543 octets, SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, ZIP valide avec 30 entrées, aucun chemin dangereux et 26/26 hashes/tailles du manifeste corrects. Version annoncée : 1.2.0.
+- Extraction propre en répertoire temporaire sur Windows 11 Home build 26300; Python 3.14.4 `compileall` réussi. Aucun lancement de l'application, installation dans WoW ou activation n'a été exécuté; pas de VM Windows 10 disponible. L'installation et l'activation réelles restent non vérifiées.
+- Les GET de production de `/buy.html` et `/fr/buy.html` répondent 200 avec l'ancien prix ponctuel de 20 € et un bouton désactivé. L'API publique `/api/config` conserve `bot-wow-lifetime`, `priceEur=20`, `currency=eur`. Les quatre anciennes routes `/ab/.../buy.html` répondent 404 en production. La PR ajoute des redirections vers les pages Early Access fermées; ce changement n'est pas publié.
+- Le contrat du Worker dans la branche exige `RELEASE_STATUS=confirmed` et échoue fermé par défaut; tests couvrent `pending`, `open` et l'absence avant tout appel Mollie ou insertion de commande. La valeur du secret de production n'a pas été lue.
+- Le flux d'achat appelle Resend et conserve l'ID provider uniquement en mémoire; la table `deliveries` ne documente que les échecs. La route historique `/api/resend` est un stub log-only. `script-settings` Cloudflare a retourné `observability: null`; aucun résultat provider historique ne peut être confirmé depuis cette session. Aucun e-mail n'a été envoyé.
+- Les quatre observations de revue Codex sont traitées dans la conception (§15.1–15.4); le re-review sur `ce74601` était terminé sans finding non résolu. La logique abonnement/reprise des webhooks/chargeback demeure une conception à implémenter et tester en Mollie TEST avant toute ouverture. Ahrefs ne permettait pas les requêtes avec le plan connecté; Search Console BOT-WOW n'est pas connecté.
+
+### État commercial et suite
+
+Les tarifs mensuels proposés sont affichés comme indisponibles, sans formulaire, collecte d'e-mail, réservation ou checkout. Le prix API de 20 € ponctuel est inchangé. Aucun paiement, remboursement, envoi d'e-mail, modification de secret/binding, migration D1/R2 ou déploiement n'a eu lieu. Les tests locaux et les modifications de cette branche doivent encore passer CI et une revue Codex sur le nouveau SHA.
+
+**Prochaine action :** publier la branche et faire tourner CI/revue sur son SHA final; garder la caisse live fermée tant que l'installation Windows, l'activation, le fulfillment Resend et les tests récurrents n'ont pas de preuve vérifiable.

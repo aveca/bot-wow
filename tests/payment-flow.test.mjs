@@ -129,6 +129,7 @@ function makeEnv(state) {
     TELEMETRY_DB: telemetry,
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
+    RELEASE_STATUS: 'confirmed',
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',

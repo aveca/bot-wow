@@ -64,6 +64,7 @@ function makeEnv(state) {
     DB: db,
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
+    RELEASE_STATUS: 'confirmed',
     MOLLIE_API_KEY: 'test_key_secret_value',
     MOLLIE_WEBHOOK_SECRET: 'test_webhook_secret_value',
     ADMIN_JWT_SECRET: 'test_admin_secret_value',
@@ -110,6 +111,60 @@ function freshState() {
 
 /* ------------------------------------------------------------------ tests */
 console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
+
+/* Les journaux du Worker ne doivent contenir ni e-mail client, ni cle de
+   licence, ni jeton/lien de telechargement. */
+{
+  const workerSource = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+  const logLines = workerSource.split(/\r?\n/).filter((line) => /console\.(?:log|error|warn)/.test(line));
+  const dynamicPiiLogging = logLines.some((line) => {
+    const withoutCategory = line.replace(/\[(?:EMAIL|ADMIN)\]/g, '');
+    return /\$\{[^}]*\bemail\b|\bemail\b\s*[,}:]|\b(?:licenseKey|license\.key|downloadUrl)\b\s*[,}:]/i.test(withoutCategory);
+  });
+  check('les logs Worker ne contiennent pas d’e-mail, de cle ou de jeton de livraison',
+    !dynamicPiiLogging);
+  check('le statut Resend conserve un identifiant provider sans destinataire',
+    /\[EMAIL\] Resend accepted provider message.*providerMessageId/.test(workerSource));
+}
+
+/* Le secret de release doit rester en mode fermé tant que la livraison n'est
+   pas confirmée. Les deux rails de paiement refusent avant toute commande ou
+   appel Mollie, y compris en cas de valeur historique `open` ou d'absence. */
+{
+  const state = freshState();
+  const env = makeEnv(state);
+  env.RELEASE_STATUS = 'open';
+  mollieCalls = [];
+  const res = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env,
+  });
+  const body = await res.json();
+  check('checkout Mollie refuse le statut non confirmé',
+    res.status === 409 && body.error === 'delivery_unverified');
+  check('checkout Mollie n’appelle pas le prestataire avant confirmation', mollieCalls.length === 0);
+  check('checkout Mollie n’écrit aucune commande avant confirmation',
+    !state.calls.some((call) => /INSERT INTO orders/i.test(call.sql || '')));
+
+  const bitcoinState = freshState();
+  const bitcoinEnv = makeEnv(bitcoinState);
+  bitcoinEnv.RELEASE_STATUS = 'pending';
+  const bitcoin = await callWorker('/api/bitcoin/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env: bitcoinEnv,
+  });
+  const bitcoinBody = await bitcoin.json();
+  check('checkout Bitcoin refuse aussi avant confirmation',
+    bitcoin.status === 409 && bitcoinBody.error === 'delivery_unverified');
+  check('checkout Bitcoin n’écrit aucune commande avant confirmation',
+    !bitcoinState.calls.some((call) => /INSERT INTO orders/i.test(call.sql || '')));
+
+  const missingState = freshState();
+  const missingEnv = makeEnv(missingState);
+  delete missingEnv.RELEASE_STATUS;
+  const missing = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env: missingEnv,
+  });
+  check('absence du secret de release échoue fermée', missing.status === 409);
+}
 
 /* 1-3. rate limit : 5 par 5 min et par IP */
 {

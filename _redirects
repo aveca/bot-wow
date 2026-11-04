@@ -22,3 +22,9 @@
 /node_modules/*  /404.html  302
 /dist/*  /404.html  302
 /.github/*  /404.html  302
+
+# Archive the old one-time A/B buy pages behind the single closed Early Access page.
+/ab/a/buy.html  /buy.html  301
+/ab/b/buy.html  /buy.html  301
+/ab/a/fr/buy.html  /fr/buy.html  301
+/ab/b/fr/buy.html  /fr/buy.html  301

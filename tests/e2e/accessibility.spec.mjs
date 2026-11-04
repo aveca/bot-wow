@@ -57,13 +57,12 @@ test('accessibility: focus-visible outline on interactive elements', async ({ pa
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
 
-    // Le champ email a une classe pm-input et un outline :focus-visible dans le CSS
-    const email = page.locator('#email');
-    await expect(email).toBeAttached();
+    // The skip link is the first tab stop and has an explicit keyboard ring.
+    await page.keyboard.press('Tab');
+    const skipLink = page.locator('.skip-link');
+    await expect(skipLink).toBeFocused();
 
-    // Au focus clavier, l'anneau or apparait (pas outline:none sur :focus-visible)
-    await email.focus();
-    const focusStyle = await email.evaluate((el) => {
+    const focusStyle = await skipLink.evaluate((el) => {
       const cs = getComputedStyle(el);
       return { outline: cs.outline, outlineColor: cs.outlineColor, outlineOffset: cs.outlineOffset };
     });
@@ -79,27 +78,19 @@ test('accessibility: focus-visible outline on interactive elements', async ({ pa
    ACCESSIBILITÉ — labels + ARIA
    ───────────────────────────── */
 
-test('accessibility: email input has label and aria-describedby', async ({ page }, testInfo) => {
+test('accessibility: purchase pages expose no email capture before release verification', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   for (const path of ['/buy.html', '/fr/buy.html', '/index.html', '/fr/']) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
 
-    const email = page.locator('#email');
-    await expect(email).toBeAttached();
+    await expect(page.locator('#email, #buyForm, #buyBtn')).toHaveCount(0);
+    await expect(page.locator('.plan-state')).toBeAttached();
+    const statusText = await page.locator('.plan-state').first().innerText();
+    expect(statusText).toMatch(/not available|no purchase|indisponible|aucun achat/i);
 
-    // L'input a un type email
-    await expect(email).toHaveAttribute('type', 'email');
-
-    // Un label est associe (for="email")
-    await expect(page.locator('label[for="email"]')).toBeAttached();
-
-    // aria-describedby pointe vers les messages d'erreur/succès
-    await expect(email).toHaveAttribute('aria-describedby', /buyErr/);
-    await expect(email).toHaveAttribute('aria-describedby', /buyOk/);
-
-    await captureScreenshot(page, testInfo, `aria-email-${path.replace(/\//g, '-')}`);
+    await captureScreenshot(page, testInfo, `release-status-${path.replace(/\//g, '-')}`);
   }
   expect(errors).toEqual([]);
 });

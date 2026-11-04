@@ -257,6 +257,7 @@ const env = {
   RATE_LIMIT: { get: async (k) => kvStore.get(k) ?? null, put: async (k, v) => { kvStore.set(k, v); } },
   R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
   MOLLIE_API_KEY: 'test_key',
+  RELEASE_STATUS: 'confirmed',
   ADMIN_JWT_SECRET: 'test_admin_secret',
   LICENSE_SECRET: 'test_license_secret',
   CONTACT_EMAIL: 'support@bot-wow.com',

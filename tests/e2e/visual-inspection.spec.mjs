@@ -207,7 +207,7 @@ test('visual: homepage FR — mobile layout', async ({ page }, testInfo) => {
    VISUAL INSPECTION — Buy page EN
    ───────────────────────────── */
 
-test('visual: buy page EN — layout, blocked state, form', async ({ page }, testInfo) => {
+test('visual: buy page EN — proposed plans and availability state', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
@@ -216,17 +216,11 @@ test('visual: buy page EN — layout, blocked state, form', async ({ page }, tes
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-buy-en-desktop');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY EN BUY BTN:', JSON.stringify(buyBtn, null, 2));
-
-  const checkoutBlocked = await inspectElementStyles(page, '.checkout-blocked');
-  console.log('BUY EN CHECKOUT BLOCKED:', JSON.stringify(checkoutBlocked, null, 2));
-
-  const emailInput = await inspectElementStyles(page, '#email');
-  console.log('BUY EN EMAIL INPUT:', JSON.stringify(emailInput, null, 2));
-
-  const availabilityNotice = await inspectElementStyles(page, '#release-availability-notice');
-  console.log('BUY EN AVAILABILITY NOTICE:', JSON.stringify(availabilityNotice, null, 2));
+  const planState = await inspectElementStyles(page, '#early-access-status');
+  console.log('BUY EN AVAILABILITY STATUS:', JSON.stringify(planState, null, 2));
+  const plans = await inspectElementStyles(page, '.plans-grid');
+  console.log('BUY EN PLANS GRID:', JSON.stringify(plans, null, 2));
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
@@ -243,8 +237,8 @@ test('visual: buy page EN — mobile layout', async ({ page }, testInfo) => {
   const mbar = await inspectElementStyles(page, '.mbar');
   console.log('BUY EN MOBILE mbar:', JSON.stringify(mbar, null, 2));
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY EN MOBILE BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const plans = await inspectElementStyles(page, '.plans-grid');
+  console.log('BUY EN MOBILE PLANS:', JSON.stringify(plans, null, 2));
 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
@@ -253,7 +247,7 @@ test('visual: buy page EN — mobile layout', async ({ page }, testInfo) => {
    VISUAL INSPECTION — Buy page FR
    ───────────────────────────── */
 
-test('visual: buy page FR — layout, blocked state, form', async ({ page }, testInfo) => {
+test('visual: buy page FR — proposed plans and availability state', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
@@ -262,11 +256,9 @@ test('visual: buy page FR — layout, blocked state, form', async ({ page }, tes
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-buy-fr-desktop');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY FR BUY BTN:', JSON.stringify(buyBtn, null, 2));
-
-  const checkoutBlocked = await inspectElementStyles(page, '.checkout-blocked');
-  console.log('BUY FR CHECKOUT BLOCKED:', JSON.stringify(checkoutBlocked, null, 2));
+  const planState = await inspectElementStyles(page, '#early-access-status');
+  console.log('BUY FR AVAILABILITY STATUS:', JSON.stringify(planState, null, 2));
+  await expect(page.locator('.plans-grid .price-card')).toHaveCount(3);
 
   const langAttr = await page.locator('html').getAttribute('lang');
   console.log('BUY FR html lang:', langAttr);
