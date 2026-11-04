@@ -177,33 +177,193 @@ qu'aucun paiement Mollie n'a abouti. `demo_open` et `offer_view` sont
 SELECT provider, status, COUNT(*), SUM(amount) FROM orders GROUP BY provider, status;
 ```
 
-| provider | status | n | montant |
-|---|---|---|---|
-| `bitcoin_manual` | **paid** | **5** | **100,00 €** |
-| `bitcoin_manual` | pending_payment | 8 | 160,00 € |
-| `bitcoin_manual` | failed | 11 | 220,00 € |
-| `bitcoin_manual` | rejected | 1 | 20,00 € |
+| provider | status | n | montant nominal | **encaissé ?** |
+|---|---|---|---|---|
+| `mollie` | failed | 11 | 220,00 € | **0,00 €** — les 11 paiements sont `status=expired`, `paidAt=null`, `method=null` |
+| `bitcoin_manual` | **paid** | **5** | **100,00 €** | **0,00 €** — données de test (adresse BTC *placeholder*, txid de test) |
+| `bitcoin_manual` | pending_payment | 8 | 160,00 € | **0,00 €** — jamais payés (aucun txid) |
+| `bitcoin_manual` | rejected | 1 | 20,00 € | **0,00 €** |
+| **Total** | | **25** | **500,00 €** | **0,00 €** |
+
+> ⚠️ **Correction de ce rapport (2026-11-04T16:55Z).** Une version
+> antérieure de ce tableau attribuait les 11 commandes `failed` à
+> `bitcoin_manual`. C’est **faux** : elles sont de provider **`mollie`**
+> (vérifié par `SELECT provider, status, COUNT(*) … GROUP BY provider,
+> status`). Le montant nominal total (500,00 €) **n’est pas du revenu** :
+> voir la colonne « encaissé ? » et le §3bis.
 
 **Les 5 commandes « paid » ne sont pas des ventes :**
 
 - provider = `bitcoin_manual` (pas Mollie), toutes les 5 le **2026-10-04 entre 01:01 et 02:30** ;
-- **le domaine e-mail des 5 commandes est `example.com`** — donnée de test.
+- **le domaine e-mail des 5 commandes est `example.com`** — donnée de test ;
+- **[V] preuve supplémentaire (2026-11-04T16:45Z)** : les 5 commandes portent
+  la **même adresse BTC littéralement
+  `bc1qadminbotwowpaymentaddressplaceholder123456…`** et des txid de test
+  (`test-txid-12345`, `test-real-txid-12345`, `e2e-test-txid-001`) ;
+  aucune transaction réelle n’a pu transiter.
 
 | Table | État |
 |---|---|
 | `licenses` | 5 lignes, `status='active'`, **toutes issues de ces commandes de test** |
 | `activations` | **0 ligne** |
-| `downloads` | 5 jetons, 8 téléchargements |
+| `downloads` | 5 jetons |
 | `deliveries` | 0 ligne |
-| `webhook_events` | 16 lignes |
-| **Mollie** | **0 paiement réussi** — `checkout_created` = 6, `checkout_failed` = 6 (27/10) : **100 % d'échec** |
+| `botwow_emails` | 12 lignes — **toutes des adresses de test** (`@example.com`, `probe…`) → **0 abonné réel** |
+| `webhook_events` | 16 lignes — **dont 5 sans aucune commande associée** (voir B12) |
+| **Mollie** | **11 paiements créés, 11 expirés non payés** — `checkout_created` = 6, `checkout_failed` = 6 (27/10) |
 
 ### ➜ Chiffre d'affaires réel confirmé : **0,00 €**
 
-**0 client réel, 0 commande payée par un client, 0 licence activée.**
-Les 100 € « paid » sont des données de test. **BOT-WOW n'est pas rentable et
-ne peut pas être déclaré tel** : il n'existe aucune base commerciale.
+**0 client payeur, 0 commande payée par un client, 0 licence activée, 0 email
+client envoyé.** Les 100 € « paid » sont des données de test ; les 220 € de
+paiements Mollie ont **expiré sans être réglés**. **BOT-WOW n'est pas rentable
+et ne peut pas être déclaré tel** : il n'existe aucune base commerciale.
 Aucune conclusion de rentabilité n'est possible sur ce jeu de données.
+
+---
+
+## 3bis. Ce que les données D1 disent du chemin de paiement (2026-11-04T16:45Z–17:05Z)
+
+Cinq faits **nouveaux**, tous vérifiés en lecture seule sur la base D1 de
+production et l’API Cloudflare. Ils changent le diagnostic du checkout.
+
+### 3bis.1 Les 11 paiements Mollie n’ont pas « échoué » : ils ont **expiré impayés**
+
+**[V]** Extraction du statut Mollie stocké dans `orders.metadata` (le Worker y
+enregistre l’objet de paiement reçu de l’API) :
+
+```sql
+SELECT id, json_extract(metadata,'$.mollie.status')  AS st,
+       json_extract(metadata,'$.mollie.mode')    AS mode,
+       json_extract(metadata,'$.mollie.method')  AS meth,
+       json_extract(metadata,'$.mollie.paidAt')  AS paidAt
+FROM orders WHERE provider='mollie';
+```
+
+| Résultat | Valeur | Sur les 11 commandes |
+|---|---|---|
+| `st` (statut Mollie) | `expired` | **11 / 11** |
+| `mode` | `live` | 11 / 11 |
+| `meth` (moyen de paiement) | `null` | **11 / 11** |
+| `paidAt` | `null` | **11 / 11** |
+
+**Conséquence : le tunnel technique de création de paiement fonctionne** (les
+11 objets ont un id `tr_…`, un lien de checkout, une expiration). **Ce n’est
+pas un 6/6 « échec technique »** : les 6 événements `checkout_failed`
+correspondent au **webhook `payment.expired`** qui marque la commande
+`failed`. Aucun acheteur n’a **choisi ni finalisé un moyen de paiement**
+(`method=null`), et les 11 paiements ont expiré (~16 min après création).
+
+> ⚠️ **Ce que cela ne dit pas** : rien ne prouve qu’un acheteur réel a vu la
+> page de paiement Mollie. L’absence de `method` est compatible avec (a) une
+> page de paiement jamais affichée (casse front), (b) un abandon, (c) un
+> test. La preuve existante est **trop petite** (11 sessions, toutes avec des
+> adresses de test) pour conclure.
+
+### 3bis.2 ⚠️ Le checkout BOT-WOW encaisse dans le compte Mollie de **Sargasses**
+
+**[V] Fait le plus grave de cette section.** Les 11 paiements BOT-WOW
+portent, dans leur `metadata` stocké par notre propre Worker :
+
+```json
+"profileId": "pfl_t8KCk4Cm2C",
+"_links": { "dashboard": { "href": "https://my.mollie.com/dashboard/org_19554425/payments/tr_…" } }
+```
+
+**[V] Vérification indépendante que `pfl_t8KCk4Cm2C` est le profil
+SARGASSES** (dépôt `aveca/sargagame`) :
+
+| Fichier | Ligne | Contenu |
+|---|---|---|
+| `public/api/mollie-config.example.php` | 9 | `'profile_id' => 'pfl_t8KCk4Cm2C'` |
+| `scripts/write-mollie-config.cjs` | 49 | `'profile_id' => 'pfl_t8KCk4Cm2C'` |
+| `src/Sargasses_PROD.jsx` | 1778 | `export const MOLLIE_PROFILE="pfl_t8KCk4Cm2C"` |
+
+→ Les deux produits partagent **le même profil et la même organisation
+Mollie** (`org_19554425`). Trois conséquences, toutes actionnables :
+
+1. **Attribution de revenu cassée** : un euro encaissé par BOT-WOW atterrit
+   dans le compte Mollie de Sargasses. Toute mesure de revenu Sargasses
+   lisant l’API Mollie peut **compter un paiement BOT-WOW** (et l’inverse).
+   C’est une contamination croisée des deux moteurs.
+2. **Pas de profil BOT-WOW** : il n’existe aucun profil BOT-WOW dans cette
+   organisation. Le secret `MOLLIE_PROFILE_ID` du Worker `botwow-api` pointe
+   donc vers celui d’un autre produit.
+3. **Le défaut `profileId` de la PR #77** (« handle Mollie profileId by
+   credential type ») ne corrige que le *transport* du paramètre ; il ne
+   corrige pas la **séparation des comptes**. Il faut un **profil (et une
+   clé) BOT-WOW dédiés** avant tout paiement réel.
+
+### 3bis.3 Cinq webhooks Mollie traités **sans aucune commande** (22–23/10)
+
+**[V]** Jointure `webhook_events ⋈ orders` sur `provider_id` :
+
+| `webhook_events.id` | traité le | commande associée |
+|---|---|---|
+| `payment:tr_JFZR2mwem3mWGiZABtUYJ` | 2026-10-22T01:17Z | **aucune** |
+| `payment:tr_777iJfuzjSjiEGw6CtUYJ` | 2026-10-22T01:17Z | **aucune** |
+| `payment:tr_t5bjC3XBWhS6sYfKLtUYJ` | 2026-10-22T01:17Z | **aucune** |
+| `payment:tr_w4XUfy6iFGuGQvDVatUYJ` | 2026-10-22T01:20Z | **aucune** |
+| `payment:tr_VkYWAAHCLXKYvFn77TXYJ` | 2026-10-23T01:01Z | **aucune** |
+
+**[V]** `mollie_customers` contient pour ces sessions **2 clients avec des
+adresses personnelles** (adresses non reproduites ici : le dépôt est public) —
+ces paiements ont donc été créés avec de vraies adresses, et **leur sort n’est
+enregistré nulle part**. Le webhook a été « traité » (ligne
+`webhook_events`) mais aucune commande n’a été écrite : le paiement est
+**invisible**. Statut Mollie de ces 5 paiements : **non vérifié** (la clé
+API n’est pas accessible en lecture depuis l’environnement ; une vérification
+Mollie en lecture seule est demandée en §7 action 1).
+
+### 3bis.4 Le code du Worker **déployé** n’est pas versionné dans le dépôt
+
+**[V]** API Cloudflare — Worker `botwow-api` :
+
+| Fait | Valeur |
+|---|---|
+| `script_tag` de production | `20f5821adfeb465cae177120c9015f8f` |
+| `modified_on` | **2026-10-27T07:46:02Z** |
+| Dernière version de code | n° 49 `87900aa9…` (2026-10-27T07:46:00Z) |
+| Annotations de cette version | **aucune** (`workers/commit_sha` **absent**) |
+| Version n° 48 (23/10) | tag `bot-wow-kv-quota-20261023`, `commit_sha=83047d19…` |
+| Le tag est-il un commit du dépôt ? | **NON** — `git cat-file -t 20f5821a…` → *not a valid object name* |
+| Le tag est-il un blob du dépôt ? | **NON** |
+| Blob du `worker/index.js` de `main` | `725d98e4…` ≠ tag de production |
+
+→ **La version en production n’est rattachable à aucun commit.** Elle a été
+chargée par `wrangler` (`last_deployed_from: wrangler`) **sans**
+`commit_sha`, contrairement à la version précédente. C’est **exactement la
+même cause structurelle que le Worker `sg-payments` de Sargasses** (voir
+`reports/sargagame/REVENUE-STATE-2026-11-04.md` §2bis) : **le chemin de
+paiement n’est ni vérifié ni versionné.**
+
+### 3bis.5 Funnel complet, et le point où il s’arrête
+
+**[V]** Census de la table `events` (D1 `botwow-analytics`, remote) :
+
+| Événement | Total | Depuis le 2026-10-28 | Commentaire |
+|---|---:|---:|---|
+| `page_view` | 1 539 | 531 | trafic entrant |
+| `journey_view` | 587 | 286 | |
+| `cta_click` | 56 | 7 | |
+| `checkout_requested` | 31 | **3** | clic sur un CTA d’achat (non testé) |
+| `checkout_start` | 4 | **0** | soumission du formulaire d’achat |
+| `checkout_created` | 6 | **0** | paiement créé par le Worker |
+| `checkout_failed` | 6 | **0** | webhook `payment.expired` |
+| `checkout_error` | **0** | 0 | **jamais émis** — le client n’a jamais echoqué d’échec d’appel API |
+| `payment_confirmed`, `conversion`, `delivery_sent`, `activation`, `demo_open`, `offer_view` | **0** | 0 | maillons non atteints |
+
+**[V]** Les 3 intentions d’achat restantes ont eu lieu le
+**2026-10-29**, le **2026-11-02** et le **2026-11-04T02:47Z** (avec un
+`journey_id` réel, `test=0`). **Aucune n’a produit de `checkout_start`** :
+le clic s’arrête avant le formulaire.
+
+**Deux lectures possibles, non départageables avec 3 observations :**
+(a) friction d’interface (le formulaire n’est pas atteint/visible) ;
+(b) abandon normal après le clic (l’offre à 20 € demande de llok email).
+**Ce que l’on peut affirmer sans se tromper :** avec 531 pages vues sur
+8 jours et **0** checkout démarré, **le volume est le premier frein
+numérique**, avant tout diagnostic de paiement.
 
 ---
 
@@ -211,29 +371,37 @@ Aucune conclusion de rentabilité n'est possible sur ce jeu de données.
 
 | # | Blocage | Preuve | Impact | Traité ? |
 |---|---|---|---|---|
-| **B1** | **Checkout Mollie en échec systématique (6/6)** | D1 analytics : `checkout_created`=6, `checkout_failed`=6 | **Bloqueur total** : aucun euro ne peut entrer | **NON — autorisation requise** |
-| **B2** | Aucune donnée client (commandes = `example.com`) | D1 `botwow-production` | Aucun marché, aucune preuve de valeur | Non (business) |
+| **B1** | **Le checkout n’a jamais encaissé** — non pas parce qu’il « échoue », mais parce que **personne n’a finalisé un paiement** : 11 paiements Mollie créés, 11 `expired`, `method=null`, `paidAt=null` | §3bis.1 (extraction du statut Mollie) | **Bloqueur total** : 0 € | **NON — autorisation requise** |
+| **B2** | **Aucune base commerciale** : 25 commandes, **0 client payeur** ; 6 commandes `pending_payment` portent une adresse personnelle réelle (prospects qui n’ont jamais payé) ; `botwow_emails` = 12 lignes, toutes `@example.com` | D1 `botwow-production` | Aucun marché, aucune preuve de valeur | Non (business) |
+| **B11** | `www.bot-wow.com` dupliqué sans redirection 301 (Cloudflare Pages n’applique pas `_redirects` par domaine) | HTTP 200 identique sur les deux hôtes | Signal de consolidation déclaratif seulement | **OUI** (code, PR #73) — remédiation **zone-level** |
 | **B3** | Pages legacy live sur `api.bot-wow.com/{de,en,es,pt,ru}/` | HTTP 200 + contenu mesuré | Risque SEO + promesse « 0 € » en data structurée | **OUI** (code) — déploiement à confirmer |
-| **B4** | `www` dupliqué sans redirection 301 | HTTP 200 identique sur les deux hôtes | Signal de consolidation déclaratif seulement | **OUI** (code) |
+| **B4** | `www` dupliqué sans redirection 301 — **couvert par B11** | HTTP 200 identique sur les deux hôtes | — | (idem B11) |
 | **B5** | Tunnel non dédupliqué | Schéma `events` sans unicité | Taux d'intention inexploitables | **OUI** |
 | **B6** | Test et réel indiscernables | `test` toujours à 0 | Revenu potentiellement faux | **OUI** |
 | **B7** | Activation jamais mesurée | `activations` = 0 ligne | Dernière étape du tunnel invisible | **OUI** (code) |
 | **B8** | « 1 machine » (pages) vs `max_activations=2` (code) vs « no seat limits » (FAQ) | §1.5 | Garantie incohérente | **NON — décision requise** |
 | **B9** | Checkout bloqué côté interface (PR #54), pas côté Worker | Pages de vente : bouton désactivé | Un POST direct reste possible tant que le Worker n'est pas gardé | **NON — autorisation requise** |
 | **B10** | `demo_open` et `offer_view` : 0 ligne malgré un code émetteur | D1 analytics | Deux étapes du tunnel invisibles | À investiguer |
+| **B12** | **5 webhooks Mollie traités sans commande** (22–23/10, dont 2 avec adresses personnelles) → paiement invisible, sort inconnu | §3bis.3 (jointure `webhook_events ⋈ orders`) | **Argent possiblement encaissé sans aucune trace** ; impossible de rapprocher | **NON — vérification Mollie en lecture seule requise** |
+| **B13** | ⚠️ **Le checkout BOT-WOW encaisse dans l’organisation Mollie de Sargasses** (`profileId pfl_t8KCk4Cm2C`, `org_19554425`) — aucun profil BOT-WOW n’existe | §3bis.2 (metadata D1 + dépôt `sargagame`) | **Contamination croisée des revenus** des deux moteurs ; attribution de revenu non fiable | **NON — décision commerciale + secrets** |
+| **B14** | **Le code du Worker en production n’est rattachable à aucun commit** (tag `20f5821a…` absent du dépôt, version n° 49 sans `commit_sha`) | §3bis.4 (API Cloudflare) | On ne sait pas **quel code encaisse** ; rollback non reproductible | **NON — redéploiement versionné requis** |
+| **B15** | **Volume quasi nul** : 531 pages vues / 8 j → 7 `cta_click` → 3 `checkout_requested` → **0** `checkout_start` | §3bis.5 (census `events`) | Le tunnel est **mesuré** mais vide ; aucun levier de conversion ne peut être validé dessus | Non (business) |
 
-**Sur B1 — analyse du checkout (sans exécuter de paiement) :**
-le secret `MOLLIE_API_KEY` est présent, `MOLLIE_PROFILE_ID` est présent, et
-`MOLLIE_WEBHOOK_SECRET` est présent. Le `createMolliePayment` n'envoie
-**jamais `profileId`** alors que `MOLLIE_PROFILE_ID` est configuré et que
-son placeholder est documenté « à configurer chez Mollie ». Le code de
-checkout envoie `customerId`, `amount`, `description`, `redirectUrl`,
-`cancelUrl`, `webhookUrl`, `metadata`. **Sans appel à l'API Mollie (un
-`POST /payments` réel), la cause exacte des 6 échecs n'est pas établie** :
-`MOLLIE_PROFILE_ID` non configuré côté Mollie, clé en mode test sans
-profil, ou erreur réseau. **Reproduire exigerait de créer un vrai objet de
-paiement Mollie — action de paiement qui exige une autorisation explicite.**
-Ce diagnostic est donc laissé documenté, pas contourné.
+**Sur B1 — ce que l’on sait désormais (2026-11-04T16:45Z) :**
+la création du paiement **fonctionne** (11 objets Mollie créés en mode
+`live`, avec id, lien de checkout et expiration). Les 6 `checkout_failed` sont
+des webhooks `payment.expired`. Le point de rupture mesuré est **après** la
+création : aucun moyen de paiement n’a été choisi (`method=null`), donc
+`paidAt=null` et encaissement 0,00 €. Restent deux causes **non départageables
+sans un test contrôlé** : (a) la page de paiement Mollie n’a jamais été
+affichée à l’acheteur (casse front : le `checkout_requested` le plus récent
+est du 2026-11-04T02:47Z et n’a produit **ni** `checkout_start` **ni**
+`checkout_error`), ou (b) abandon après le clic. **Reproduire exigerait de
+créer un vrai objet de paiement Mollie — action de paiement qui exige une
+autorisation explicite.** Ce diagnostic est donc laissé documenté, pas
+contourné. **À traiter avant tout :** le profil Mollie partagé avec Sargasses
+(B13) — payer dans le mauvais compte n’est pas un test, c’est un défaut de
+séparation comptable.
 
 ---
 
@@ -249,6 +417,11 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 | **PR #73 — redirections `www`** | **MERGED** 2026-11-04T08:18:44Z — merge commit `dfc11582` : retrait des règles `_redirects` `www` **inopérantes** (Cloudflare Pages n'applique pas les redirections par domaine), remédiation **zone-level** documentée |
 | **PR #74 — `paths-ignore` `reports/**`** | **MERGED** 2026-11-04T11:34:39Z — merge commit `5fcaebe` : les commits documentaires ne déclenchent plus de déploiement Pages |
 | **PR #75 — garde-fou commercial consigné** | **MERGED** 2026-11-04T12:05:55Z — merge commit `33becbf3` |
+| **PR #76 — recalage de l’état courant** | **MERGED** 2026-11-04T13:16Z — merge commit `595e7acd85996512d404a3f4b2b278ea2c4bfe35` |
+| **PR #77 — `profileId` selon le type d’identifiants** | **DRAFT**, non fusionnée, non déployée — correctif de **transport** du paramètre ; ne corrige **pas** la séparation des comptes Mollie (B13) |
+| **PR #78 — revalidation live Cloudflare + D1** | **OUVERTE**, documentaire — recoupe mes mesures (0,00 €, 11 Mollie `failed`, 0 activation, 0 livraison) |
+| **PR #79 — honnêteté de la copie d’achat EN/FR** | **OUVERTE** — 8 surfaces d’achat ; le checkout reste bloqué |
+| **Ce document — correction du chiffre d’affaires** | PR de documentation : correction du tableau `provider`/`status` (§3), ajout du §3bis (statut Mollie réel, profil partagé Sargasses, 5 webhooks sans commande, code non versionné, census complet), reclassement B1/B2 et des actions |
 | Tests ajoutés | `tests/legacy-landing.test.mjs` (34 assertions) · `tests/payment-mode.test.mjs` (15) · `tests/funnel-dedup.test.mjs` (9) · `tests/delivery-replay.test.mjs` (41, PR #71) |
 | Tests réparés | `tests/funnel.test.mjs` — 36 assertions, **0 échec** (8 échecs avant, jamais exécuté par la CI) |
 
@@ -331,6 +504,17 @@ déploiement Pages `7542044619` (sha `084e2bd`) reste le dernier en ligne.
   le 23/10 ; `0003` analytics appliquée) : le risque de schéma est écarté.
 - **[N]** Aucun paiement réel n'a été créé ni vérifié (ni checkout, ni
   webhook). Les tests Mollie sont **simulés** par interception de `fetch`.
+  Les 11 paiements des 27/10 ont bien été créés par l’API Mollie (mode
+  `live`), mais **aucun n’a été payé** : leur sort commercial est « expiré ».
+- **[N]** Le statut Mollie des **5 paiements sans commande** (§3bis.3) n’a pas
+  pu être consulté : la clé API n’est pas lisible depuis l’environnement.
+  **Vérification Mollie en lecture seule à faire par un opérateur
+  autorisé** — c’est la seule trace qui pourrait révéler un encaissement
+  sans commande.
+- **[N]** La **clé** Mollie du Worker `botwow-api` n’a pas pu être lue
+  (secret). Ce qui est établi, c’est que le **profil** utilisé par le code
+  (`pfl_t8KCk4Cm2C`) est celui de Sargasses (§3bis.2). Rattacher la clé au
+  bon profil exige un opérateur autorisé.
 - **[N]** Aucun e-mail n'a été envoyé. `RESEND_API_KEY` est présent comme
   secret ; la table `deliveries` ne conserve que les échecs : il n'existe
   **aucun reçu durable** de livraison.
@@ -345,11 +529,59 @@ déploiement Pages `7542044619` (sha `084e2bd`) reste le dernier en ligne.
 
 ## 7. Trois prochaines actions classées (revenu potentiel / preuves / effort)
 
-| # | Action | Revenu potentiel | Preuves | Effort |
-|---|---|---|---|---|
-| **1** | **Diagnostiquer et débloquer le checkout Mollie** (cause des 6 échecs du 27/10 ; `profileId` jamais envoyé ; profil Mollie à confirmer). Nécessite une autorisation explicite : créer un vrai paiement. | **Décisif** : sans lui, 0 € quel que soit le reste | 6/6 échecs + secrets présents + code analysé | **Moyen** — 1 autorisation + 1 test contrôlé |
-| **2** | **Décider la garantie d'activation** (1 machine vs 2) et aligner Worker, FAQ, pages et mentions légales | Indirect (confiance) : une garantie incohérente se voit au moment de l'achat | §1.5 — 3 sources contradictoires | **Faible** — 1 décision + copy + 1 constante |
-| **3** | **Reconcilier le tunnel sur 28 jours** (abandons de checkout, remboursements, révocations, événements de revocation) et redémarrer le suivi `daily-metrics` équivalent | Indirect : rend le funnel exploitable et la preuve de revenu fiable | §2.2 (absences), §2.4 | **Moyen** — 1 script de réconciliation + 1 workflow |
+> **Recalage du 2026-11-04T17:05Z.** Les trois actions ci-dessous ont été
+> **remplacées** : la mesure du §3bis montre que le checkout **crée** bien les
+> paiements (B1 n’est pas une panne technique) mais qu’il encaisse dans le
+> **compte Mollie de Sargasses** (B13), que le code en production n’est
+> **rattachable à aucun commit** (B14), et que le tunnel est **quasi vide**
+> (B15). L’ordre suit donc **l’ordre des verrous**, pas celui de la
+> confortabilité.
+
+### 1) Séparer et versionner le chemin de paiement (B13 + B14)
+**Potentiel : le plus élevé des trois moteurs BOT-WOW** (sans séparation des
+comptes, un euro encaissé par BOT-WOW est **attribué au mauvais produit** —
+c'est-à-dire que même une vente réussie produirait une **mesure de revenu
+fiable**) · **Preuve : maximale et vérifiable** (`profileId pfl_t8KCk4Cm2C` +
+`org_19554425` dans la metadata de nos propres commandes ; profil identique
+confirmé dans 3 fichiers du dépôt `sargagame` ; version Worker n° 49 **sans**
+`commit_sha` ; tag `20f5821a…` absent du dépôt) · **Effort : faible à moyen**
+(profil + clé **BOT-WOW dédiés** côté Mollie, puis redéploiement du Worker
+avec `commit_sha` — les deux sont des **autorisations** : secrets et
+déploiement de production).
+
+Décision à prendre : **(a)** créer un profil BOT-WOW dans l'organisation
+Mollie et y lier une clé dédiée, ou **(b)** acter l'existence d'un compte
+Mollie unique multi-produits et documenter une règle d'affectation des
+revenus. **(a) est la seule option qui rende la mesure par produit
+fiable.** Pendant ce temps : **ne pas activer le checkout réel**, et
+**faire vérifier en lecture seule les 5 paiements sans commande** (B12).
+
+### 2) Prouver un paiement de bout en bout (B1)
+**Potentiel : élevé** (c'est le 0 € → 1 €) · **Preuve : forte** (11 paiements
+créés en mode `live`, tous expirés non payés ; le tunnel client s'arrête à
+`checkout_requested`) · **Effort : moyen** — 1 autorisation pour un paiement
+réel **dans le profil BOT-WOW dédié** (donc après l'action 1), sur un
+parcours complet (page de paiement affichée → moyen de paiement choisi →
+webhook → licence → email → activation). Chaque étape doit être observée,
+pas supposée.
+
+### 3) Produire du volume qualifiant (B15)
+**Potentiel : moyen mais non mesurable aujourd'hui** (531 pages vues / 8 j,
+7 `cta_click`, 3 intentions, **0** checkout démarré : aucun levier de
+conversion ne peut être validé sur un tunnel de 3 observations) ·
+**Preuve : forte** (census `events` complet, §3bis.5) · **Effort : faible
+techniquement / élevé commercialement** — trafic, SEO, ou communauté.
+À condition de **ne pas acheter de trafic** avant la décision de conformité
+(PR #66, Blizzard) : un achat de trafic sur le produit actuel serait
+dépensé deux fois.
+
+### En parallèle, sans urgence revenue
+- **B8 — garantie d'activation** (« 1 machine » vs `max_activations=2` vs
+  « no seat limits ») : 1 décision + copy + 1 constante. Coût faible,
+  effet sur la confiance au moment de l'achat.
+- **B12 — rapprochement des 5 paiements sans commande** : 1 lecture seule de
+  l'API Mollie par un opérateur autorisé.
+- **B4/B11 — `www` → apex** : redirection au niveau zone Cloudflare.
 
 > **Rappel de doctrine :** aucune modification du checkout réel, des prix,
 > des remboursements, des paiements ou des envois clients n'a été faite dans
