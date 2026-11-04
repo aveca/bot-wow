@@ -212,7 +212,7 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const data = await res.json();
   check('le checkout renvoie une URL de paiement', res.status === 200 && !!data.checkoutUrl,
     `(status=${res.status} ${JSON.stringify(data).slice(0, 120)})`);
-  const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
+  const payment = mollieCalls.find((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST');
   check('une API Key Mollie n’envoie jamais profileId à la création du paiement',
     payment && !new URL(payment.url).searchParams.has('profileId'),
     `(url=${payment && payment.url})`);
@@ -243,7 +243,7 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('un montant different de la reference est refuse', res.status === 400,
     `(status=${res.status})`);
   check('aucun paiement n\'est cree pour un montant refuse',
-    !mollieCalls.some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
+    !mollieCalls.some((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST'));
 }
 
 /* 3. un webhook paye cree UNE licence */
@@ -277,7 +277,7 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const res = await callWorker('/api/checkout', {
     method: 'POST', body: { email: 'org-client@test.fr', lang: 'fr' }, env,
   });
-  const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
+  const payment = mollieCalls.find((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST');
   check('un jeton organisation transmet profileId a la creation du paiement',
     res.status === 200 && payment && new URL(payment.url).searchParams.get('profileId') === 'pfl_test_profile',
     `(status=${res.status} url=${payment && payment.url})`);
