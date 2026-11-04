@@ -51,5 +51,22 @@ for (const [page, file, claimRe] of [
     (html.match(/data-cta-id="buy-/g) || []).length >= 3);
 }
 
+
+for (const [page, file, forbiddenClaim, blockedLabel] of [
+  ['index.html', 'index.html', /Card payments via Mollie|Card payment is live through Mollie|Payment by <b[^>]*>Mollie<\/b>/i, /delivery not confirmed/i],
+  ['fr/index.html', 'fr/index.html', /Paiement par carte via Mollie|Le paiement par carte fonctionne via Mollie|Paiement par <b[^>]*>Mollie<\/b>/i, /livraison à confirmer/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  const button = (html.match(/<button\b[^>]*id="buyBtn"[^>]*disabled[^>]*>[\s\S]*?<\/button>/i) || [])[0] || '';
+  check(page + ' : avis de livraison présent avant le formulaire',
+    html.indexOf('id="release-availability-notice"') >= 0 &&
+    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
+  check(page + ' : bouton de checkout réellement désactivé', !!button);
+  check(page + ' : libellé du bouton explique le blocage', blockedLabel.test(button));
+  check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
+    !forbiddenClaim.test(flat));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
