@@ -22,3 +22,19 @@
 /node_modules/*  /404.html  302
 /dist/*  /404.html  302
 /.github/*  /404.html  302
+
+# www -> apex : une SEULE version indexable.
+#
+# Mesure 2026-11-04 : https://www.bot-wow.com/ et https://bot-wow.com/
+# renvoyaient TOUS DEUX 200 avec un contenu identique (40 340 octets). Le
+# canonical declare dans les pages pointait bien vers l'apex, mais aucune
+# redirection HTTP n'existait : le signal de consolidation etait uniquement
+# declaratif. Redirection 301 explicite, permanente, sans effet sur le
+# contenu ni sur le checkout.
+#
+# Cloudflare Pages applique les redirections meme quand un asset existe :
+# la regle gagne sur le cache. Le site est aussi publie sur GitHub Pages,
+# qui n'applique PAS ce fichier : le www y reste servi en 200 (limite
+# documentee dans reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md).
+https://www.bot-wow.com/*  https://bot-wow.com/:splat  301
+https://www.bot-wow.com  https://bot-wow.com/  301

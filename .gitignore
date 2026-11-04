@@ -22,3 +22,7 @@ captures/
 # Captures et releves de QA visuelle (scripts/qa-*-cdp.mjs) : artefacts
 # locaux de verification, regeneres a la demande, jamais versionnes.
 .qa-captures/
+
+# Artefacts d'audit locaux (logs de deploiement, sorties de test, scripts de
+# patch jetables) : jamais versionnes.
+.audit/
