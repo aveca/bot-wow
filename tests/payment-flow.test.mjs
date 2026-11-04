@@ -157,7 +157,7 @@ globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
   if (u.startsWith('https://api.mollie.com/v2/')) {
     mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
+    if (new URL(u).pathname.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
       return new Response(JSON.stringify({ id: 'tr_test', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
         { status: 201, headers: { 'Content-Type': 'application/json' } });
     }
