@@ -102,6 +102,7 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 **PR suivie :** [#69 — BOT-WOW monthly Early Access tiers + sales redesign](https://github.com/aveca/bot-wow/pull/69)
 **Branche :** `revenue/early-access-monthly-499-20261104`
 **Dernier SHA publié avant ce suivi :** `ce746010ed6b7aa2f14bbf9f5edc4a6492b405da`
+**Commit d'implémentation local :** `5ccb1e231e5f20bc15c1e506aa88fce4068f8caa`
 **État production vérifié :** aucun déploiement n'a été déclenché par cette mission.
 
 ### Preuves fraîches et limites
