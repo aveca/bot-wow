@@ -258,6 +258,7 @@ const env = {
   R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
   MOLLIE_API_KEY: 'test_key',
   RELEASE_STATUS: 'confirmed',
+  LEGACY_LIFETIME_OFFER_STATUS: 'confirmed',
   ADMIN_JWT_SECRET: 'test_admin_secret',
   LICENSE_SECRET: 'test_license_secret',
   CONTACT_EMAIL: 'support@bot-wow.com',

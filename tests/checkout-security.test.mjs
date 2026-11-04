@@ -65,6 +65,7 @@ function makeEnv(state) {
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     RELEASE_STATUS: 'confirmed',
+    LEGACY_LIFETIME_OFFER_STATUS: 'confirmed',
     MOLLIE_API_KEY: 'test_key_secret_value',
     MOLLIE_WEBHOOK_SECRET: 'test_webhook_secret_value',
     ADMIN_JWT_SECRET: 'test_admin_secret_value',
@@ -164,6 +165,35 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
     method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env: missingEnv,
   });
   check('absence du secret de release échoue fermée', missing.status === 409);
+}
+
+/* A ready package does not implicitly enable the legacy lifetime offer. */
+{
+  const state = freshState();
+  const env = makeEnv(state);
+  delete env.LEGACY_LIFETIME_OFFER_STATUS;
+  mollieCalls = [];
+  const res = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env,
+  });
+  const body = await res.json();
+  check('checkout Mollie reste fermé sans activation de l’offre historique',
+    res.status === 409 && body.error === 'offer_unavailable');
+  check('offre Mollie indisponible sans appel prestataire', mollieCalls.length === 0);
+  check('offre Mollie indisponible sans insertion de commande',
+    !state.calls.some((call) => /INSERT INTO orders/i.test(call.sql || '')));
+
+  const bitcoinState = freshState();
+  const bitcoinEnv = makeEnv(bitcoinState);
+  bitcoinEnv.LEGACY_LIFETIME_OFFER_STATUS = 'open';
+  const bitcoin = await callWorker('/api/bitcoin/checkout', {
+    method: 'POST', body: { email: 'client@test.fr', lang: 'fr' }, env: bitcoinEnv,
+  });
+  const bitcoinBody = await bitcoin.json();
+  check('checkout Bitcoin refuse aussi un statut d’offre non confirmé',
+    bitcoin.status === 409 && bitcoinBody.error === 'offer_unavailable');
+  check('offre Bitcoin indisponible sans insertion de commande',
+    !bitcoinState.calls.some((call) => /INSERT INTO orders/i.test(call.sql || '')));
 }
 
 /* 1-3. rate limit : 5 par 5 min et par IP */

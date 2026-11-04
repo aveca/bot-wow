@@ -72,6 +72,7 @@ function makeSqliteEnv(schemaFn, state, { now = Date.now() } = {}) {
       R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
       MOLLIE_API_KEY: 'test_key',
       RELEASE_STATUS: 'confirmed',
+      LEGACY_LIFETIME_OFFER_STATUS: 'confirmed',
       MOLLIE_WEBHOOK_SECRET: 'test_secret',
       ADMIN_JWT_SECRET: 'test_admin_secret',
       ADMIN_EMAIL: 'admin@example.com',

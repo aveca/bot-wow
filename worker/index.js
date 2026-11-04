@@ -2449,6 +2449,13 @@ function toMollieLocale(lang) {
 var PRICE_TABLE = {
   "bot-wow-lifetime": { amount: 2000, currency: "EUR", description: "BOT-WOW — Accès à vie" }
 };
+// Keep the legacy lifetime offer disabled unless it has its own explicit
+// enablement. RELEASE_STATUS only confirms delivery readiness; it does not
+// authorize selling an offer that the Early Access pages no longer present.
+// No production binding is configured by this branch, so the default is closed.
+function isLegacyLifetimeOfferEnabled(env2) {
+  return env2.LEGACY_LIFETIME_OFFER_STATUS === "confirmed";
+}
 var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
 var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
@@ -2499,6 +2506,15 @@ async function handleCheckout(request, env2) {
         ? "La livraison du paquet n'est pas encore confirmée. Contactez le support avant de payer."
         : "Package delivery is not confirmed yet. Contact support before paying.",
       support: "support@bot-wow.com"
+    }, 409, { "Retry-After": "3600" });
+  }
+  if (!isLegacyLifetimeOfferEnabled(env2)) {
+    return jsonResponse2({
+      ok: false,
+      error: "offer_unavailable",
+      message: lang === "fr"
+        ? "Cette offre n'est pas disponible actuellement. Aucun achat ni réservation n'est ouvert."
+        : "This offer is not available right now. No purchase or reservation is open."
     }, 409, { "Retry-After": "3600" });
   }
   try {
@@ -3132,6 +3148,15 @@ async function handleBitcoinCheckout(request, env2) {
         ? "La livraison du paquet n'est pas encore confirmée. Contactez le support avant de payer."
         : "Package delivery is not confirmed yet. Contact support before paying.",
       support: "support@bot-wow.com"
+    }, 409, { "Retry-After": "3600" });
+  }
+  if (!isLegacyLifetimeOfferEnabled(env2)) {
+    return jsonResponse3({
+      ok: false,
+      error: "offer_unavailable",
+      message: lang === "fr"
+        ? "Cette offre n'est pas disponible actuellement. Aucun achat ni réservation n'est ouvert."
+        : "This offer is not available right now. No purchase or reservation is open."
     }, 409, { "Retry-After": "3600" });
   }
   try {
