@@ -773,3 +773,49 @@ Conséquence : un planificateur explicitement conçu pour optimiser des rondes W
 2. Garder le checkout fermé tant que le profil de paiement BOT-WOW, la livraison, le webhook, l'email et l'activation ne sont pas prouvés.
 3. Ne pas lancer le prototype de planificateur WoW comme pivot prétendument conforme ; d'abord cadrer un produit réellement indépendant du gameplay Blizzard ou obtenir une validation écrite.
 4. Ne pas compter les cinq commandes Bitcoin de test comme ventes.
+
+
+---
+
+# P0.29 — intégration de PR #84 et vérification du déploiement — 2026-11-04T21:17Z
+
+## PR #84 intégrée
+
+- PR #84 fusionnée par squash après validation complète du HEAD `b05c7a9a40b0ef0f6269e824025101e66dffcf02`.
+- Commit de merge / nouveau `main` : `9986fb635659981ba64945af71297a30b41d4e0e`.
+- PR : https://github.com/aveca/bot-wow/pull/84
+- Checks du HEAD avant merge :
+  - Validate Bot-Wow : SUCCESS, run `41913862013`.
+  - UI quality / Playwright / captures : SUCCESS, run `41913862099`.
+  - GitGuardian Security Checks : SUCCESS.
+- Portée : cinq fichiers de copie et tests, aucune modification des prix, du checkout ou des paiements.
+
+## Déploiement Cloudflare Pages
+
+- Projet `bot-wow`, branche `main`.
+- Déploiement : `d0c68582-ac24-448b-9f94-0e3ee2f0fc0c`.
+- Commit : `9986fb635659981ba64945af71297a30b41d4e0e`.
+- URL de déploiement : https://d0c68582.bot-wow.pages.dev
+- Dernière étape `deploy` : SUCCESS, terminée le 2026-11-04T21:17:11Z.
+- Workflow GitHub Pages `41914592024` était encore `in_progress` au dernier contrôle ; `Validate Bot-Wow` sur le commit de merge `41914591679` : SUCCESS.
+
+## Vérification live — limite constatée
+
+Après le succès Cloudflare Pages, le lecteur web a encore renvoyé sur `bot-wow.com` les anciens textes « What ships today, exactly » / « Everything below is delivered and working now », ainsi que l'ancien texte français de livraison. Les URLs uniques `pages.dev` et les requêtes cache-buster n'ont pas pu être ouvertes par le lecteur web. Aucun en-tête `CF-Cache-Status`, `Age` ou ETag n'a été obtenu.
+
+Il est donc **confirmé que le déploiement Pages du commit 9986fb est SUCCESS**, mais il n'est **pas confirmé que les quatre domaines/surfaces publiques servent déjà le nouvel HTML**. L'extraction web peut être périmée ; ne pas purger le cache ni prétendre à une vérification live réussie sans une requête HTTP directe non cachée.
+
+## Conséquences commerciales inchangées
+
+- Prix public : 20 €.
+- Checkout public toujours désactivé ; aucune transaction créée.
+- D1 production : 25 commandes, dont 5 commandes Bitcoin de test `paid` sur `@example.com`, 8 pending, 1 rejected, 11 Mollie failed ; 5 licences, 5 jetons, 0 activation, 0 livraison ; 16 webhooks dont 5 sans commande.
+- D1 commercialement confirmé : 0,00 €.
+- Profil Mollie visible : un seul profil vérifié lié à `sargasses-martinique.com`, aucun profil BOT-WOW dédié visible.
+- Worker `botwow-api` : dernier déploiement listé le 27/10 ; aucune mise à jour Worker réalisée.
+
+## Décision suivante
+
+1. Obtenir une vraie vérification HTTP no-cache du HTML sur `bot-wow.com` et `www.bot-wow.com` après le déploiement, sans purge non autorisée.
+2. Garder le checkout fermé jusqu'à séparation du profil Mollie et preuve complète paiement → webhook → livraison → activation.
+3. Ne pas commercialiser un planificateur WoW manuel comme conforme : la clause EULA sur les logiciels qui facilitent le gameplay reste un risque non résolu.
