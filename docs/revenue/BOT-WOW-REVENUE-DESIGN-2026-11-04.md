@@ -302,3 +302,20 @@ Use unique provider event IDs (or a stable event-type + payment/refund/chargebac
 The production counts and deployment details in section 12 are a **read-only point-in-time snapshot observed on 2026-11-04**, not a persisted signed audit artifact or a guarantee that the environment is unchanged. Treat them as historical clues only. Before implementation or release, re-query the live Cloudflare Pages deployment, Worker version/bindings, R2 object metadata and D1 counts; attach the resulting timestamped evidence (or CI artifact) to the implementation PR. Do not infer successful delivery, activation, archive integrity or end-user installation from object/table counts alone.
 
 The code reference for the repository baseline used in that snapshot is https://github.com/aveca/bot-wow/commit/2edd74be83f272672b303ccdb316d52137109076. The snapshot values remain provisional until refreshed directly from the control plane.
+
+
+### 15.5 Fresh read-only Cloudflare evidence — 2026-11-04T04:08:32.663Z
+
+The following control-plane values were queried directly from Cloudflare in this session. This is a timestamped point-in-time observation, not a guarantee that state cannot change afterward. All requests below were read-only; no production resource, secret, payment, object or database row was modified.
+
+| Surface | Direct read-only evidence | Observed result |
+|---|---|---|
+| Cloudflare Pages production | `GET /accounts/abf2b92cf718313567b4b38eb9dda17f/pages/projects/bot-wow/deployments?env=production&page=1&per_page=1` | Latest production deployment `84b0a681-f816-49b4-9a74-5c885eedbbef`, success, created `2026-10-30T01:01:32.826445Z`, source branch `main`, commit `2edd74be83f272672b303ccdb316d52137109076`; aliases include https://bot-wow.com and https://www.bot-wow.com. Preview/doc PR changes are not live. |
+| Cloudflare Worker deployment | `GET /accounts/abf2b92cf718313567b4b38eb9dda17f/workers/scripts/botwow-api/deployments` | Latest deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% assigned to version `c3dcc842-c422-42d3-9828-405f30d70b5f` (version 50), created `2026-10-27T07:46:28.277198Z`. |
+| R2 release object metadata | `GET /accounts/abf2b92cf718313567b4b38eb9dda17f/r2/buckets/botwow-binaries/objects?per_page=50&prefix=casinobabe-fishing-1.2.0.zip` | `casinobabe-fishing-1.2.0.zip` exists; 1,387,543 bytes; content type `application/zip`; last modified `2026-10-27T06:31:06.784Z`; ETag `d9d7ab22ec076873b8fed656a53460bc`. This ETag is object metadata and is **not** a SHA-256 proof. No object bytes were downloaded or changed in this check. |
+| D1 table counts | Read-only D1 query on `botwow-production`, database `e57f5874-a9f0-42bf-8dbc-10785ef083f5` | `orders=25`, `licenses=5`, `activations=0`, `deliveries=0`, `webhook_events=16`; query metadata reported `changed_db=false`, `rows_written=0`. |
+| D1 order states and paid total | Read-only grouped `SELECT` on `orders` | `failed=11`, `paid=5`, `pending_payment=8`, `rejected=1`; paid rows are `eur`, 5 orders, `total_minor_units=10000` (= €100.00). |
+
+The older P0.7 operations snapshot records a previously checked archive SHA-256 of `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`; that prior report is not a fresh byte-level verification in this session. Current R2 metadata alone cannot certify archive integrity, a clean Windows installation, or successful end-to-end customer delivery. The zero `deliveries` and `activations` table counts do not prove no email was sent or no customer activated through another path; those require provider/log evidence.
+
+**Operational consequence:** production Pages is still on the 2026-10-30 main commit and the production Worker is still on version 50 from 2026-10-27. This PR remains documentation/design only; no price, checkout, Worker, secret, R2 or live-payment change is authorized by this evidence refresh.
