@@ -6,7 +6,7 @@ Scope: BOT-WOW only. Read-only production checks unless explicitly stated. No pa
 
 - `main`: `595e7acd85996512d404a3f4b2b278ea2c4bfe35`.
 - PR #77 — [Mollie profileId fix](https://github.com/aveca/bot-wow/pull/77), draft/open, head `e25781fd0d10f0bffedaca982fdf4ed5bd74313a`. It changes only `worker/index.js` and `tests/payment-flow.test.mjs`.
-- PR #79 — [purchase-copy honesty fix](https://github.com/aveca/bot-wow/pull/79), open, head `6a447b2c3e034dd8a298fa7c94c4675e5d9324c4`. It changes six EN/FR purchase surfaces and two regression test files.
+- PR #79 — [purchase-copy honesty fix](https://github.com/aveca/bot-wow/pull/79), open, head `6a447b2c3e034dd8a298fa7c94c4675e5d9324c4`. It changes eight EN/FR purchase surfaces and two regression test files.
 - PR #78 — documentation revalidation remains open.
 - PR #66 — compliance review / non-automating pivot remains open; pivot not merged or implemented.
 
