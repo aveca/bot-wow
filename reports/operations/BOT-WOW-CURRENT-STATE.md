@@ -618,3 +618,49 @@ These are event counts, not unique people or sessions. There is no verified paid
 4. Keep the public checkout closed until the compliance decision, dedicated payment routing, and end-to-end fulfillment proof are complete.
 
 No prices, checkout rules, secrets, bindings, D1/R2 data, payments, emails, Worker deployments, Pages settings, or production content were changed in this revalidation.
+
+---
+
+# Revalidation P0.29 — live funnel + purchase-copy contradiction — 2026-11-04T20:36Z
+
+## GitHub / CI
+- `main` remains `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`.
+- Repository census: 76 branches and 17 open PRs. PR #71 is merged; #83 is open; #77 and #66 remain drafts; #67 remains open. Historical PRs were not reopened.
+- Before this addendum, PR #83 head `7b349b23ac68aa5d658fa546a85884b267886414` had Validate and UI-quality workflows SUCCESS. Updating this document triggers fresh checks; their new results are pending.
+- No merge to `main` was performed.
+
+## Production Pages / public purchase page
+- Latest production Pages deployment remains `afa6e83a-de94-4d4e-a118-8c61f61bb11a`, commit `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`, deploy stage SUCCESS at `2026-11-04T18:28:42Z`; aliases include `bot-wow.com` and `www.bot-wow.com`.
+- The latest PR #83 preview deployment is skipped because preview deployments are disabled; it is not production.
+- Direct public extraction of `https://bot-wow.com/buy` shows the checkout is disabled and delivery is explicitly unconfirmed. It also exposes a contradictory sentence: **“Everything below is delivered and working now.”** and the heading “What ships today, exactly”, despite the same page saying the v1.2.0 package is not verified and telling visitors not to purchase.
+- Current `main` source contains the same contradiction in both `buy.html` and `fr/buy.html`. The web reader could not retrieve the French live page in this pass, so French production HTML is not independently confirmed.
+- A separate code/test PR is being prepared to replace these claims with an explicit “intended product scope / delivery unverified” disclosure. No production copy was changed in this cycle.
+
+## Cloudflare D1 — fresh read-only queries
+All queries were SELECT only; Cloudflare reported `changed_db=false` and `rows_written=0`.
+- `orders`: 25 total — Bitcoin manual `paid=5`, `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- `licenses=5`; `downloads=5` (download tokens recorded, not proof that files were downloaded); `activations=0`; `deliveries=0`; `webhook_events=16`; `botwow_emails=12`.
+- Correct webhook join `webhook_events.id = 'payment:' || orders.provider_id`: 11 matched, 5 unmatched.
+- Nested Mollie metadata: 11/11 have provider status `expired`, mode `live`, no payment method, no `paidAt`, and one distinct profile ID.
+- Read-only Mollie `ListProfiles` still returns exactly one verified profile, `pfl_t8KCk4Cm2C`, associated with `sargasses-martinique.com`; no dedicated BOT-WOW profile is visible. It must not be reused for BOT-WOW.
+- Application/D1-confirmed commercial revenue remains **€0.00**. The independent Mollie payment ledger was not queried; no payment was inferred from D1 alone.
+
+## Analytics — latest production event census
+Fresh read-only query of `botwow-analytics.events`, split by `test`:
+- `page_view`: 1,566 production; 15 test.
+- `journey_view`: 604 production; 6 test.
+- `cta_click`: 48 production; 8 test.
+- `checkout_requested`: 29 production; 2 test.
+- `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1` (all production).
+- `payment_confirmed`, `conversion`, `delivery_sent`, and `activation` remain absent from the grouped event result.
+These are event counts, not unique visitors or sessions. Do not mix test events into commercial metrics.
+
+## Worker / payments
+- Active Worker deployment remains `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version 50, created `2026-10-27T07:46:28Z`, with no `workers/commit_sha` annotation.
+- The P0.28 addendum above remains the source of the direct deployed-bundle comparison: production version 50 has the release guard but is behind current `main` for `resumeFulfillment` and the legacy download fallback. Current `main:worker/index.js` includes the newer replay path. No Worker deployment or POST test was performed.
+- No checkout was reopened, no payment was created, no credential or binding was changed, and no customer email was sent.
+
+## Decision
+1. Correct the contradictory purchase-page copy and add a regression test (safe, reversible, code-only PR).
+2. Keep the checkout blocked until a dedicated BOT-WOW Mollie profile/credential and a verified fulfillment artifact exist.
+3. Keep acquisition for the automated bot paused until the Blizzard compliance decision / non-automating product pivot is resolved.
