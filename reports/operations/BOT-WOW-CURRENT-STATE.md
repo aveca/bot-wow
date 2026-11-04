@@ -301,3 +301,19 @@ PR #19 (branche `fix/download-artifact-integrity-20261023`, HEAD `0a1a6a5`) exis
 3. Lever le garde-fou commercial (décision distincte, nécessite autorisation séparée).
 
 **Blocage restant :** Aucune autorisation de déploiement ni d'ouverture commerciale n'a été obtenue. Le garde-fou commercial reste actif.
+
+---
+
+# Latest revalidation — 2026-11-04T15:26Z
+
+Latest evidence is recorded in [`2026-11-04-live-revalidation-1526z.md`](./2026-11-04-live-revalidation-1526z.md).
+
+- `main` remains `595e7acd85996512d404a3f4b2b278ea2c4bfe35`.
+- PR #77 is open/draft at `e25781fd0d10f0bffedaca982fdf4ed5bd74313a`; both GitHub Actions workflows passed on that exact head. It fixes the Mollie API-key `profileId` defect in code but is not deployed.
+- PR #79 is open at `6a447b2c3e034dd8a298fa7c94c4675e5d9324c4`; it removes false Mollie-live/redirect claims from all six purchase surfaces and adds regression tests. No CI run was available on its latest head at this timestamp; do not merge until checks pass.
+- Cloudflare Pages production remains deployment `d9d79ad7` from `main@595e7acd`; preview deployments are disabled. Worker `botwow-api` remains on deployment `36227a4d` from 2026-10-27; PR #77 is not live.
+- D1 read-only evidence: 11 Mollie failed orders; 5 paid `bitcoin_manual` test orders; 0 confirmed customer sales, €0.00 real revenue, 0 deliveries, 0 activations. Funnel: 1,508 live page views, 573 journeys, 48 CTA clicks, 29 checkout requests, 6 checkout-created and 6 checkout-failed events; no payment-confirmed or conversion events.
+- Live EN/FR homepages and buy pages still contain Mollie availability/redirect claims while checkout is disabled. PR #79 corrects this, but is not live.
+- PR #66 compliance/pivot decision remains open. Do not spend on acquisition or market the current automation to official-server players until platform compliance is resolved.
+
+**Next action:** review PR #77; run the complete validation and browser suite on PR #79's exact head; keep the Worker deployment and checkout reopening gated on explicit authorization and a controlled end-to-end fulfillment test.
