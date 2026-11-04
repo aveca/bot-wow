@@ -2259,6 +2259,17 @@ async function handleActivate(request, env2) {
       `).bind(Date.now(), existingActivation.id).run();
     }
     const token = await signActivation(key, machineId, env2.LICENSE_SECRET);
+    // MESURE DU FUNNEL : activation d'une licence (dernier maillon mesure,
+    // avant : visite -> offre -> checkout -> paiement -> licence ->
+    // livraison -> activation). Aucune donnee personnelle : uniquement une
+    // reference tronquee et irreversible de la licence.
+    try {
+      const licenseRef = await hashPaymentReference(licenseResult.key);
+      await emitFunnelEvent(env2, 'license_activated', null, '/api/activate', null, { step: 'license_activated', ref: licenseRef });
+    } catch (e) {
+      // La mesure ne doit jamais empecher l'activation.
+      console.error("Activation: mesure impossible", String(e && e.message || ""));
+    }
     return jsonResponse({
       ok: true,
       status: "active",
@@ -2638,6 +2649,18 @@ async function handleMollieWebhook(request, env2) {
   // deux licences. La cle est l'identifiant du paiement (stable quel que
   // soit le type d'evenement).
   const eventId = `payment:${paymentId}`;
+  // Le journey_id opaque est transmis dans les metadonnees Mollie du checkout.
+  // On le recupere ici sans lecture KV supplémentaire. Il est calcule AVANT
+  // le verrou : une reprise doit pouvoir mesurer ce qu'elle complete.
+  const rawJourneyId = payment.metadata?.journey_id;
+  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
+  let paymentRef = null;
+  try {
+    paymentRef = await hashPaymentReference(payment.id);
+  } catch {
+    // La telemetrie reste facultative : une erreur de hachage ne bloque pas le webhook.
+  }
+  let alreadyLocked = false;
   try {
     await env2.DB.prepare(
       "INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'mollie', ?)"
@@ -2645,50 +2668,123 @@ async function handleMollieWebhook(request, env2) {
   } catch (e) {
     const msg = String(e && e.message || "");
     if (/UNIQUE|constraint/i.test(msg)) {
-      console.log(`Webhook: paiement ${paymentId} deja traite, ignore`);
-      return new Response("OK", { status: 200 });
+      // Le verrou est deja pose. Deux situations :
+      //  (a) la livraison est deja complete -> rejeu normal, rien a refaire ;
+      //  (b) la livraison a ECHOUE apres le verrou (panne D1, e-mail, reseau).
+      // Dans le cas (b), ignorer le rejeu definitivement ferait perdre la vente :
+      // le client a paye et ne recevrait jamais sa licence. On REPREND donc la
+      // livraison, de facon idempotente (une seule licence, un seul jeton).
+      alreadyLocked = true;
+      console.log(`Webhook: paiement ${paymentId} deja verrouille, etat de la livraison verifie`);
+    } else {
+      console.error("Webhook: insertion de l'evenement impossible", msg);
+      return new Response("Server Error", { status: 500 });
     }
-    console.error("Webhook: insertion de l'evenement impossible", msg);
-    return new Response("Server Error", { status: 500 });
-  }
-  // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
-  // On le récupère ici sans lecture KV supplémentaire.
-  const rawJourneyId = payment.metadata?.journey_id;
-  const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
-  let paymentRef = null;
-  try {
-    paymentRef = await hashPaymentReference(payment.id);
-  } catch {
-    // La télémétrie reste facultative : une erreur de hachage ne bloque pas le webhook.
   }
   // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
   // doit revoquer la licence liee (le signal existait mais n'etait jamais
   // branche sur le flux du webhook).
   if (status === "paid") {
-    await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef);
-    // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
-    // Ecris APRÈS fulfillOrder pour ne rien ecrire si la livraison echoue
-    // (schema de production avec orders.id INTEGER -> datatype mismatch).
-    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef });
-    // MESURE DE CONVERSION (V11.2).
-    // Cette ligne n'est ecrite QUE par le serveur, apres verification du
-    // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
-    // paiement confirme restent donc trois evenements distincts, et un
-    // evenement "conversion" ne peut pas etre forge depuis le navigateur
-    // (le point de collecte public ne l'accepte pas).
-    // L'echec de cette mesure ne doit JAMAIS empecher la livraison de la
-    // licence : l'echec est attrape et journalise.
-    try {
-      await recordConversion(env2, payment, email, lang);
-    } catch (e) {
-      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+    if (alreadyLocked) {
+      // REPRISE : la livraison initiale a echoue apres le verrou. Elle est
+      // rejouee de facon idempotente ; si elle echoue encore, l'erreur remonte
+      // et Mollie reprogramme la notification.
+      await resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef);
+    } else {
+      await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef);
+      // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
+      // Ecrit APRES fulfillOrder pour ne rien ecrire si la livraison echoue
+      // (le client ne doit pas etre compte comme converti sans licence).
+      await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef });
+      // MESURE DE CONVERSION (V11.2).
+      // Cette ligne n'est ecrite QUE par le serveur, apres verification du
+      // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
+      // paiement confirme restent donc trois evenements distincts, et un
+      // evenement "conversion" ne peut pas etre forge depuis le navigateur
+      // (le point de collecte public ne l'accepte pas).
+      // L'echec de cette mesure ne doit JAMAIS empecher la livraison de la
+      // licence : l'echec est attrape et journalise.
+      try {
+        await recordConversion(env2, payment, email, lang);
+      } catch (e) {
+        console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+      }
     }
-  } else {
+  } else if (!alreadyLocked) {
     await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
   }
   return new Response("OK", { status: 200 });
 }
 __name(handleMollieWebhook, "handleMollieWebhook");
+/**
+ * Reprise d'une livraison interrompue.
+ *
+ * Le verrou d'idempotence (`webhook_events`) est pose AVANT la livraison.
+ * Si la livraison echoue apres ce verrou (panne D1, e-mail, reseau), un
+ * rejeu du webhook ne doit pas se solder par un abandon : le client a paye.
+ *
+ * Cette fonction verifie ce qui a reellement ete livre et ne rejoue que le
+ * maillon manquant :
+ *  - pas de commande  -> livraison complete a rejouer ;
+ *  - commande sans licence -> licence + jeton + e-mail a produire ;
+ *  - licence sans jeton   -> jeton + e-mail a produire ;
+ *  - licence + jeton mais e-mail non envoye -> e-mail a rejouer.
+ *
+ * Elle ne cree jamais une seconde licence : les etapes existantes sont
+ * reutilisees.
+ */
+async function resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef) {
+  const orderId = `ord_${payment.id}`;
+  const order = await env2.DB.prepare(
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+  ).bind(orderId, payment.id).first();
+  if (!order) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (aucune commande)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef);
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef });
+    try {
+      await recordConversion(env2, payment, email, lang);
+    } catch (e) {
+      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+    }
+    return;
+  }
+  const license = await env2.DB.prepare(
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+  ).bind(payment.id).first();
+  if (!license) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (licence manquante)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef);
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef });
+    try {
+      await recordConversion(env2, payment, email, lang);
+    } catch (e) {
+      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+    }
+    return;
+  }
+  // La licence existe : on ne la recree pas. On garantit le jeton de
+  // telechargement et l'envoi de l'e-mail de livraison.
+  const download = await env2.DB.prepare(
+    "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
+  ).bind(license.id).first();
+  if (!download) {
+    console.log(`Webhook: reprise de la livraison ${payment.id} (jeton de telechargement manquant)`);
+    await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef);
+    return;
+  }
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${download.token}`;
+  const alreadySent = await env2.DB.prepare(
+    "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
+  ).bind(`%${license.key}%`).first();
+  if (alreadySent) {
+    console.log(`Webhook: livraison ${payment.id} deja complete, rien a rejouer`);
+    return;
+  }
+  console.log(`Webhook: reprise de la livraison ${payment.id} (e-mail a rejouer)`);
+  await sendDeliveryEmail2(env2, email, license.key, downloadUrl, lang, journeyId);
+}
+__name(resumeFulfillment, "resumeFulfillment");
 /**
  * Enregistre une CONVERSION confirmee dans la base de telemetrie.
  *
@@ -2777,42 +2873,67 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   // licence pointait sur `meta.last_row_id` (un nombre) : la jointure
   // orders <-> licenses ne pouvait donc jamais aboutir.
   const orderId = `ord_${payment.id}`;
-  await env2.DB.prepare(`
-    INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-    VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
-  `).bind(
-    orderId,
-    payment.id,
-    email,
-    amount,
-    payment.amount.currency,
-    JSON.stringify({ lang, product: PRODUCT_METADATA_KEY, mollie: payment }),
-    now,
-    now
-  ).run();
-  const licenseKey = generateLicenseKey2();
-  const licenseResult = await env2.DB.prepare(`
-    INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
-    VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-  `).bind(licenseKey, orderId, email, lang, 2, now, now).run();
-  const licenseId = licenseResult.meta.last_row_id;
-  const downloadToken = generateToken2();
-  await env2.DB.prepare(`
-    INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
-    VALUES (?, ?, ?, 0, ?, ?)
-  `).bind(
-    downloadToken,
-    licenseId,
-    now + 30 * 864e5,
-    10,
-    now
-  ).run();
-  const downloadUrl = `https://api.bot-wow.com/api/download?t=${downloadToken}`;
-  await sendDeliveryEmail2(env2, email, licenseKey, downloadUrl, lang, journeyId);
-  await sendAdminNotification2(env2, email, licenseKey, amount);
-  console.log(`Order fulfilled: ${payment.id} -> ${email} (${licenseKey})`);
-  // Evenement serveur : licence creee et liee a la commande payee.
-  await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef });
+  // IDEMPOTENCE : la commande existe deja si une premiere tentative a
+  // echoue apres l'ecriture de la commande. On la reutilise au lieu de
+  // recommencer (une commande par paiement, jamais deux).
+  let order = await env2.DB.prepare(
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+  ).bind(orderId, payment.id).first();
+  if (!order) {
+    await env2.DB.prepare(`
+      INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
+      VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
+    `).bind(
+      orderId,
+      payment.id,
+      email,
+      amount,
+      payment.amount.currency,
+      JSON.stringify({ lang, product: PRODUCT_METADATA_KEY, mollie: payment }),
+      now,
+      now
+    ).run();
+    order = { id: orderId };
+  }
+  // IDEMPOTENCE : au plus UNE licence par commande. Sur une reprise, la
+  // licence deja creee est reutilisee : le client garde la meme cle, et le
+  // rejeu ne cree pas de doublon.
+  let license = await env2.DB.prepare(
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+  ).bind(payment.id).first();
+  if (!license) {
+    const licenseKey = generateLicenseKey2();
+    const licenseResult = await env2.DB.prepare(`
+      INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
+    `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
+    license = { id: licenseResult?.meta?.last_row_id ?? null, key: licenseKey };
+    // Evenement serveur : licence creee et liee a la commande payee.
+    await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef });
+  }
+  // IDEMPOTENCE : un seul jeton de telechargement par licence. Le lien deja
+  // envoye au client reste valide.
+  let download = await env2.DB.prepare(
+    "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
+  ).bind(license.id).first();
+  if (!download) {
+    const downloadToken = generateToken2();
+    await env2.DB.prepare(`
+      INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
+      VALUES (?, ?, ?, 0, ?, ?)
+    `).bind(
+      downloadToken,
+      license.id,
+      now + 30 * 864e5,
+      10,
+      now
+    ).run();
+    download = { token: downloadToken };
+  }
+  const downloadUrl = `https://api.bot-wow.com/api/download?t=${download.token}`;
+  await sendDeliveryEmail2(env2, email, license.key, downloadUrl, lang, journeyId);
+  await sendAdminNotification2(env2, email, license.key, amount);
+  console.log(`Order fulfilled: ${payment.id} -> ${email} (${license.key})`);
 }
 __name(fulfillOrder, "fulfillOrder");
 async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef) {
@@ -3018,6 +3139,23 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
   // d'envoi est configuree (Resend), sinon on conserve la commande et la
   // licence en base (table deliveries) pour un rejeu, sans jamais la
   // dupliquer.
+  // REJEU : si un envoi REUSSI est deja constate pour cette licence, on ne
+  // renvoie pas un second e-mail au client. La reprise du webhook complete
+  // ce qui manque, elle ne spamme pas.
+  try {
+    const alreadySent = await env2.DB.prepare(
+      "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1"
+    ).bind(`%${key}%`).first();
+    if (alreadySent) {
+      console.log("[EMAIL] licence deja livree, aucun renvoi");
+      return { sent: true, reason: "already_sent" };
+    }
+  } catch (e) {
+    // La verification est un garde-fou, jamais un bloqueur : au pire, un
+    // e-mail en double peut partir, ce qui reste preferable a une licence
+    // jamais livree.
+    console.error("[EMAIL] verification de l'envoi precedent impossible", e && e.message);
+  }
   const subject = lang === "en" ? "Your BOT-WOW licence and download link" : "Votre licence BOT-WOW et votre lien de téléchargement";
   const text = lang === "en" ? [
     "Thank you for your purchase.",
@@ -3050,15 +3188,37 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
     console.error("[EMAIL] Envoi impossible (" + status.reason + ") - livraison consignee en base pour rejeu");
     try {
       await env2.DB.prepare(`
-        INSERT INTO deliveries (email, subject, body, kind, status, created_at)
-        VALUES (?, ?, ?, 'delivery', 'pending', ?)
-      `).bind(email, subject, text, Date.now()).run();
+        INSERT INTO deliveries (email, subject, body, kind, status, error, created_at)
+        VALUES (?, ?, ?, 'delivery', 'pending', ?, ?)
+      `).bind(email, subject, text, status.reason || "unknown", Date.now()).run();
     } catch (e) {
       console.error("[EMAIL] consignation impossible:", e && e.message);
     }
     // Evenement serveur : echec de livraison e-mail.
     await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed' });
   } else {
+    // PREUVE DE LIVRAISON : un envoi REUSSI laisse aussi un recu durable.
+    // Avant, seule l'echec etait consigne : impossible de distinguer une
+    // licence envoyee d'une licence creee. C'est la seule source de verite
+    // pour le suivi « livraison confirmee » et pour le rejeu.
+    try {
+      const pending = await env2.DB.prepare(
+        "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'pending' AND body LIKE ? ORDER BY id DESC LIMIT 1"
+      ).bind(`%${key}%`).first();
+      if (pending) {
+        await env2.DB.prepare(
+          "UPDATE deliveries SET status = 'sent', sent_at = ?, error = NULL WHERE id = ?"
+        ).bind(Date.now(), pending.id).run();
+      } else {
+        await env2.DB.prepare(`
+          INSERT INTO deliveries (email, subject, body, kind, status, created_at, sent_at)
+          VALUES (?, ?, ?, 'delivery', 'sent', ?, ?)
+        `).bind(email, subject, text, Date.now(), Date.now()).run();
+      }
+    } catch (e) {
+      // L'echec de la consignation ne doit jamais annuler une livraison reussie.
+      console.error("[EMAIL] consignation de l'envoi impossible:", e && e.message);
+    }
     // Evenement serveur : licence livree par e-mail.
     await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_sent' });
   }

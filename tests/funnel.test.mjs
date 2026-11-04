@@ -74,46 +74,84 @@ function makeEnv(state) {
   const db = {
     prepare(sql) {
       const key = sql.replace(/\s+/g, ' ').trim();
-      const exec = {
-        bind: (...args) => ({
-          run: async () => {
-            state.calls.push({ sql: key, args });
-            if (/INSERT INTO webhook_events/i.test(key)) {
-              if (state.events.has(args[0])) throw new Error('UNIQUE constraint failed: webhook_events.id');
-              state.events.add(args[0]);
-            }
-            if (/INSERT INTO orders/i.test(key)) {
-              state.orders.push(args[0]);
-              if (state.orderRows) {
-                state.orderRows[args[0]] = {
-                  id: args[0],
-                  provider: /'bitcoin_manual'/.test(key) ? 'bitcoin_manual' : 'mollie',
-                  provider_id: /'bitcoin_manual'/.test(key) ? args[1] : args[1],
-                  email: args.find((a) => typeof a === 'string' && a.includes('@')) || '',
-                  amount: 2000, currency: 'eur',
-                  status: /pending_payment/.test(key) ? 'pending_payment' : 'paid',
-                };
-              }
-            }
-            if (/INSERT INTO licenses/i.test(key)) state.licenses.push(args[1]);
-            if (/INSERT INTO downloads/i.test(key)) state.downloads.push(args[1]);
-            if (/INSERT INTO deliveries/i.test(key)) state.deliveries.push(args[1]);
-            return { meta: { last_row_id: state.orders.length } };
-          },
-        }),
-        run: async () => { state.calls.push({ sql: key }); return { meta: { last_row_id: 0 } }; },
+      /* Le Worker appelle toujours `.bind(...).run()` ou `.bind(...).first()` :
+         l'objet lie doit donc exposer les deux methodes. */
+      const bound = (args) => ({
+        run: async () => {
+          state.calls.push({ sql: key, args });
+          if (/INSERT INTO webhook_events/i.test(key)) {
+            if (state.events.has(args[0])) throw new Error('UNIQUE constraint failed: webhook_events.id');
+            state.events.add(args[0]);
+          }
+          if (/INSERT INTO orders/i.test(key)) {
+            state.orders.push(args);
+            state.orderRows ||= {};
+            state.orderRows[args[0]] = {
+              id: args[0],
+              provider: /'bitcoin_manual'/.test(key) ? 'bitcoin_manual' : 'mollie',
+              provider_id: args[1],
+              email: args.find((a) => typeof a === 'string' && a.includes('@')) || '',
+              amount: 2000, currency: 'eur',
+              status: /pending_payment/.test(key) ? 'pending_payment' : (/'failed'/.test(key) ? 'failed' : 'paid'),
+            };
+          }
+          if (/INSERT INTO licenses/i.test(key)) state.licenses.push(args);
+          if (/INSERT INTO downloads/i.test(key)) state.downloads.push(args);
+          if (/INSERT INTO deliveries/i.test(key)) {
+            state.deliveries.push({
+              id: state.deliveries.length + 1,
+              email: args[0], subject: args[1], body: args[2],
+              kind: 'delivery',
+              status: /'sent'/.test(key) ? 'sent' : 'pending',
+              created_at: args[args.length - 1],
+            });
+          }
+          if (/UPDATE deliveries SET status = 'sent'/i.test(key)) {
+            const row = state.deliveries.find((d) => d.id === args[1]);
+            if (row) { row.status = 'sent'; row.sent_at = args[0]; }
+            return { meta: { changes: row ? 1 : 0 } };
+          }
+          return { meta: { last_row_id: state.orders.length } };
+        },
         first: async () => {
           state.calls.push({ sql: key, args });
           if (/FROM webhook_events/i.test(key)) return state.events.has(args[0]) ? { id: args[0] } : null;
           if (/SELECT \* FROM orders/i.test(key)) {
             const id = args[0];
-            return state.orderRows?.[id] || null;
+            const rows = Object.values(state.orderRows || {});
+            return state.orderRows?.[id] || rows.find((r) => r.id === id || r.provider_id === args[1]) || null;
+          }
+          /* Licence liee a la commande du paiement : utilisee par la reprise
+             de livraison (le rejeu du webhook ne doit pas recreer de licence). */
+          if (/JOIN orders o ON o.id = l.order_id/i.test(key)) {
+            const order = Object.values(state.orderRows || {}).find((o) => o.provider_id === args[0]);
+            if (!order) return null;
+            const lic = state.licenses.find((l) => l[1] === order.id);
+            return lic ? { id: state.licenses.indexOf(lic) + 1, key: lic[0], status: 'active' } : null;
+          }
+          /* Jeton de telechargement deja cree pour cette licence. */
+          if (/FROM downloads WHERE license_id/i.test(key)) {
+            const dl = state.downloads.find((d) => d[1] === args[0]);
+            return dl ? { token: dl[0] } : null;
+          }
+          /* Recu de livraison : 'sent' = deja livre, 'pending' = a rejouer. */
+          if (/FROM deliveries/i.test(key)) {
+            const m = /%([^%]+)%/.exec(String(args[0] || ''));
+            const needle = m ? m[1] : null;
+            const wanted = /status = 'sent'/.test(key) ? 'sent' : 'pending';
+            const rows = state.deliveries.filter((d) => d.status === wanted && (!needle || String(d.body || '').includes(needle)));
+            return rows.length ? rows[rows.length - 1] : null;
           }
           return null;
         },
         all: async () => [],
+      });
+      return {
+        bind: (...args) => bound(args),
+        run: async () => { state.calls.push({ sql: key }); return { meta: { last_row_id: 0 } }; },
+        first: async () => null,
+        all: async () => [],
       };
-      return exec;
     },
     batch: async (stmts) => { await Promise.all(stmts.map((s) => s.run())); return []; },
   };
@@ -143,6 +181,10 @@ function makeEnv(state) {
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
+    /* La garde de livraison a son propre jeu de tests
+       (checkout-gate.test.mjs / checkout-gate-mollie.test.mjs). Ici on
+       simule le Worker en etat « livre » pour mesurer le FUNNEL. */
+    RELEASE_STATUS: 'confirmed',
     state,
   };
 }
@@ -156,6 +198,9 @@ async function call(path, { method = 'GET', body = null, env } = {}) {
   });
   return workerMod.default.fetch(req, env, {});
 }
+/* Le corps du test appelle `callWorker` : on conserve ce nom (les scenarios
+   sont ecrits avec) et on le branche sur l'unique implementation. */
+const callWorker = call;
 
 /* ------------------------------------------------------------------ tests */
 console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
@@ -306,14 +351,20 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
+  /* `mollieCalls` est global au fichier : on ne compte que les appels
+     declenches par CE scenario (les scenarios precedents ont cre leurs
+     propres paiements). */
+  const paymentCallsBefore = mollieCalls.length;
   // montant refuse
   const bad = await callWorker('/api/checkout', { method: 'POST', body: { email: 'x@t.fr', amount: 999, currency: 'EUR' }, env });
-  check('montant different refuse', res.status === 400);
+  check('montant different refuse', bad.status === 400, `(status=${bad.status})`);
   // email invalide
   const badEmail = await callWorker('/api/checkout', { method: 'POST', body: { email: 'not-an-email', lang: 'fr' }, env });
   check('email invalide refuse', badEmail.status === 400);
   // aucun paiement cree
-  check('aucun paiement Mollie pour requete invalide', !mollieCalls.some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
+  check('aucun paiement Mollie pour requete invalide',
+    !mollieCalls.slice(paymentCallsBefore).some((c) => c.url.endsWith('/payments') && c.method === 'POST'),
+    `(${mollieCalls.length - paymentCallsBefore} appels)`);
   // aucun achat cree
   check('aucune commande creee pour requete invalide', state.orders.length === 0);
 }
