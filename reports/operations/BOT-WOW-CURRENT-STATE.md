@@ -1026,7 +1026,7 @@ Le bundle actif contient donc également des logs contenant des données personn
 - `main` : `3786bcec75a22a4a4af2c968c83ad39263cb7958` (merge PR #85).
 - Arbre Git récursif : 443 entrées, non tronqué.
 - Branches : 78.
-- PR ouvertes : 16.
+- PR ouvertes : 17.
 - PR #85 : MERGED ; son CI Validate + UI quality/Playwright est SUCCESS.
 - Run Validate sur le SHA main : `41927264705`, SUCCESS.
 - PR #81 : documentation ancienne, OPEN, non mergeable.
