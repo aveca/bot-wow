@@ -88,5 +88,22 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
     !forbiddenClaim.test(flat));
 }
 
+
+for (const [page, file, oldClaim, newDisclosure, newHeading] of [
+  ['buy.html', 'buy.html',
+    /Everything below is delivered and working now/i,
+    /The list below describes the intended product scope; package availability and delivery are not yet verified/i,
+    /What the intended v1\.2\.0 build includes/i],
+  ['fr/buy.html', 'fr/buy.html',
+    /Tout ce qui suit est livré et fonctionne maintenant/i,
+    /La liste ci-dessous décrit le périmètre prévu du produit ; la disponibilité du paquet et sa livraison ne sont pas encore vérifiées/i,
+    /Périmètre prévu du build v1\.2\.0/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  check(`${page} : aucune affirmation de livraison déjà vérifiée`, !oldClaim.test(flat));
+  check(`${page} : périmètre explicitement présenté comme prévu et non vérifié`,
+    newDisclosure.test(flat) && newHeading.test(flat));
+}
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
