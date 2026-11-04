@@ -39,6 +39,23 @@ post-merge PR #71 — preuve de livraison v1.2.0)
 | `GET https://api.bot-wow.com/` | **200** (racine Worker) |
 | `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **toujours inopérante** (B11) |
 
+### Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T11:10Z
+
+Contrôle du HTML servi par `https://bot-wow.com/buy` et `https://bot-wow.com/fr/buy`
+(lecture seule) :
+
+| Contrôle | `/buy` | `/fr/buy` |
+|---|---|---|
+| Marqueur `checkout-blocked` présent | **oui** | **oui** |
+| Bouton d'achat `disabled` | **oui** | **oui** |
+| Prix affiché 20 € | **oui** | **oui** |
+| Aucun palier (4,99 / 7,99 / 9,99) | **oui** | **oui** |
+| Aucune mention d'abonnement | **oui** | **oui** — « **Pas d'abonnement**, pas de module caché, pas de renouvellement surprise » |
+
+→ **ONE CORE OFFER tient en production** (une seule licence à 20 €, paiement
+unique, aucun abonnement) et **le checkout réel reste bloqué**. Aucun paiement
+n'a été créé, aucun email client envoyé.
+
 > Rappel de méthode : l'API ne vit **pas** sous `bot-wow.com/api/` (le dépôt
 > `bot-wow.com` n'a aucun dossier `api/` — `assets/app.js` le documente : « vérifie :
 > /api/config sur bot-wow.com renvoie 404 »). L'API est servie par le Worker sur
