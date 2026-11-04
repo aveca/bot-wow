@@ -107,7 +107,14 @@ Aucun événement `payment_confirmed`, `conversion`, `delivery_sent`, `delivery_
 
 Aucune modification de paiement/checkout, aucun déploiement Worker, aucune écriture D1/R2, aucun changement de secret, aucun e-mail et aucun paiement n'ont été effectués pendant ce contrôle.
 
-## 7. Prochaine priorité classée
+## 7. Conformité et éligibilité commerciale
+
+- La page d'achat publique avertit explicitement que l'automatisation enfreint les conditions Blizzard et peut entraîner suspension ou bannissement.
+- La PR #66, toujours ouverte en draft, contient un audit interne daté du 2026-10-29 qui classe le produit actuel (lecture d'écran + clics automatisés + addon) comme contraire aux conditions publiées de Blizzard, sans autorisation explicite identifiée.
+- Cette branche propose un pivot non-automatisant : planificateur de routes à saisie manuelle, carnet de spots et simulateur hors ligne, sans lecture d'écran, clics automatisés, addon de contrôle ni interaction avec le client. Ce pivot n'est pas implémenté ou fusionné.
+- Ce rapport est une source interne, pas un avis juridique ni une décision de Blizzard. Ne pas promouvoir le bot auprès des joueurs de serveurs officiels tant que le périmètre d'autorisation n'est pas résolu ; toute utilisation sur serveur privé doit respecter les règles explicites de ce serveur.
+
+## 8. Prochaine priorité classée
 
 | Priorité | Action | Impact | Effort | Condition |
 |---|---|---|---|---|
