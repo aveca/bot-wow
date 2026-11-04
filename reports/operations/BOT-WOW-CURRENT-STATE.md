@@ -625,7 +625,7 @@ No prices, checkout rules, secrets, bindings, D1/R2 data, payments, emails, Work
 
 ## GitHub / CI
 - `main` remains `83553e39d8d12c06f75d3f5ffee8f97109d8eec8`.
-- Repository census: 76 branches and 17 open PRs. PR #71 is merged; #83 is open; #77 and #66 remain drafts; #67 remains open. Historical PRs were not reopened.
+- Repository census after this cycle's branch/PR creation: 77 branches and 18 open PRs. PR #71 is merged; #83 and #84 are open; #77 and #66 remain drafts; #67 remains open. Historical PRs were not reopened.
 - Before this addendum, PR #83 head `7b349b23ac68aa5d658fa546a85884b267886414` had Validate and UI-quality workflows SUCCESS. Updating this document triggers fresh checks; their new results are pending.
 - No merge to `main` was performed.
 
