@@ -109,10 +109,10 @@ for (const [page, file, oldClaim, newDisclosure, newHeading] of [
 for (const [page, file, oldClaims, newScope] of [
   ['index.html', 'index.html',
     /The one role BOT-WOW ships today|Fishing ships today|BOT-WOW ships one role|1 shipped \+ 3 in development|packaged build, delivered with a SHA-256 manifest/i,
-    /The intended v1\.2\.0 scope is one role: fishing|release availability notice/i],
+    /The intended v1\.2\.0 scope is one role: fishing/i],
   ['fr/index.html', 'fr/index.html',
     /Le seul rôle que BOT-WOW livre aujourd'hui|La pêche livre aujourd'hui|BOT-WOW livre un seul rôle|1 livré \+ 3 en développement|paquet de livraison, avec un manifeste SHA-256/i,
-    /Le périmètre prévu de la v1\.2\.0 couvre un seul rôle : la pêche|release-availability-notice/i],
+    /Le périmètre prévu de la v1\.2\.0 couvre un seul rôle : la pêche/i],
 ]) {
   const html = read(file);
   const flat = html.replace(/\\s+/g, ' ');
