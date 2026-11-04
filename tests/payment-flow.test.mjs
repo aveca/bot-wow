@@ -29,7 +29,7 @@ function check(name, ok, detail = '') {
 }
 
 /* ---------------------------------------------------------- environnement */
-function makeEnv(state) {
+function makeEnv(state, mollieApiKey = 'test_key') {
   const db = {
     prepare(sql) {
       const key = sql.replace(/\s+/g, ' ').trim();
@@ -129,7 +129,7 @@ function makeEnv(state) {
     TELEMETRY_DB: telemetry,
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
-    MOLLIE_API_KEY: 'test_key',
+    MOLLIE_API_KEY: mollieApiKey,
     // Profil présent pour détecter toute régression profileId avec une API Key.
     MOLLIE_PROFILE_ID: 'pfl_test_profile',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
@@ -267,6 +267,36 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('la licence reference la meme commande', state.licenses[0] && state.licenses[0][1] === state.orders[0],
     `(licence=${state.licenses[0] && state.licenses[0][1]} commande=${state.orders[0]})`);
   check('un jeton de telechargement est cree', state.downloads.length === 1, `(${state.downloads.length})`);
+}
+
+/* 3a. un jeton organisation transmet profileId au paiement */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state, 'access_org_token');
+  mollieCalls = [];
+  const res = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'org-client@test.fr', lang: 'fr' }, env,
+  });
+  const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
+  check('un jeton organisation transmet profileId a la creation du paiement',
+    res.status === 200 && payment && new URL(payment.url).searchParams.get('profileId') === 'pfl_test_profile',
+    `(status=${res.status} url=${payment && payment.url})`);
+}
+
+/* 3b. un jeton organisation transmet profileId a la lecture webhook */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state, 'access_org_token');
+  mollieCalls = [];
+  paymentState = { id: 'tr_org', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+    metadata: { email: 'org-client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
+  const res = await callWorker('/api/mollie-webhook', {
+    method: 'POST', body: { id: 'tr_org' }, env,
+  });
+  const paymentRead = mollieCalls.find((c) => c.method === 'GET' && c.url.includes('/payments/tr_org'));
+  check('un jeton organisation transmet profileId a la lecture webhook',
+    res.status === 200 && paymentRead && new URL(paymentRead.url).searchParams.get('profileId') === 'pfl_test_profile',
+    `(status=${res.status} url=${paymentRead && paymentRead.url})`);
 }
 
 /* 3b. un webhook paye enregistre UNE conversion (mesure serveur) */
