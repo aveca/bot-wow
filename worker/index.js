@@ -2456,6 +2456,9 @@ var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
 var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
 async function handleCheckout(request, env2) {
+  if (env2.RELEASE_STATUS !== "confirmed") {
+    return jsonResponse2({ ok: false, error: "delivery_unverified" }, 409);
+  }
   const ip = getClientIp2(request);
   const rl = await checkRateLimit2(env2.RATE_LIMIT, "checkout", ip, CHECKOUT_RATE_LIMIT);
   if (!rl.allowed) {
