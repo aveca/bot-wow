@@ -195,3 +195,40 @@ La lecture publique de `https://bot-wow.com/` et `https://bot-wow.com/buy` retou
 La version officielle de l'End User License Agreement de Blizzard, révisée le 21 mars 2024, interdit notamment de créer, utiliser, offrir, promouvoir, annoncer, mettre à disposition ou distribuer des bots non autorisés ; elle définit les bots comme des logiciels permettant le contrôle automatisé d'un jeu ou d'un personnage. Le comportement décrit publiquement par BOT-WOW (lecture du flotteur et clic automatisé) entre directement dans le périmètre de risque de cette règle. Ce n'est pas un avis juridique, mais cela rend la commercialisation auprès des joueurs du service Blizzard officiel non défendable sans autorisation explicite. Référence : https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement.
 
 Conséquence : donner la priorité à la PR #66 et à un MVP sans contrôle automatisé du jeu ; ne pas lancer d'acquisition ciblant les joueurs des serveurs officiels tant que l'autorisation n'est pas établie.
+
+
+## 10. Livraison PR #79 et état après déploiement — 2026-11-04T16:52:07.707Z
+
+### PR #79 — fusionnée et déploiement Pages réussi
+
+- PR #79 est fusionnée par squash dans `main` : commit `657921ea892130019e2eb17518d8bc36e6a2c60d`.
+- Contrôles sur son HEAD `85f6af3948f399881c6dea027a1d6a02b6c2a057` : Validate Bot-Wow **success** (run 41870619388) et UI quality / navigateur réel **success** (run 41870619101).
+- Cloudflare Pages production : déploiement `68191ea2-542a-44e7-bb32-3e9705c316e0`, commit `657921e`, stages build et deploy **success** ; fin du déploiement `2026-11-04T16:51:02.606938Z`.
+- Le Worker `botwow-api` n'a pas été déployé ; cette livraison ne change que les pages statiques et leurs tests.
+
+### Vérification du domaine public — propagation non prouvée
+
+Après le déploiement Pages réussi, la lecture web du domaine personnalisé `https://bot-wow.com/` et `/buy` a encore retourné l'ancienne copie contenant « Payment by Mollie », « you are redirected to Mollie » et « Card payment is live through Mollie ». Le crawler peut servir un cache ; l'environnement ne permet pas une requête HTTP directe indépendante pour trancher. **Conclusion prudente : déploiement Pages confirmé, mais le contenu actualisé sur le domaine personnalisé n'est pas encore prouvé.** Refaire une vérification navigateur/HTTP avec cache neutralisé au prochain cycle.
+
+### PR #77 — tests verts, mais bloquée par séparation de compte
+
+- HEAD `502da4efb0f4b05a05ff560396160b929e68073c`.
+- Validate Bot-Wow **success** (run 41871084324).
+- UI quality, tests unitaires/intégration, CSS, build et navigateur réel **success** (run 41871084050).
+- PR toujours en draft ; aucun merge ni déploiement Worker. Le code distingue désormais API Key (`test_`/`live_`, sans `profileId`) et Advanced/OAuth/Organization token (avec `profileId`).
+- Cette correction technique ne résout pas le problème de compte : les 11 paiements BOT-WOW historiques sont tous rattachés au profil Sargasses. Il faut un profil BOT-WOW et une clé dédiés avant toute réactivation du checkout.
+
+### Conformité produit
+
+Un commentaire documenté a été ajouté à la PR #66 avec la source officielle de l'EULA Blizzard (révision 21/03/2024), qui interdit la création, l'offre, la promotion et la distribution de bots non autorisés. La PR #66 reste ouverte ; le pivot non-automatisant demeure la direction commerciale prioritaire avant toute acquisition de joueurs du service officiel.
+
+### État financier et opérations
+
+Les dernières lectures D1 demeurent : 11 paiements Mollie live expirés sur le profil Sargasses ; 5 commandes bitcoin_manual de test `example.com` ; 0 paiement confirmé, 0 livraison, 0 activation et 0,00 EUR de revenu commercial confirmé. Aucun paiement, e-mail, changement de secret ou déploiement Worker n'a été exécuté.
+
+### Prochaine priorité
+
+1. Obtenir un profil Mollie BOT-WOW séparé et une clé de test dédiée (autorisation requise pour création/configuration).
+2. Refaire la vérification HTTP du domaine public après le déploiement #79 ; corriger uniquement si le contenu live est réellement ancien.
+3. Garder PR #77 en draft jusqu'à validation du credential BOT-WOW distinct ; ne pas déployer le Worker avec le profil Sargasses.
+4. Avancer le pivot non-automatisant de PR #66.
