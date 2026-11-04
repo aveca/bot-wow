@@ -81,7 +81,7 @@
 | **Rollback GitHub Pages** | Pousser l'ancien commit : `git reset --hard 0960dfc` + `git push --force-with-limit origin main` (rétore l'état avant corrections) |
 | **Rollback Cloudflare Worker** | Redéployer l'ancienne version du Worker. Comme `wrangler` garde l'historique des deployments, on peut cibler la version précédente (celui de `0960dfc`). |
 | **Rollback D1** | Restaurer depuis sauvegarde : `wrangler d1 execute botwow-production --file=backup-*.sql` |
-| **Rollback R2** | L'objet `Casinobabe-v1.0.38.zip` fait foi en tant que repli (voir `wrangler.toml§4`) |
+| **Récupération R2** | Le Worker ne sert plus l'archive historique en repli. Construire, vérifier puis uploader l'objet versionné exact ; un objet manquant renvoie `503 artifact_unavailable`. Ne redéployer l'ancien Worker que si la release historique est explicitement acceptée. |
 | **Rollback secrets** | Laisser les secrets tels quels ; ils configurent l'environnement de production. |
 
 ### Vérification paiement en mode test (sans paiement réel)
@@ -102,7 +102,7 @@ Le test `tests/payment-flow.test.mjs` valide le parcours complet **sans effectue
 | **Worker Cloudflare incompatible** | Moyenne | Élevé | Le `wrangler deploy` doit suivre le `git push`. Rollback : redéployer l'ancien Worker (version `0960dfc`) |
 | **Secrets Cloudflare absents ou erronés** | Moyenne | Élevé | Le checkout échoue (`checkout_failed`) ; e-mails de licence ne partent pas. Vérifier via `wrangler secret list` (sans afficher les valeurs) |
 | **Base D1 incompatible** | Faible | Moyen | Les migrations sont `IF NOT EXISTS` + idempotentes. Rollback : restauration depuis sauvegarde D1 |
-| **Paquet R2 manquant ou corrompu** | Faible | Moyen | Le bouton de téléchargement tombe sur le repli `Casinobabe-v1.0.38.zip`. Rollback : reconstruire et re-uploader |
+| **Paquet R2 manquant ou corrompu** | Faible | Moyen | Le téléchargement renvoie `503 artifact_unavailable` au lieu de servir une ancienne version. Récupération : reconstruire, vérifier le manifeste/SHA-256 et uploader l'objet versionné attendu ; rollback Worker uniquement si l'ancienne release est explicitement acceptée. |
 | **Webhook Mollie mal déclaré** | Faible | Élevé | Les notifications Mollie ne seront pas reçues → licences non créées. Vérifier dans le compte Mollie l'URL `https://api.bot-wow.com/api/mollie-webhook` |
 
 **Condition de rollback global** : Revenir à l'état `0960dfc` (commit précédent). Tous les tests et validations passaient sur cet état également (c'était l'état de production avant nos corrections).

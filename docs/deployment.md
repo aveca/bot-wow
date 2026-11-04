@@ -168,8 +168,13 @@ Bitcoin) sur le schéma réconcilié.
 
 ## 4. Objet R2 (le paquet livré au client)
 
-Le bouton de téléchargement sert l'objet `R2_OBJECT_KEY`
-(`casinobabe-fishing-1.2.0.zip`), avec repli sur `Casinobabe-v1.0.38.zip`.
+Le bouton de téléchargement sert exclusivement l'objet configuré `R2_OBJECT_KEY`
+(`casinobabe-fishing-1.2.0.zip`). Il ne bascule jamais vers une archive historique :
+si la clé est invalide ou l'objet absent, le Worker renvoie `503 artifact_unavailable`.
+Publier et vérifier l'artefact attendu avant de déployer cette correction ; sinon, les
+téléchargements restent temporairement indisponibles. Le quota est réservé par une
+mise à jour conditionnelle atomique (`count < max_count`) après vérification de l'objet,
+afin que deux requêtes simultanées ne dépassent pas le nombre de téléchargements autorisé.
 
 ```bash
 # Construction du paquet (depuis le dépôt Casinobabe)
