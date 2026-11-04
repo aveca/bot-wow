@@ -353,3 +353,6 @@ Latest evidence is recorded in [`2026-11-04-live-revalidation-1526z.md`](./2026-
 - **Production** : la page publique montre toujours l'ancien texte Mollie contradictoire ; PR #79 n'est pas déployée. Worker botwow-api version 50, déploiement 2026-10-27 ; bindings secrets présents par nom seulement.
 - **Garde-fous** : aucun profil créé, secret modifié, paiement/e-mail envoyé, checkout rouvert ou déploiement effectué. Aucun changement sur main.
 - **Prochaine action** : profil BOT-WOW indépendant + clé de test dédiée (autorisation requise), puis test contrôlé end-to-end après validation du code et des permissions.
+
+
+- **Conformité officielle** : l'EULA Blizzard (révision du 21/03/2024) interdit la création, l'offre, la promotion et la distribution de bots non autorisés, définis comme des logiciels contrôlant automatiquement un jeu/personnage. Le comportement public de BOT-WOW (lecture du flotteur + clic automatisé) est donc un risque direct pour la commercialisation sur le service officiel. Référence : https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement. Priorité à la PR #66 et à une offre non-automatisante ; pas d'acquisition ciblant les joueurs des serveurs officiels sans autorisation explicite.
