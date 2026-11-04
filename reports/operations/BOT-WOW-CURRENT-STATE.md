@@ -988,3 +988,29 @@ Ce contrôle lève uniquement le doute sur l'existence et l'intégrité interne 
 Le checkout reste fermé. Les 16 paiements Mollie BOT-WOW référencés dans D1 ont été vérifiés individuellement dans P0.30 : 16/16 expirés, aucun `paidAt`, aucun moyen de paiement, tous rattachés au profil Sargasses. Le revenu commercial confirmé reste `0,00 €`.
 
 Aucun objet R2 n'a été modifié, aucun Worker déployé, aucun secret/binding modifié, aucun paiement créé, aucun e-mail envoyé, aucune écriture D1 effectuée.
+
+
+## P0.31 — comparaison du bundle Worker actif avec main (même relevé)
+
+L'API Cloudflare `GET /accounts/{account_id}/workers/scripts/botwow-api/content/v2` a maintenant fourni le bundle actif lisible (multipart, 264 215 octets de réponse).
+
+Worker actif :
+- version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`
+- déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`, créé le 2026-10-27T07:46:28.277Z
+- marqueurs présents : `RELEASE_STATUS`, `delivery_unverified`, `sendDeliveryEmail2`, `sendEmail2`, `MOLLIE_PROFILE_ID`
+- marqueur absent : `resumeFulfillment`.
+
+Comparaison fonctionnelle :
+- Dans le bundle actif, `handleMollieWebhook` insère `payment:<id>` dans `webhook_events` avant `fulfillOrder`. Une notification dupliquée qui rencontre la contrainte UNIQUE retourne ensuite `200 OK` comme déjà traitée. Le bundle actif n'a pas de reprise de livraison après cet état.
+- Dans `main` (`worker/index.js`, blob `725d98e4595b27aa60e88758ecac20c711a38b6b`), le code suit `alreadyLocked` et appelle `resumeFulfillment` sur un rejeu ; cette fonction vérifie commande, licence, jeton et reçu d'e-mail puis reprend les étapes manquantes.
+- Donc le correctif de reprise présent dans main n'est pas dans le Worker de production version 50. **Si une livraison échoue après l'insertion du verrou webhook dans la version 50, le rejeu peut être ignoré sans reprise.** C'est un défaut P0 de livraison, pas une hypothèse.
+
+Comparaison de journalisation :
+- Le bundle actif journalise l'adresse e-mail dans le log d'acceptation Resend.
+- Il journalise `email`, `key` et `amount` dans la notification admin.
+- Il journalise `payment.id`, l'e-mail et la clé de licence après fulfillment.
+- Le code main remplace ces logs par un identifiant de message fournisseur, `Paid order recorded` et l'identifiant de paiement uniquement.
+
+Le bundle actif contient donc également des logs contenant des données personnelles et des clés de licence qui ont été redigés dans main.
+
+**Décision :** préparer le déploiement du Worker main avec un rollback vers la version 50, mais ne pas déployer dans ce cycle. Le Worker est le chemin paiement/livraison de production ; sa mise à niveau exige la confirmation d'un profil Mollie BOT-WOW dédié et une autorisation explicite. Ne pas réutiliser le profil Sargasses. Aucun POST, paiement, secret, binding ou déploiement n'a été effectué.
