@@ -1,14 +1,14 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T16:52:07.707Z** (PR #79 fusionnée, Pages déployé, Mollie cross-profile confirmé) (profil Mollie croisé confirmé, D1 et PR #77/#79 revalidés) (réconciliation live GitHub, Cloudflare Pages, Worker et D1 après PR #76)
+**Dernière mise à jour de ce document : 2026-11-04T18:20Z** (PR #78 et #80 fusionnées — CA BOT-WOW corrigé à 0,00 €, chemin de paiement réel mesuré, R18 fermé côté Sargasses)
 
 ---
 
 # 0. État au 2026-11-04 — Mission revenue (ONE CORE OFFER)
 
 **Dépôt :** https://github.com/aveca/bot-wow
-**Branche de travail :** `docs/current-state-final-20261104` (base `origin/main` @ `33becbf3`)
-**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73 · https://github.com/aveca/bot-wow/pull/74 · https://github.com/aveca/bot-wow/pull/75 · https://github.com/aveca/bot-wow/pull/76
+**Branche de travail :** `docs/current-state-r18-closed-20261104` (base `origin/main` @ `db1a35e3`)
+**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · /71 · /73 · /74 · /75 · /76 · /77 · /78 · /79 · /80
 **Rapport d'évidence :** `reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md`
 **Rapport livraison :** `reports/operations/2026-11-04-p0-delivery-proof.md`
 
@@ -368,3 +368,79 @@ Latest evidence is recorded in [`2026-11-04-live-revalidation-1526z.md`](./2026-
 - **Conformité** : commentaire ajouté à PR #66 avec lien vers l'EULA officielle Blizzard (révision 21/03/2024) qui interdit les bots non autorisés ; pivot non-automatisant prioritaire.
 - **Worker** : version 50 du 27/10, inchangée. Aucun secret modifié, paiement créé, e-mail envoyé, checkout ouvert ou déploiement Worker effectué.
 - **Prochaine action** : profil Mollie BOT-WOW distinct + clé de test dédiée, puis test contrôlé paiement → webhook → licence → e-mail → téléchargement → activation après autorisation.
+
+
+---
+
+# État final de la mission revenue — 2026-11-04T18:20Z
+
+## GitHub
+
+| Élément | Valeur |
+|---|---|
+| `main` | `db1a35e366091d372ac34778f4a3c27e4bb7a291` (merge PR #78) |
+| **PR #78** — revalidation live Cloudflare + D1 | **MERGED** 2026-11-04T17:19:41Z → `db1a35e3` |
+| **PR #80** — correction du CA + §3bis (chemin de paiement réel) | **MERGED** 2026-11-04T17:19:38Z → `a3499d7` |
+| **PR #79** — honnêteté de la copie sur 8 surfaces d'achat | **MERGED** 2026-11-04T16:50:27Z → `657921e` |
+| **PR #77** — `profileId` selon le type d'identifiants | **DRAFT maintenu** — décision argumentée en commentaire |
+
+CI sur le SHA exact de #80 : `validate` **success** (`41873795380`), `ui-quality` **success** (`41873795611`), GitGuardian **pass**.
+
+> Les deux merges documentaires (#78, #80) n'ont déclenché que **« Validate Bot-Wow »** (`41876516746`, `41876526860`) — **zéro** déploiement Pages, conformément à `paths-ignore: reports/**`.
+
+## Production — revérifiée en lecture seule
+
+- **Worker `botwow-api`** : **inchangé** — tag `20f5821adfeb465cae177120c9015f8f`, version de code n° 49 (2026-10-27T07:46:00Z) **sans annotation `commit_sha`**. Ce tag n'est **ni un commit ni un blob** du dépôt (`git cat-file -t` → *not a valid object name*).
+- **D1 `botwow-production`** (remote, via l'API Cloudflare — **13 tables**) : 25 commandes = 11 `mollie/failed` + 5 `bitcoin_manual/paid` (tests) + 8 `pending_payment` + 1 `rejected` ; **licences 5 · downloads 5 · activations 0 · deliveries 0** ; `webhook_events` 16 dont **5 sans commande** ; `botwow_emails` 12, toutes `@example.com`.
+- **Statut Mollie réel** (extrait de `orders.metadata`) : les 11 paiements sont `status=expired`, `mode=live`, **`method=null`**, **`paidAt=null`** → **personne n'a finalisé un moyen de paiement**.
+- **Pages** : `/buy` → marqueur `checkout-blocked` présent, bouton `disabled`, **20,00 €**, **aucune** mention « Mollie disponible / redirect » (PR #79 en ligne).
+
+## Vérité revenue
+
+**Chiffre d'affaires confirmé : 0,00 €.** 0 client payeur, 0 licence activée, 0 livraison, 0 email client. Les 5 commandes `paid` portent la même adresse BTC littéralement `bc1qadminbotwowpaymentaddressplaceholder123456…` et des txid de test (`test-txid-12345`, `test-real-txid-12345`, `e2e-test-txid-001`). Les 220 € de paiements Mollie ont **expiré sans être réglés**.
+
+> **Note de méthode** : une lecture antérieure via `wrangler d1 execute` **sans `--remote`** avait retourné la base **locale** (miniflare). Toutes les valeurs ci-dessus proviennent de l'**API Cloudflare** (`POST /accounts/{id}/d1/database/{uuid}/query`) et sont reproductibles.
+
+## Funnel (D1 `botwow-analytics`, remote)
+
+| Événement | Total | Depuis le 2026-10-28 |
+|---|---:|---:|
+| `page_view` | 1 539 | 531 |
+| `journey_view` | 587 | 286 |
+| `cta_click` | 56 | 7 |
+| `checkout_requested` | 31 | **3** |
+| `checkout_start` | 4 | **0** |
+| `checkout_created` | 6 | 0 |
+| `checkout_failed` | 6 | 0 |
+| `checkout_error` | **0** | 0 |
+| `payment_confirmed` / `conversion` / `delivery_sent` / `activation` / `demo_open` / `offer_view` | **0** | 0 |
+
+Les 3 intentions restantes (29/10, 02/11, **04/11 02:47Z**) s'arrêtent au clic : **aucun** `checkout_start`, **aucun** `checkout_error`. Avec 531 pages vues sur 8 jours et 0 checkout démarré, **le volume est le premier frein numérique** — avant tout diagnostic de paiement.
+
+## Blocages (détail complet : `BOT-WOW-REVENUE-STATE-2026-11-04.md` §4)
+
+| # | Blocage | Autorisation requise |
+|---|---|---|
+| **B1** | Le checkout n'a jamais encaissé — **personne n'a finalisé un paiement** (ce n'est pas une panne technique) | Oui (test de paiement réel) |
+| **B2** | Aucune base commerciale : 0 client payeur ; 6 `pending_payment` portent une adresse personnelle | Non (business) |
+| **B12** | **5 webhooks Mollie traités sans commande** (dont 2 sessions avec adresses personnelles) → paiement invisible | Oui (lecture seule API Mollie) |
+| **B13** | ⚠️ **Le checkout encaisse dans l'organisation Mollie de Sargasses** (`pfl_t8KCk4Cm2C`, `org_19554425`) | Oui (profil + clé dédiés) |
+| **B14** | Le code de production n'est rattachable à **aucun commit** | Oui (redéploiement versionné) |
+| **B15** | Volume quasi nul | Non (business) |
+| **B8** | Garantie d'activation incohérente (« 1 machine » vs `max_activations=2` vs « no seat limits ») | Oui (décision) |
+
+## Côté Sargasses — R18 est fermé pour la mesure
+
+La PR Sargasses **#1277** (`df01afd9`, MERGED 2026-11-04T18:01:55Z) **scope désormais le tracker MRR sur les enregistrements attribués à Sargasses** : un paiement BOT-WOW payé ne sera plus compté comme revenu Sargasses. Vérifié par exécution (20/20 cas + calcul end-to-end reproduisant 38,96 € / 17,98 $).
+
+> Cela corrige **l'attribution de la mesure**, pas **la destination de l'argent** : le checkout BOT-WOW dépose toujours dans le compte Sargasses (B13). La séparation physique des comptes reste la seule solution structurelle.
+
+## Garde-fous — rien de ce qui suit n'a été fait
+
+Aucun prix, montant, remboursement, débit, email client, secret, binding, checkout rouvert, paiement créé ni déploiement Worker modifié. Le checkout **réel n'a pas été réactivé** : il reste bloqué côté interface (PR #54) et le Worker n'a reçu aucun déblocage.
+
+## Prochaine action (une seule)
+
+**Séparer et versionner le chemin de paiement** — profil Mollie BOT-WOW **dédié** + clé **dédiée**, puis redéploiement du Worker avec `commit_sha` — **autorisation explicite requise**. Sans cela, même une vente réussie produirait une mesure de revenu **non attribuable** et un rollback non reproductible.
+
+Puis, dans le même lot autorisé : la **lecture seule des 5 paiements sans commande** (B12) et le **test de bout en bout** dans le profil dédié.
