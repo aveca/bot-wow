@@ -130,6 +130,8 @@ function makeEnv(state) {
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key',
+    // Profil présent pour détecter toute régression profileId avec une API Key.
+    MOLLIE_PROFILE_ID: 'pfl_test_profile',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
     RELEASE_STATUS: 'confirmed',
@@ -211,6 +213,9 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('le checkout renvoie une URL de paiement', res.status === 200 && !!data.checkoutUrl,
     `(status=${res.status} ${JSON.stringify(data).slice(0, 120)})`);
   const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
+  check('une API Key Mollie n’envoie jamais profileId à la création du paiement',
+    payment && !new URL(payment.url).searchParams.has('profileId'),
+    `(url=${payment && payment.url})`);
   check('le montant envoyé a Mollie est 20,00 EUR (fixe par le serveur)',
     payment && payment.body.amount.value === '20.00' && payment.body.amount.currency === 'EUR',
     `(recu ${JSON.stringify(payment && payment.body.amount)})`);
@@ -245,11 +250,16 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
+  mollieCalls = [];
   paymentState = { id: 'tr_test', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
     metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
   const res = await callWorker('/api/mollie-webhook', {
     method: 'POST', body: { id: 'tr_test' }, env,
   });
+  const paymentRead = mollieCalls.find((c) => c.method === 'GET' && c.url.includes('/payments/tr_test'));
+  check('une API Key Mollie ne transmet pas profileId lors de la lecture webhook',
+    paymentRead && !new URL(paymentRead.url).searchParams.has('profileId'),
+    `(url=${paymentRead && paymentRead.url})`);
   check('le webhook repond 200', res.status === 200, `(status=${res.status})`);
   check('une licence est creee', state.licenses.length === 1, `(${state.licenses.length})`);
   check('la commande porte un identifiant TEXT', typeof state.orders[0] === 'string' && state.orders[0].startsWith('ord_'),
