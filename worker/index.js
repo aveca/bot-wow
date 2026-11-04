@@ -574,7 +574,7 @@ async function handleMollieWebhook(request, env2) {
   }
   let payment;
   try {
-    payment = await fetchMolliePayment(env2, paymentId, false);
+    payment = await fetchMolliePayment(env2, paymentId, true);
   } catch (e) {
     console.error("Webhook: lecture du paiement impossible", e && e.message);
     return new Response("Server Error", { status: 500 });
@@ -954,7 +954,7 @@ async function createMolliePayment(env2, params) {
   // avec une API Key provoque un 400 "Invalid Authorization header" /
   // "Bad Request". Seuls les tokens OAuth / organisation necessitent
   // profileId. On ne l'envoie donc jamais pour une cle API.
-  return mollieFetch(env2, "POST", "/payments", body, false);
+  return mollieFetch(env2, "POST", "/payments", body, true);
 }
 __name(createMolliePayment, "createMolliePayment");
 async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
