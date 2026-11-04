@@ -1,31 +1,33 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T11:10Z** (revérification
-post-merge PR #71 — preuve de livraison v1.2.0)
+**Dernière mise à jour de ce document : 2026-11-04T13:21Z** (revérification
+post-merge PR #71, #73, #74 et #75 — preuve de livraison v1.2.0 + garde commercial)
 
 ---
 
 # 0. État au 2026-11-04 — Mission revenue (ONE CORE OFFER)
 
 **Dépôt :** https://github.com/aveca/bot-wow
-**Branche de travail :** `docs/current-state-refresh-20261104` (base `origin/main` @ `084e2bd`)
-**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73
+**Branche de travail :** `docs/current-state-final-20261104` (base `origin/main` @ `33becbf3`)
+**PRs mergées :** https://github.com/aveca/bot-wow/pull/70 · https://github.com/aveca/bot-wow/pull/71 · https://github.com/aveca/bot-wow/pull/73 · https://github.com/aveca/bot-wow/pull/74 · https://github.com/aveca/bot-wow/pull/75
 **Rapport d'évidence :** `reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md`
 **Rapport livraison :** `reports/operations/2026-11-04-p0-delivery-proof.md`
 
-## 0.0 Revérification du 2026-11-04T11:10Z (après le merge de la PR #71)
+## 0.0 Revérification du 2026-11-04T13:21Z (après les merges des PR #71, #73, #74 et #75)
 
 | Élément | Valeur | Statut |
 |---|---|---|
-| `main` | `084e2bd` (merge PR #71, 2026-11-04T08:57:50Z) | MERGED |
+| `main` | `33becbf3` (merge PR #75, 2026-11-04T12:05:55Z) | MERGED |
 | PR #71 | « P0 — preuve de livraison v1.2.0 + garde + reprise idempotente » (`worker/index.js` **+185 / −72**, `tests/delivery-replay.test.mjs` 41 contrôles, intégration PR #19 + PR #44) | MERGED |
 | PR #73 | « retirer les règles www mortes et documenter la remediation zone-level » | MERGED (`dfc11582`, 08:18:44Z) |
 | Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** — en ligne |
 | Pages (PR #73) | deployment `7541341864` (sha `dfc11582`) | **success** — en ligne |
 | Pages (PR #70) | deployment `7540967184` (sha `e2a93384`) | **success** — en ligne |
+| PR #74 | « rafraîchir l'état courant après le merge de la PR #71 » — `reports/**` ajouté au `paths-ignore` de `pages.yml` | MERGED (`5fcaebe`, 11:34:39Z) |
+| PR #75 | « consigner la vérification du garde-fou commercial en production » | MERGED (`33becbf3`, 12:05:55Z) |
 | **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on = 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — le code Worker de #70, #71 et #73 n'est pas en production |
 
-### Mesures live du 2026-11-04T11:10Z (directement vérifiées)
+### Mesures live du 2026-11-04T13:21:12Z (directement vérifiées, lecture seule)
 
 | Requête | Résultat mesuré |
 |---|---|
@@ -39,7 +41,7 @@ post-merge PR #71 — preuve de livraison v1.2.0)
 | `GET https://api.bot-wow.com/` | **200** (racine Worker) |
 | `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **toujours inopérante** (B11) |
 
-### Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T11:10Z
+### Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T13:21:12Z
 
 Contrôle du HTML servi par `https://bot-wow.com/buy` et `https://bot-wow.com/fr/buy`
 (lecture seule) :
@@ -50,7 +52,9 @@ Contrôle du HTML servi par `https://bot-wow.com/buy` et `https://bot-wow.com/fr
 | Bouton d'achat `disabled` | **oui** | **oui** |
 | Prix affiché 20 € | **oui** | **oui** |
 | Aucun palier (4,99 / 7,99 / 9,99) | **oui** | **oui** |
-| Aucune mention d'abonnement | **oui** | **oui** — « **Pas d'abonnement**, pas de module caché, pas de renouvellement surprise » |
+| Aucune mention positive d'abonnement | **oui** | **oui** |
+| Négation explicite de l'abonnement | « **No subscription**, no hidden modules, no surprise renewal » + « one-time payment · no renewal, ever » | « **Pas d'abonnement**, pas de module caché, pas de renouvellement surprise » + « paiement unique · aucun renouvellement, jamais » |
+| Mention « licence à vie » | « lifetime licence » | « Licence à vie » |
 
 → **ONE CORE OFFER tient en production** (une seule licence à 20 €, paiement
 unique, aucun abonnement) et **le checkout réel reste bloqué**. Aucun paiement
@@ -71,6 +75,8 @@ n'a été créé, aucun email client envoyé.
 | `e2a93384` | merge PR #70 — ONE CORE OFFER, tunnel dedup, réel/test, activation, logs expurgés |
 | `084e2bd` | merge PR #71 — preuve de livraison v1.2.0, garde `RELEASE_STATUS` (409), reprise idempotente, journal `deliveries`, `license_activated`, renvoi opérationnel |
 | `dfc11582` | merge PR #73 — retrait des règles `_redirects` `www` mortes, remédiation zone-level documentée |
+| `5fcaebe` | merge PR #74 — `reports/**` ajouté au `paths-ignore` de `pages.yml` (les commits documentaires ne redéploient plus Pages) |
+| `33becbf3` | merge PR #75 — vérification du garde-fou commercial consignée dans l'état courant |
 
 ## 0.2 Décisions structurantes
 
@@ -97,8 +103,10 @@ n'a été créé, aucun email client envoyé.
 1. Générateur de landing legacy **supprimé** ; l'hôte API redirige **308**
    vers `https://bot-wow.com/<chemin>` (routes `/api/*` et `/health`
    intactes). Worker : 244 178 → 116 431 octets.
-2. Règle **301 `www` → apex** dans `_redirects` (GitHub Pages n'applique
-   pas `_redirects` : le `www` y reste en 200 — limite documentée).
+2. Règle **301 `www` → apex** dans `_redirects` (PR #70) — **montée comme
+   inopérante** : Cloudflare Pages n'applique pas les redirections par domaine.
+   La PR #73 a donc **retiré** ces règles et documenté la remédiation
+   **zone-level** (cf. B11).
 3. **Déduplication du tunnel** côté client (`assets/analytics.js`), clé
    `event|page|cta|step|mode|years`, échappatoire `?telemetry_dedup=0`.
 4. **Réel / test distingués** (fail-safe) : `payment.mode === "test"` ⇒
@@ -124,7 +132,7 @@ n'a été créé, aucun email client envoyé.
 |---|---|
 | Worker **déployé** | tag `20f5821adfeb465cae177120c9015f8f` (`modified_on 2026-10-27T07:46:02Z`) — **inchangé**, **cible de rollback** |
 | Worker **PR #70 / #71 / #73** | **NON déployé** — un déploiement exige une autorisation explicite (AGENTS.md §5) et embarquerait le delta non revu du 22/10 → 27/10 (+103 / −112 lignes) |
-| Pages (`main`) | `main` = `084e2bd` — déploiement Pages `7542044619` **success** (09:00:28Z) |
+| Pages (`main`) | `main` = `33becbf3` — dernier déploiement Pages `7542044619` (sha `084e2bd`) **success** (09:00:28Z). Les merges #74 et #75 (documentaires) n'ont déclenché **que** `Validate Bot-Wow` — **zéro** déploiement Pages |
 | Schéma D1 | à jour (migrations `0001`→`0004` appliquées le 23/10, `0003` analytics incluse) — risque de schéma écarté |
 | Checkout réel | **inchangé et non réactivé** (bloqué côté interface, PR #54) |
 | Secrets | **aucune modification** ; `MOLLIE_PROFILE_ID` est présent mais `createMolliePayment` n'envoie **jamais** `profileId` |

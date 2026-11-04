@@ -243,10 +243,12 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 
 | Élément | Valeur |
 |---|---|
-| Branche | `docs/current-state-refresh-20261104` (base `origin/main` @ `084e2bd`) |
+| Branche | `docs/current-state-final-20261104` (base `origin/main` @ `33becbf3`) |
 | **PR #70 — ONE CORE OFFER** | **MERGED** 2026-11-04T07:57:11Z — merge commit `e2a93384ff499b8364d2f78f4f0ec1d3dcfab26c` |
 | **PR #71 — preuve de livraison v1.2.0** | **MERGED** 2026-11-04T08:57:50Z — merge commit `084e2bd` (`worker/index.js` **+185 / −72**) : garde `RELEASE_STATUS` (409 avant encaissement), reprise idempotente de la livraison, journal `deliveries`, mesure `license_activated`, renvoi opérationnel, intégration PR #19 + PR #44 |
 | **PR #73 — redirections `www`** | **MERGED** 2026-11-04T08:18:44Z — merge commit `dfc11582` : retrait des règles `_redirects` `www` **inopérantes** (Cloudflare Pages n'applique pas les redirections par domaine), remédiation **zone-level** documentée |
+| **PR #74 — `paths-ignore` `reports/**`** | **MERGED** 2026-11-04T11:34:39Z — merge commit `5fcaebe` : les commits documentaires ne déclenchent plus de déploiement Pages |
+| **PR #75 — garde-fou commercial consigné** | **MERGED** 2026-11-04T12:05:55Z — merge commit `33becbf3` |
 | Tests ajoutés | `tests/legacy-landing.test.mjs` (34 assertions) · `tests/payment-mode.test.mjs` (15) · `tests/funnel-dedup.test.mjs` (9) · `tests/delivery-replay.test.mjs` (41, PR #71) |
 | Tests réparés | `tests/funnel.test.mjs` — 36 assertions, **0 échec** (8 échecs avant, jamais exécuté par la CI) |
 
@@ -258,7 +260,7 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 | `npm run validate` | **exit 0** |
 | `git diff --check` | PASS |
 
-### 5.3 Déploiement — état vérifié le 2026-11-04T11:10Z
+### 5.3 Déploiement — état vérifié le 2026-11-04T13:21:12Z
 
 | Élément | Valeur | Statut |
 |---|---|---|
@@ -267,7 +269,7 @@ Ce diagnostic est donc laissé documenté, pas contourné.
 | Pages (PR #71) | deployment `7542044619` (sha `084e2bd`) | **success** |
 | **Worker `botwow-api`** | tag `20f5821adfeb465cae177120c9015f8f`, `modified_on 2026-10-27T07:46:02Z` | **NON REDÉPLOYÉ** — cible de rollback ; le code #70/#71/#73 n'est pas en production |
 
-Mesures live du 2026-11-04T11:10Z (directement vérifiées) :
+Mesures live du 2026-11-04T13:21:12Z (directement vérifiées) :
 
 | Requête | Résultat |
 |---|---|
@@ -280,7 +282,7 @@ Mesures live du 2026-11-04T11:10Z (directement vérifiées) :
 | `GET https://api.bot-wow.com/de/` | **200** + legacy — **attendu** (Worker non redéployé) |
 | `GET https://www.bot-wow.com/` | **200** — redirection `www` → apex **inopérante** (B11) |
 
-**Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T11:10Z**
+**Garde-fou commercial — vérifié ACTIF en production le 2026-11-04T13:21:12Z**
 (lecture seule du HTML de `https://bot-wow.com/buy` et `https://bot-wow.com/fr/buy`) :
 
 | Contrôle | `/buy` | `/fr/buy` |
@@ -289,7 +291,8 @@ Mesures live du 2026-11-04T11:10Z (directement vérifiées) :
 | Bouton d'achat `disabled` | **oui** | **oui** |
 | Prix 20 € | **oui** | **oui** |
 | Aucun palier (4,99 / 7,99 / 9,99) | **oui** | **oui** |
-| Aucune mention d'abonnement | **oui** | **oui** (« Pas d'abonnement, pas de module caché, pas de renouvellement surprise ») |
+| Aucune mention positive d'abonnement | **oui** | **oui** |
+| Négation explicite | « No subscription, no hidden modules, no surprise renewal » + « one-time payment · no renewal, ever » | « Pas d'abonnement, pas de module caché, pas de renouvellement surprise » + « paiement unique · aucun renouvellement, jamais » |
 
 → **ONE CORE OFFER tient en production** et **le checkout réel reste bloqué**.
 Aucun paiement créé, aucun email client envoyé.
@@ -299,7 +302,7 @@ Aucun paiement créé, aucun email client envoyé.
 > `assets/app.js` documente que `/api/config` y renvoie 404. Un 404 sur
 > `bot-wow.com/api/config` est donc **attendu**, pas une régression.
 
-### 5.4 Correctif de trigger deploy (appliqué dans cette branche)
+### 5.4 Correctif de trigger deploy (MERGED — PR #74)
 
 PR #71 annonçait dans son corps « Exclut `reports/**` de `pages.yml`
 (`paths-ignore`) » — **la modification n'a jamais été appliquée** : le
@@ -307,9 +310,14 @@ PR #71 annonçait dans son corps « Exclut `reports/**` de `pages.yml`
 `.github/workflows/pages.yml`. Un commit documentaire en `reports/**`
 déclenchait donc **inutilement** un déploiement Pages.
 
-**Correction appliquée :** `'reports/**'` ajouté au `paths-ignore` de
-`.github/workflows/pages.yml`. Aucun workflow de CI utile n'est désactivé
-(`validate.yml` et `ui-quality.yml` continuent de tourner sur `main`).
+**Correction appliquée et mergée (PR #74, `5fcaebe`, 2026-11-04T11:34:39Z) :**
+`'reports/**'` ajouté au `paths-ignore` de `.github/workflows/pages.yml`. Aucun
+workflow de CI utile n'est désactivé (`validate.yml` et `ui-quality.yml`
+continuent de tourner sur `main`).
+
+**Vérifié en production :** les merges documentaires #74 et #75 n'ont déclenché
+**que** le workflow `Validate Bot-Wow` — **zéro** déploiement Pages. Le
+déploiement Pages `7542044619` (sha `084e2bd`) reste le dernier en ligne.
 
 ---
 
