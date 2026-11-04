@@ -634,7 +634,7 @@ No prices, checkout rules, secrets, bindings, D1/R2 data, payments, emails, Work
 - The latest PR #83 preview deployment is skipped because preview deployments are disabled; it is not production.
 - Direct public extraction of `https://bot-wow.com/buy` shows the checkout is disabled and delivery is explicitly unconfirmed. It also exposes a contradictory sentence: **“Everything below is delivered and working now.”** and the heading “What ships today, exactly”, despite the same page saying the v1.2.0 package is not verified and telling visitors not to purchase.
 - Current `main` source contains the same contradiction in both `buy.html` and `fr/buy.html`. The web reader could not retrieve the French live page in this pass, so French production HTML is not independently confirmed.
-- A separate code/test PR is being prepared to replace these claims with an explicit “intended product scope / delivery unverified” disclosure. No production copy was changed in this cycle.
+- PR #84 (`fix/buy-copy-scope-disclosure-20261104`, head `3de440aced62f23b00586bece5665cfe4d574762`) now corrects the EN/FR claims and adds regression assertions. Validate run `41908880388` and UI-quality / real-browser run `41908880589` are both SUCCESS. PR #84 is not merged or deployed; no production copy was changed in this cycle.
 
 ## Cloudflare D1 — fresh read-only queries
 All queries were SELECT only; Cloudflare reported `changed_db=false` and `rows_written=0`.
