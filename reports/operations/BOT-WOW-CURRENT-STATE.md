@@ -805,6 +805,14 @@ Après le succès Cloudflare Pages, le lecteur web a encore renvoyé sur `bot-wo
 
 Il est donc **confirmé que le déploiement Pages du commit 9986fb est SUCCESS**, mais il n'est **pas confirmé que les quatre domaines/surfaces publiques servent déjà le nouvel HTML**. L'extraction web peut être périmée ; ne pas purger le cache ni prétendre à une vérification live réussie sans une requête HTTP directe non cachée.
 
+Contrôle supplémentaire du contenu source sur `main` après le merge, via l'API GitHub :
+- `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html` : anciennes affirmations de livraison absentes sur les quatre fichiers.
+- Anciennes affirmations Mollie actives absentes sur les quatre fichiers.
+- `buyBtn` désactivé sur les quatre fichiers.
+- Déclaration explicite du périmètre prévu présente sur les quatre fichiers.
+
+Le code publié sur `main` est donc cohérent ; seule la réponse HTTP live du domaine personnalisé reste à confirmer indépendamment de l'extraction web.
+
 ## Conséquences commerciales inchangées
 
 - Prix public : 20 €.
