@@ -163,8 +163,14 @@ function makeDb(state) {
             }
             if (/FROM deliveries/i.test(key)) {
               const needle = like(args[0]);
-              const wanted = /status = 'sent'/.test(key) ? 'sent' : 'pending';
-              const rows = state.deliveries.filter((d) => d.status === wanted && (!needle || String(d.body || '').includes(needle)));
+              /* Le Worker filtre parfois par statut ('sent' / 'pending'),
+                 parfois non (mise a jour du recu existant). */
+              const wanted = /status = 'sent'/.test(key) ? 'sent'
+                : /status = 'pending'/.test(key) ? 'pending' : null;
+              const rows = state.deliveries.filter((d) => (
+                (wanted === null || d.status === wanted)
+                && (!needle || String(d.body || '').includes(needle))
+              ));
               return rows.length ? rows[rows.length - 1] : null;
             }
             if (/FROM activations/i.test(key)) {
@@ -485,6 +491,12 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     '(lien absent)');
   check('renvoi : aucune licence supplementaire creee',
     state.licenses.length === 1, `(${state.licenses.length})`);
+  check('renvoi : le recu de livraison reste UNIQUE par licence (comptage fiable)',
+    state.deliveries.filter((d) => d.status === 'sent').length === 1,
+    `(${state.deliveries.map((d) => d.status).join(',')})`);
+  check('renvoi : le recu conserve le numero de licence dans son corps',
+    state.deliveries.length === 1 && String(state.deliveries[0].body).includes(state.licenses[0]?.key),
+    '(cle absente du recu)');
 }
 
 /* --- 9. Le renvoi admin utilise l'URL de PRODUCTION (pas staging) --- */

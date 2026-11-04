@@ -3207,14 +3207,21 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
     // Avant, seule l'echec etait consigne : impossible de distinguer une
     // licence envoyee d'une licence creee. C'est la seule source de verite
     // pour le suivi « livraison confirmee » et pour le rejeu.
+    //
+    // SEMANTIQUE : UNE ligne de recu par licence. Le compteur
+    // « COUNT(*) WHERE status='sent' » doit donc pouvoir compter les
+    // clients reellement livres. Si un renvoi explicite (client ou admin)
+    // inserait une seconde ligne, ce compteur compterait deux fois le
+    // meme client. On met donc a jour le recu existant (en rafraichissant
+    // `sent_at`) plutot que d'en creer un nouveau.
     try {
-      const pending = await env2.DB.prepare(
-        "SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'pending' AND body LIKE ? ORDER BY id DESC LIMIT 1"
+      const existing = await env2.DB.prepare(
+        "SELECT id, status FROM deliveries WHERE kind = 'delivery' AND body LIKE ? ORDER BY id DESC LIMIT 1"
       ).bind(`%${key}%`).first();
-      if (pending) {
+      if (existing) {
         await env2.DB.prepare(
           "UPDATE deliveries SET status = 'sent', sent_at = ?, error = NULL WHERE id = ?"
-        ).bind(Date.now(), pending.id).run();
+        ).bind(Date.now(), existing.id).run();
       } else {
         await env2.DB.prepare(`
           INSERT INTO deliveries (email, subject, body, kind, status, created_at, sent_at)

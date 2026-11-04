@@ -5,6 +5,10 @@ on:
     paths-ignore:
       - 'AGENTS.md'
       - '.github/workflows/pages.yml'
+      # Un commit documentaire (rapports d'operations, etat courant) ne
+      # change pas le site : il ne doit pas declencher un deploiement
+      # Pages inutile. La CI utile (validate / tests) reste active.
+      - 'reports/**'
   workflow_dispatch:
 permissions:
   contents: read
