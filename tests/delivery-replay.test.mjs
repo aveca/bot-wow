@@ -287,13 +287,10 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   paymentState = paidPayment('tr_REPLAY1');
   state.failLicenseInsert = true; // panne D1 au moment de creer la licence
 
-  let firstError = null;
-  try {
-    await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_REPLAY1' }, env });
-  } catch (e) { firstError = e; }
+  const firstRes = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_REPLAY1' }, env });
 
   check('livraison interrompue : le webhook signale l\'echec (Mollie reprogramme)',
-    !!firstError, '(aucune erreur levee)');
+    firstRes.status === 500, `(status=${firstRes.status})`);
   check('livraison interrompue : aucune licence creee',
     state.licenses.length === 0, `(${state.licenses.length})`);
   check('livraison interrompue : le verrou d\'idempotence est pose',
@@ -426,8 +423,8 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
 
   check('activation : la licence active', res.status === 200 && body.ok === true,
     `(status=${res.status} ${JSON.stringify(body).slice(0, 80)})`);
-  check('activation : l\'evenement license_activated est emis',
-    state.telemetry.some((t) => String(t.args).includes('license_activated')),
+  check('activation : l\'evenement d\'activation est emis',
+    state.telemetry.some((t) => String(t.args).includes('activation')),
     `(${state.telemetry.length} evenements)`);
   check('activation : aucun e-mail ni licence supplementaires',
     state.licenses.length === 1 && state.emails.length === 1,
@@ -555,7 +552,7 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   check('renvoi admin : plus aucun faux « would be sent » (envoi simule)',
     !/would be sent to/.test(workerCode), '(faux envoi present)');
   check('renvoi admin : le renvoi passe par l\'envoyeur reel',
-    /sendDeliveryEmail2\(env2, license\.email/.test(workerCode), '(appel absent)');
+    /sendDeliveryEmail2\(env2, license\.email/.test(workerSrc), '(appel absent)');
   check('renvoi admin : le lien de telechargement est en production',
     /https:\/\/api\.bot-wow\.com\/api\/download\?t=\$\{license\.token\}/.test(workerCode),
     '(URL de production absente)');

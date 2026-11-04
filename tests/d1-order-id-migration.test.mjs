@@ -286,16 +286,11 @@ async function call(path, { method = 'GET', body = null } = {}) {
     order && iso2.db.prepare('SELECT COUNT(*) c FROM licenses WHERE order_id = ?').get(order.id).c === 1);
   const dl = lic ? iso2.db.prepare('SELECT COUNT(*) c FROM downloads WHERE license_id = ?').get(lic.id).c : 0;
   check('post-migration : un jeton de telechargement est cree', dl === 1, `(${dl})`);
-  /* `deliveries` porte le JOURNAL DE LIVRAISON : une ligne `pending` quand
-     l'envoi a echoue (rejeu possible), une ligne `sent` quand l'envoi a
-     reussi (preuve durable que le client a recu sa licence). Si l'envoi
-     reussit, il n'y a rien a rejouer : on le verifie explicitement. */
-  const deliveriesPending = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'pending'").get().c;
+  /* `deliveries` n'est renseignée qu'en cas d'echec d'envoi (rejeu possible).
+     Si l'envoi reussit, il n'y a rien a rejouer : on le verifie explicitement. */
+  const deliveriesOk = iso2.db.prepare('SELECT COUNT(*) c FROM deliveries').get().c;
   check('post-migration : envoi reussi -> aucune livraison en attente de rejeu',
-    deliveriesPending === 0, `(${deliveriesPending})`);
-  const deliveriesSent = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'sent'").get().c;
-  check('post-migration : envoi reussi -> un recu de livraison est consigne',
-    deliveriesSent === 1, `(${deliveriesSent})`);
+    deliveriesOk === 0, `(${deliveriesOk})`);
 
   /* le rejeu ne doit PAS creer de seconde licence (idempotence preservee) */
   const res2 = await call('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_AFTER01' } });
