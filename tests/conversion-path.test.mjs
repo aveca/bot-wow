@@ -65,11 +65,11 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
-// 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
+// 5. Comparaison : la formule BOT-WOW mène au statut de disponibilité, le calculateur est instrumenté
 {
   const t = read('compare.html');
-  check('compare : CTA de la formule BOT-WOW', /data-cta-id="formula-ours-buy"/.test(t));
-  check('compare : CTA de paiement present dans la formule', /data-cta-id="formula-ours-buy"/.test(t));
+  check('compare : CTA de statut de la formule BOT-WOW', /data-cta-id="formula-ours-status"/.test(t));
+  check('compare : CTA de statut present dans la formule', /data-cta-id="formula-ours-status"/.test(t));
   check('compare : calculateur de cout present', /id="ownership"/.test(t));
   check('compare : source et date des prix citees', /pixelwowbot\.com/.test(t) && /2026-10-22/.test(t));
   check('compare : aucun prix de concurrent invente (30 / 90 jours absent)', !/30 \/ 90/.test(t));
@@ -166,7 +166,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-buy'], ['fr/compare.html', 'mbar-buy']]) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-status'], ['fr/compare.html', 'mbar-status']]) {
     const t = read(f);
     check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
