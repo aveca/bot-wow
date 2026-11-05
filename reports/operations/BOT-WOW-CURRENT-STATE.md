@@ -1808,3 +1808,10 @@ The current source provenance and self-contained installation onboarding remain 
 - The homepage EN/FR changes are in commits 391c454d6d70907dabef6b41bea9b9ca6948c7ca and b52c76684559b77ad9aa60ce1c5142d9148cf149. Regression coverage was added in b90792236f67acc82954b81ecea24360c2e5e774.
 - The branch head immediately before this report append was b90792236f67acc82954b81ecea24360c2e5e774. Validate and UI quality workflows were queued/in progress; no result is claimed here.
 - No product, price, checkout, payment, Worker, D1, R2, DNS, cache or email configuration was changed.
+
+
+## P0.44 follow-up — remove residual machine-bound wording — 2026-11-05T09:44Z
+
+- The homepage EN/FR still said the licence was tied to the user's machine, which could imply a confirmed machine entitlement. It now says activation limits remain under verification. No entitlement or backend rule was changed.
+- Page commits: index.html bdfe8a9886ed9763ad2ad617eb0ae8d50a96cb6f; fr/index.html 74b7e9e25c970b1adf69443fc0127964cda048a7. Regression-test commit: 2afc9e4bd1d97c0be7e47a057243071f6564775d.
+- Branch head immediately before this report append: 2afc9e4bd1d97c0be7e47a057243071f6564775d. CI for this exact head had not yet appeared when this note was written.
