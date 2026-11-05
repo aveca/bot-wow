@@ -1275,3 +1275,22 @@ Current `main` `worker/index.js` sets `DEFAULT_MAX_ACTIVATIONS = 2` (line 40), a
 The public EN/FR buy pages still say “Activation on one machine” / “Activation sur une machine” and the FAQ says the licence activates on one machine.
 
 This is a proven commercial-entitlement mismatch. Do not silently change the backend limit or the public offer copy. The product owner must decide whether the offer is one machine (then code must enforce one) or up to two distinct machine activations (then copy/terms must state the exact rule). No price or activation rule was changed in this cycle.
+
+
+## P0.33 delivery result — PR #88 merged and Pages production deployment succeeded — 2026-11-05
+
+- PR #88 was squash-merged after both required workflows passed on head `c3069f0f011f86f84c432daeb336a815bf53989e`.
+  - Validate Bot-Wow SUCCESS: https://github.com/aveca/bot-wow/actions/runs/41943517766
+  - UI quality, unit/integration, CSS audit, build and real-browser Playwright SUCCESS: https://github.com/aveca/bot-wow/actions/runs/41943517802
+- Merge commit / current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- Cloudflare Pages production deployment: `54aacb90-1cce-4055-b2ab-f2241afc4792`, URL `https://54aacb90.bot-wow.pages.dev`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, build SUCCESS, deploy SUCCESS, aliases assigned to `https://bot-wow.com` and `https://www.bot-wow.com`.
+- Cloudflare's Pages rollback endpoint is available. The previous known-good production deployment was `5711fb21-f674-4bf2-9712-615a76ad4332`.
+- Live HTML verification is **not complete**: the web reader continued to return a pre-merge crawl after the new deployment became active, then cache-buster requests failed to fetch. The container had no DNS/network access. No `CF-Cache-Status`, `Age` or ETag could be captured. Do not claim the new copy is confirmed at the origin until a real HTTP/browser request succeeds.
+- PR #87 remains OPEN / DRAFT, with both CI workflows passing. It is a payment-integration code change and is not merged or deployed. No BOT-WOW-specific Mollie profile is visible.
+- Worker `botwow-api` remains version 50; no Worker deployment, secret or binding change was made.
+- D1 remained read-only; no new order/payment was created. Latest commercial baseline remains 0 verified paid sales and €0.00 confirmed revenue.
+- The public/backend activation allowance mismatch is documented above; no entitlement rule or copy was changed.
+
+### Next action
+
+Verify the exact production HTML on `bot-wow.com` and `www.bot-wow.com` using a real no-cache HTTP/browser request and confirm the EN/FR disclosure is served. Then resolve the one-machine versus two-activation entitlement with the product owner before any checkout reopening. Keep all payment/Worker production changes blocked until a dedicated BOT-WOW Mollie profile/credential and explicit authorization exist.
