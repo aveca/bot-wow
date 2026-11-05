@@ -1725,7 +1725,7 @@ The current source provenance and self-contained installation onboarding remain 
 - Code/content commit: `cd6b972441c1925839654762935636ebc02155c7`.
 - Product-context and status-label commit: `d931572b0b3c4672fe54ed3f627887721ea68475`.
 - PR #94: https://github.com/aveca/bot-wow/pull/94 — open, not merged; base `main`, head `d931572b0b3c4672fe54ed3f627887721ea68475`.
-- The PR changes four files: `modules.html`, `fr/modules.html`, `PRODUCT.md`, `tests/release-availability.test.mjs`.
+- The initial PR revision changed six files; the current expanded PR revision changes ten files: `modules.html`, `fr/modules.html`, `PRODUCT.md`, `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html`, `tests/release-availability.test.mjs`, `tests/e2e/demo-quality.spec.mjs`, and this operational report.
 
 ## Directly verified source findings
 
@@ -1754,3 +1754,49 @@ The current source provenance and self-contained installation onboarding remain 
 ## Next action
 
 - Verify all PR #94 checks on its latest head. Fix any failing regression assertion in the same branch. Do not merge or deploy. After CI is green, retain the PR for review and prioritize recovery of a reproducible, readable release artifact and independent payment/fulfillment readiness.
+
+
+---
+
+# P0.44 — live purchase-copy reconciliation and CI repair — 2026-11-05T09:45Z
+
+## New public evidence
+
+- The live /buy page was re-opened through the web reader on 2026-11-05. It still described the fishing add-on as shipped with a SHA-256 manifest per file and promised activation on one machine, while separately saying checkout is unavailable and package delivery is unverified. The homepage still repeated the one-machine / licence-resend promise. These are public copy defects, not evidence of a delivered archive or an operational entitlement policy.
+- Main source confirms the same claims in buy.html, fr/buy.html, index.html and fr/index.html.
+- Backend licenses.max_activations defaults to 2. The meaning and policy are not reconciled with the public one-machine wording. No entitlement rule was changed.
+
+## PR #94 — expanded correction
+
+- Branch: fix/p0.40-modules-product-truth-20261105.
+- Current head at this report: 1b3a030759a7e814ce09e511c8898eb17dc74c61.
+- PR: https://github.com/aveca/bot-wow/pull/94 — OPEN, not merged, base main at 3bb17af9ddfe1cc149e8e55245c05717308d68c7.
+- Ten changed files: Modules EN/FR, Buy EN/FR, homepage EN/FR, PRODUCT.md, release-availability tests, responsive E2E test, and this report.
+- Buy EN/FR now describes add-on presence and per-file manifest as unverified, removes the public Casinobabe addon component label, and states that machine limits/licence re-sending are not confirmed.
+- Homepage EN/FR removes the one-machine and re-send promises while entitlement configuration is unresolved.
+- Modules EN/FR distinguish internal registry labels from commercial availability, remove Mollie as an active payment claim, and link to purchase status rather than presenting an active purchase CTA.
+- PRODUCT.md distinguishes intended terms, code integration, operational payment, registry status and verified delivery.
+
+## CI and fixes
+
+- Initial PR head 113194e021392765181515a2115981101b8d307e: Validate SUCCESS; UI quality failed on mobile because the test selected a hidden desktop navigation duplicate. Fixed by selecting a visible purchase-status link in tests/e2e/demo-quality.spec.mjs.
+- Head 8d0ebc0a31bd98b16d48430deef02d28eb3ee815: Validate failed on one stale Licence re-sent on request if you reinstall claim in the homepage; the other new availability assertions passed. That final claim was corrected in index.html.
+- Current head 1b3a030759a7e814ce09e511c8898eb17dc74c61: Validate Bot-Wow SUCCESS; UI quality / Playwright was still IN PROGRESS when this addendum was written. Do not merge until both required workflows are SUCCESS on the exact latest head.
+- No local Factory runtime is connected to this automation session; no local npm test result is claimed.
+
+## Production and commercial recheck
+
+- Cloudflare Pages production remains deployment 845e3e10-e05a-4a68-805a-65971a61add5, source main commit 3bb17af9ddfe1cc149e8e55245c05717308d68c7, deploy SUCCESS. The PR branch preview is skipped because preview deployments are disabled. PR #94 has not been deployed.
+- Worker botwow-api remains version 50, version ID c3dcc842-c422-42d3-9828-405f30d70b5f, deployment 36227a4d-00e7-4c9f-94e0-0913b29049bc, 100% traffic. No Worker deployment.
+- Mollie ListProfiles returned one profile not belonging to BOT-WOW. No BOT-WOW profile exists in the returned list; do not reuse another activity's profile.
+- D1 production, read-only: orders bitcoin_manual/paid=5, bitcoin_manual/pending_payment=8, bitcoin_manual/rejected=1, mollie/failed=11; all five paid rows are @example.com test rows; commercial paid rows with non-example addresses = 0. Licences 5; downloads 5; deliveries 0; activations 0; webhook events 16, of which 5 have no matching Mollie order; email records 12, confirmed 0.
+- Analytics D1, events with test=0: page views 1,750; journeys 692; CTA clicks 48; checkout requests 29; checkout starts 4; checkout created 6; checkout failed 6; no payment-confirmed, conversion, delivery-sent or activation events. Last page view: 2026-11-05T09:40:31Z; last journey: 09:40:27Z; last CTA and checkout request: 2026-11-04T02:47:00Z. These are event counts, not unique users.
+- All D1 queries returned changed_db=false and rows_written=0.
+- Commercial paid sales verified: 0. Revenue confirmed: €0.00. Checkout remains closed.
+
+## Next action
+
+1. Wait for UI quality / Playwright to finish on the exact current PR #94 head. If it fails, fix only the demonstrated regression and rerun CI.
+2. Once all required checks are SUCCESS and the head is unchanged, merge PR #94 by squash under the user's standing authorization for reversible, non-sensitive static changes; the prior production deployment 845e3e10-e05a-4a68-805a-65971a61add5 is the rollback reference.
+3. Verify Cloudflare Pages production and EN/FR homepage, Modules and Buy pages after merge. Do not change checkout, price, Worker, payment credentials, D1/R2, email or platform-compliance scope.
+4. Keep the checkout closed until package provenance/readability, authorization scope, dedicated payment profile and end-to-end fulfillment are independently verified.
