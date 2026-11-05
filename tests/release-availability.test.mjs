@@ -317,5 +317,37 @@ for (const item of homepagePurchaseStatusCases) {
     !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
 }
 
+
+
+// The standalone Buy routes are currently status pages, not purchasable offers.
+const purchaseStatusPageCases = [
+  {
+    file: 'buy.html',
+    title: /<title>BOT-WOW purchase status/i,
+    nav: /data-cta-id="nav-status"[^>]*>Check purchase status<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?target price/i,
+    targetPrice: /documented target price/i,
+  },
+  {
+    file: 'fr/buy.html',
+    title: /<title>BOT-WOW — statut d'achat/i,
+    nav: /data-cta-id="nav-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?prix cible/i,
+    targetPrice: /prix cible documenté/i,
+  },
+];
+for (const item of purchaseStatusPageCases) {
+  const html = read(item.file);
+  check(item.file + ' : titre SEO décrit un statut, pas un achat ouvert', item.title.test(html));
+  check(item.file + ' : CTA de navigation décrit la disponibilité', item.nav.test(html));
+  check(item.file + ' : CTA principal décrit la disponibilité', item.hero.test(html));
+  check(item.file + ' : barre persistante annonce le statut et le prix cible', item.bar.test(html));
+  check(item.file + ' : 20 € est présenté comme prix cible', item.targetPrice.test(html));
+  check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
+    !/(?:nav-buy|buy-hero-primary)/i.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
