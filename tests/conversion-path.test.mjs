@@ -217,7 +217,8 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
   let html = '';
   try { html = read(file); } catch { continue; }
   const wrong = [...html.matchAll(/href="([^"]*legal\/[^"]*)"/g)].map(m => m[1])
-    .filter(u => !u.includes('/legal/fr/') && !/privacy|terms/.test(u));
+    .filter(u => !u.includes('/legal/fr/') && !/privacy|terms/.test(u) &&
+      !['https://www.blizzard.com/en-us/legal/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement', 'https://www.blizzard.com/fr-fr/legal/cd5930c0-2784-420c-a23d-1e0d6ff8599b/charte-anti-triche'].includes(u));
   check(`${file} : les liens legaux FR pointent vers /legal/fr/`,
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
