@@ -1592,3 +1592,90 @@ Toutes les requêtes D1 de ce cycle ont renvoyé `changed_db=false` et `rows_wri
 5. **P1 — SEO** : la consolidation 301 www→apex est optionnelle désormais que le contenu consulté est cohérent ; la préparer séparément avec rollback, sans modifier Cloudflare sans autorisation.
 6. **P2 — acquisition** : aucun achat média ; améliorer l'attribution organique seulement après validation d'une offre commercialisable.
 
+
+
+---
+
+# P0.41 — Revalidation production, sécurité et cohérence de l'offre — 2026-11-05T06:13Z
+
+## GitHub
+
+- Dépôt : `aveca/bot-wow`.
+- `main` : `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- Branches : 83 ; PR ouvertes : 17.
+- PR #89 : OPEN / DRAFT / mergeable ; HEAD documentaire `793a8ee6d4204fe994d8acadf0d457577899b96a`. Validate et UI quality/Playwright SUCCESS sur ce SHA.
+- PR #90 : OPEN / DRAFT ; HEAD `1f61a451d962fd9d8f3a8464acbdfca25e283032`. Validate et UI quality/Playwright SUCCESS. Le correctif distingue API Keys Mollie et tokens organisationnels ; aucun profil BOT-WOW dédié n'est disponible.
+- PR #60 : OPEN / DRAFT, diverged, 8 commits ahead / 76 behind main.
+- PR #61 : OPEN / DRAFT, diverged, 13 ahead / 71 behind main.
+- Ne pas réutiliser les branches #60/#61 sans reprise minimale sur main actuel et nouvelle CI : elles sont trop anciennes.
+- Issues #91, #92, #59 et #13 restent ouvertes. Commentaires de revalidation publiés :
+  - #92 : `6651223056` — contradictions exactes Modules/PRODUCT et lacunes de tests.
+  - #91 : `6651223572` — le lecteur web retourne maintenant 404 pour quatre routes ; le GET no-cache Factory reste nécessaire pour arbitrer le conflit avec les anciens 200.
+  - #59 : `6651240028` — preuve fraîche des logs sensibles dans le Worker actif et état divergé des PR de redaction.
+  - #13 : `6651240811` — état actuel du retry et des webhooks orphelins.
+
+## Pages publiques et Pages
+
+- Production Pages : déploiement `54aacb90-1cce-4055-b2ab-f2241afc4792`, commit `218f0eb`, stage deploy SUCCESS, créé le 2026-11-05T00:47:14Z.
+- Domaines apex et www associés au même projet.
+- `https://bot-wow.com/`, `/buy`, `/fr/buy.html` et `/compatibility.html` consultés : prix affiché 20 €, achat indisponible, paquet v1.2.0 non vérifié, aucun délai de livraison promis, avertissement explicite d'absence d'autorisation Blizzard et de ne pas utiliser les services Blizzard.
+- La matrice live indique Classic 1.13 testé ; serveur tiers = test technique uniquement, sans autorisation implicite ; TBC/WotLK/Live non testés/non pris en charge ; combat/BG/quêtes hors périmètre.
+- La lecture web des pages `/modules.html` et `/fr/modules.html` échoue dans cet outil. Le défaut source est toutefois confirmé sur main et les deux fichiers sont inclus dans l'artefact Pages.
+
+## Contradictions source confirmées sur main
+
+- `modules.html` (blob `505b07e19770e31fe3edfa7b1b24d65950db6c24`) : `v1.2.0 current release`, `Payment handled by Mollie`, et pêche présentée comme disponible/payée par licence.
+- `fr/modules.html` (blob `eca26d528ee61f122ac77b63d40518fb8e91a9bf`) : `v1.2.0 version actuelle`, `Paiement pris en charge par Mollie`, et pêche présentée comme disponible/couverte par la licence.
+- `PRODUCT.md` (blob `541766ab8e2a37db59acca98862a6f63a3b2f485`) : annonce Mollie et Bitcoin comme rails de l'offre, e-mail comme livraison, et compatibilité Retail / Classic Era / SoD / majorité des serveurs privés.
+- `compatibility.html` (blob `00bd0d178b09e041a1dddbccf94aa4d029ffc8ed`) est plus restrictif : Classic 1.13 testé ; serveur tiers en test technique seulement ; TBC/WotLK/Live non pris en charge.
+- `tests/release-availability.test.mjs` couvre homepage, buy, variantes, FAQ et conformité, mais pas Modules ni PRODUCT.md. `tests/modules-parity.test.mjs` valide surtout le JSON du registre et peut être SKIP si le dépôt Python externe est absent.
+- Issue #92 contient maintenant les preuves et critères de régression.
+
+## Worker de production — lecture seule
+
+- Worker `botwow-api`, déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100 % du trafic.
+- Le script actif téléchargé via l'API Cloudflare ne contient pas `resumeFulfillment`.
+- Le bundle actif contient deux appels `Math.random()` pour la génération de clés.
+- Le bundle actif journalise encore des e-mails, clés de licence et URL de téléchargement tokenisées dans les helpers legacy, ainsi que des données sensibles dans les notifications et logs de fulfillment.
+- Le `main` actuel contient `resumeFulfillment` et des helpers de logs expurgés, mais le chemin de rejet checkout journalise encore la valeur brute `body.amount`.
+- PR #60/#61 contiennent des travaux historiques utiles mais sont fortement en retard ; ne pas merger telles quelles.
+- Aucun déploiement Worker ni modification de secret/binding. Les changements sécurité et le déploiement attendent l'autorisation explicite requise.
+
+## D1 production — lecture seule
+
+- `bitcoin_manual/paid` : 5, toutes `@example.com` (tests, pas des ventes).
+- `bitcoin_manual/pending_payment` : 8.
+- `bitcoin_manual/rejected` : 1.
+- `mollie/failed` : 11.
+- Licences : 5 ; jetons de téléchargement : 5 ; livraisons : 0 ; activations : 0.
+- Webhooks : 16 ; marqueurs sans commande correspondante : 5.
+- Contacts : 12 ; `confirmed_at IS NOT NULL` : 0.
+- Toutes les requêtes ont `changed_db=false`, `rows_written=0`.
+
+## Analytics — événements test=0, pas des utilisateurs uniques
+
+- `page_view` : 1 708 ; dernier événement 2026-11-05T05:52:03Z.
+- `journey_view` : 674 ; dernier événement 2026-11-05T03:18:31Z.
+- `cta_click` : 48 ; dernier événement 2026-11-04T02:47:00Z.
+- `checkout_requested` : 29 ; dernier événement 2026-11-04T02:47:00Z.
+- `checkout_start` : 4 ; `checkout_created` : 6 ; `checkout_failed` : 6 (derniers événements le 2026-10-27).
+- Aucun événement enregistré `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Les pages vues continuent d'augmenter, mais aucun nouveau CTA n'est enregistré depuis le 2026-11-04T02:47Z.
+
+## Mollie et revenus
+
+- `ListProfiles` retourne un seul profil vérifié, associé à `sargasses-martinique.com`. Aucun profil BOT-WOW dédié ; ne jamais réutiliser celui d'une autre activité.
+- Ventes commerciales payées vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Les cinq lignes `paid` sont des commandes de test `@example.com`; aucun paiement commercial n'est démontré.
+- Checkout public toujours fermé ; aucune livraison client ni activation démontrée.
+
+## Décision et prochaine action
+
+1. P0 : corriger #92 sur une branche dédiée — Modules EN/FR, PRODUCT.md, tests de disponibilité — puis CI et vérification live après merge autorisé.
+2. P0 sécurité : préparer sur main actuel une correction CSPRNG des clés et une redaction du log `body.amount`, avec tests synthétiques ; ne pas merger/déployer sans autorisation.
+3. P0 livraison : préparer le déploiement Worker actuel avec preuve de bundle et rollback vers v50 ; ne pas déployer tant que l'autorisation de production n'est pas donnée.
+4. P0 conformité : ne pas promouvoir le bot automatisant le gameplay pour les services Blizzard sans autorisation documentée.
+5. Ne pas ajouter de redirections anciennes sur la seule base de snapshots ou d'erreurs du lecteur web ; refaire un GET HTTP brut no-cache depuis Factory.
+
+Aucun prix, checkout, paiement, email, secret, binding, D1, R2, DNS, cache, Worker ou production n'a été modifié dans cette revalidation.
