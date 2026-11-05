@@ -1315,6 +1315,7 @@ Sources:
 
 ### GitHub
 - Current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33` (PR #88 merged).
+- PR #71 is **MERGED** (`2026-11-04T08:57:50Z`, merge commit `084e2bd3785526835e678f70b77699a8f838d16a`); the older P0.5/checkout-gate PR is not an open blocker.
 - Relevant open drafts: PR #87 (Mollie credential-specific `profileId` fix, head `c39157d5180752f03af9900fe7a5517dc576f591`) and PR #89 (this operational snapshot). PR #87 is now **diverged from current main**: 2 commits ahead and 1 behind, merge base `3786bcec`; its green CI is on the old base and it must be rebased/revalidated before any future merge.
 - PR #87 Validate and UI/Playwright both completed SUCCESS on head `c39157d`. PR #89 Validate and UI/Playwright both completed SUCCESS on its prior head `b881f58`; the latest documentation-only commit `d66e357` did not trigger new workflows under the repository's path filters. No production Worker change is implied.
 - PR #19 is CLOSED/MERGED; its versioned-R2-only download behavior is already part of main. Do not create a competing duplicate fix.
