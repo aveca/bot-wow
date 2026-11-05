@@ -200,6 +200,30 @@ test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
   expect(checkoutRequests).toEqual([]);
 });
 
+
+
+test('closed checkout: pressing Enter cannot submit the email form EN/FR', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const path of ['/', '/fr/', '/buy.html', '/fr/buy.html', '/compare.html', '/fr/compare.html']) {
+    const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    const before = page.url();
+    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await page.locator('#email').fill('probe@example.com');
+    await page.locator('#email').press('Enter');
+    await expect(page).toHaveURL(before);
+    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('#buyOk')).toHaveText('');
+  }
+
+  expect(checkoutRequests).toEqual([]);
+});
+
 test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
