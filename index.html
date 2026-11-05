@@ -475,7 +475,7 @@
 
         <form id="buyForm" novalidate>
           <input type="hidden" name="locale" value="en">
-          <label for="email" class="form-label">Your email (to receive the key and download link)</label>
+          <label for="email" class="form-label">Email — no data is submitted while checkout is closed.</label>
           <div class="input-group">
             <input class="pm-input" id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" inputmode="email" aria-describedby="buyErr buyOk">
             <button class="btn btn-gold btn-lg" type="submit" id="buyBtn" disabled><span class="btn-text">Pay €20.00 — delivery not confirmed</span></button>
@@ -488,7 +488,7 @@
           <span><svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="7" width="9.2" height="6.8" rx="1.6"/><path d="M5.7 7V5.3a2.3 2.3 0 0 1 4.6 0V7"/></svg> Checkout temporarily unavailable</span>
           <span><a href="./legal/terms.html" style="color:inherit">Terms</a> · <a href="./legal/refund.html" style="color:inherit">Refunds</a> · <a href="./legal/privacy.html" style="color:inherit">Privacy</a></span>
         </div>
-        <p class="pay-note">The amount and currency are fixed server-side; the browser only sends your email.</p>
+        <p class="pay-note">When checkout is available, amount and currency are fixed server-side. While it is closed, this form cannot submit.</p>
       </article>
     </div>
 
