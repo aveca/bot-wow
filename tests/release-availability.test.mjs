@@ -299,7 +299,7 @@ const homepagePurchaseStatusCases = [
     hero: /data-cta-id="hero-status"[^>]*>Vérifier la disponibilité<\/a>/i,
     bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a><\/div>/i,
     targetPrice: /prix cible documenté/i,
-    allowedStatusLabel: /vérifier (?:la disponibilité|le statut)|statut (?:d’achat|de disponibilité)/i,
+    allowedStatusLabel: /vérifier (?:la disponibilité|le statut)|voir le statut|statut (?:d’achat|de disponibilité)/i,
   },
 ];
 for (const item of homepagePurchaseStatusCases) {
