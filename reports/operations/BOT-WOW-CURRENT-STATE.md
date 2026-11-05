@@ -2283,10 +2283,13 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 - Current main source has already removed fallback behavior: it validates a single configured versioned key and returns `artifact_unavailable` when that object is missing. That safer code is not deployed to v50.
 - No R2 object read or mutation occurred in this cycle; actual archive existence and SHA-256 remain unverified.
 
-## Delivery email — directly verified blocker
-- Current main and deployed v50 both implement `sendDeliveryEmail` as a log-only stub. There is no provider API call; no licence/download email is sent by this function.
-- D1 SELECT-only results remain: deliveries 0, activations 0, email contacts 12, confirmed 0.
-- This is a hard fulfillment blocker independent of the payment provider.
+## Delivery email — implementation exists; live send remains unverified
+- The legacy helper named `sendDeliveryEmail` is a log-only stub, but it is not the active delivery path.
+- Both current `main/worker/index.js` and the deployed v50 bundle contain `sendDeliveryEmail2` and `sendEmail2`; the latter issues a POST to `https://api.resend.com/emails` when `RESEND_API_KEY` is configured.
+- Active Worker settings expose the `RESEND_API_KEY` secret binding name and `MAIL_FROM` sender setting. Secret values remain masked and were not read, printed or changed.
+- Webhook and resend paths call `sendDeliveryEmail2`. The presence of code and a binding does not prove a successful provider send.
+- D1 SELECT-only shows 0 delivery rows; there are also 0 verified non-test paid orders. This proves no recorded delivery, not that email sending is unimplemented. No test email was sent.
+- Correct status: delivery-email implementation is present; effective credential validity and a successful production send remain unverified.
 
 ## Effective checkout gate — unknown, not assumed closed server-side
 - Worker settings contain a `RELEASE_STATUS` `secret_text` binding. The value is masked and was not read or exposed.
@@ -2311,3 +2314,53 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 3. P1 — verify the exact package bytes/version/SHA through an authorized R2 read path.
 4. P1 — obtain a dedicated BOT-WOW Mollie profile and webhook only after the product scope is authorized and fulfillment is ready.
 5. P1 — implement delivery email only after a separately authorized, controlled test-send procedure.
+
+
+
+---
+
+# P0.56 — fresh verification corrects the email finding and reconfirms production state — 2026-11-05T21:5xZ
+
+## GitHub / PR state
+- Exact `main` remains `0bba14dffbfb239f7368ff632d084a5a6449bc12`; no newer main commit was returned.
+- PR #98 changes only this operational report. Its head `c2b58ca7ad1fa1ef1e618d058d6ddd1fc3477059` has Validate run `42104599878` SUCCESS and UI Quality run `42104599841` SUCCESS on the same SHA.
+- Issues #97 and #99 remain open. PR #90 and #66 remain drafts; neither was merged.
+
+## Cloudflare production
+- Pages production deployment remains `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, source commit `0bba14dffbfb239f7368ff632d084a5a6449bc12`, deploy stage SUCCESS. No new Pages deployment occurred.
+- Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% traffic. Its custom domain `api.bot-wow.com` is enabled.
+- Read-only Worker settings show binding names `RELEASE_STATUS` and `RESEND_API_KEY` as secret_text, plus `MAIL_FROM` and `R2_OBJECT_KEY=casinobabe-fishing-1.2.0.zip`. No secret value was read or exposed.
+- Downloaded active Worker script read-only. It still contains `handleLanding` and legacy SEO routes. Its download candidate list contains the configured object, `casinababe-fishing-1.2.0.zip`, and `Casinababe-v1.0.38.zip`; the response filename is hard-coded to the v1.0.38 name. This confirms the stale fallback/filename defect in v50. Current main has the single configured-object path and uses the actual object key as the response filename.
+
+## Important correction — email implementation
+- The previous P0.55 report incorrectly concluded that delivery email was not implemented by inspecting only the legacy `sendDeliveryEmail` stub.
+- Current main and deployed v50 also contain the active `sendDeliveryEmail2` → `sendEmail2` path. `sendEmail2` POSTs to Resend's `/emails` endpoint when `RESEND_API_KEY` is configured.
+- Worker settings expose the secret binding name `RESEND_API_KEY`; its value is masked and was not read or changed. The source contains a real provider integration, but credential validity and successful production sending are not verified.
+- The active webhook/resend paths call `sendDeliveryEmail2`, not the legacy stub. D1 currently records 0 delivery rows and 0 verified non-test paid orders. No test email was sent.
+- Correct conclusion: email delivery code exists; a real successful delivery is not evidenced. Do not describe the provider integration as absent.
+
+## Read-only production data — 2026-11-05T21:5xZ
+- D1 production queries were SELECT-only; every query reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (all five emails are `@example.com`, amount sum 10,000 minor units is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`. Paid non-test orders: 0; paid non-test amount: 0.
+- Licences: 5 active; downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
+- Email table `botwow_emails`: 12 rows, 0 confirmed, 9 marketing-consent flags, 7 transactional-consent flags. No email was sent during this check.
+- Analytics events with `test=0`: page_view 1,856; journey_view 739; cta_click 48; checkout_requested 29; checkout_start 4; checkout_created 6; checkout_failed 6. No payment_confirmed, conversion, delivery_sent or activation events. These are event counts, not unique visitors.
+
+## Mollie
+- Live `ListProfiles`: one verified profile for `https://sargasses-martinique.com/`; no BOT-WOW-specific profile.
+- Live `ListWebhooks`: one enabled webhook targeting `https://sargasses-martinique.com/api/mollie-webhook.php`; no BOT-WOW webhook.
+- No payment was created and no other activity's profile was reused.
+
+## Live site limitation
+- Direct web-reader opens for the eight secondary routes failed in this run. Source-level copy defects remain confirmed by the current main files; live HTTP body and headers for those routes were not independently retrieved. Do not claim live correction.
+
+## Safety / commercial state
+- `RELEASE_STATUS` is a masked secret binding. Code defaults to `pending` and allows checkout only when the effective value is exactly `confirmed`; the effective value remains unknown. No valid checkout probe was sent.
+- Public checkout remains closed. Verified commercial sales: 0. Confirmed commercial revenue: €0.00.
+- No Worker deploy, secret change, payment, email send, D1/R2 mutation, DNS change or cache purge occurred.
+
+## Next action
+1. Correct this report and issue #99 so the email integration is accurately described.
+2. Execute issue #97 as a static EN/FR copy/test PR; keep checkout and Worker unchanged.
+3. Prepare, but do not deploy, a Worker reconciliation for the confirmed legacy landing and old-archive fallback. Worker deployment requires separate explicit authorization.
+4. Verify package bytes/provenance and the effective release gate through authorized non-disclosing paths before any sales enablement.
