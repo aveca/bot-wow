@@ -2264,3 +2264,50 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 2. Run `npm run validate`, `npm test`, `npm run test:e2e`, `node scripts/build-site.mjs _site` and `git diff --check` for real; require Validate and UI Quality green on the exact final SHA.
 3. Merge/deploy only the reversible static copy/test change after full diff inspection and green CI; verify the Pages source commit and all affected live routes. No checkout, payment or Worker change.
 4. Keep the commercial decision at NO-GO until the product scope is authorized, package provenance is reproducible, a dedicated payment profile exists, and post-payment delivery is independently verified.
+
+
+---
+
+# P0.55 — deployed Worker v50 diverges from main; email delivery remains a stub — 2026-11-05T20:34Z
+
+## Active Worker / custom domain — directly verified
+- Worker: `botwow-api`; active deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`; version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`; 100% traffic.
+- Custom domain `api.bot-wow.com` is enabled in production and mapped to service `botwow-api`.
+- Downloaded deployed Worker script read-only. It contains a legacy `handleLanding` handler for GET requests outside `/api/`, including generated SEO routes `/bot-wow-gold`, `/bot-wow-classic`, `/best-wow-bot`, `/bot-wow-gratuit`. Embedded EN/FR strings still promote automated gold/XP/items/battlegrounds, a lifetime €20 Bitcoin licence, private-server compatibility and “humanized” behavior.
+- The browser/web reader could not retrieve the API hostname, so the exact response body of those paths was not independently browser-verified. The enabled custom-domain mapping plus the deployed fetch-handler code prove that non-API GET requests are routed to this Worker handler.
+- Current `main/worker/index.js` (blob `725d98e4595b27aa60e88758ecac20c711a38b6b`) no longer contains `handleLanding`; active Worker v50 is materially stale relative to main.
+
+## Download artifact discrepancy
+- Deployed v50 tries the configured `R2_OBJECT_KEY`, then `casinobabe-fishing-1.2.0.zip`, then falls back to `Casinobabe-v1.0.38.zip`.
+- Its response `Content-Disposition` is always `Casinobabe-v1.0.38.zip`, even when another candidate is selected.
+- Current main source has already removed fallback behavior: it validates a single configured versioned key and returns `artifact_unavailable` when that object is missing. That safer code is not deployed to v50.
+- No R2 object read or mutation occurred in this cycle; actual archive existence and SHA-256 remain unverified.
+
+## Delivery email — directly verified blocker
+- Current main and deployed v50 both implement `sendDeliveryEmail` as a log-only stub. There is no provider API call; no licence/download email is sent by this function.
+- D1 SELECT-only results remain: deliveries 0, activations 0, email contacts 12, confirmed 0.
+- This is a hard fulfillment blocker independent of the payment provider.
+
+## Effective checkout gate — unknown, not assumed closed server-side
+- Worker settings contain a `RELEASE_STATUS` `secret_text` binding. The value is masked and was not read or exposed.
+- Deployed code defaults to `pending`, but `env.RELEASE_STATUS` overrides the default; `confirmed` permits checkout creation.
+- The effective value cannot be verified through the read-only settings endpoint. No valid checkout request was sent because it could create a real payment.
+- Public Pages checkout UI is closed, but that alone does not prove the Worker-side gate's effective value.
+
+## Mollie
+- `ListProfiles`: one profile only; no BOT-WOW-specific profile.
+- `ListWebhooks`: one live webhook only, targeting a different domain; no BOT-WOW webhook was returned.
+- Worker secret binding names exist, but masked values do not prove correct profile/webhook configuration. Do not reuse another activity's profile.
+
+## Persistent tracker / safety
+- Created issue [#99 — reconcile stale Worker, remove legacy landing route and verify fail-closed delivery](https://github.com/aveca/bot-wow/issues/99).
+- Required work: prepare a focused Worker PR to remove the legacy landing handler, preserve current-main single-artifact behavior, remove old-version fallback, fix download-quota ordering, and add regression tests. Document the missing email provider without enabling sends.
+- No Worker deployment, secret change, payment, valid checkout probe, email, D1 write, R2 read/write, DNS or cache mutation occurred.
+- Worker deployment, secret changes, payment rules and email sending remain blocked pending explicit authorization. Keep the public checkout closed.
+
+## Updated next priorities
+1. P0 — issue #99: prepare/test Worker source reconciliation; do not deploy or change secrets.
+2. P0 — issue #97: remove residual purchase CTAs and unsupported payment/delivery claims across secondary EN/FR pages.
+3. P1 — verify the exact package bytes/version/SHA through an authorized R2 read path.
+4. P1 — obtain a dedicated BOT-WOW Mollie profile and webhook only after the product scope is authorized and fulfillment is ready.
+5. P1 — implement delivery email only after a separately authorized, controlled test-send procedure.
