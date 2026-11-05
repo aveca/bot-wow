@@ -50,26 +50,26 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check(`${label} : aucun CTA vers un domaine tiers`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
-// 4. Parcours hero -> demonstration -> comparaison -> achat (accueil EN)
+// 4. Parcours hero -> demonstration -> comparaison -> statut d'achat (accueil EN)
 {
   const t = read('index.html');
   check('accueil : CTA hero vers la demonstration', /href="\.\/demo\.html"[^>]*data-cta-id="hero-demo"/.test(t));
-  check('accueil : CTA hero vers l\'offre', /href="#buy"[^>]*data-cta-id="hero-offer"/.test(t));
+  check('accueil : CTA hero vers le statut de disponibilité', /href="#buy"[^>]*data-cta-id="hero-status"/.test(t));
   check('accueil : sortie du radar vers la demonstration', /class="radar-next-link" href="\.\/demo\.html"/.test(t));
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
-  check('accueil : CTA final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-buy"/.test(t));
+  check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
   check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
   check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
   check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
-// 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
+// 5. Comparaison : la formule BOT-WOW mène au statut de disponibilité, le calculateur est instrumenté
 {
   const t = read('compare.html');
-  check('compare : CTA de la formule BOT-WOW', /data-cta-id="formula-ours-buy"/.test(t));
-  check('compare : CTA de paiement present dans la formule', /data-cta-id="formula-ours-buy"/.test(t));
+  check('compare : CTA de statut de la formule BOT-WOW', /data-cta-id="formula-ours-status"/.test(t));
+  check('compare : CTA de statut present dans la formule', /data-cta-id="formula-ours-status"/.test(t));
   check('compare : calculateur de cout present', /id="ownership"/.test(t));
   check('compare : source et date des prix citees', /pixelwowbot\.com/.test(t) && /2026-10-22/.test(t));
   check('compare : aucun prix de concurrent invente (30 / 90 jours absent)', !/30 \/ 90/.test(t));
@@ -166,9 +166,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const f of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html']) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-status'], ['fr/compare.html', 'mbar-status']]) {
     const t = read(f);
-    check(`${f} : la barre d'action mobile est instrumentee`, /data-cta-id="mbar-buy"/.test(t));
+    check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
 }
 
@@ -223,10 +223,10 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
 
-// 11. Hierarchie visuelle : l OR est reserve aux CTA d achat. Si tout est
-// doré, plus rien ne ressort et l action d achat devient invisible.
+// 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
+// le traitement visuel réservé à un achat immédiat.
 {
-  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy', 'hero-offer'];
+  const PURCHASE = [];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]

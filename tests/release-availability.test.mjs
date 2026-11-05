@@ -282,5 +282,129 @@ check('fr/index.html : aucune promesse de licence réexpédiée sur demande',
 // Licence and FAQ claims must remain aligned with the currently unverified
 // activation, recovery and delivery state. Cover both language variants and
 // the standalone licence documentation.
+
+
+// Homepage purchase CTAs must report availability, never imply that checkout
+// is currently open. The target price remains visible as a target, not a buy-now offer.
+const homepagePurchaseStatusCases = [
+  {
+    file: 'index.html',
+    hero: /data-cta-id="hero-status"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a><\/div>/i,
+    targetPrice: /documented target price|target price/i,
+    allowedStatusLabel: /check (?:purchase )?status|check availability|purchase status/i,
+  },
+  {
+    file: 'fr/index.html',
+    hero: /data-cta-id="hero-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a><\/div>/i,
+    targetPrice: /prix cible documenté/i,
+    allowedStatusLabel: /vérifier (?:la disponibilité|le statut)|voir le statut|statut (?:d’achat|de disponibilité)/i,
+  },
+];
+for (const item of homepagePurchaseStatusCases) {
+  const html = read(item.file);
+  const statusLinks = [...html.matchAll(/<a\b[^>]*href="#buy"[^>]*>([\s\S]*?)<\/a>/gi)];
+  const labels = statusLinks.map((match) => match[1].replace(/<[^>]*>/g, '').trim());
+  check(item.file + ' : CTA principal de statut présent', item.hero.test(html));
+  check(item.file + ' : barre mobile annonce le statut, pas un achat', item.bar.test(html));
+  check(item.file + ' : prix explicitement présenté comme cible', item.targetPrice.test(html));
+  check(item.file + ' : tous les liens vers la section achat sont des liens de statut',
+    statusLinks.length >= 6 && labels.every((label) => item.allowedStatusLabel.test(label)));
+  check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
+    !/(?:hero-offer|journey-fish-buy|journey-licence-buy|steps-buy|final-buy|mbar-buy)/i.test(html));
+  check(item.file + ' : aucun lien footer ne prétend ouvrir un achat',
+    !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
+}
+
+
+
+// The standalone Buy routes are currently status pages, not purchasable offers.
+const purchaseStatusPageCases = [
+  {
+    file: 'buy.html',
+    title: /<title>BOT-WOW purchase status/i,
+    nav: /data-cta-id="nav-status"[^>]*>Check purchase status<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?target price/i,
+    targetPrice: /documented target price/i,
+  },
+  {
+    file: 'fr/buy.html',
+    title: /<title>BOT-WOW — statut d'achat/i,
+    nav: /data-cta-id="nav-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?prix cible/i,
+    targetPrice: /prix cible documenté/i,
+  },
+];
+for (const item of purchaseStatusPageCases) {
+  const html = read(item.file);
+  check(item.file + ' : titre SEO décrit un statut, pas un achat ouvert', item.title.test(html));
+  check(item.file + ' : CTA de navigation décrit la disponibilité', item.nav.test(html));
+  check(item.file + ' : CTA principal décrit la disponibilité', item.hero.test(html));
+  check(item.file + ' : barre persistante annonce le statut et le prix cible', item.bar.test(html));
+  check(item.file + ' : 20 € est présenté comme prix cible', item.targetPrice.test(html));
+  check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
+    !/(?:nav-buy|buy-hero-primary)/i.test(html));
+}
+
+
+
+// Comparison pages must not imply a live price, payment provider, delivery,
+// activation policy or Blizzard authorization while the offer is unavailable.
+for (const item of [
+  {
+    file: 'compare.html',
+    formula: /data-cta-id="formula-ours-status"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a>/i,
+    target: /documented target price/i,
+    scope: /No Blizzard authorization is claimed or documented/i,
+  },
+  {
+    file: 'fr/compare.html',
+    formula: /data-cta-id="formula-ours-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a>/i,
+    target: /prix cible documenté/i,
+    scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
+  },
+]) {
+  const html = read(item.file);
+  check(item.file + ' : CTA de formule = statut de disponibilité', item.formula.test(html));
+  check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
+  check(item.file + ' : prix explicitement présenté comme cible', item.target.test(html));
+  check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
+  check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
+  check(item.file + ' : aucune promesse de machine ou renvoi de licence',
+    !/Activation on one machine|Activation sur une machine|licence re-send on request|renvoi de licence sur demande/i.test(html));
+  check(item.file + ' : aucun addon attribué à Casinababe',
+    !/Casinababe addon|addon Casinababe/i.test(html));
+  check(item.file + ' : aucune livraison présentée comme déjà expédiée',
+    !/1 shipped \+ 3 in development|1 livré \+ 3 en développement/i.test(html));
+  check(item.file + ' : avertissement d’autorisation présent', item.scope.test(html));
+}
+for (const file of ['modules.html', 'fr/modules.html']) {
+  const html = read(file);
+  check(file + ' : CTA de statut sans style d’achat immédiat',
+    /<a class="btn btn-ghost"[^>]*href="\.\/buy\.html">(?:Purchase status|Statut de l'achat)<\/a>/.test(html));
+}
+
+
+
+// The disabled form must not imply that entering an email will trigger delivery.
+for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html', 'compare.html', 'fr/compare.html']) {
+  const html = read(file);
+  const fr = file.startsWith('fr/');
+  const expectedLabel = fr
+    ? /E-mail — aucune donnée n'est transmise tant que le paiement est fermé\./i
+    : /Email — no data is submitted while checkout is closed\./i;
+  const expectedNote = fr
+    ? /Tant qu'il est fermé, ce formulaire ne peut pas être envoyé\./i
+    : /While it is closed, this form cannot submit\./i;
+  check(file + ' : le libellé email ne promet plus une livraison', expectedLabel.test(html));
+  check(file + ' : la note explique que le formulaire ne peut pas être envoyé', expectedNote.test(html));
+  check(file + ' : le bouton de paiement reste désactivé', /id="buyBtn" disabled/.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
