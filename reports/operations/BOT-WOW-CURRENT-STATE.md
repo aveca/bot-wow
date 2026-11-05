@@ -1679,3 +1679,36 @@ Toutes les requêtes D1 de ce cycle ont renvoyé `changed_db=false` et `rows_wri
 5. Ne pas ajouter de redirections anciennes sur la seule base de snapshots ou d'erreurs du lecteur web ; refaire un GET HTTP brut no-cache depuis Factory.
 
 Aucun prix, checkout, paiement, email, secret, binding, D1, R2, DNS, cache, Worker ou production n'a été modifié dans cette revalidation.
+
+
+---
+
+# P0.42 — R2 list/get discrepancy after documentation merge — 2026-11-05T06:25Z
+
+## Main / production baseline
+
+- Main after PR #89 documentation merge: `25aa9b2033b152a09385c070f405c0e433810017`.
+- PR #89 merged by squash; only `reports/operations/BOT-WOW-CURRENT-STATE.md` changed.
+- PR #89 Validate and UI quality/Playwright both succeeded on documentation HEAD `e9bedc3bd6ea7e3033fcb9d3d1322aa38c986e8c`.
+- Cloudflare Pages production deployment for the merge: `37878628-ded4-4e7d-a80f-1fcaa5571d33`, commit `25aa9b2`, build and deploy SUCCESS. Apex and www aliases active.
+- Post-deploy checks of homepage, EN buy, FR buy and compatibility confirm the existing content remains unchanged: price 20 €, checkout unavailable, package delivery unverified, no delivery time promised, and explicit Blizzard platform warning.
+
+## R2 artifact recheck — read-only
+
+Bucket `botwow-binaries`, List Objects returns:
+- `casinababe-fishing-1.2.0.zip` — 1,387,543 bytes; ETag `d9d7ab22ec076873b8fed656a53460bc`; last modified `2026-10-27T06:31:06.784Z`.
+- `Casinababe-v1.0.38.zip` — 1,229,709 bytes; ETag `b3f54aed8a36547f454c65420684ddc0`; last modified `2026-10-04T01:27:26.941Z`.
+
+Direct R2 API Get Object attempts with `cf-r2-jurisdiction: default` returned HTTP 404 / Cloudflare code 10007, “The specified key does not exist”, for both listed keys. The list/get discrepancy means the object listing alone does not prove the object is readable by the Worker. This integration could not retrieve current object bytes or recompute the SHA-256 in this pass.
+
+Historical verification on 2026-10-28 recorded the v1.2.0 ZIP SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, 30 ZIP entries, 26 manifest files, and zero size/hash/CRC mismatches. That is historical evidence, not a fresh byte-level retrieval on 2026-11-05.
+
+The current source provenance and self-contained installation onboarding remain unresolved: issue #18 records that the package cannot be reproducibly rebuilt from the current main source paths and the archive lacks a self-contained dependency/install guide.
+
+## Decision
+
+- Keep the purchase form closed and the release-delivery notice in place.
+- Do not describe the fishing module as “available and paid for by licence” until the current R2 object is readable, its bytes/hash/manifest are revalidated, source provenance is reproducible, and post-payment fulfillment is certified.
+- Factory must test an independent, already-authorized R2 read path (existing Worker binding or existing S3 credentials only); do not create credentials, deploy a temporary Worker, upload/replace/delete an object, or expose secrets.
+- Issue #18 and #92 now contain this evidence and acceptance criteria.
+- No R2 write, D1 write, payment, email, secret/binding change, Worker deployment, or price/checkout change occurred.
