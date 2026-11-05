@@ -389,5 +389,22 @@ for (const file of ['modules.html', 'fr/modules.html']) {
     /<a class="btn btn-ghost"[^>]*href="\.\/buy\.html">(?:Purchase status|Statut de l'achat)<\/a>/.test(html));
 }
 
+
+
+// The disabled form must not imply that entering an email will trigger delivery.
+for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html', 'compare.html', 'fr/compare.html']) {
+  const html = read(file);
+  const fr = file.startsWith('fr/');
+  const expectedLabel = fr
+    ? /E-mail — aucune donnée n'est transmise tant que le paiement est fermé\./i
+    : /Email — no data is submitted while checkout is closed\./i;
+  const expectedNote = fr
+    ? /Tant qu'il est fermé, ce formulaire ne peut pas être envoyé\./i
+    : /While it is closed, this form cannot submit\./i;
+  check(file + ' : le libellé email ne promet plus une livraison', expectedLabel.test(html));
+  check(file + ' : la note explique que le formulaire ne peut pas être envoyé', expectedNote.test(html));
+  check(file + ' : le bouton de paiement reste désactivé', /id="buyBtn" disabled/.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
