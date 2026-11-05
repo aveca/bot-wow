@@ -1493,3 +1493,30 @@ Base `botwow-analytics`, filtre `test=0` :
 4. **P1 — sécurité** : préparer séparément le remplacement de `Math.random()` pour les clés de licence par un RNG cryptographique avec tests, sans déploiement non autorisé.
 5. **P1 — entitlements** : résoudre l'écart « une machine » vs `max_activations=2` avant toute vente.
 6. **P2 — acquisition** : ne pas acheter de trafic ; les volumes actuels ne démontrent aucune progression d'intention de paiement.
+
+
+---
+
+# P0.36b — contrôle du domaine www et des redirections — 2026-11-05T02:16Z
+
+## Observation publique comparée
+- `https://bot-wow.com/fr/` (ouvert directement) affiche la version actuelle : certains builds tiers sont utilisés pour les tests techniques, cela ne constitue pas une autorisation ; la section de risque précise qu'aucune autorisation Blizzard n'est revendiquée/documentée et qu'il ne faut pas utiliser BOT-WOW avec les services exploités par Blizzard.
+- `https://www.bot-wow.com/fr/` (ouvert directement) retourne encore une ancienne copie : « Les serveurs privés sont notre environnement de référence », formule plus permissive, et un avertissement de risque générique. L'extraction `www` n'est donc pas cohérente avec l'apex lors de cette observation.
+- `https://www.bot-wow.com/` retourne une copie EN avec le nouvel avertissement explicite.
+- `/wow-gold-bot` et `/undetected-wow-bot` ont répondu 404 lors des ouvertures directes. Les résultats de recherche historiques ne sont pas des pages live confirmées.
+
+## Cloudflare — état DNS et règles, lecture seule
+- Zone `bot-wow.com` : DNS `www.bot-wow.com` = CNAME `bot-wow.pages.dev`, `proxied=true`, TTL automatique.
+- Pages : `bot-wow.com` et `www.bot-wow.com` sont deux custom domains actifs du même projet `bot-wow`.
+- Liste des rulesets de zone : aucun ruleset `http_request_dynamic_redirect` présent.
+- GET de l'entrypoint `http_request_dynamic_redirect` retourne 404 `could not find entrypoint ruleset`. Il n'existe donc pas actuellement de règle Single Redirect www→apex dans cette phase.
+- Les commentaires du fichier `_redirects` et la branche historique `fix/www-alias-redirect-20261104` documentent déjà que Cloudflare Pages `_redirects` ne sait pas cibler un hostname. Cette branche est divergée de main (1 commit ahead / 39 behind) et ne doit pas être réutilisée telle quelle.
+
+## Diagnostic et action requise
+- Fait vérifié : le contenu extrait de `www/fr/` diffère de `bot-wow.com/fr/` ; la configuration DNS maintient `www` comme alias Pages distinct ; aucune règle de redirection de zone n'est configurée.
+- Cause exacte non prouvée : sans GET HTTP brut depuis un navigateur/terminal avec headers `CF-Cache-Status`, `Age`, `ETag`, `Last-Modified`, il est impossible de distinguer une copie edge périmée d'une autre réponse d'origine/alias. Ne pas affirmer « cache » comme cause.
+- Remédiation à préparer, mais non appliquée : créer une Cloudflare Single Redirect au niveau de la zone, source `https://www.bot-wow.com/*`, destination `https://bot-wow.com/:splat`, statut 301, conservation de la query string ; vérifier la non-boucle et les chemins FR/EN ; seulement après validation, envisager le retrait de `www.bot-wow.com` des custom domains Pages.
+- Cette modification de production (Redirect Rules / domaine Pages) nécessite une autorisation explicite. Aucun DNS, ruleset, domaine Pages, cache ou déploiement n'a été modifié.
+
+## Priorité
+Traiter la consolidation www→apex comme P0 de cohérence et de conformité avant acquisition : une version www/fr plus ancienne peut exposer des avertissements insuffisants même si l'apex est à jour.
