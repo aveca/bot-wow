@@ -45,11 +45,39 @@ async function captureScreenshot(page, testInfo, name) {
 }
 
 async function expectNoHorizontalOverflow(page) {
-  const dimensions = await page.evaluate(() => ({
-    documentWidth: document.documentElement.scrollWidth,
-    viewportWidth: document.documentElement.clientWidth
-  }));
-  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+  const dimensions = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    const offenders = [...document.querySelectorAll('body *')]
+      .map((el) => {
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return {
+          tag: el.tagName,
+          id: el.id,
+          className: typeof el.className === 'string' ? el.className : el.getAttribute('class'),
+          text: (el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 120),
+          left: Math.round(rect.left * 100) / 100,
+          right: Math.round(rect.right * 100) / 100,
+          width: Math.round(rect.width * 100) / 100,
+          minWidth: style.minWidth,
+          whiteSpace: style.whiteSpace,
+          flexWrap: style.flexWrap,
+          display: style.display
+        };
+      })
+      .filter((item) => item.width > 0 && (item.left < -1 || item.right > viewportWidth + 1))
+      .sort((a, b) => b.right - a.right)
+      .slice(0, 12);
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth,
+      offenders
+    };
+  });
+  expect(
+    dimensions.documentWidth,
+    `Horizontal overflow: ${JSON.stringify(dimensions.offenders)}`
+  ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
 }
 
 async function verifyPurchaseBlocked(page, testInfo, lang) {
