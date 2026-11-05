@@ -282,13 +282,14 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   await expect(page.locator('#demo-title')).toHaveText('Explore the route planner.');
   await expect(page.locator('.sim-banner')).toContainText('SIMULATED DATA');
   await expect(page.locator('.sim-banner')).toContainText('does not control the game client');
-  await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
+  await expect(page.locator('nav a[data-cta-id="purchase-status"]')).toHaveAttribute('href', './buy.html');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './fr/demo.html');
   const mobileOffer = page.locator('.demo-mobile-offer');
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
-    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
-    await expect(mobileOffer).toContainText('€20.00');
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
+    await expect(mobileOffer).toContainText('Purchase unavailable');
+    await expect(mobileOffer).toContainText('No verified downloadable release');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -331,8 +332,9 @@ test('French demo: locale stays French and all key navigation targets are locali
   const mobileOffer = page.locator('.demo-mobile-offer');
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
-    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
-    await expect(mobileOffer).toContainText('20,00 €');
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
+    await expect(mobileOffer).toContainText('Achat indisponible');
+    await expect(mobileOffer).toContainText('Aucun paquet téléchargeable vérifié');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
