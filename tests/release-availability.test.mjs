@@ -349,5 +349,45 @@ for (const item of purchaseStatusPageCases) {
     !/(?:nav-buy|buy-hero-primary)/i.test(html));
 }
 
+
+
+// Comparison pages must not imply a live price, payment provider, delivery,
+// activation policy or Blizzard authorization while the offer is unavailable.
+for (const item of [
+  {
+    file: 'compare.html',
+    formula: /data-cta-id="formula-ours-status"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a>/i,
+    target: /documented target price/i,
+    scope: /No Blizzard authorization is claimed or documented/i,
+  },
+  {
+    file: 'fr/compare.html',
+    formula: /data-cta-id="formula-ours-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a>/i,
+    target: /prix cible documenté/i,
+    scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
+  },
+]) {
+  const html = read(item.file);
+  check(item.file + ' : CTA de formule = statut de disponibilité', item.formula.test(html));
+  check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
+  check(item.file + ' : prix explicitement présenté comme cible', item.target.test(html));
+  check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
+  check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
+  check(item.file + ' : aucune promesse de machine ou renvoi de licence',
+    !/Activation on one machine|Activation sur une machine|licence re-send on request|renvoi de licence sur demande/i.test(html));
+  check(item.file + ' : aucun addon attribué à Casinababe',
+    !/Casinababe addon|addon Casinababe/i.test(html));
+  check(item.file + ' : aucune livraison présentée comme déjà expédiée',
+    !/1 shipped \+ 3 in development|1 livré \+ 3 en développement/i.test(html));
+  check(item.file + ' : avertissement d’autorisation présent', item.scope.test(html));
+}
+for (const file of ['modules.html', 'fr/modules.html']) {
+  const html = read(file);
+  check(file + ' : CTA de statut sans style d’achat immédiat',
+    /<a class="btn btn-ghost"[^>]*href="\.\/buy\.html">(?:Purchase status|Statut de l'achat)<\/a>/.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
