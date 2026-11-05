@@ -107,7 +107,7 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   await expect(page.locator('#buyOk')).not.toContainText('redirect');
 }
 
-test('homepage: primary demo and purchase paths remain visible and responsive', async ({ page }, testInfo) => {
+test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
@@ -115,11 +115,41 @@ test('homepage: primary demo and purchase paths remain visible and responsive', 
   await expect(page.locator('#release-availability-notice')).toBeVisible();
   await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
-  await expect(page.locator('a[data-cta-id="hero-offer"]')).toBeVisible();
+  await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage');
   expect(errors).toEqual([]);
+});
+
+
+
+test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const route of [
+    { path: '/', label: 'Check purchase status', bar: 'Purchase status' },
+    { path: '/fr/', label: 'Vérifier la disponibilité', bar: 'Statut de disponibilité' },
+  ]) {
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    const statusCta = page.locator('a[data-cta-id="hero-status"]');
+    await expect(statusCta).toBeVisible();
+    await expect(statusCta).toContainText(route.label);
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
+    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('[data-cta-id="hero-offer"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="final-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
+    await statusCta.click();
+    await expect(page.locator('#buy')).toBeInViewport();
+    await expectNoHorizontalOverflow(page);
+  }
+
+  expect(checkoutRequests).toEqual([]);
 });
 
 test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
