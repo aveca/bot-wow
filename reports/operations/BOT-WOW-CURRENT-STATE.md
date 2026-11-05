@@ -1977,3 +1977,47 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 - Checkout remains closed. No price, checkout rule, payment, email, secret, binding, Worker, DNS, D1/R2 or production mutation occurred.
 - No applicable authorization for distributing/promoting the current gameplay-automation product is documented. This is a platform-contract risk, not a legal opinion.
 - Next: inspect CI for head `0b8370c`; fix any test failures; confirm whether the mobile band CSS resolves the two overflow cases; only then consider static merge/deployment under the existing policy and rollback. Keep checkout and Worker untouched.
+
+
+---
+
+# P0.49 — merge and Pages deployment closure — 2026-11-05T16:00Z
+
+## Merge and CI
+- PR #94 was squash-merged at `2026-11-05T15:58:10Z`.
+- PR head: `63b4e707935e0e6589745154d140aa3daac892eb`.
+- Merge commit / new main: `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- PR #94: CLOSED / MERGED; 15 files changed.
+- GitHub Actions on the exact PR head: Validate Bot-Wow run `42059527469` SUCCESS; UI Quality run `42059527342` SUCCESS.
+- Playwright: **158 passed**; both `modules-en` and `modules-fr` passed. Release-availability regression output: `RELEASE AVAILABILITY : OK`.
+- An intermediate CI failure on `491132f` was a duplicate `licenceTruthCases` declaration; the duplicate was removed in `0b8370c` before the successful final run.
+
+## Merged changes
+- EN/FR homepage, Buy, Modules, FAQ and licence documentation now distinguish intended scope from verified package/payment/delivery availability.
+- Removed unverified one-machine, activation, reactivation and key-resend promises from the affected pages and documentation.
+- The €20 amount remains the intended price only; no price was changed and no purchase is available.
+- Modules status bands wrap on narrow screens; Playwright now reports overflowing DOM elements on any future failure.
+- Regression tests cover the EN/FR licence documents, FAQs and French homepage.
+- No Worker, payment logic, checkout rule, secret, binding, D1/R2 object, email, DNS or price mutation.
+
+## Cloudflare Pages deployment
+- Production deployment: `376230c1-b8e2-4d7b-8ada-f368b0f6e6d3` (`376230c1`).
+- Source commit: `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- Build and deploy stages: SUCCESS; completed `2026-11-05T15:58:35.140784Z`.
+- Previous successful deployment retained for rollback: `845e3e10-e05a-4a68-805a-65971a61add5`.
+- Content verification limitation: a fresh web crawl of `https://bot-wow.com/buy.html` still returned the older add-on / one-machine / licence-resend copy while also showing checkout unavailable. Direct no-cache fetch attempts from the connector runtime returned HTTP 403, and the Pages preview host was inaccessible to the web reader. Therefore deployment identity and build success are verified, but exact edge-served HTML after propagation is **not yet independently verified**. Do not claim every public page's text is confirmed live until a browser/HTTP check succeeds.
+
+## Fresh commercial snapshot (read-only)
+- Orders: 5 Bitcoin `paid`, all test-domain; 8 Bitcoin `pending_payment`; 1 Bitcoin `rejected`; 11 Mollie `failed`.
+- Licences: 5 active, `max_activations=2`; this is not proof of a two-device entitlement.
+- Deliveries: 0; activations: 0; webhook records: 16; contacts: 12, confirmed: 0.
+- D1 reads: all `changed_db=false`, `rows_written=0`.
+- Analytics `test=0`: 1,789 page views; 711 journey views; 48 CTA clicks; 29 checkout requests; 4 starts; 6 created; 6 failed; no payment-confirmed, conversion, delivery-sent or activation events. Latest page/journey events: `2026-11-05T15:21:51Z`.
+- Mollie `ListProfiles`: one verified profile on a non-BOT-WOW domain; no dedicated BOT-WOW profile.
+
+## Final commercial state
+- Commercial paid sales verified: **0**.
+- Confirmed revenue: **€0.00**.
+- Checkout remains closed. Worker `botwow-api` remains v50; no Worker deployment.
+- No documented authorization for commercial distribution of the current gameplay-automation scope. This is a platform-contract risk, not a legal opinion.
+- Next action: verify exact edge-served EN/FR pages through a real browser/HTTP path; then resolve the commercial scope and package provenance before any payment work. Keep checkout closed.
