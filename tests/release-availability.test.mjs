@@ -120,5 +120,37 @@ for (const [page, file, oldClaims, newScope] of [
   check(`${page} : périmètre prévu et disponibilité non vérifiée clairement indiqués`, newScope.test(flat));
 }
 
-\n// Plateforme / conformité : compatibilité technique ne signifie pas autorisation.\nconst platformDisclosureFiles = [\n  ['index.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],\n  ['buy.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],\n  ['compatibility.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],\n  ['faq.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],\n  ['fr/index.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],\n  ['fr/buy.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],\n  ['fr/compatibility.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],\n  ['fr/faq.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],\n];\nfor (const [file, agreement, noAuthorization, noBlizzardServices] of platformDisclosureFiles) {\n  const html = read(file);\n  const flat = html.replace(/\\s+/g, ' ');\n  check(\`\${file} : lien / référence à l'accord anti-triche\`, agreement.test(flat));\n  check(\`\${file} : absence d'autorisation Blizzard clairement indiquée\`, noAuthorization.test(flat));\n  check(\`\${file} : avertissement contre l'utilisation sur les services Blizzard\`, noBlizzardServices.test(flat));\n  check(\`\${file} : aucune invitation à utiliser le bot "dans les règles du serveur"\`,\n    !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));\n}\nfor (const [file, unavailable] of [\n  ['faq.html', /Card checkout is currently unavailable/i],\n  ['fr/faq.html', /paiement par carte est actuellement indisponible/i],\n]) {\n  const flat = read(file).replace(/\\s+/g, ' ');\n  check(\`\${file} : les moyens de paiement ne sont pas présentés comme actifs\`, unavailable.test(flat));\n  check(\`\${file} : aucune affirmation de checkout Mollie actif\`, !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));\n}\n\nconsole.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
+
+ 
+// Platform compliance: technical compatibility is not authorization.
+const platformDisclosureFiles = [
+  ['index.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
+  ['buy.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
+  ['compatibility.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
+  ['faq.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
+  ['fr/index.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
+  ['fr/buy.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
+  ['fr/compatibility.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
+  ['fr/faq.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
+];
+for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDisclosureFiles) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  check(file + ' : référence à l’accord anti-triche', agreement.test(flat));
+  check(file + ' : absence d’autorisation Blizzard clairement indiquée', noAuthorization.test(flat));
+  check(file + ' : avertissement contre l’utilisation sur les services Blizzard', noBlizzardServices.test(flat));
+  check(file + ' : aucune invitation à utiliser le bot dans les règles du serveur',
+    !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));
+}
+for (const [file, unavailable] of [
+  ['faq.html', /Card checkout is currently unavailable/i],
+  ['fr/faq.html', /paiement par carte est actuellement indisponible/i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
+  check(file + ' : aucune affirmation de checkout Mollie actif',
+    !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
+}
+
+console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
