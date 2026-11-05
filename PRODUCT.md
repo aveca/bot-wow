@@ -26,20 +26,14 @@ uniquement des outils de test/dev.
 
 ## Product
 
-BOT-WOW est un **bot de pêche pour World of Warcraft Classic** qui fonctionne
-par **lecture d'écran (pixel)** — aucune injection ni lecture mémoire.
+BOT-WOW est décrit publiquement comme un outil d'automatisation de pêche pour WoW Classic 1.13, fondé sur la lecture d'écran et des messages de fenêtre. Les sources runtime référencées par le registre ne sont pas présentes dans ce dépôt sur `main` ; le fonctionnement complet n'est donc pas reproductible indépendamment depuis ce dépôt.
 
-### Ce que le produit fait
+### Ce que le registre et les pages décrivent — non revalidé comme paquet livrable
 
-- Détecte le flotteur et l'ombre à l'écran, mémorise les spots de pêche
-  productifs, enchaîne des rondes optimisées entre plusieurs spots.
-- Livré avec un **addon** (`Casinobae Addon`) et un **manifeste SHA-256** par
-  fichier.
-- Carte de spots **versionnée, exportable/importable** (JSON), dédupliquée.
-- Modes de ronde : `prudent`, `equilibre`, `exploration` (ce dernier signale
-  explicitement les segments non mesurés).
-- Démonstration navigateur réelle : carte SVG interactive, données
-  explicitement marquées **simulées**.
+- Détection du flotteur, mémoire de spots, planification de rondes, mode arrière-plan et arrêt F9 sont des capacités rapportées par le registre interne, pas des fonctionnalités actuellement certifiées dans un paquet téléchargeable.
+- Un add-on runtime apparaît dans l'historique technique sous le nom `Casinababe Addon`. C'est une référence de composant, pas un produit distinct ; sa présence dans l'archive v1.2.0 actuelle n'est pas vérifiée.
+- Le manifeste SHA-256 est décrit dans la documentation, mais l'archive actuelle n'est pas lisible via l'API R2 testée et ses octets n'ont pas été revalidés.
+- La démo navigateur est une carte SVG interactive avec des données explicitement simulées ; elle ne prouve pas le fonctionnement du runtime.
 
 ### Registre technique et preuve de livraison
 
@@ -49,6 +43,11 @@ par **lecture d'écran (pixel)** — aucune injection ni lecture mémoire.
 - Le test de parité facultatif référence `Casinababe/scripts/botwow_modules.py`, chemin externe absent de ce dépôt ; il peut se terminer en `SKIP` si la source Python externe n'est pas configurée. BOT-WOW reste le produit ; cette référence externe n'est pas un second produit.
 - Le bucket R2 liste un objet v1.2.0, mais l'API Cloudflare `Get Object` a retourné HTTP 404 / code 10007 le 2026-11-05. Les octets actuels, leur SHA-256 et leur provenance ne sont donc pas revalidés.
 - En conséquence, le site et ce document doivent décrire le module comme un statut de registre interne, pas comme un paquet disponible, achetable ou livrable.
+
+## Users — hypothèse de cible, non validée commercialement
+
+Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherche un assistant de pêche. Cette cible n'est pas validée par des ventes et ne doit pas être activement sollicitée tant que le périmètre contractuel autorisé n'est pas établi.
+
 ## Offer — intended terms, not purchasable
 
 - Prix cible documenté : **20,00 €** (EUR), paiement unique, licence à vie ; ce montant n'est pas une invitation à payer actuellement.
@@ -57,19 +56,16 @@ par **lecture d'écran (pixel)** — aucune injection ni lecture mémoire.
 - Le code contient des chemins d'intégration Mollie et Bitcoin manuel, mais aucun moyen de paiement BOT-WOW n'est actuellement certifié opérationnel. Aucun profil Mollie BOT-WOW dédié n'est disponible ; ne jamais réutiliser un profil d'une autre activité.
 - Livraison prévue : e-mail contenant une clé de licence et un lien de téléchargement. La livraison en production n'est pas certifiée ; le dernier relevé D1 du 2026-11-05 montre 0 livraison et 0 activation.
 - Compatibilité vérifiée dans la matrice : WoW Classic 1.13 testé ; environnement de serveur tiers utilisé pour des tests techniques uniquement, sans autorisation implicite. TBC, WotLK et Live ne sont pas testés / pas pris en charge ; macOS et Linux ne sont pas pris en charge. Windows 10/11 et Python 3.11+ sont les prérequis publiés.
-## Constraints — Honnêteté (non négociable)
 
-Ces éléments sont **des preuves de confiance**, pas des frictions à décorer :
+## Constraints — Honnêteté et règles de plateforme (non négociable)
 
 - BOT-WOW automatise le gameplay. L'accord anti-triche de Blizzard interdit les logiciels tiers non autorisés qui permettent le botting ou facilitent le gameplay. Aucune autorisation de Blizzard n'est revendiquée ni documentée ; ne pas utiliser BOT-WOW avec les services exploités par Blizzard.
 - La compatibilité technique avec un serveur tiers ne vaut pas autorisation et ne résout pas les restrictions éventuelles d'autres ayants droit ou de la loi.
 - La lecture d'écran ne confère aucune autorisation et ne prévient pas les sanctions. Aucune promesse d'indétectabilité, d'anti-ban ou de compte protégé n'est acceptable.
-- Pas de remboursement automatique sur le rail Bitcoin ; chaque cas est examiné.
-- Les modules `planned` ne sont pas livrés et ne doivent pas être présentés
-  comme disponibles.
-- **Interdiction absolue de fabriquer** : avis clients, nombres d'utilisateurs,
-  compteurs, preuve sociale, benchmarks non sourcés, résultats mesurés non
-  fournis par le produit.
+- Les modules `planned` ne sont pas livrés et ne doivent pas être présentés comme disponibles.
+- Ne jamais fabriquer des avis clients, nombres d'utilisateurs, compteurs, preuves sociales, benchmarks ou résultats mesurés non sourcés.
+- Ne pas ouvrir le checkout, créer des paiements, envoyer des emails ou lancer de campagnes tant que la disponibilité du paquet, l'autorisation commerciale et la livraison ne sont pas établies.
+
 
 ## Assets réels disponibles
 
