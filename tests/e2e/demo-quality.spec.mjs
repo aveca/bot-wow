@@ -169,6 +169,37 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
   expect(checkoutRequests).toEqual([]);
 });
 
+
+
+test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const route of [
+    { path: '/compare.html', label: 'Check purchase status', bar: 'Purchase status' },
+    { path: '/fr/compare.html', label: 'Vérifier la disponibilité', bar: 'Statut de disponibilité' },
+  ]) {
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    const statusCta = page.locator('a[data-cta-id="formula-ours-status"]');
+    await expect(statusCta).toBeVisible();
+    await expect(statusCta).toContainText(route.label);
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
+    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('[data-cta-id="formula-ours-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(/Mollie/i);
+    await statusCta.click();
+    await expect(page.locator('#buy')).toBeInViewport();
+    await expectNoHorizontalOverflow(page);
+  }
+
+  expect(checkoutRequests).toEqual([]);
+});
+
 test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
