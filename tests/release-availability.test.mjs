@@ -245,5 +245,10 @@ for (const [file, staleMachineBinding] of [
   check(file + ' : aucun entitlement machine présenté comme confirmé', !staleMachineBinding.test(read(file)));
 }
 
+
+check('index.html : le contenu de l’archive et son manifeste restent explicitement non vérifiés',
+  /current archive and its SHA-256 manifest are not verified/i.test(read('index.html')) &&
+  !/The addon and the packaged build, with a SHA-256 manifest/i.test(read('index.html')));
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
