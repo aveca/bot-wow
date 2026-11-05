@@ -2193,3 +2193,12 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 1. Finish the targeted homepage residual-copy PR and validate it on GitHub Actions.
 2. Use Factory's real browser/HTTP tooling to verify all eight EN/FR routes against the new Pages deployment, including response status, final URL, ETag, Age, Cache-Control and CF-Cache-Status. Resolve the FR Buy and Comparison crawler discrepancy only after identifying cache vs route behavior.
 3. Keep checkout closed until commercial scope, package provenance, dedicated payment profile and end-to-end fulfillment are independently verified.
+
+
+## P0.52 PR publication — 2026-11-05T19:01Z
+
+- Follow-up PR: [#96 — remove residual unavailable-offer claims from homepage](https://github.com/aveca/bot-wow/pull/96).
+- Branch: `fix/p0.52-homepage-residual-offer-claims-20261105`; code/report head before this publication note: `ddb963a9fd314dc4671403dc11fc919a0694ba35`.
+- PR #96 currently contains 8 commits and 4 changed files: EN/FR homepage, release-availability regression tests, and this operational report.
+- No local Factory/npm result is claimed. Require Validate and UI Quality/Playwright SUCCESS on the exact final head before merge.
+- Static merge/deploy remains permitted only with the standing reversible-change authorization, verified rollback and no checkout/payment/Worker mutation.
