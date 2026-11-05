@@ -2202,3 +2202,65 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 - PR #96 currently contains 8 commits and 4 changed files: EN/FR homepage, release-availability regression tests, and this operational report.
 - No local Factory/npm result is claimed. Require Validate and UI Quality/Playwright SUCCESS on the exact final head before merge.
 - Static merge/deploy remains permitted only with the standing reversible-change authorization, verified rollback and no checkout/payment/Worker mutation.
+
+
+---
+
+# P0.54 — residual purchase CTAs and unsupported delivery claims found on secondary routes — 2026-11-05T20:27Z
+
+## GitHub / Pages baseline
+- Repository: `aveca/bot-wow`; exact `main`: `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- PR #96 is merged into this main. The latest Pages production deployment is `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, created `2026-11-05T19:36:35Z`; build and deploy stages both SUCCESS. Its source branch is `main` and source commit exactly matches `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- Pages project `bot-wow`: production branch `main`; build `node scripts/build-site.mjs _site`; output `_site`; build cache disabled; preview deployments disabled. Both custom domains `bot-wow.com` and `www.bot-wow.com` are ACTIVE and aliases of the same deployment.
+- Previous production deployment retained as rollback: `9f9e0e84-60dc-4d64-9b70-e01ab1ec40fc`.
+- Public live checks on 2026-11-05 show the current status copy on Home EN/FR, Buy EN/FR, Compare EN/FR and Modules EN/FR. The reader resolves `buy.html` to `/buy` and `fr/buy.html` to `/fr/buy`; both forms state checkout unavailable and are disabled. Compare pages label €20 as a target price and purchase unavailable. Modules pages state that the internal registry is not proof of a downloadable product. Public references: https://www.bot-wow.com/ ; https://bot-wow.com/buy.html ; https://bot-wow.com/fr/buy.html ; https://bot-wow.com/compare.html ; https://bot-wow.com/fr/compare.html ; https://bot-wow.com/modules.html ; https://bot-wow.com/fr/modules.html .
+- Direct public homepage crawl on www and apex is now consistent with the merged status copy. Earlier stale search-index excerpts are not proof of a current live route mismatch; no cache purge or DNS change was attempted.
+
+## Newly verified residual copy defects in current main
+These are source-level facts on the exact main SHA, not assumptions about crawler cache:
+
+- `demo.html` and `fr/demo.html`: header CTA still says Buy/Acheter; demo-close CTA says “Get the lifetime licence — €20” / “Prendre la licence à vie — 20 €”; mobile bar still says “One-time · lifetime licence” / “Paiement unique · licence à vie”; intro says to inspect the planner “before you buy”.
+- `features.html` and `fr/features.html`: header Buy/Acheter CTA remains. The licence/delivery feature still states machine-locked keys, a manual Bitcoin rail and Mollie card checkout, despite the current closed checkout and absence of a dedicated BOT-WOW Mollie profile.
+- `getting-started.html` and `fr/getting-started.html`: header Buy/Acheter CTA remains; the page promises a post-payment ZIP and licence key, one-machine activation and key re-sending. Those entitlements and delivery are not verified.
+- `fishing.html`, `fr/fishing.html`, `faq.html`, `fr/faq.html`, `compatibility.html`, `fr/compatibility.html`, `roadmap.html`, `fr/roadmap.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor rather than the purchase-status route.
+- `success.html` and `fr/success.html`: header Buy/Acheter CTA remains; FR page title says “Commande confirmée”; both pages describe licence-key and download-link email delivery even though no verified delivery exists. The English body correctly warns that the page alone does not confirm payment, but the title/next-step copy still overstates the state.
+- `docs/install.html`, `docs/fr/install.html`, `docs/license.html`, `docs/fr/license.html`, `docs/index.html`, `docs/fr/index.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor.
+
+## Persistent tracker
+- Created GitHub issue [#97 — align all secondary EN/FR routes with closed checkout and unverified delivery](https://github.com/aveca/bot-wow/issues/97).
+- Required scope: neutral purchase-status links across all affected pages; remove unsupported Mollie/Bitcoin/machine-lock/lifetime/email-delivery promises; make getting-started and success pages explicitly conditional; extend `tests/release-availability.test.mjs` to scan the complete affected EN/FR route set.
+- The issue is static copy + regression tests only. No checkout, payment, price, Worker, secrets, bindings, D1/R2, email, DNS, cache or production payment changes.
+
+## D1 production — read-only, 2026-11-05T20:20Z
+- All SQL statements were SELECT-only; every result reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (stored sum 10,000 minor units), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test orders: **0**; all five paid rows use `@example.com`. Do not count their stored amounts as revenue.
+- Licences: 5 (all active); total configured activation slots 10, but this does not prove a customer entitlement. Activations: 0.
+- Deliveries: 0 rows. Webhook event records: 16. Email contacts: 12; confirmed: 0; marketing-consent flag count: 9. No email was sent and no production row was written.
+- No customer payment or commercial sale is confirmed.
+
+## Analytics D1 — read-only, `test=0`, 2026-11-05T20:20Z
+- `page_view=1,840`; latest page event `2026-11-05T19:38:27.389Z`.
+- `journey_view=737`; latest `2026-11-05T19:38:24.483Z`.
+- `cta_click=48`; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique users or sessions. Page/journey views increased; no new CTA click is recorded after the previous snapshot.
+
+## Worker / Mollie
+- Active Worker `botwow-api`: latest deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic; no new deployment.
+- Mollie profile listing still shows no BOT-WOW-specific profile. Do not reuse a profile from another activity. No payment was created.
+- PR #90 remains DRAFT and is based on stale main `218f0eb`; PR #66 remains DRAFT and non-mergeable against an older base. Neither is ready to merge or deploy.
+
+## Commercial decision
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Public checkout remains closed. No verified customer package delivery or activation.
+- No applicable authorization for the current WoW gameplay-automation scope is documented. Do not promote or sell that scope for Blizzard-operated services. Third-party technical compatibility is not authorization.
+- No payment, email, price, checkout, Worker, secret, binding, D1/R2, DNS, cache or production mutation occurred in this cycle.
+
+## Next action
+1. Execute issue #97 on a dedicated branch in the local Factory/OpenCode environment: correct the residual EN/FR buy CTAs and unsupported payment/delivery/activation copy on all listed routes, and extend the existing release-availability test.
+2. Run `npm run validate`, `npm test`, `npm run test:e2e`, `node scripts/build-site.mjs _site` and `git diff --check` for real; require Validate and UI Quality green on the exact final SHA.
+3. Merge/deploy only the reversible static copy/test change after full diff inspection and green CI; verify the Pages source commit and all affected live routes. No checkout, payment or Worker change.
+4. Keep the commercial decision at NO-GO until the product scope is authorized, package provenance is reproducible, a dedicated payment profile exists, and post-payment delivery is independently verified.
