@@ -163,8 +163,8 @@ for (const [file, unavailable] of [
 
 // Public module pages must distinguish internal registry status from commercial availability.
 for (const [file, unavailable, noMollie, noSafeHarbour, noAuthorization, noBlizzardUse] of [
-  ['modules.html', /delivery unverified|distribution unverified|package provenance/i, /Payment handled by Mollie|Mollie as an active payment/i, /within the rules of the server you play on/i, /No Blizzard authorization is claimed or documented/i, /Do not use BOT-WOW with Blizzard-operated services/i],
-  ['fr/modules.html', /livraison non vérifiée|distribution non vérifiée|provenance/i, /Paiement pris en charge par Mollie|Mollie comme moyen de paiement actif/i, /dans le respect des règles du serveur sur lequel vous jouez/i, /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i, /N'utilisez pas BOT-WOW avec les services exploités par Blizzard/i],
+  ['modules.html', /delivery unverified|distribution unverified|package provenance/i, /Mollie/i, /within the rules of the server you play on/i, /No Blizzard authorization is claimed or documented/i, /Do not use BOT-WOW with Blizzard-operated services/i],
+  ['fr/modules.html', /livraison non vérifiée|distribution non vérifiée|provenance/i, /Mollie/i, /dans le respect des règles du serveur sur lequel vous jouez/i, /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i, /N'utilisez pas BOT-WOW avec les services exploités par Blizzard/i],
 ]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
@@ -174,6 +174,7 @@ for (const [file, unavailable, noMollie, noSafeHarbour, noAuthorization, noBlizz
   check(file + ' : absence d’autorisation Blizzard clairement indiquée', noAuthorization.test(flat));
   check(file + ' : avertissement explicite contre les services Blizzard', noBlizzardUse.test(flat));
   check(file + ' : lien vers le statut d’achat plutôt que CTA d’achat', /href="\.\/buy\.html"/.test(html) && /Purchase status|Statut de l'achat/i.test(flat));
+  check(file + ' : aucune confusion avec un autre produit', !/Casinababe/i.test(flat));
 }
 const moduleRegistry = JSON.parse(read('assets/modules.json'));
 const fishRegistry = moduleRegistry.modules.find((m) => m.id === 'fish');
@@ -182,7 +183,7 @@ if (fishRegistry) {
   if (missingFishPaths.length) {
     for (const file of ['modules.html', 'fr/modules.html']) {
       const flat = read(file).replace(/\s+/g, ' ');
-      check(file + ' : absence des sources du registre signalée', /source paths.*absent from this repository snapshot|chemins source.*absents de cette version du dépôt/i.test(flat));
+      check(file + ' : absence des sources du registre signalée', /source(?:\/test)? paths.*absent from this repository snapshot|chemins source\/tests? référencés.*absents de cette version du dépôt/i.test(flat));
     }
   }
 }

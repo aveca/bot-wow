@@ -1712,3 +1712,45 @@ The current source provenance and self-contained installation onboarding remain 
 - Factory must test an independent, already-authorized R2 read path (existing Worker binding or existing S3 credentials only); do not create credentials, deploy a temporary Worker, upload/replace/delete an object, or expose secrets.
 - Issue #18 and #92 now contain this evidence and acceptance criteria.
 - No R2 write, D1 write, payment, email, secret/binding change, Worker deployment, or price/checkout change occurred.
+
+
+---
+
+# P0.43 — public module truth and commercial record — 2026-11-05T09:20Z
+
+## Baseline and delivery
+
+- BOT-WOW main at the start of this cycle: `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- Branch: `fix/p0.40-modules-product-truth-20261105`.
+- Code/content commit: `cd6b972441c1925839654762935636ebc02155c7`.
+- Product-context and status-label commit: `d931572b0b3c4672fe54ed3f627887721ea68475`.
+- PR #94: https://github.com/aveca/bot-wow/pull/94 — open, not merged; base `main`, head `d931572b0b3c4672fe54ed3f627887721ea68475`.
+- The PR changes four files: `modules.html`, `fr/modules.html`, `PRODUCT.md`, `tests/release-availability.test.mjs`.
+
+## Directly verified source findings
+
+- `assets/modules.json` contains 8 entries: `fish` is marked `available`, three modules are `development` and four are `planned`.
+- The fish registry references `scripts/fishing_bot.py` and `scripts/fishing_memory.py`; GitHub Contents API returned 404 for both on current main. The referenced `tests/fishing_bot_test.py`, `tests/run-fishing-harness.mjs`, and optional external `Casinababe/scripts/botwow_modules.py` path are also absent from this repository. The parity test can SKIP when that external source is not configured.
+- R2 List Objects returns the v1.2.0 object, but the tested Get Object path returns HTTP 404 / Cloudflare code 10007. Current bytes and SHA-256 are not revalidated. Historical hash data remains historical only.
+- Modules EN/FR source previously presented Mollie as active, v1.2.0 as current, and Fishing as shipped/available under licence. The buy pages continue to state checkout closed and delivery unverified. The PR now distinguishes internal registry status from commercial release and removes purchase CTAs from Modules.
+- The public module pages now explicitly state that no Blizzard authorization is claimed/documented and advise against use on Blizzard-operated services. This is a disclosure correction, not a legal opinion or permission to market the automation.
+
+## Production and commercial baseline
+
+- Latest Pages production deployment known in this cycle: deployment `845e3e10-e05a-4a68-805a-65971a61add5`, source commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, SUCCESS. PR #94 is not deployed; live pages remain the main version until an authorized merge/deploy.
+- Worker `botwow-api` remains version 50; no Worker deployment was performed.
+- Mollie ListProfiles returned no BOT-WOW profile; an unrelated profile was not reused. PR #90 remains open/draft and does not open checkout.
+- D1 production, read-only: 5 Bitcoin `paid` test rows with `example.com` addresses, 8 pending, 1 rejected, 11 Mollie failed; 5 licences, 5 download tokens, 0 deliveries, 0 activations, 16 webhook events, 12 email records and 0 confirmed contacts. These rows do not prove a commercial sale.
+- Analytics D1, `test=0`: 1,726 page views, 680 journey views, 48 CTA clicks, 29 checkout requests, 4 checkout starts, 6 checkout created, 6 checkout failed; no payment-confirmed, conversion, delivery or activation events.
+- D1 requests were read-only; `changed_db=false`, `rows_written=0`.
+- Commercial sales verified: 0. Revenue confirmed: €0.00. Checkout remains closed.
+
+## Validation and limits
+
+- No local Factory environment is connected to this automation runtime, so local npm commands were not run. The new regression assertions are in the PR; GitHub Actions results must be checked on the PR head before any merge decision.
+- No price, checkout, payment, secret, binding, D1, R2, Worker, DNS, email, cache or production change was made.
+- Repository AGENTS.md explicitly prohibits merging to the default branch or deploying production without explicit authorization. Keep PR #94 open until CI is green and the required authorization is present.
+
+## Next action
+
+- Verify all PR #94 checks on its latest head. Fix any failing regression assertion in the same branch. Do not merge or deploy. After CI is green, retain the PR for review and prioritize recovery of a reproducible, readable release artifact and independent payment/fulfillment readiness.
