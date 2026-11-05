@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Module ledger — what is real, what is coming, what is not · BOT-WOW</title>
-<meta name="description" content="The BOT-WOW module ledger: one available module (Fishing), three in development (Navigation, Inventory & vendor, Recovery), four planned. Each status is backed by re-runnable tests. No invented features.">
+<meta name="description" content="Technical module registry only. The Fishing registry status is not proof of a downloadable release; source provenance, package availability and post-payment delivery are unverified. Checkout is closed.">
 <meta name="theme-color" content="#05070f">
 <link rel="canonical" href="https://bot-wow.com/modules.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/modules.html">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BOT-WOW">
 <meta property="og:title" content="BOT-WOW module ledger — honest product statuses">
-<meta property="og:description" content="One available module, three in development, four planned — every status backed by tests you can re-run.">
+<meta property="og:description" content="Technical registry only: the v1.2.0 package and post-payment delivery are unverified. Checkout is closed.">
 <meta property="og:url" content="https://bot-wow.com/modules.html">
 <link rel="icon" href="./assets/favicon.svg?v=cb3925b6" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,8 +24,7 @@
 <body>
 
 <div class="topbar">
-  <div class="w"><span><b>v1.2.0</b> current release</span><span>Windows 10/11 · Python 3.11+</span>
-    <span>Ledger generated from the bot repository</span><span>Payment handled by Mollie</span></div>
+  <div class="w"><span><b>v1.2.0</b> delivery unverified</span><span>Windows 10/11 · Python 3.11+</span><span>Technical registry only</span><span>Checkout closed — no payment available</span></div>
 </div>
 
 <nav>
@@ -46,7 +45,7 @@
     </div>
     <div class="nav-right">
       <div class="langs"><a class="on" href="./modules.html">EN</a><a href="./fr/modules.html">FR</a></div>
-      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre" data-track="cta_click" data-cta-id="nav-buy">Buy — €20.00</a>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./buy.html">Purchase status</a>
     </div>
   </div>
 </nav>
@@ -56,17 +55,20 @@
   <div class="w">
     <h1 class="h2" style="max-width:20ch">What is real, what is coming, what is not.</h1>
     <p class="lead" style="max-width:70ch">
-      This page is the product's contract with you. Fishing is available and paid for by the
-      licence; three roles are in development with real, tested code; four more are planned
-      and clearly marked as design only. <strong style="color:var(--txt)">A status is only as
-      strong as the tests behind it.</strong>
+      This page records an internal technical registry, not a commercial release. The registry
+      marks Fishing as available, but the source and test paths it references are absent from
+      this repository snapshot. The v1.2.0 archive cannot currently be retrieved from the release
+      store, and post-payment delivery is not certified. Checkout is closed. Three roles are
+      marked in development and four are planned. <strong style="color:var(--txt)">A registry
+      status is not proof of a downloadable product.</strong>
     </p>
     <p class="honest-note" style="margin-inline:0;max-width:72ch">
-      Ledger <span class="mono">v1.2.0</span> — 1 available · 3 in development · 4 planned.
-      Source of truth: <span class="mono">Casinobabe/scripts/botwow_modules.py</span>, exported to
-      <span class="mono">assets/modules.json</span> and verified byte-identical at each build by
-      <span class="mono">npm test</span> (modules-parity). The export is deterministic: no invented
-      dates, no decorative counters.
+      Internal registry snapshot <span class="mono">v1.2.0</span> — fish is marked
+      <span class="mono">available</span> in <span class="mono">assets/modules.json</span>;
+      3 modules are in development and 4 are planned. The registry references source/test paths
+      absent from this repository snapshot. Its optional Python parity test skips when the
+      external source is absent. This page does not prove package provenance, R2 readability,
+      checkout availability or customer delivery.
     </p>
   </div>
 </section>
@@ -74,21 +76,23 @@
 <!-- ====================================================== AVAILABLE -->
 <section class="pad" style="padding-top:34px">
   <div class="w">
-    <div class="band"><span class="st st-ok"><i></i>Available</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">implemented · tested · evidence</span></div>
+    <div class="band"><span class="st st-ok"><i></i>Registry label: available</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">distribution and source verification pending</span></div>
 
     <div class="modrow">
       <div class="m-main">
         <h3>Fish — assistant + optimised rounds</h3>
-        <p class="m-desc">The working core: measured float detection, persistent spot memory,
-          planner with parity-verified rounds, background mode, F9 stop.</p>
+        <p class="m-desc">The internal registry describes a fishing core with float detection,
+          spot memory, route planning, background mode and F9 stop. The source paths referenced by
+          that registry are not present in this repository snapshot, so these capabilities have
+          not been independently re-run here and do not establish delivery readiness.</p>
         <div class="mod">
           <div class="mod-col has">
-            <div class="mod-label">Shipped & verified</div>
+            <div class="mod-label">Registry-reported capabilities — not revalidated here</div>
             <ul>
-              <li>Cast → bite → catch cycle instrumented per run (median logged bite→click 308 ms)</li>
-              <li>Persistent memory for spots (migrations, atomic writes, export/import)</li>
-              <li>Route planner: nearest-neighbour + 2-opt over measured legs; 3 modes</li>
-              <li>Windows background capture (PrintWindow) and window-message clicks</li>
+              <li>Historical registry record: cast → bite → catch cycle; logged median bite→click 308 ms, not revalidated in this repository snapshot</li>
+              <li>Registry record: persistent spot memory (migrations, atomic writes, export/import); source not present here</li>
+              <li>Registry record: nearest-neighbour + 2-opt route planner with three modes; source not present here</li>
+              <li>Registry record: Windows background capture and window-message clicks; not revalidated here</li>
             </ul>
           </div>
           <div class="mod-col dep">
@@ -100,10 +104,10 @@
           </div>
         </div>
         <p class="mono" style="margin:10px 0 0;font-size:11.5px;color:var(--mut2)">
-          suites: python tests/fishing_bot_test.py · node tests/run-fishing-harness.mjs
-          &nbsp;|&nbsp; files: scripts/fishing_bot.py · scripts/fishing_memory.py</p>
+          The referenced source/test paths are absent from this repository snapshot; source
+          provenance and independent package reproduction remain unverified.</p>
       </div>
-      <div class="m-status"><span class="st st-ok"><i></i>Available</span></div>
+      <div class="m-status"><span class="st st-no"><i></i>Distribution unverified</span></div>
     </div>
   </div>
 </section>
@@ -259,12 +263,13 @@
 <section class="pad final">
   <div class="w">
     <h2 class="h2">Hold the ledger to its own rule</h2>
-    <p class="lead" style="max-width:64ch">Every "shipped" claim on this page maps to a file and a
-      test suite you can re-run. If a claim ever stops matching the code, the ledger is wrong —
-      tell us: <a class="foot-mail" href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p>
+    <p class="lead" style="max-width:64ch">The registry is an internal technical snapshot, not
+      a delivery promise. Its referenced source/test paths are absent from this repository
+      snapshot. If you can provide verified source provenance, contact
+      <a class="foot-mail" href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a>.</p>
     <div class="hero-cta">
       <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="modules-demo">Try the demo (simulated data)</a>
-      <a class="btn btn-ghost btn-lg" href="./#offre" data-track="cta_click" data-cta-id="modules-offer">See the offer</a>
+      <a class="btn btn-ghost btn-lg" href="./buy.html">Check purchase status</a>
     </div>
   </div>
 </section>
@@ -274,10 +279,9 @@
     <div class="grid">
       <div>
         <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
-        <p>Fishing assistant for WoW Classic. Published by Casinobabe.
-           Not affiliated with, endorsed by, or connected to Blizzard Entertainment.
-           Automation tools can violate the game's terms of service; read the
-           compatibility page before use.</p>
+        <p>BOT-WOW is a fishing-automation project for WoW Classic. It is not affiliated
+           with or endorsed by Blizzard Entertainment. No Blizzard authorization is claimed
+           or documented. Do not use BOT-WOW with Blizzard-operated services.</p>
       </div>
       <div>
         <h3>Product</h3>
@@ -287,7 +291,7 @@
           <li><a href="./demo.html">Demo (simulated data)</a></li>
           <li><a href="./compatibility.html">Compatibility</a></li>
           <li><a href="./roadmap.html">Roadmap</a></li>
-          <li><a href="./#offre">Pricing</a></li>
+          <li><a href="./buy.html">Purchase status</a></li>
         </ul>
       </div>
       <div>
@@ -303,7 +307,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment. Use automation software responsibly and within the rules of the server you play on.</div>
+      <div class="disclaimer">© 2026 BOT-WOW. Not affiliated with or endorsed by Blizzard Entertainment. Blizzard's Anti-Cheating Agreement prohibits unauthorized third-party software that enables botting or facilitates gameplay. No Blizzard authorization is claimed or documented for BOT-WOW. Do not use it with Blizzard-operated services. Technical compatibility with a third-party server does not imply authorization.</div>
       <span class="mono">v1.2.0 · contents: <a href="./legal/terms.html">terms</a> ·
         <a href="./legal/privacy.html">privacy</a> · <a href="./legal/refund.html">refunds</a></span>
     </div>

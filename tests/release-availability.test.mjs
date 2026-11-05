@@ -161,5 +161,39 @@ for (const [file, unavailable] of [
     !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
 }
 
+// Public module pages must distinguish internal registry status from commercial availability.
+for (const [file, unavailable, noMollie, noSafeHarbour, noAuthorization, noBlizzardUse] of [
+  ['modules.html', /delivery unverified|distribution unverified|package provenance/i, /Payment handled by Mollie|Mollie as an active payment/i, /within the rules of the server you play on/i, /No Blizzard authorization is claimed or documented/i, /Do not use BOT-WOW with Blizzard-operated services/i],
+  ['fr/modules.html', /livraison non vérifiée|distribution non vérifiée|provenance/i, /Paiement pris en charge par Mollie|Mollie comme moyen de paiement actif/i, /dans le respect des règles du serveur sur lequel vous jouez/i, /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i, /N'utilisez pas BOT-WOW avec les services exploités par Blizzard/i],
+]) {
+  const html = read(file);
+  const flat = html.replace(/\s+/g, ' ');
+  check(file + ' : disponibilité commerciale non vérifiée et paiement fermé', unavailable.test(flat) && /checkout fermé|checkout closed|paiement fermé/i.test(flat));
+  check(file + ' : Mollie non présenté comme moyen actif', !noMollie.test(flat));
+  check(file + ' : aucune formulation de safe-harbour serveur', !noSafeHarbour.test(flat));
+  check(file + ' : absence d’autorisation Blizzard clairement indiquée', noAuthorization.test(flat));
+  check(file + ' : avertissement explicite contre les services Blizzard', noBlizzardUse.test(flat));
+  check(file + ' : lien vers le statut d’achat plutôt que CTA d’achat', /href="\.\/buy\.html"/.test(html) && /Purchase status|Statut de l'achat/i.test(flat));
+}
+const moduleRegistry = JSON.parse(read('assets/modules.json'));
+const fishRegistry = moduleRegistry.modules.find((m) => m.id === 'fish');
+if (fishRegistry) {
+  const missingFishPaths = (fishRegistry.files || []).filter((p) => !fs.existsSync(path.join(REPO, p)));
+  if (missingFishPaths.length) {
+    for (const file of ['modules.html', 'fr/modules.html']) {
+      const flat = read(file).replace(/\s+/g, ' ');
+      check(file + ' : absence des sources du registre signalée', /source paths.*absent from this repository snapshot|chemins source.*absents de cette version du dépôt/i.test(flat));
+    }
+  }
+}
+const productTruth = read('PRODUCT.md');
+const productFlat = productTruth.replace(/\s+/g, ' ');
+check('PRODUCT.md : checkout déclaré fermé', /checkout public est \*\*fermé\*\*/i.test(productFlat));
+check('PRODUCT.md : profil Mollie BOT-WOW dédié absent', /aucun profil Mollie BOT-WOW dédié/i.test(productFlat));
+check('PRODUCT.md : livraison non certifiée', /livraison en production n'est pas certifiée/i.test(productFlat));
+check('PRODUCT.md : compatibilité limitée à Classic 1.13', /WoW Classic 1\.13 testé/i.test(productFlat) && !/majorité des serveurs privés|WoW Retail \(The War Within\)|Season of Discovery/i.test(productFlat));
+check('PRODUCT.md : compatibilité tierce ne vaut pas autorisation', /sans autorisation implicite/i.test(productFlat));
+check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut de configuration à 2 activations/i.test(productFlat));
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
