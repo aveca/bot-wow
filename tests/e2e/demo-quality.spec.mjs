@@ -232,8 +232,9 @@ for (const route of commercialPages) {
     await expect(page.locator('footer .logo-mark')).toHaveCount(1);
     await expect(page.locator('nav .nav-links a').first()).toBeAttached();
     await expect(page.locator('a[href*="demo.html"]:visible').first()).toBeVisible();
-    const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"]').count();
+    const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"], a[href*="buy.html"]').count();
     expect(purchasePaths).toBeGreaterThan(0);
+    await expect(page.locator('a[href*="buy.html"]').first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await captureScreenshot(page, testInfo, route.name);
     expect(errors, `JavaScript errors on ${route.path}`).toEqual([]);
