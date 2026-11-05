@@ -1822,3 +1822,100 @@ The current source provenance and self-contained installation onboarding remain 
 - Final review found one remaining unqualified homepage bullet claiming the add-on and packaged build included a SHA-256 manifest. It now states that these are intended components and the current archive/manifest are not verified.
 - Page commit: 4c354a566c67ee2f48dfcbc4af8bb1a534974909. Regression-test commit: 408f6595ec626c2e1a797269767f503b26ebddbb.
 - Branch head immediately before this report append: 408f6595ec626c2e1a797269767f503b26ebddbb. CI for this exact head had not yet appeared when this note was written.
+
+
+---
+
+# P0.48 — fresh PR, live funnel and payment revalidation — 2026-11-05T14:08Z
+
+## GitHub state
+
+- Repository: `aveca/bot-wow`; default branch `main`.
+- Main HEAD: `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- PRs open at this check: 17.
+- PR #71 is already merged (merge SHA `084e2bd3785526835e678f70b77699a8f838d16a`); no further unblock action is needed there.
+- PR #94 remains OPEN, not merged, base `main`, head `3a2c7a408ca174b6266b92f2e1624343e758a600`, 24 commits ahead / 0 behind, 10 changed files.
+- PR #94 Validate run `42004943834`: SUCCESS.
+- PR #94 UI Quality run `42004943771`: FAILURE; job `127169532730`, 156 passed / 2 failed.
+- Playwright failures: Modules EN at 391px viewport has document scrollWidth 481px; Modules FR at 391px has scrollWidth 534px. The PR changed-file list does not include `assets/components.css`; no CSS correction is present in this HEAD.
+- PR #90 remains OPEN / DRAFT and diverged from main: 2 ahead / 2 behind, merge base `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- PR #66 remains OPEN / DRAFT and diverged: 3 ahead / 42 behind. Do not merge this stale branch.
+
+## PR #94 branch copy gaps
+
+The branch still contains:
+- `fr/index.html`: “Licence réexpédiée sur demande si vous réinstallez”.
+- `docs/license.html`: one-machine entitlement claims.
+- `faq.html`: “one machine per licence”.
+- `fr/faq.html`: lost-key resend promise.
+
+`tests/release-availability.test.mjs` does not cover the licence documentation or the two FAQ files; its French homepage resend pattern does not match “Licence réexpédiée”. These are confirmed regression-test gaps. A comment with exact evidence was updated on PR #94 (comment `6660138552`).
+
+## Public production — live pages inspected 2026-11-05
+
+- Pages production deployment: `845e3e10-e05a-4a68-805a-65971a61add5`, commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, deploy SUCCESS at `2026-11-05T06:30:21Z`.
+- EN home `https://bot-wow.com/` still shows machine-bound licence / resend copy and purchase CTAs while stating delivery is unverified.
+- FR home `https://bot-wow.com/fr/` still shows “Licence réexpédiée sur demande” and machine-bound wording while stating delivery is unverified.
+- EN Buy `https://bot-wow.com/buy` still claims the Casinobabe add-on is shipped with a per-file SHA-256 manifest and one-machine activation; the same page says delivery is unverified and checkout unavailable.
+- FR Buy `https://bot-wow.com/fr/buy` contains the same contradictions.
+- EN Modules `https://bot-wow.com/modules` still says “v1.2.0 current release”, “Payment handled by Mollie”, and fishing is available/paid by licence; its footer uses “within the rules of the server you play on”.
+- FR Modules `https://bot-wow.com/fr/modules` still says “v1.2.0 version actuelle”, “Paiement pris en charge par Mollie”, and fishing is available/couvert par la licence; its footer uses equivalent server-rules wording.
+- These are live-production facts. PR #94 changes are not deployed.
+
+## Cloudflare Worker and source
+
+- Active Worker `botwow-api`: version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% traffic, created `2026-10-27T07:46:28Z`.
+- Current `main/worker/index.js` still contains two `Math.random()` uses in licence-key generation, logs raw `body.amount` on the rejected-client-amount path, and defaults `RELEASE_STATUS` to `pending`.
+- Current main source includes `resumeFulfillment`; that does not prove the active v50 bundle contains it. No Worker deployment occurred.
+
+## D1 production — read-only, 2026-11-05 14:08Z
+
+All queries returned `changed_db=false`, `rows_written=0`.
+
+- Orders: Bitcoin manual / paid 5; Bitcoin manual / pending_payment 8; Bitcoin manual / rejected 1; Mollie / failed 11.
+- All 5 paid Bitcoin rows have email domain `example.com`; they are test data, not commercial sales.
+- The 8 pending rows comprise 7 Gmail and 1 example.com domain; pending is not revenue.
+- The 11 failed Mollie rows comprise 10 `bot-wow.fr` and 1 `test.fr` domain.
+- Licences: 5 active, each configured with `max_activations=2`; this does not establish a two-device contractual entitlement.
+- Deliveries: 0 rows. Activations: 0. Webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent.
+
+## Analytics D1 — read-only, test=0
+
+- `page_view`: 1,780; latest `2026-11-05T13:37:50.348Z`.
+- `journey_view`: 706; latest `2026-11-05T13:32:19.951Z`.
+- `cta_click`: 48; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested`: 29; latest `2026-11-04T02:47:00.719Z`.
+- `checkout_start`: 4; `checkout_created`: 6; `checkout_failed`: 6.
+- No `payment_confirmed`, `conversion`, `delivery_sent`, or `activation` events were returned.
+- These are event counts, not unique visitors or sessions.
+
+## Mollie — read-only
+
+- `ListProfiles` returns one verified profile on a different domain; no BOT-WOW-specific profile is present.
+- Do not reuse another activity's profile. No payment was created.
+
+## Platform scope
+
+- Official Blizzard EULA search result (current page, last revised 2024-03-21) §1.C.2 explicitly includes creating, using, offering, promoting, advertising, making available and distributing unauthorized bots and software that changes/facilitates gameplay.
+- Official Anti-Cheating Agreement describes unauthorized third-party software that enables/facilitates botting or gameplay.
+- No applicable authorization is documented for BOT-WOW. This is a platform-contract risk assessment, not legal advice.
+- The manual WoW-specific planner proposed in PR #66 is not automatically a compliant safe harbour; a genuinely game-agnostic, non-client-interacting product would need separate scope and demand validation. A comment was added to PR #66 (comment `6660159108`).
+
+## Commercial decision
+
+- Commercial paid sales verified: **0**.
+- Commercial revenue confirmed: **€0.00**.
+- Checkout remains unavailable publicly; do not open it.
+- Do not promote the current gameplay-automation offer for Blizzard-operated services without applicable authorization.
+- No price, checkout rule, payment, email, secret, binding, D1/R2, Worker, DNS, cache, or production mutation occurred in this run.
+- R2 bytes were not re-requested because the last documented authorized Get path returned 404 / code 10007 and no new read credential/path became available; historical SHA remains historical, not a fresh verification.
+
+## Next action
+
+1. Finish PR #94: instrument the two mobile overflow failures, correct the real overflowing element, and extend copy tests to licence docs + FAQs + all public Modules claims.
+2. Keep PR #94 unmerged until Validate and UI Quality both pass on the same SHA.
+3. After the static PR is safe to ship, decide whether to pause the legacy bot offer or pursue a genuinely game-agnostic fishing-planner pivot; do not label the existing WoW-specific manual planner compliant.
+4. Only revisit R2/Mollie/payment once there is a commercially authorized, deliverable product scope.
+
+No local Factory/npm/Playwright execution is claimed in this connector-only run.
