@@ -282,5 +282,40 @@ check('fr/index.html : aucune promesse de licence réexpédiée sur demande',
 // Licence and FAQ claims must remain aligned with the currently unverified
 // activation, recovery and delivery state. Cover both language variants and
 // the standalone licence documentation.
+
+
+// Homepage purchase CTAs must report availability, never imply that checkout
+// is currently open. The target price remains visible as a target, not a buy-now offer.
+const homepagePurchaseStatusCases = [
+  {
+    file: 'index.html',
+    hero: /data-cta-id="hero-status"[^>]*>Check purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a><\/div>/i,
+    targetPrice: /documented target price|target price/i,
+    allowedStatusLabel: /check (?:purchase )?status|check availability|purchase status/i,
+  },
+  {
+    file: 'fr/index.html',
+    hero: /data-cta-id="hero-status"[^>]*>Vérifier la disponibilité<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a><\/div>/i,
+    targetPrice: /prix cible documenté/i,
+    allowedStatusLabel: /vérifier (?:la disponibilité|le statut)|statut (?:d’achat|de disponibilité)/i,
+  },
+];
+for (const item of homepagePurchaseStatusCases) {
+  const html = read(item.file);
+  const statusLinks = [...html.matchAll(/<a\b[^>]*href="#buy"[^>]*>([\s\S]*?)<\/a>/gi)];
+  const labels = statusLinks.map((match) => match[1].replace(/<[^>]*>/g, '').trim());
+  check(item.file + ' : CTA principal de statut présent', item.hero.test(html));
+  check(item.file + ' : barre mobile annonce le statut, pas un achat', item.bar.test(html));
+  check(item.file + ' : prix explicitement présenté comme cible', item.targetPrice.test(html));
+  check(item.file + ' : tous les liens vers la section achat sont des liens de statut',
+    statusLinks.length >= 6 && labels.every((label) => item.allowedStatusLabel.test(label)));
+  check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
+    !/(?:hero-offer|journey-fish-buy|journey-licence-buy|steps-buy|final-buy|mbar-buy)/i.test(html));
+  check(item.file + ' : aucun lien footer ne prétend ouvrir un achat',
+    !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
