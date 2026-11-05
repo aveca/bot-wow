@@ -166,9 +166,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const f of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html']) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-buy'], ['fr/compare.html', 'mbar-buy']]) {
     const t = read(f);
-    check(`${f} : la barre de statut mobile est instrumentee`, /data-cta-id="mbar-status"/.test(t));
+    check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
 }
 
