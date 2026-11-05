@@ -481,5 +481,16 @@ for (const [file, forbidden] of [
   check(file + ' : anciennes promesses ou instructions non disponibles supprimées', !forbidden.test(html));
 }
 
+
+for (const [file, forbidden] of [
+  ['roadmap.html', /Live now — v1\.2\.0|machine activation|manual bitcoin rail|Farm your/i],
+  ['fr/roadmap.html', /En place aujourd'hui — v1\.2\.0|activation par machine|rail bitcoin manuel|farm d'XP/i],
+  ['docs/index.html', /Everything you need to install, use|Prerequisites, addon, configuration, first run/i],
+  ['docs/fr/index.html', /Tout ce qu'il faut pour installer, utiliser|Prérequis, addon, configuration, lancement/i],
+]) {
+  const html = read(file);
+  check(file + ' : page archivée sans promesse de release ou d’installation', !forbidden.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);

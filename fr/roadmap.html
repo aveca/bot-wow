@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Feuille de route — BOT-WOW</title>
-<meta name="description" content="Ce que BOT-WOW fait aujourd'hui, ce qui se construit, et la suite — avec des dates seulement quand elles sont tenables.">
+<meta name="description" content="Historique archivé du projet BOT-WOW uniquement. Aucune release téléchargeable ou autorisée n’est actuellement disponible.">
 <link rel="canonical" href="https://bot-wow.com/fr/roadmap.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/roadmap.html">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/roadmap.html">
@@ -35,58 +35,10 @@
 <main class="page">
   <div class="w">
     <a class="backlink2" href="./">← Accueil</a>
-    <h1>Feuille de route <span class="grad">&amp; changelog</span></h1>
-    <p class="kp">Maintenant, ensuite, et jamais — des statuts visibles plutôt que des
-      prédictions confiantes. Les dates n'apparaissent que lorsqu'elles sont tenables.</p>
+    <h1>Historique du projet <span class="grad">— archivé</span></h1>
+    <p class="kp">Notes historiques du projet uniquement. Cette page n’est pas une feuille de route active et ne décrit pas un produit actuellement disponible.</p>
 
-    <div class="prose">
-      <h2><span class="st st-ok"><i></i>En place aujourd'hui — v1.2.0</span></h2>
-      <ul>
-        <li>Détection du flotteur mesurée et cycle complet lancer → morsure → prise,
-          y compris le mode arrière-plan sans focus de la fenêtre.</li>
-        <li>Mémoire persistante des spots (schéma versionné, export / import) avec
-          visites planifiées, fiabilité mesurée et historique de mobs.</li>
-        <li>Rondes optimisées (plus proche voisin + 2-opt, trois modes) — la démo du site
-          exécute le même planificateur, confronté à celui du bot Python à chaque build.</li>
-        <li>Les conditions de licence, de paiement et de livraison restent non vérifiées ; aucune release client ni aucun moyen de paiement n’est actuellement disponible.</li>
-      </ul>
-
-      <h2><span class="st st-dev"><i></i>En cours</span></h2>
-      <ul>
-        <li><b>Trajet entre spots</b> — l'odomètre + l'auto-run passent les tests unitaires
-          (dérive nulle au repos, arrivée vérifiée) ; la validation en jeu du trajet
-          complet est l'étape restante.</li>
-        <li><b>Retour au cadavre</b> — la chaîne de défaillance (mort vue seulement au
-          repos, pas de confirmation de fantôme, pas de navigation vers le cadavre,
-          signal de résurrection ambigu) a été documentée ; une machine à états bornée
-          avec délais par étape est en cours d'implémentation. Tant qu'elle ne tient pas
-          en jeu, une mort laisse le bot à l'arrêt et attend un humain.</li>
-        <li><b>Inventaire & vendeur</b> — le planificateur hors-ligne (math des sacs,
-          listes de vente/réappro, plan de tournée vendeur borné) est implémenté et testé
-          en unitaire avec un contrat BagSnapshot défini ; le câblage du flux de données
-          depuis le jeu est l'étape en cours.</li>
-      </ul>
-
-      <h2><span class="st st-plan"><i></i>Prévu — sans date promise</span></h2>
-      <ul>
-        <li><b>Grind &amp; farm d'XP, collecte, élimination de mobs (combat), quêtes, champs de bataille</b> — rôles de combat en <b>conception écrite seulement</b> ; ils dépendent d'une couche de détection de combat qui n'existe pas encore. Rien de tout cela ne tourne en jeu aujourd'hui. Quand le travail réel commence, le <a href="./modules.html">registre des modules</a> les passera d'abord « En développement ».</li> 
-        <li><b>Scripting</b> (tâches personnalisées bornées) et <b>follower</b> —
-          conceptions séquencées après la preuve de la navigation et du combat.</li>
-        <li>Autres clients de jeu (profils TBC / WotLK) — après la validation cœur en jeu,
-          jamais avant.</li>
-        <li>Partage de la carte des spots entre utilisateurs.</li>
-      </ul>
-
-      <h2><span class="st st-no"><i></i>Jamais — sauf si cette page change la première</span></h2>
-      <ul>
-        <li>Lecture mémoire ou injection dans le processus du jeu.</li>
-        <li>Toute promesse « sûr » ou « indétectable » — voyez la
-          <a href="./compatibility.html">page compatibilité</a> pour la version honnête.</li>
-      </ul>
-
-      <div class="callout green"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.4h7.6L16 6.8v9.8H5V3.4z"/><path d="M12.6 3.4v3.4H16"/><path d="M7.6 11h5M7.6 13.8h3.4"/></svg> <span>Le changelog détaillé et versionné vit dans
-        <a href="../docs/fr/changelog.html">docs/changelog.html</a>. Chaque entrée cite les
-        mesures ou les tests qui justifient le changement.</span></div>
+    <div class="prose"><h2>Historique archivé du projet</h2><p>Les anciennes notes décrivent des prototypes et des modules envisagés. Elles ne prouvent ni l’existence d’une release client actuelle, ni un paquet téléchargeable, ni une compatibilité vérifiée. Aucun produit n’est disponible à l’achat.</p><h2>Statut commercial et plateforme</h2><p>Le checkout est fermé. Les conditions de paiement, de licence, d’activation et de livraison ne sont pas vérifiées. Aucune autorisation applicable d’automatisation du gameplay sur les services exploités par Blizzard n’est documentée. N’utilisez pas ce logiciel avec ces services.</p><p><a href="./buy.html">Statut d’achat</a></p></div>
     </div>
   </div>
 </main>
