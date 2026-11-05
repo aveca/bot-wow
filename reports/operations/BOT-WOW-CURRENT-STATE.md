@@ -2071,3 +2071,63 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 - Do not open checkout or change payment rules. Package R2 Get last returned HTTP 404 / 10007; no new authorized retrieval path was established in this cycle. Package provenance remains unverified.
 - No applicable authorization for the current gameplay-automation scope is documented. Keep checkout closed pending a defensible commercial scope or applicable authorization.
 - Confirmed commercial paid sales: **0**. Confirmed revenue: **€0.00**.
+
+
+---
+
+# P0.51 — mobile status-navigation regression corrected; CI green — 2026-11-05
+
+## GitHub / PR #95
+- Repository: `aveca/bot-wow`; default branch remains `main` at `b7d9cc77508b1a5d7a131ac664b240739a3be66d`.
+- PR #95: `https://github.com/aveca/bot-wow/pull/95`; branch `fix/p0.50-homepage-purchase-status-20261105`; base `main`; latest tested head before this report-only update: `b5b4f18d5682ad89ceefcfcbbd4d2146c072c001`.
+- PR #95 remains OPEN, non-draft, mergeable; no merge or production deployment occurred in this snapshot.
+- Current PR diff: 13 files; Home/Buy/Comparison EN/FR purchase-status copy, Modules status styling, regression tests and this report. No Worker/payment/backend file changed.
+- 86 branch names were returned by the current branch search (cursor indicates branch search pagination); 17 open PRs were returned. Relevant open PRs: #95, #90 (draft Mollie credential routing), #66 (draft compliance/pivot). PR #71 is already merged and is not an outstanding task.
+
+## CI — exact tested SHA
+- Earlier UI run `42067255815` failed with 162 passed / 2 failed. Both failures were the same assertion on mobile EN/FR Buy pages: the test expected `nav-status` to be visible at 391px.
+- Root cause confirmed in existing `assets/site.css`: `@media(max-width:520px){.nav-right .btn{display:none}}`. The header CTA is intentionally hidden in the compact mobile header; the hero status CTA remains visible.
+- Targeted test-only correction in `tests/e2e/demo-quality.spec.mjs`, commit `b5b4f18d5682ad89ceefcfcbbd4d2146c072c001`: assert the nav link is attached; expect it hidden at viewport widths <=520px and visible above that breakpoint; continue requiring the hero status CTA visible at every viewport.
+- Validate run `42079166109`: SUCCESS on the exact tested SHA.
+- UI Quality run `42079166107`: SUCCESS on the exact tested SHA.
+- Real-browser Playwright: **164 passed, 0 failed**. Both EN and FR blocked-purchase tests pass in desktop and mobile projects.
+- CI logs also report the optional Python planner check skipped because `ModuleNotFoundError: No module named 'fishing_spots'`. This does not fail the static/UI workflow, but Python runtime parity was not independently validated by this CI run.
+- No local Factory/npm/Playwright execution is claimed; the evidence above is from GitHub Actions.
+
+## Public production / Pages
+- Cloudflare Pages project `bot-wow`: production branch `main`; preview deployment setting `none`; build command `node scripts/build-site.mjs _site`, output `_site`.
+- Latest production deployment remains `33468888-aee7-40d5-9ba6-c92a42204e68`, source commit `b7d9cc77508b1a5d7a131ac664b240739a3be66d`, build/deploy SUCCESS. The latest PR branch preview is skipped because preview deployments are disabled.
+- Public crawl still sees the old main content, as expected while PR #95 is unmerged: homepage still contains buy/lifetime claims; Buy EN still shows the old add-on/manifest, one-machine, key-resend and email-for-key copy; comparison EN still displays Mollie/lifetime/server-rules claims. References: `https://bot-wow.com/`, `https://bot-wow.com/buy.html`, `https://bot-wow.com/compare.html`. This is a production/source-version gap, not evidence that PR #95 failed to build.
+- No Pages deployment, cache purge or DNS mutation occurred in this snapshot. Rollback reference remains deployment `33468888-aee7-40d5-9ba6-c92a42204e68` until a newer production deployment is confirmed.
+
+## Worker / payment integrations
+- Active Worker `botwow-api`: deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic; unchanged.
+- Mollie `ListProfiles` returned one verified profile on `https://sargasses-martinique.com/`; no BOT-WOW-specific profile is visible. Never reuse the other activity's profile. No payment was created.
+
+## D1 production — read-only, 2026-11-05
+- All queries: `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5`, `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- All five `paid` rows use `example.com`; they are test records, not customer sales. Their stored amount sum is 10,000 minor units, also not revenue.
+- Licences: 5; all five have `max_activations=2` (not proof of a two-device entitlement). Downloads: 5. Deliveries: 0. Activations: 0. Webhook records: 16. Email contacts: 12; confirmed: 0.
+- No email sent, no payment created, no production data written.
+
+## Analytics D1 — read-only, `test=0`
+- `page_view=1,818` (latest `2026-11-05T16:45:19.687Z`).
+- `journey_view=726` (latest `2026-11-05T16:45:16.779Z`).
+- `cta_click=48`; latest remains `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique visitors or sessions. Page/journey events increased; purchase intent did not.
+
+## Commercial / compliance decision
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Public checkout remains closed. No dedicated BOT-WOW payment profile; no delivery or activation records.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell that scope on Blizzard-operated services; a manual WoW-specific planner is not automatically a safe harbour.
+- No price, checkout rule, payment, email, secret, binding, D1/R2 object, Worker, DNS, cache or production mutation occurred.
+
+## Next action
+1. Re-check CI after this report commit on the new final PR head; require Validate and UI Quality green on that same SHA.
+2. Review the complete PR #95 diff, then merge/deploy only under the user's standing authorization for reversible static changes with a verified rollback. Do not open checkout.
+3. After any Pages deployment, verify the exact source commit and all EN/FR Home, Buy, Comparison and Modules pages through a live HTTP/browser path. Preview deployments are disabled.
+4. Resolve the commercial/platform scope and authentic package delivery before any payment work. Keep Worker v50 untouched until a separate authorized security/deployment task.
