@@ -1294,3 +1294,18 @@ This is a proven commercial-entitlement mismatch. Do not silently change the bac
 ### Next action
 
 Verify the exact production HTML on `bot-wow.com` and `www.bot-wow.com` using a real no-cache HTTP/browser request and confirm the EN/FR disclosure is served. Then resolve the one-machine versus two-activation entitlement with the product owner before any checkout reopening. Keep all payment/Worker production changes blocked until a dedicated BOT-WOW Mollie profile/credential and explicit authorization exist.
+
+
+### Commercial consequence of the Blizzard EULA
+
+The current EULA's Section C.2 is broader than a ban on a player using a bot: it lists creating, using, offering, promoting, advertising, making available and/or distributing bots or other unauthorized code/software that changes or facilitates gameplay. This directly affects the proposed sale/marketing path, not only end-user use. No Blizzard authorization is documented in this repository. This remains a serious platform-contract risk; this is not a legal opinion.
+
+Official source: https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement
+
+### Pivot-market caution
+
+A generic outdoor fishing spot/route planner is not automatically a better commercial opportunity. Current public competitors already offer waypoint management, route planning and free tiers (for example FISHMARKS), while Lunkerr offers trip planning and saved spots on a low-cost subscription. Any game-independent BOT-WOW pivot must show a distinct wedge (e.g. genuinely local/offline, privacy-first, optimized multi-stop routes) and validate demand before changing the public offer or pricing.
+
+Sources:
+- https://fishmarks.com/
+- https://www.lunkerr.com/
