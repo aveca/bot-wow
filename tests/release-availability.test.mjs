@@ -492,5 +492,38 @@ for (const [file, forbidden] of [
   check(file + ' : page archivée sans promesse de release ou d’installation', !forbidden.test(html));
 }
 
+
+const additionalStatusRoutes = [
+  ['cancel.html', './buy.html'],
+  ['fr/cancel.html', './buy.html'],
+  ['docs/changelog.html', '../buy.html'],
+  ['docs/fr/changelog.html', '../../fr/buy.html'],
+  ['docs/known-issues.html', '../buy.html'],
+  ['docs/fr/known-issues.html', '../../fr/buy.html'],
+  ['404.html', './buy.html'],
+  ['fr/404.html', './buy.html'],
+  ['legal/terms.html', '../buy.html'],
+  ['legal/fr/terms.html', '../../fr/buy.html'],
+  ['legal/privacy.html', '../buy.html'],
+  ['legal/fr/privacy.html', '../../fr/buy.html'],
+  ['legal/refund.html', '../buy.html'],
+  ['legal/fr/refund.html', '../../fr/buy.html'],
+];
+for (const [file, statusHref] of additionalStatusRoutes) {
+  const html = read(file);
+  check(file + ' : aucun ancien lien commercial #offre/#buy', !/href=["'][^"']*#(?:offre|buy)/i.test(html));
+  check(file + ' : lien vers la page de statut', html.includes('href="' + statusHref + '"'));
+  check(file + ' : aucun CTA Buy/Acheter à 20 €', !/Buy — €20\.00|Acheter — 20,00 €|Buy now|Acheter maintenant/i.test(html));
+}
+for (const [file, forbidden] of [
+  ['cancel.html', /Payment cancelled\.|Nothing was charged|Back to the offer/i],
+  ['fr/cancel.html', /Paiement annulé\.|Rien n'a été débité|Revenir à l'offre/i],
+  ['404.html', /Use automation software responsibly and within the rules/i],
+  ['fr/404.html', /Utilisez les logiciels d'automatisation de manière responsable/i],
+]) {
+  const html = read(file);
+  check(file + ' : ne présente pas une annulation ou une autorisation non vérifiée', !forbidden.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
