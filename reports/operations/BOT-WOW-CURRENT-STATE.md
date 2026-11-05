@@ -2021,3 +2021,53 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 - Checkout remains closed. Worker `botwow-api` remains v50; no Worker deployment.
 - No documented authorization for commercial distribution of the current gameplay-automation scope. This is a platform-contract risk, not a legal opinion.
 - Next action: verify exact edge-served EN/FR pages through a real browser/HTTP path; then resolve the commercial scope and package provenance before any payment work. Keep checkout closed.
+
+
+---
+
+# P0.50 — truthful availability across the public EN/FR funnel (2026-11-05)
+
+## GitHub snapshot
+- Default branch: `main` at `b7d9cc77508b1a5d7a131ac664b240739a3be66d`.
+- PR #94 is merged; merge SHA `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- PR #95: `https://github.com/aveca/bot-wow/pull/95`, branch `fix/p0.50-homepage-purchase-status-20261105`.
+- Code head before this report-only commit: `7ce88d66529c16fe0f9734afdef3025499fde235`.
+- PR #95 is OPEN and mergeable; no merge performed in this snapshot.
+- Validate run `42066782919`: SUCCESS on code head `7ce88d66529c16fe0f9734afdef3025499fde235`.
+- UI Quality run `42066776057`: pending/in progress at snapshot time on the same code head. Do not merge until UI Quality succeeds on the final PR head.
+
+## Changes in PR #95
+- Home, Buy and Comparison pages EN/FR now use availability/status CTAs rather than immediate buy-now labels while checkout is closed.
+- The €20 amount remains unchanged and is labelled as a documented target price, not a currently purchasable offer.
+- Comparison pages no longer claim an active Mollie profile, a one-machine activation promise, a licence resend, or a shipped module; the comparison calculator is explicitly illustrative.
+- Comparison copy states that third-party technical compatibility is not authorization and that no Blizzard authorization is claimed or documented.
+- Modules status links use secondary styling rather than the purchase-gold treatment.
+- All six Home/Buy/Comparison forms clarify that no email is submitted while checkout is closed.
+- The form's existing disabled-button guard remains unchanged; Playwright coverage now checks that pressing Enter cannot submit while closed.
+- Status CTA IDs are distinct from purchase-intent IDs so availability checks remain `cta_click`, not `checkout_requested`.
+- Static regression tests cover Home, Buy, Comparison and Modules EN/FR; Playwright covers status navigation and closed-form submission.
+
+## Verification and production
+- GitHub Validate passed on the code head above. UI Quality had not completed at snapshot time.
+- No local Factory runner was available in this execution; no local npm/Playwright run is claimed.
+- Production Pages remains deployment `33468888-aee7-40d5-9ba6-c92a42204e68`, source commit `b7d9cc77508b1a5d7a131ac664b240739a3be66d`, SUCCESS.
+- Branch preview deployment is skipped because preview deployments are disabled. PR #95 is not live.
+- Previous production deployment `33468888-aee7-40d5-9ba6-c92a42204e68` is the rollback target until a new production deployment is confirmed.
+- Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment or configuration mutation.
+
+## Fresh read-only commercial snapshot
+- Orders: 5 Bitcoin `paid`, all `@example.com`; 8 Bitcoin `pending_payment`; 1 Bitcoin `rejected`; 11 Mollie `failed`.
+- Paid orders outside the test domain: 0. These five paid rows are test data, not sales.
+- Licences: 5 active; configured activation slots total 10. This does not establish a two-device entitlement.
+- Downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
+- Contacts: 12; confirmed: 0.
+- All production D1 reads: `changed_db=false`, `rows_written=0`.
+- Analytics `test=0`: 1,804 page views; 719 journey views; 48 CTA clicks; 29 checkout requests; 4 checkout starts; 6 checkout created; 6 checkout failed; 0 payment-confirmed, conversion, delivery-sent or activation events.
+- Latest page-view event: `2026-11-05T16:33:46Z`. Latest CTA click remains `2026-11-04T02:47:00Z`.
+- Mollie ListProfiles returned no dedicated BOT-WOW profile. No payment was created.
+
+## Remaining blockers and next action
+- Confirm UI Quality on the final PR #95 head. If green, inspect the final diff, squash-merge the static reversible changes under the existing deployment authorization, then verify the new Cloudflare Pages production deployment and every affected EN/FR URL. If red, fix only the failing assertion or page defect.
+- Do not open checkout or change payment rules. Package R2 Get last returned HTTP 404 / 10007; no new authorized retrieval path was established in this cycle. Package provenance remains unverified.
+- No applicable authorization for the current gameplay-automation scope is documented. Keep checkout closed pending a defensible commercial scope or applicable authorization.
+- Confirmed commercial paid sales: **0**. Confirmed revenue: **€0.00**.
