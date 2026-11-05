@@ -4,7 +4,7 @@
  *
  * CE QUI EST TESTE
  * ----------------
- * 1. la barre existe dans les deux langues et pointe vers la section d'achat ;
+ * 1. la barre existe dans les deux langues et pointe vers le statut de disponibilité ;
  * 2. le prix affiche est le prix REEL (20,00 / 20.00) — jamais un prix invente
  *    ou une remise ;
  * 3. le CSS la rend visible sur desktop UNIQUEMENT via .is-on (donc invisible
@@ -46,10 +46,10 @@ function extractMbar(html) {
 for (const [name, html] of [['EN', en], ['FR', fr]]) {
   const mbar = extractMbar(html);
   check(`${name} : la barre d'action existe`, !!mbar);
-  check(`${name} : le lien pointe vers la section d'achat (#buy)`,
+  check(`${name} : le lien pointe vers le statut de disponibilité (#buy)`,
     !!mbar && /href="#buy"/.test(mbar));
-  check(`${name} : le lien est instrumenté (data-track + data-cta-id)`,
-    !!mbar && /data-track="cta_click"/.test(mbar) && /data-cta-id="mbar-buy"/.test(mbar));
+  check(`${name} : le lien de statut est instrumenté (data-track + data-cta-id)`,
+    !!mbar && /data-track="cta_click"/.test(mbar) && /data-cta-id="mbar-status"/.test(mbar));
   check(`${name} : la barre porte un role/aria pour les lecteurs d'ecran`,
     !!mbar && /role="region"/.test(mbar) && /aria-label=/.test(mbar));
 }
