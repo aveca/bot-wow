@@ -2131,3 +2131,74 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 2. Review the complete PR #95 diff, then merge/deploy only under the user's standing authorization for reversible static changes with a verified rollback. Do not open checkout.
 3. After any Pages deployment, verify the exact source commit and all EN/FR Home, Buy, Comparison and Modules pages through a live HTTP/browser path. Preview deployments are disabled.
 4. Resolve the commercial/platform scope and authentic package delivery before any payment work. Keep Worker v50 untouched until a separate authorized security/deployment task.
+
+
+---
+
+# P0.52 — PR #95 merged, Pages deployment and live funnel revalidation — 2026-11-05T18:57Z
+
+## GitHub
+- Repository: `aveca/bot-wow`; default branch `main`.
+- PR #95 was squash-merged at `2026-11-05T18:55:44Z`.
+- Merge SHA / new main: `573cc1298223980eade0be67f5aba45af6716787`.
+- PR head: `f7c9ce5e32c60dc564f9ccf4ea9fdb4bd6c30696`.
+- Validate run `42079682256`: SUCCESS on the exact final PR head.
+- UI Quality run `42079682316`: SUCCESS on the exact final PR head; Playwright log confirms **164 passed, 0 failed**.
+- PR #95 changed 13 files. No Worker, payment logic, price, checkout rule, secret, binding, D1/R2 object or email behavior was changed.
+- Open PR count after merge: 16. Relevant remaining PRs: #90 (draft Mollie credential routing), #66 (draft compliance/pivot); #71 and #94 are already merged.
+
+## Cloudflare Pages
+- Canonical production deployment: `9f9e0e84-60dc-4d64-9b70-e01ab1ec40fc`.
+- Source branch: `main`; source commit: `573cc1298223980eade0be67f5aba45af6716787`.
+- Build SUCCESS; deploy SUCCESS at `2026-11-05T18:56:26Z`.
+- Production URL: `https://9f9e0e84.bot-wow.pages.dev`.
+- Previous deployment retained for rollback: `33468888-aee7-40d5-9ba6-c92a42204e68`.
+- Worker remains separate and unchanged.
+
+## Public crawl after deployment
+- Fresh web-reader output shows the new purchase-status copy on EN homepage, FR homepage, EN Buy, EN Modules and FR Modules.
+- The reader still returns old copy on FR Buy and EN/FR Comparison, including old buy/lifetime/Mollie labels. GitHub `main` source for all three files contains the new status copy and the successful Pages deployment identifies the exact merge SHA. The web reader does not expose raw response headers or a reliable cache-bypass path here; therefore the cause may be crawler cache or route/edge propagation and is **not yet determined**. Do not claim all public routes are independently verified live.
+- The deployment-specific `pages.dev` host was not readable by the web reader. No cache purge or DNS change was attempted.
+
+## New residual homepage defect found in the merged source
+- `index.html` and `fr/index.html` still contained the journey tab labels “Automate my fishing” / “Automatiser ma pêche”, plus a comparison row claiming “€20 lifetime — no renewal” / “20 € à vie — pas de renouvellement”.
+- These strings conflict with the current unavailable status and unnecessarily present the gameplay-automation action as an active CTA.
+- A targeted follow-up branch `fix/p0.52-homepage-residual-offer-claims-20261105` replaces them with neutral scope-discovery labels and a target-price/unavailable statement, and adds static regression assertions. No product behavior or checkout logic is changed.
+
+## D1 production — read-only
+- All queries returned `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5`, `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test rows: **0**; all five `paid` rows use `@example.com`.
+- Licences: 5; downloads: 5; deliveries: 0; activations: 0; webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent and no database row was written.
+
+## Analytics D1 — read-only, test=0
+- `page_view=1,826`; `journey_view=730`; `cta_click=48`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No payment-confirmed, conversion, delivery-sent or activation events.
+- These are event counts, not unique visitors or sessions.
+
+## Payment and Worker integrations
+- Mollie `ListProfiles`: one verified profile on a different domain; no BOT-WOW-specific profile. Do not reuse another activity's profile. No payment was created.
+- Active `botwow-api` remains Worker version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment.
+
+## Commercial and platform scope
+- Commercial paid sales verified: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Checkout remains closed; no package delivery or activation is recorded.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell it for Blizzard-operated services; third-party technical compatibility is not authorization.
+- No payment, email, price, checkout, secret, binding, Worker, D1/R2, DNS or cache mutation occurred in this run.
+
+## Next action
+1. Finish the targeted homepage residual-copy PR and validate it on GitHub Actions.
+2. Use Factory's real browser/HTTP tooling to verify all eight EN/FR routes against the new Pages deployment, including response status, final URL, ETag, Age, Cache-Control and CF-Cache-Status. Resolve the FR Buy and Comparison crawler discrepancy only after identifying cache vs route behavior.
+3. Keep checkout closed until commercial scope, package provenance, dedicated payment profile and end-to-end fulfillment are independently verified.
+
+
+## P0.52 PR publication — 2026-11-05T19:01Z
+
+- Follow-up PR: [#96 — remove residual unavailable-offer claims from homepage](https://github.com/aveca/bot-wow/pull/96).
+- Branch: `fix/p0.52-homepage-residual-offer-claims-20261105`; code/report head before this publication note: `ddb963a9fd314dc4671403dc11fc919a0694ba35`.
+- PR #96 currently contains 8 commits and 4 changed files: EN/FR homepage, release-availability regression tests, and this operational report.
+- No local Factory/npm result is claimed. Require Validate and UI Quality/Playwright SUCCESS on the exact final head before merge.
+- Static merge/deploy remains permitted only with the standing reversible-change authorization, verified rollback and no checkout/payment/Worker mutation.

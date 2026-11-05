@@ -406,5 +406,30 @@ for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html', 'c
   check(file + ' : le bouton de paiement reste désactivé', /id="buyBtn" disabled/.test(html));
 }
 
+
+// Residual homepage copy must not imply an available gameplay-automation offer.
+for (const item of [
+  {
+    file: 'index.html',
+    intent: /data-intent="fish">Explore the fishing scope<\/button>/i,
+    price: /<span class="v-val">€20 target price — unavailable<\/span>/i,
+    intro: /gameplay-automation offer is not available for purchase/i,
+    forbidden: /Automate my fishing|€20 lifetime — no renewal|really does today/i,
+  },
+  {
+    file: 'fr/index.html',
+    intent: /data-intent="fish">Découvrir le périmètre pêche<\/button>/i,
+    price: /<span class="v-val">20 € prix cible — achat indisponible<\/span>/i,
+    intro: /L’offre d’automatisation du gameplay n’est pas disponible à l’achat/i,
+    forbidden: /Automatiser ma pêche|20 € à vie — pas de renouvellement|fait réellement aujourd’hui/i,
+  },
+]) {
+  const html = read(item.file);
+  check(item.file + ' : onglet pêche neutre, pas une incitation à automatiser', item.intent.test(html));
+  check(item.file + ' : ancien prix à vie remplacé par un prix cible indisponible', item.price.test(html));
+  check(item.file + ' : introduction rappelle que l’offre est indisponible', item.intro.test(html));
+  check(item.file + ' : anciennes affirmations commerciales supprimées', !item.forbidden.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
