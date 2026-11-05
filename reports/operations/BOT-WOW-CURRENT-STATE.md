@@ -1815,3 +1815,10 @@ The current source provenance and self-contained installation onboarding remain 
 - The homepage EN/FR still said the licence was tied to the user's machine, which could imply a confirmed machine entitlement. It now says activation limits remain under verification. No entitlement or backend rule was changed.
 - Page commits: index.html bdfe8a9886ed9763ad2ad617eb0ae8d50a96cb6f; fr/index.html 74b7e9e25c970b1adf69443fc0127964cda048a7. Regression-test commit: 2afc9e4bd1d97c0be7e47a057243071f6564775d.
 - Branch head immediately before this report append: 2afc9e4bd1d97c0be7e47a057243071f6564775d. CI for this exact head had not yet appeared when this note was written.
+
+
+## P0.44 final copy check — package contents on homepage — 2026-11-05T09:45Z
+
+- Final review found one remaining unqualified homepage bullet claiming the add-on and packaged build included a SHA-256 manifest. It now states that these are intended components and the current archive/manifest are not verified.
+- Page commit: 4c354a566c67ee2f48dfcbc4af8bb1a534974909. Regression-test commit: 408f6595ec626c2e1a797269767f503b26ebddbb.
+- Branch head immediately before this report append: 408f6595ec626c2e1a797269767f503b26ebddbb. CI for this exact head had not yet appeared when this note was written.
