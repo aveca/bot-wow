@@ -1123,3 +1123,117 @@ Toutes les requêtes D1 de ce relevé sont des SELECT/PRAGMA : `changed_db=false
 ## Une prochaine action prioritaire
 
 Préparer un correctif Mollie minimal et isolé (distinction API Key vs token d'organisation, tests unitaires) sur une branche propre depuis ce main, en laissant la PR en draft. Ne pas le déployer et ne pas créer de paiement tant qu'un profil BOT-WOW dédié et une credential BOT-WOW ne sont pas disponibles. Ensuite seulement, préparer le test contrôlé de bout en bout et le déploiement Worker avec rollback, sous autorisation explicite.
+
+
+---
+
+# P0.33 — live funnel, platform-rules disclosure and clean Mollie successor — 2026-11-05
+
+## Current baseline
+
+Current `main` at the start of this cycle: `3786bcec75a22a4a4af2c968c83ad39263cb7958`.
+
+### D1 production — read-only, 2026-11-05
+
+Database query metadata confirms `changed_db=false` and `rows_written=0`.
+
+Orders:
+- `bitcoin_manual / paid`: 5 rows; all five email domains are `example.com` and are excluded as test data.
+- `bitcoin_manual / pending_payment`: 8.
+- `bitcoin_manual / rejected`: 1.
+- `mollie / failed`: 11.
+- Total orders: 25.
+
+Fulfillment tables:
+- Licenses: 5.
+- Download tokens: 5.
+- Deliveries: 0.
+- Activations: 0.
+- Webhook events: 16.
+- Webhook events without an order match using `webhook_events.id = 'payment:' || orders.provider_id`: 5.
+- Email records: 12.
+
+**Commercial paid orders verified in D1: 0; confirmed commercial revenue: €0.00.** The five `paid` Bitcoin rows are test-domain records, not sales. A download token is not proof of a completed download or delivery.
+
+Analytics (`test=0`, event counts, not unique visitors/sessions):
+- `page_view`: 1,630; latest observed 2026-11-05 00:05:37 UTC.
+- `journey_view`: 640.
+- `cta_click`: 48; latest 2026-11-04 02:47:00 UTC.
+- `checkout_requested`: 29.
+- `checkout_start`: 4.
+- `checkout_created`: 6.
+- `checkout_failed`: 6.
+- `planner_mode`: 1.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events in the queried production aggregate.
+
+### Mollie profile — read-only
+
+Latest `ListProfiles` returns one verified profile associated with a different domain. No BOT-WOW-dedicated profile is visible. Do not reuse the returned profile or its credentials. The previously documented individual check of the 16 BOT-WOW-referenced Mollie IDs remains 16/16 expired; this cycle did not create a payment or query another product's global payment registry.
+
+### Public site
+
+Direct web reads of `https://bot-wow.com/`, `/buy`, and `https://www.bot-wow.com/` show:
+- €20 one-time offer remains displayed.
+- v1.2.0 delivery is explicitly unverified.
+- Card checkout is unavailable and the purchase form is disabled.
+- The English copy still said “play on servers where it is allowed” and described third-party servers as a reference environment; this could imply that operator permission is sufficient.
+- The French `/fr/buy` page could not be retrieved by the web reader in this cycle. Its live HTML is therefore not confirmed.
+
+No live HTTP no-cache headers were available from the web reader. Do not claim a cache or origin defect without a direct response.
+
+## Platform-rules finding
+
+The live product is described as software that reads the game screen and clicks on fishing bites. Blizzard's published Anti-Cheating Agreement states that unauthorized third-party programs for botting or changing/facilitating gameplay are a serious violation. The EULA page reports a revision date of 2024-03-21; the Anti-Cheating Agreement search result reports last updated 2016-02-03.
+
+References:
+- https://www.blizzard.com/en-us/legal/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement
+- https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement
+
+This is a serious contractual/compliance blocker, not a legal opinion. BOT-WOW has no demonstrated Blizzard authorization. Do not promote the automated bot as permitted or safe. Technical compatibility with a third-party server does not itself establish authorization from Blizzard or other rights holders.
+
+## New code PR — Mollie credential-specific profileId
+
+PR #87: https://github.com/aveca/bot-wow/pull/87  
+Branch: `fix/p0.33-mollie-profileid-main-20261104`  
+Head: `c39157d5180752f03af9900fe7a5517dc576f591`.
+
+This is a clean successor to conflicting draft PR #77, based on current main. It changes only:
+- `worker/index.js`: omit `profileId` for standard `test_*` / `live_*` API keys; send it for organization/OAuth credentials.
+- `tests/payment-flow.test.mjs`: regressions for test API key, live API key and organization token on payment creation and webhook retrieval.
+
+GitHub Validate and UI quality workflows both succeeded. This is a payment-integration code change only on a draft PR; it is not merged or deployed. It does not solve the missing dedicated BOT-WOW profile or account separation. Keep it draft until the account operator confirms a dedicated profile/credential and explicitly authorizes a controlled payment test and production deployment.
+
+Official Mollie references:
+- https://docs.mollie.com/reference/authentication
+- https://docs.mollie.com/reference/create-payment
+
+## New public-copy PR — platform and payment disclosures
+
+PR #88: https://github.com/aveca/bot-wow/pull/88  
+Branch: `fix/p0.33-platform-compliance-copy-20261105`  
+Head: `4f0f6427861c62c552ac033223775f28d7cc5fdf`.
+
+Changes are limited to eight EN/FR pages and `tests/release-availability.test.mjs`:
+- state clearly that BOT-WOW has no Blizzard authorization and must not be used with Blizzard-operated services;
+- clarify that third-party technical compatibility is not authorization and operator permission alone is not sufficient evidence of rights-holder authorization;
+- remove “play on servers where it is allowed” / “within the rules of the server” wording;
+- replace “no network detection” with a technical-scope statement;
+- correct the FAQ so it no longer claims Mollie card checkout and a manual Bitcoin lane are currently available.
+
+At snapshot time, Validate and UI/Playwright workflows were still in progress. No local tests are claimed. This PR changes no price, checkout rule, Worker, credential, D1, R2, email or production configuration. If both workflows pass and the diff remains limited to these reversible copy/test changes, it is eligible for the repository's normal safe merge/deploy procedure with a Pages rollback available.
+
+## Production changes
+
+None in this cycle:
+- no Worker deployment;
+- no Pages deployment;
+- no checkout/payment change;
+- no secret or binding change;
+- no D1 writes;
+- no R2 writes;
+- no payment creation;
+- no customer email.
+
+## Next action
+
+Finish PR #88 CI and publish the corrected EN/FR disclosure if all checks pass; keep PR #87 and all payment/Worker production changes blocked until a dedicated BOT-WOW Mollie profile/credential and explicit production-test authorization exist. Do not start paid acquisition for the automated bot while the platform-rules blocker remains unresolved.
