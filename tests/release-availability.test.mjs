@@ -277,5 +277,32 @@ check('fr/index.html : renvoi de licence explicitement non confirmé',
 check('fr/index.html : aucune promesse de licence réexpédiée sur demande',
   !/(?:clé|licence) réexpédiée sur demande/i.test(frHomeCopy));
 
+
+
+// Licence and FAQ claims must remain aligned with the currently unverified
+// activation, recovery and delivery state. Cover both language variants and
+// the standalone licence documentation.
+const licenceTruthCases = [
+  ['docs/license.html', /Activation terms are under verification/i, /public checkout is closed/i,
+    /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
+  ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
+    /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
+  ['faq.html', /offer is not currently available for purchase/i, /Activation limits are not confirmed/i,
+    /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
+  ['fr/faq.html', /offre n'est pas actuellement disponible à l'achat/i, /limites d'activation ne sont pas confirmées/i,
+    /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
+];
+for (const [file, availability, activation, stale] of licenceTruthCases) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : disponibilité commerciale explicitement fermée', availability.test(flat));
+  check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
+  check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
+}
+const frHomeCopy = read('fr/index.html').replace(/\s+/g, ' ');
+check('fr/index.html : renvoi de licence explicitement non confirmé',
+  /modalités de récupération ou de renvoi d'une licence ne sont pas confirmées/i.test(frHomeCopy));
+check('fr/index.html : aucune promesse de licence réexpédiée sur demande',
+  !/(?:clé|licence) réexpédiée sur demande/i.test(frHomeCopy));
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
