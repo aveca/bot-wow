@@ -229,5 +229,13 @@ for (const [file, disclosure, stale] of [
   check(file + ' : aucune promesse de machine non réconciliée', !stale.test(flat));
 }
 
+
+for (const [file, staleLabel] of [
+  ['index.html', /The Casin[oa]babe addon/i],
+  ['fr/index.html', /L'addon Casin[oa]babe/i],
+]) {
+  check(file + ' : aucune étiquette de composant sous un autre nom de produit', !staleLabel.test(read(file)));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
