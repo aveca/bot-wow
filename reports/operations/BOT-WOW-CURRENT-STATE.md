@@ -1919,3 +1919,61 @@ All queries returned `changed_db=false`, `rows_written=0`.
 4. Only revisit R2/Mollie/payment once there is a commercially authorized, deliverable product scope.
 
 No local Factory/npm/Playwright execution is claimed in this connector-only run.
+
+
+---
+
+# P0.49 — targeted copy, licence and responsive corrections — 2026-11-05T15:55Z
+
+## GitHub / PR
+- Main remains `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- PR #94 remains OPEN, base main, branch `fix/p0.40-modules-product-truth-20261105`; latest known head after this report update: `0b8370cfe861ada7d95cdb2b2b5357b6f488a270`.
+- PR #94 contains 15 changed files; no merge occurred.
+- PR #71 remains merged (merge SHA `084e2bd3785526835e678f70b77699a8f838d16a`).
+
+## Changes made on PR #94 branch through GitHub contents API
+- `fr/index.html`: removed the unverified French licence re-send promise and replaced it with an explicit non-confirmation.
+- `docs/license.html` and `docs/fr/license.html`: removed one-machine, fingerprint, machine-change, reactivation and key-re-send guarantees; now state that activation/recovery terms are unverified and checkout is closed.
+- `faq.html` and `fr/faq.html`: removed one-machine entitlement and guaranteed key resend; the €20 amount is described only as the intended price, not as an available offer.
+- `tests/release-availability.test.mjs`: added regression assertions for both licence documents, both FAQs and the French homepage.
+- `assets/components.css`: added a narrow-screen layout for the Modules status bands: wrap the badge/descriptor, hide only the decorative divider, and allow the descriptor to wrap.
+- `tests/e2e/demo-quality.spec.mjs`: the overflow assertion now includes the top overflowing DOM elements in its failure message; the viewport threshold remains unchanged.
+
+## CI findings and correction
+- Previous run on head `491132fb06fc1bfdd780ce437acc08e7b3590413`: Validate and UI Quality both failed.
+- Exact Validate/UI failure: `SyntaxError: Identifier 'licenceTruthCases' has already been declared` in `tests/release-availability.test.mjs`.
+- Cause: the same regression block was appended twice. The duplicate block was removed in commit `0b8370cfe861ada7d95cdb2b2b5357b6f488a270`.
+- The latest CI run for the corrected head had not appeared at the time of this report. The earlier Playwright overflow evidence remains 156 passed / 2 failed at 391px (EN scrollWidth 481px; FR 534px). The new CSS fix is not yet certified until the new UI workflow passes.
+- No local Factory/npm execution is claimed; CI is the actual test runner used in this connector-only cycle.
+
+## Production / Pages
+- Latest Cloudflare Pages production deployment remains `845e3e10-e05a-4a68-805a-65971a61add5`, source main commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, deploy SUCCESS at `2026-11-05T06:30:21Z`.
+- PR #94 is not deployed.
+- A fresh web crawl of `https://bot-wow.com/buy` still shows the old add-on/manifest and one-machine/key-resend claims while the checkout notice says delivery is unverified and checkout is unavailable. The crawler output is not a raw HTTP/header capture; source and Pages deployment evidence remain authoritative for deployment identity.
+- The public buy page explicitly says not to purchase until delivery is confirmed; no checkout was attempted.
+
+## Worker / integrations
+- Active Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment.
+- Mollie `ListProfiles`: one verified profile exists on a non-BOT-WOW domain; no BOT-WOW-specific profile. No payment created.
+
+## D1 production — fresh read-only query
+- Every query returned `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual paid 5 (all test-domain); pending 8 (7 other-domain, 1 test-domain); rejected 1 (test-domain); Mollie failed 11 (10 other-domain, 1 test-domain).
+- Licences: 5 active, each `max_activations=2`; this does not establish a two-device entitlement.
+- Deliveries: 0 rows. Activations: 0. Webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent.
+
+## Analytics — fresh read-only query, test=0
+- `page_view`: 1,789; latest timestamp `1793892111648` ms.
+- `journey_view`: 711; latest timestamp `1793892111653` ms.
+- `cta_click`: 48; last recorded `2026-11-04T02:47:00.736Z`.
+- `checkout_requested`: 29; `checkout_start`: 4; `checkout_created`: 6; `checkout_failed`: 6.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique visitors or sessions.
+
+## Commercial status
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Checkout remains closed. No price, checkout rule, payment, email, secret, binding, Worker, DNS, D1/R2 or production mutation occurred.
+- No applicable authorization for distributing/promoting the current gameplay-automation product is documented. This is a platform-contract risk, not a legal opinion.
+- Next: inspect CI for head `0b8370c`; fix any test failures; confirm whether the mobile band CSS resolves the two overflow cases; only then consider static merge/deployment under the existing policy and rollback. Keep checkout and Worker untouched.
