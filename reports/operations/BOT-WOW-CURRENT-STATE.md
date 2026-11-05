@@ -1800,3 +1800,11 @@ The current source provenance and self-contained installation onboarding remain 
 2. Once all required checks are SUCCESS and the head is unchanged, merge PR #94 by squash under the user's standing authorization for reversible, non-sensitive static changes; the prior production deployment 845e3e10-e05a-4a68-805a-65971a61add5 is the rollback reference.
 3. Verify Cloudflare Pages production and EN/FR homepage, Modules and Buy pages after merge. Do not change checkout, price, Worker, payment credentials, D1/R2, email or platform-compliance scope.
 4. Keep the checkout closed until package provenance/readability, authorization scope, dedicated payment profile and end-to-end fulfillment are independently verified.
+
+
+## P0.44 follow-up — homepage naming consistency — 2026-11-05T09:44Z
+
+- The homepage EN/FR still named the fishing add-on after a separate product brand, even though the offer is BOT-WOW. The intended component remains unverified, so the public copy now calls it a fishing add-on and explicitly says its presence in the current archive is unverified.
+- The homepage EN/FR changes are in commits 391c454d6d70907dabef6b41bea9b9ca6948c7ca and b52c76684559b77ad9aa60ce1c5142d9148cf149. Regression coverage was added in b90792236f67acc82954b81ecea24360c2e5e774.
+- The branch head immediately before this report append was b90792236f67acc82954b81ecea24360c2e5e774. Validate and UI quality workflows were queued/in progress; no result is claimed here.
+- No product, price, checkout, payment, Worker, D1, R2, DNS, cache or email configuration was changed.
