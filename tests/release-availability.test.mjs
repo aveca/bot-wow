@@ -196,5 +196,38 @@ check('PRODUCT.md : compatibilité limitée à Classic 1.13', /WoW Classic 1\.13
 check('PRODUCT.md : compatibilité tierce ne vaut pas autorisation', /sans autorisation implicite/i.test(productFlat));
 check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut de configuration à 2 activations/i.test(productFlat));
 
+
+// Public offer copy must not claim an unverified archive component or entitlement.
+for (const [file, componentDisclosure, activationDisclosure, staleComponent, staleActivation] of [
+  ['buy.html',
+    /presence in the current v1\.2\.0 archive and its per-file SHA-256 manifest have not been verified/i,
+    /Activation terms under verification/i,
+    /The Casinobabe addon|shipped with a SHA-256 manifest per file/i,
+    /Activation on one machine|One machine activation|A licence activates on one machine/i],
+  ['fr/buy.html',
+    /présence dans l'archive v1\.2\.0 actuelle et son manifeste SHA-256 par fichier ne sont pas vérifiés/i,
+    /Conditions d'activation en cours de vérification/i,
+    /L'addon Casinobabe|livré avec un manifeste SHA-256 par fichier/i,
+    /Activation sur une machine|Une activation sur une machine|Une licence active une machine/i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : composant d’archive et manifeste non vérifiés', componentDisclosure.test(flat));
+  check(file + ' : aucun nom de produit tiers présenté comme composant livré', !staleComponent.test(flat));
+  check(file + ' : entitlement machine explicitement non confirmé', activationDisclosure.test(flat));
+  check(file + ' : aucune promesse de limite machine non réconciliée', !staleActivation.test(flat));
+}
+for (const [file, disclosure, stale] of [
+  ['index.html',
+    /Activation terms are under verification; machine limits and licence re-sends are not currently confirmed/i,
+    /Activation on one machine|One machine activation|licence re-sent on request/i],
+  ['fr/index.html',
+    /Les conditions d'activation sont en cours de vérification ; les limites de machines et le renvoi de licence ne sont pas encore confirmés/i,
+    /Activation sur une machine|Une activation sur une machine|clé réexpédiée sur demande/i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : conditions d’activation non confirmées', disclosure.test(flat));
+  check(file + ' : aucune promesse de machine non réconciliée', !stale.test(flat));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
