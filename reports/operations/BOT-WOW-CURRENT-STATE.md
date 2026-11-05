@@ -2202,3 +2202,165 @@ No local Factory/npm/Playwright execution is claimed in this connector-only run.
 - PR #96 currently contains 8 commits and 4 changed files: EN/FR homepage, release-availability regression tests, and this operational report.
 - No local Factory/npm result is claimed. Require Validate and UI Quality/Playwright SUCCESS on the exact final head before merge.
 - Static merge/deploy remains permitted only with the standing reversible-change authorization, verified rollback and no checkout/payment/Worker mutation.
+
+
+---
+
+# P0.54 — residual purchase CTAs and unsupported delivery claims found on secondary routes — 2026-11-05T20:27Z
+
+## GitHub / Pages baseline
+- Repository: `aveca/bot-wow`; exact `main`: `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- PR #96 is merged into this main. The latest Pages production deployment is `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, created `2026-11-05T19:36:35Z`; build and deploy stages both SUCCESS. Its source branch is `main` and source commit exactly matches `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- Pages project `bot-wow`: production branch `main`; build `node scripts/build-site.mjs _site`; output `_site`; build cache disabled; preview deployments disabled. Both custom domains `bot-wow.com` and `www.bot-wow.com` are ACTIVE and aliases of the same deployment.
+- Previous production deployment retained as rollback: `9f9e0e84-60dc-4d64-9b70-e01ab1ec40fc`.
+- Public live checks on 2026-11-05 show the current status copy on Home EN/FR, Buy EN/FR, Compare EN/FR and Modules EN/FR. The reader resolves `buy.html` to `/buy` and `fr/buy.html` to `/fr/buy`; both forms state checkout unavailable and are disabled. Compare pages label €20 as a target price and purchase unavailable. Modules pages state that the internal registry is not proof of a downloadable product. Public references: https://www.bot-wow.com/ ; https://bot-wow.com/buy.html ; https://bot-wow.com/fr/buy.html ; https://bot-wow.com/compare.html ; https://bot-wow.com/fr/compare.html ; https://bot-wow.com/modules.html ; https://bot-wow.com/fr/modules.html .
+- Direct public homepage crawl on www and apex is now consistent with the merged status copy. Earlier stale search-index excerpts are not proof of a current live route mismatch; no cache purge or DNS change was attempted.
+
+## Newly verified residual copy defects in current main
+These are source-level facts on the exact main SHA, not assumptions about crawler cache:
+
+- `demo.html` and `fr/demo.html`: header CTA still says Buy/Acheter; demo-close CTA says “Get the lifetime licence — €20” / “Prendre la licence à vie — 20 €”; mobile bar still says “One-time · lifetime licence” / “Paiement unique · licence à vie”; intro says to inspect the planner “before you buy”.
+- `features.html` and `fr/features.html`: header Buy/Acheter CTA remains. The licence/delivery feature still states machine-locked keys, a manual Bitcoin rail and Mollie card checkout, despite the current closed checkout and absence of a dedicated BOT-WOW Mollie profile.
+- `getting-started.html` and `fr/getting-started.html`: header Buy/Acheter CTA remains; the page promises a post-payment ZIP and licence key, one-machine activation and key re-sending. Those entitlements and delivery are not verified.
+- `fishing.html`, `fr/fishing.html`, `faq.html`, `fr/faq.html`, `compatibility.html`, `fr/compatibility.html`, `roadmap.html`, `fr/roadmap.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor rather than the purchase-status route.
+- `success.html` and `fr/success.html`: header Buy/Acheter CTA remains; FR page title says “Commande confirmée”; both pages describe licence-key and download-link email delivery even though no verified delivery exists. The English body correctly warns that the page alone does not confirm payment, but the title/next-step copy still overstates the state.
+- `docs/install.html`, `docs/fr/install.html`, `docs/license.html`, `docs/fr/license.html`, `docs/index.html`, `docs/fr/index.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor.
+
+## Persistent tracker
+- Created GitHub issue [#97 — align all secondary EN/FR routes with closed checkout and unverified delivery](https://github.com/aveca/bot-wow/issues/97).
+- Required scope: neutral purchase-status links across all affected pages; remove unsupported Mollie/Bitcoin/machine-lock/lifetime/email-delivery promises; make getting-started and success pages explicitly conditional; extend `tests/release-availability.test.mjs` to scan the complete affected EN/FR route set.
+- The issue is static copy + regression tests only. No checkout, payment, price, Worker, secrets, bindings, D1/R2, email, DNS, cache or production payment changes.
+
+## D1 production — read-only, 2026-11-05T20:20Z
+- All SQL statements were SELECT-only; every result reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (stored sum 10,000 minor units), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test orders: **0**; all five paid rows use `@example.com`. Do not count their stored amounts as revenue.
+- Licences: 5 (all active); total configured activation slots 10, but this does not prove a customer entitlement. Activations: 0.
+- Deliveries: 0 rows. Webhook event records: 16. Email contacts: 12; confirmed: 0; marketing-consent flag count: 9. No email was sent and no production row was written.
+- No customer payment or commercial sale is confirmed.
+
+## Analytics D1 — read-only, `test=0`, 2026-11-05T20:20Z
+- `page_view=1,840`; latest page event `2026-11-05T19:38:27.389Z`.
+- `journey_view=737`; latest `2026-11-05T19:38:24.483Z`.
+- `cta_click=48`; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique users or sessions. Page/journey views increased; no new CTA click is recorded after the previous snapshot.
+
+## Worker / Mollie
+- Active Worker `botwow-api`: latest deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic; no new deployment.
+- Mollie profile listing still shows no BOT-WOW-specific profile. Do not reuse a profile from another activity. No payment was created.
+- PR #90 remains DRAFT and is based on stale main `218f0eb`; PR #66 remains DRAFT and non-mergeable against an older base. Neither is ready to merge or deploy.
+
+## Commercial decision
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Public checkout remains closed. No verified customer package delivery or activation.
+- No applicable authorization for the current WoW gameplay-automation scope is documented. Do not promote or sell that scope for Blizzard-operated services. Third-party technical compatibility is not authorization.
+- No payment, email, price, checkout, Worker, secret, binding, D1/R2, DNS, cache or production mutation occurred in this cycle.
+
+## Next action
+1. Execute issue #97 on a dedicated branch in the local Factory/OpenCode environment: correct the residual EN/FR buy CTAs and unsupported payment/delivery/activation copy on all listed routes, and extend the existing release-availability test.
+2. Run `npm run validate`, `npm test`, `npm run test:e2e`, `node scripts/build-site.mjs _site` and `git diff --check` for real; require Validate and UI Quality green on the exact final SHA.
+3. Merge/deploy only the reversible static copy/test change after full diff inspection and green CI; verify the Pages source commit and all affected live routes. No checkout, payment or Worker change.
+4. Keep the commercial decision at NO-GO until the product scope is authorized, package provenance is reproducible, a dedicated payment profile exists, and post-payment delivery is independently verified.
+
+
+---
+
+# P0.55 — deployed Worker v50 diverges from main; email delivery remains a stub — 2026-11-05T20:34Z
+
+## Active Worker / custom domain — directly verified
+- Worker: `botwow-api`; active deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`; version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`; 100% traffic.
+- Custom domain `api.bot-wow.com` is enabled in production and mapped to service `botwow-api`.
+- Downloaded deployed Worker script read-only. It contains a legacy `handleLanding` handler for GET requests outside `/api/`, including generated SEO routes `/bot-wow-gold`, `/bot-wow-classic`, `/best-wow-bot`, `/bot-wow-gratuit`. Embedded EN/FR strings still promote automated gold/XP/items/battlegrounds, a lifetime €20 Bitcoin licence, private-server compatibility and “humanized” behavior.
+- The browser/web reader could not retrieve the API hostname, so the exact response body of those paths was not independently browser-verified. The enabled custom-domain mapping plus the deployed fetch-handler code prove that non-API GET requests are routed to this Worker handler.
+- Current `main/worker/index.js` (blob `725d98e4595b27aa60e88758ecac20c711a38b6b`) no longer contains `handleLanding`; active Worker v50 is materially stale relative to main.
+
+## Download artifact discrepancy
+- Deployed v50 tries the configured `R2_OBJECT_KEY`, then `casinobabe-fishing-1.2.0.zip`, then falls back to `Casinobabe-v1.0.38.zip`.
+- Its response `Content-Disposition` is always `Casinobabe-v1.0.38.zip`, even when another candidate is selected.
+- Current main source has already removed fallback behavior: it validates a single configured versioned key and returns `artifact_unavailable` when that object is missing. That safer code is not deployed to v50.
+- No R2 object read or mutation occurred in this cycle; actual archive existence and SHA-256 remain unverified.
+
+## Delivery email — implementation exists; live send remains unverified
+- The legacy helper named `sendDeliveryEmail` is a log-only stub, but it is not the active delivery path.
+- Both current `main/worker/index.js` and the deployed v50 bundle contain `sendDeliveryEmail2` and `sendEmail2`; the latter issues a POST to `https://api.resend.com/emails` when `RESEND_API_KEY` is configured.
+- Active Worker settings expose the `RESEND_API_KEY` secret binding name and `MAIL_FROM` sender setting. Secret values remain masked and were not read, printed or changed.
+- Webhook and resend paths call `sendDeliveryEmail2`. The presence of code and a binding does not prove a successful provider send.
+- D1 SELECT-only shows 0 delivery rows; there are also 0 verified non-test paid orders. This proves no recorded delivery, not that email sending is unimplemented. No test email was sent.
+- Correct status: delivery-email implementation is present; effective credential validity and a successful production send remain unverified.
+
+## Effective checkout gate — unknown, not assumed closed server-side
+- Worker settings contain a `RELEASE_STATUS` `secret_text` binding. The value is masked and was not read or exposed.
+- Deployed code defaults to `pending`, but `env.RELEASE_STATUS` overrides the default; `confirmed` permits checkout creation.
+- The effective value cannot be verified through the read-only settings endpoint. No valid checkout request was sent because it could create a real payment.
+- Public Pages checkout UI is closed, but that alone does not prove the Worker-side gate's effective value.
+
+## Mollie
+- `ListProfiles`: one profile only; no BOT-WOW-specific profile.
+- `ListWebhooks`: one live webhook only, targeting a different domain; no BOT-WOW webhook was returned.
+- Worker secret binding names exist, but masked values do not prove correct profile/webhook configuration. Do not reuse another activity's profile.
+
+## Persistent tracker / safety
+- Created issue [#99 — reconcile stale Worker, remove legacy landing route and verify fail-closed delivery](https://github.com/aveca/bot-wow/issues/99).
+- Required work: prepare a focused Worker PR to remove the legacy landing handler, preserve current-main single-artifact behavior, remove old-version fallback, fix download-quota ordering, and add regression tests. Document the missing email provider without enabling sends.
+- No Worker deployment, secret change, payment, valid checkout probe, email, D1 write, R2 read/write, DNS or cache mutation occurred.
+- Worker deployment, secret changes, payment rules and email sending remain blocked pending explicit authorization. Keep the public checkout closed.
+
+## Updated next priorities
+1. P0 — issue #99: prepare/test Worker source reconciliation; do not deploy or change secrets.
+2. P0 — issue #97: remove residual purchase CTAs and unsupported payment/delivery claims across secondary EN/FR pages.
+3. P1 — verify the exact package bytes/version/SHA through an authorized R2 read path.
+4. P1 — obtain a dedicated BOT-WOW Mollie profile and webhook only after the product scope is authorized and fulfillment is ready.
+5. P1 — implement delivery email only after a separately authorized, controlled test-send procedure.
+
+
+
+---
+
+# P0.56 — fresh verification corrects the email finding and reconfirms production state — 2026-11-05T21:53Z
+
+## GitHub / PR state
+- Exact `main` remains `0bba14dffbfb239f7368ff632d084a5a6449bc12`; no newer main commit was returned.
+- PR #98 changes only this operational report. Its head `c2b58ca7ad1fa1ef1e618d058d6ddd1fc3477059` has Validate run `42104599878` SUCCESS and UI Quality run `42104599841` SUCCESS on the same SHA.
+- Issues #97 and #99 remain open. PR #90 and #66 remain drafts; neither was merged.
+
+## Cloudflare production
+- Pages production deployment remains `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, source commit `0bba14dffbfb239f7368ff632d084a5a6449bc12`, deploy stage SUCCESS. No new Pages deployment occurred.
+- Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% traffic. Its custom domain `api.bot-wow.com` is enabled.
+- Read-only Worker settings show binding names `RELEASE_STATUS` and `RESEND_API_KEY` as secret_text, plus `MAIL_FROM` and `R2_OBJECT_KEY=casinobabe-fishing-1.2.0.zip`. No secret value was read or exposed.
+- Downloaded active Worker script read-only. It still contains `handleLanding` and legacy SEO routes. Its download candidate list contains the configured object, `casinababe-fishing-1.2.0.zip`, and `Casinababe-v1.0.38.zip`; the response filename is hard-coded to the v1.0.38 name. This confirms the stale fallback/filename defect in v50. Current main has the single configured-object path and uses the actual object key as the response filename.
+
+## Important correction — email implementation
+- The previous P0.55 report incorrectly concluded that delivery email was not implemented by inspecting only the legacy `sendDeliveryEmail` stub.
+- Current main and deployed v50 also contain the active `sendDeliveryEmail2` → `sendEmail2` path. `sendEmail2` POSTs to Resend's `/emails` endpoint when `RESEND_API_KEY` is configured.
+- Worker settings expose the secret binding name `RESEND_API_KEY`; its value is masked and was not read or changed. The source contains a real provider integration, but credential validity and successful production sending are not verified.
+- The active webhook/resend paths call `sendDeliveryEmail2`, not the legacy stub. D1 currently records 0 delivery rows and 0 verified non-test paid orders. No test email was sent.
+- Correct conclusion: email delivery code exists; a real successful delivery is not evidenced. Do not describe the provider integration as absent.
+
+## Read-only production data — 2026-11-05T21:53Z
+- D1 production queries were SELECT-only; every query reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (all five emails are `@example.com`, amount sum 10,000 minor units is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`. Paid non-test orders: 0; paid non-test amount: 0.
+- Licences: 5 active; downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
+- Email table `botwow_emails`: 12 rows, 0 confirmed, 9 marketing-consent flags, 7 transactional-consent flags. No email was sent during this check.
+- Analytics events with `test=0`: page_view 1,856; journey_view 739; cta_click 48; checkout_requested 29; checkout_start 4; checkout_created 6; checkout_failed 6. No payment_confirmed, conversion, delivery_sent or activation events. These are event counts, not unique visitors.
+
+## Mollie
+- Live `ListProfiles`: one verified profile for `https://sargasses-martinique.com/`; no BOT-WOW-specific profile.
+- Live `ListWebhooks`: one enabled webhook targeting `https://sargasses-martinique.com/api/mollie-webhook.php`; no BOT-WOW webhook.
+- No payment was created and no other activity's profile was reused.
+
+## Live site limitation
+- Direct web-reader opens for the eight secondary routes failed in this run. Source-level copy defects remain confirmed by the current main files; live HTTP body and headers for those routes were not independently retrieved. Do not claim live correction.
+
+## Safety / commercial state
+- `RELEASE_STATUS` is a masked secret binding. Code defaults to `pending` and allows checkout only when the effective value is exactly `confirmed`; the effective value remains unknown. No valid checkout probe was sent.
+- Public checkout remains closed. Verified commercial sales: 0. Confirmed commercial revenue: €0.00.
+- No Worker deploy, secret change, payment, email send, D1/R2 mutation, DNS change or cache purge occurred.
+
+## Next action
+1. Correct this report and issue #99 so the email integration is accurately described.
+2. Execute issue #97 as a static EN/FR copy/test PR; keep checkout and Worker unchanged.
+3. Prepare, but do not deploy, a Worker reconciliation for the confirmed legacy landing and old-archive fallback. Worker deployment requires separate explicit authorization.
+4. Verify package bytes/provenance and the effective release gate through authorized non-disclosing paths before any sales enablement.
