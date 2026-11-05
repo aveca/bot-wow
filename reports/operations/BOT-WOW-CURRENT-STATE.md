@@ -1257,3 +1257,12 @@ Finish PR #88 CI and publish the corrected EN/FR disclosure if all checks pass; 
 ### Next action
 
 Finish PR #88 UI/Playwright on the exact latest head. If green, squash-merge the reversible copy/test correction and verify the resulting Pages production deployment plus EN/FR live pages. Keep PR #87 draft and the Worker untouched until a dedicated BOT-WOW Mollie profile/credential and explicit payment-production authorization exist.
+
+
+### P0.33 final head correction — 2026-11-05
+
+- PR #88 latest head is now `c3069f0f011f86f84c432daeb336a815bf53989e` (after localizing the Blizzard anti-cheating source link on all four French pages and qualifying the metadata wording as “not documented” rather than asserting an unverified absolute).
+- Latest Validate run on this exact head: SUCCESS — https://github.com/aveca/bot-wow/actions/runs/41943517766.
+- Latest UI quality run on this exact head: still IN_PROGRESS at the time of this note — https://github.com/aveca/bot-wow/actions/runs/41943517802. Its unit/integration tests, CSS audit, build and Chromium installation have passed; real-browser Playwright is the remaining step.
+- Static branch inspection confirms the old “play on servers where it is allowed” / “within the rules of the server” wording is absent from all eight updated EN/FR pages. All eight now contain the platform warning; the four French pages link to Blizzard's French Charte anti-triche.
+- PR #77 is closed; PR #87 is the clean draft successor and both its Validate and UI/Playwright workflows passed. No production payment change has been made.
