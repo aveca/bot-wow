@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Registre des modules — ce qui est réel, ce qui vient, ce qui n'arrivera pas · BOT-WOW</title>
-<meta name="description" content="Le registre des modules BOT-WOW : un module disponible (Pêche), trois en développement (Navigation, Inventaire & vendeur, Récupération), quatre planifiés. Chaque statut est adossé à des tests ré-exécutables. Aucune fonction inventée.">
+<meta name="description" content="Registre technique uniquement. Le statut interne de la pêche ne prouve pas qu'un paquet est téléchargeable ; provenance, disponibilité du paquet et livraison après paiement ne sont pas vérifiées. Le paiement est fermé.">
 <meta name="theme-color" content="#05070f">
 <link rel="canonical" href="https://bot-wow.com/fr/modules.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/modules.html">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BOT-WOW">
 <meta property="og:title" content="BOT-WOW — registre des modules, statuts honnêtes">
-<meta property="og:description" content="Un module disponible, trois en développement, quatre planifiés — chaque statut adossé à des tests ré-exécutables.">
+<meta property="og:description" content="Registre technique uniquement : paquet v1.2.0 et livraison après paiement non vérifiés. Paiement fermé.">
 <meta property="og:url" content="https://bot-wow.com/fr/modules.html">
 <link rel="icon" href="../assets/favicon.svg?v=cb3925b6" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,8 +24,7 @@
 <body>
 
 <div class="topbar">
-  <div class="w"><span><b>v1.2.0</b> version actuelle</span><span>Windows 10/11 · Python 3.11+</span>
-    <span>Registre généré depuis le dépôt du bot</span><span>Paiement pris en charge par Mollie</span></div>
+  <div class="w"><span><b>v1.2.0</b> livraison non vérifiée</span><span>Windows 10/11 · Python 3.11+</span><span>Registre technique uniquement</span><span>Paiement fermé — aucun moyen disponible</span></div>
 </div>
 
 <nav>
@@ -46,7 +45,7 @@
     </div>
     <div class="nav-right">
       <div class="langs"><a href="../">EN</a><a class="on" href="./modules.html">FR</a></div>
-      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./#offre" data-track="cta_click" data-cta-id="nav-buy">Acheter — 20,00 €</a>
+      <a class="btn btn-gold" style="padding:10px 18px;font-size:13.5px" href="./buy.html">Statut de l'achat</a>
     </div>
   </div>
 </nav>
@@ -56,17 +55,20 @@
   <div class="w">
     <h1 class="h2" style="max-width:20ch">Ce qui est réel, ce qui vient, ce qui n'arrivera pas.</h1>
     <p class="lead" style="max-width:70ch">
-      Cette page est le contrat du produit. La pêche est disponible et couverte par la licence ;
-      trois rôles sont en développement avec du code réel et testé ; quatre autres sont planifiés
-      et clairement marqués « conception seulement ». <strong style="color:var(--txt)">Un statut
-      ne vaut que par les tests derrière lui.</strong>
+      Cette page décrit un registre technique interne, pas une offre commercialement disponible.
+      Le registre marque la pêche comme disponible, mais les chemins source et tests qu'il référence
+      sont absents de cette version du dépôt. L'archive v1.2.0 n'est pas récupérable actuellement
+      depuis le stockage de livraison et la livraison après paiement n'est pas certifiée.
+      Le paiement est fermé. Trois rôles sont en développement et quatre sont planifiés.
+      <strong style="color:var(--txt)">Un statut de registre ne prouve pas qu'un produit est téléchargeable.</strong>
     </p>
     <p class="honest-note" style="margin-inline:0;max-width:72ch">
-      Registre <span class="mono">v1.2.0</span> — 1 disponible · 3 en développement · 4 planifiés.
-      Source de vérité : <span class="mono">Casinobabe/scripts/botwow_modules.py</span>, exporté vers
-      <span class="mono">assets/modules.json</span> et vérifié à l'octet près à chaque build par
-      <span class="mono">npm test</span> (modules-parity). L'export est déterministe : pas de dates
-      inventées, pas de compteurs décoratifs.
+      Instantané du registre interne <span class="mono">v1.2.0</span> — la pêche porte le statut
+      <span class="mono">available</span> dans <span class="mono">assets/modules.json</span> ;
+      3 modules sont en développement et 4 sont planifiés. Les chemins source/tests référencés
+      sont absents de cette version du dépôt. Le test de parité Python facultatif est ignoré
+      lorsque la source externe est absente. Cette page ne prouve ni la provenance du paquet,
+      ni sa lisibilité dans R2, ni l'ouverture du paiement, ni la livraison client.
     </p>
   </div>
 </section>
@@ -74,21 +76,23 @@
 <!-- ====================================================== DISPONIBLE -->
 <section class="pad" style="padding-top:34px">
   <div class="w">
-    <div class="band"><span class="st st-ok"><i></i>Disponible</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">implémenté · testé · preuves</span></div>
+    <div class="band"><span class="st st-no"><i></i>Statut du registre : disponible (non vérifié)</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">distribution et source non vérifiées</span></div>
 
     <div class="modrow">
       <div class="m-main">
         <h3>Pêche — assistant + rondes optimisées</h3>
-        <p class="m-desc">Le noyau qui fonctionne : détection mesurée du flotteur, mémoire
-          persistante des spots, planificateur à parité vérifiée, mode arrière-plan, arrêt F9.</p>
+        <p class="m-desc">Le registre interne décrit un noyau de pêche avec détection du flotteur,
+          mémoire des spots, planification de rondes, mode arrière-plan et arrêt F9. Les chemins
+          source référencés par ce registre sont absents de cette version du dépôt : ces capacités
+          n'ont donc pas été réexécutées indépendamment ici et ne prouvent pas que la livraison est prête.</p>
         <div class="mod">
           <div class="mod-col has">
-            <div class="mod-label">Livré et vérifié</div>
+            <div class="mod-label">Capacités rapportées par le registre — non revérifiées ici</div>
             <ul>
-              <li>Cycle lancer → touche → prise instrumenté (médiane mesurée 308 ms)</li>
-              <li>Mémoire persistante des spots (migrations, écritures atomiques, export/import)</li>
-              <li>Planificateur : plus proche voisin + 2-opt sur coûts mesurés ; 3 modes</li>
-              <li>Capture d'arrière-plan Windows (PrintWindow) et clics par messages</li>
+              <li>Historique du registre : cycle lancer → touche → prise ; médiane journalisée 308 ms, non revérifiée dans cette version du dépôt</li>
+              <li>Registre : mémoire persistante des spots (migrations, écritures atomiques, export/import) ; source absente ici</li>
+              <li>Registre : planificateur plus proche voisin + 2-opt à trois modes ; source absente ici</li>
+              <li>Registre : capture d'arrière-plan Windows et clics par messages ; non revérifiés ici</li>
             </ul>
           </div>
           <div class="mod-col dep">
@@ -100,10 +104,10 @@
           </div>
         </div>
         <p class="mono" style="margin:10px 0 0;font-size:11.5px;color:var(--mut2)">
-          suites : python tests/fishing_bot_test.py · node tests/run-fishing-harness.mjs
-          &nbsp;|&nbsp; fichiers : scripts/fishing_bot.py · scripts/fishing_memory.py</p>
+          Les chemins source/tests référencés sont absents de cette version du dépôt ; la
+          provenance et la reproduction indépendante du paquet restent non vérifiées.</p>
       </div>
-      <div class="m-status"><span class="st st-ok"><i></i>Disponible</span></div>
+      <div class="m-status"><span class="st st-no"><i></i>Distribution non vérifiée</span></div>
     </div>
   </div>
 </section>
@@ -262,13 +266,13 @@
 <section class="pad final">
   <div class="w">
     <h2 class="h2">Tenez le registre à sa propre règle</h2>
-    <p class="lead" style="max-width:64ch">Chaque mention « livré » de cette page correspond à un
-      fichier et à une suite de tests que vous pouvez ré-exécuter. Si une mention cesse de
-      correspondre au code, le registre est en tort — dites-le :
-      <a class="foot-mail" href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a></p>
+    <p class="lead" style="max-width:64ch">Ce registre est un instantané technique interne, pas
+      une promesse de livraison. Les chemins source/tests qu'il référence sont absents de cette
+      version du dépôt. Si vous pouvez fournir une provenance source vérifiée, contactez :
+      <a class="foot-mail" href="mailto:support@bot-wow.com" style="color:var(--gold)">support@bot-wow.com</a>.</p>
     <div class="hero-cta">
       <a class="btn btn-gold btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="modules-demo">Essayer la démo (données simulées)</a>
-      <a class="btn btn-ghost btn-lg" href="./#offre" data-track="cta_click" data-cta-id="modules-offer">Voir l'offre</a>
+      <a class="btn btn-ghost btn-lg" href="./buy.html">Consulter le statut de l'achat</a>
     </div>
   </div>
 </section>
@@ -278,10 +282,10 @@
     <div class="grid">
       <div>
         <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
-        <p>Assistant de pêche pour WoW Classic. Édité par Casinobabe.
-           Sans affiliation, approbation ni lien avec Blizzard Entertainment.
-           Les outils d'automatisation peuvent violer les conditions d'utilisation du jeu ;
-           lisez la page compatibilité avant utilisation.</p>
+        <p>BOT-WOW est un projet d'automatisation de pêche pour WoW Classic. Il n'est ni affilié
+           à Blizzard Entertainment ni approuvé par Blizzard. Aucune autorisation de Blizzard
+           n'est revendiquée ni documentée. N'utilisez pas BOT-WOW avec les services exploités
+           par Blizzard.</p>
       </div>
       <div>
         <h3>Produit</h3>
@@ -291,7 +295,7 @@
           <li><a href="./demo.html">Démo (données simulées)</a></li>
           <li><a href="./compatibility.html">Compatibilité</a></li>
           <li><a href="./roadmap.html">Feuille de route</a></li>
-          <li><a href="./#offre">Tarif</a></li>
+          <li><a href="./buy.html">Statut de l'achat</a></li>
         </ul>
       </div>
       <div>
@@ -307,7 +311,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <div class="disclaimer">© 2026 Casinobabe — BOT-WOW. N'est ni affilié à Blizzard Entertainment ni approuvé par Blizzard Entertainment. World of Warcraft est une marque de Blizzard Entertainment. Utilisez les logiciels d'automatisation de manière responsable et dans le respect des règles du serveur sur lequel vous jouez.</div>
+      <div class="disclaimer">© 2026 BOT-WOW. Non affilié à Blizzard Entertainment et non approuvé par Blizzard. L'accord anti-triche de Blizzard interdit les logiciels tiers non autorisés qui permettent le botting ou facilitent le gameplay. Aucune autorisation de Blizzard n'est revendiquée ni documentée pour BOT-WOW. N'utilisez pas BOT-WOW avec les services exploités par Blizzard. La compatibilité technique avec un serveur tiers ne vaut pas autorisation.</div>
       <span class="mono">v1.2.0 · contenus : <a href="../legal/terms.html">conditions</a> ·
         <a href="../legal/privacy.html">confidentialité</a> · <a href="../legal/refund.html">remboursements</a></span>
     </div>
