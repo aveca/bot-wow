@@ -84,7 +84,24 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   const buyBtn = page.locator('#buyBtn');
   const buyForm = page.locator('#buyForm');
 
-  // Le bouton de paiement est desactive
+  // Les liens de navigation et le CTA principal annoncent le statut,
+  // jamais un achat disponible.
+  const navStatus = page.locator('a[data-cta-id="nav-status"]');
+  const heroStatus = page.locator('a[data-cta-id="buy-status-primary"]');
+  await expect(navStatus).toBeVisible();
+  await expect(heroStatus).toBeVisible();
+  await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
+  if (lang === 'fr') {
+    await expect(navStatus).toContainText('Vérifier la disponibilité');
+    await expect(heroStatus).toContainText('Vérifier la disponibilité');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
+  } else {
+    await expect(navStatus).toContainText('Check purchase status');
+    await expect(heroStatus).toContainText('Check purchase status');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
+  }
+
+  // Le bouton de paiement reste desactive
   await expect(buyBtn).toBeDisabled();
 
   // Le message de blocage est visible
