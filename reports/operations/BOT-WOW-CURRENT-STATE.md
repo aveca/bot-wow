@@ -2319,7 +2319,7 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 
 ---
 
-# P0.56 — fresh verification corrects the email finding and reconfirms production state — 2026-11-05T21:5xZ
+# P0.56 — fresh verification corrects the email finding and reconfirms production state — 2026-11-05T21:53Z
 
 ## GitHub / PR state
 - Exact `main` remains `0bba14dffbfb239f7368ff632d084a5a6449bc12`; no newer main commit was returned.
@@ -2339,7 +2339,7 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 - The active webhook/resend paths call `sendDeliveryEmail2`, not the legacy stub. D1 currently records 0 delivery rows and 0 verified non-test paid orders. No test email was sent.
 - Correct conclusion: email delivery code exists; a real successful delivery is not evidenced. Do not describe the provider integration as absent.
 
-## Read-only production data — 2026-11-05T21:5xZ
+## Read-only production data — 2026-11-05T21:53Z
 - D1 production queries were SELECT-only; every query reported `changed_db=false` and `rows_written=0`.
 - Orders: Bitcoin manual `paid=5` (all five emails are `@example.com`, amount sum 10,000 minor units is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`. Paid non-test orders: 0; paid non-test amount: 0.
 - Licences: 5 active; downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
