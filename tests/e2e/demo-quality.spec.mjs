@@ -88,7 +88,15 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   // jamais un achat disponible.
   const navStatus = page.locator('a[data-cta-id="nav-status"]');
   const heroStatus = page.locator('a[data-cta-id="buy-status-primary"]');
-  await expect(navStatus).toBeVisible();
+  await expect(navStatus).toBeAttached();
+  // The compact header intentionally hides its nav-right button at <=520px;
+  // the visible hero status CTA remains the mobile purchase-status entry point.
+  const viewportWidth = page.viewportSize()?.width ?? 1280;
+  if (viewportWidth <= 520) {
+    await expect(navStatus).toBeHidden();
+  } else {
+    await expect(navStatus).toBeVisible();
+  }
   await expect(heroStatus).toBeVisible();
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
   if (lang === 'fr') {
