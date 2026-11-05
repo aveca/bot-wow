@@ -191,3 +191,29 @@ for (const route of p056Routes) {
     });
   }
 }
+
+/* ─────────────────────────────
+   P0.56 — Deterministic narrow-viewport guard (no webfont).
+   The webfont Sora is loaded from Google Fonts. Until it arrives — or when
+   the request is blocked — the browser lays the page out with the system
+   fallback, whose glyphs are wider. On Linux CI runners this made the
+   word "Documentation" (332px at 40px) wider than the 286px of usable
+   width at 320px, so the document scrolled horizontally and this suite
+   failed on a defect no local run could reproduce.
+
+   Blocking the webfont makes that state deterministic everywhere: the
+   layout must not overflow with the FALLBACK font either.
+   ───────────────────────────── */
+
+for (const route of p056Routes) {
+  test(`responsive: ${route.path} does not overflow at 320px without the webfont`, async ({ page }) => {
+    await page.route('**://fonts.googleapis.com/**', route => route.abort());
+    await page.route('**://fonts.gstatic.com/**', route => route.abort());
+    await page.setViewportSize({ width: 320, height: 568 });
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+
+    await expect(page.locator('h1')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+}
