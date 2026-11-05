@@ -122,6 +122,15 @@ for (const [page, file, oldClaims, newScope] of [
 
 
  
+
+for (const file of ['fr/index.html', 'fr/buy.html', 'fr/compatibility.html', 'fr/faq.html']) {
+  const html = read(file);
+  check(file + ' : référence Blizzard localisée en français',
+    /blizzard\.com\/fr-fr\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/charte-anti-triche/i.test(html));
+  check(file + ' : aucune référence Blizzard anglaise sur la page FR',
+    !/blizzard\.com\/en-us\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/anti-cheating-agreement/i.test(html));
+}
+
 // Platform compliance: technical compatibility is not authorization.
 const platformDisclosureFiles = [
   ['index.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
