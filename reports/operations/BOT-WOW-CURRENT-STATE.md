@@ -1520,3 +1520,18 @@ Base `botwow-analytics`, filtre `test=0` :
 
 ## Priorité
 Traiter la consolidation www→apex comme P0 de cohérence et de conformité avant acquisition : une version www/fr plus ancienne peut exposer des avertissements insuffisants même si l'apex est à jour.
+
+
+---
+
+# P0.36c — consentement des contacts BOT-WOW — 2026-11-05T02:18Z
+
+Lecture seule de `botwow-production.botwow_emails`, agrégation uniquement, aucune adresse lue :
+- 12 lignes au total, toutes avec `status='subscribed'` mais `confirmed_at IS NULL` et `unsubscribed_at IS NULL`.
+- Source `newsletter` : 6 lignes avec `consent_marketing=1` et `consent_transactional=1` ; 3 lignes avec les deux consentements à 0.
+- Sources `diag` et `diag2` : 2 lignes marquées marketing=1 mais non confirmées ; ne pas les traiter comme prospects.
+- Source `test` : 1 ligne marquée avec consentements, à exclure.
+- Aucun enregistrement ne dispose d'un `confirmed_at` renseigné. Le simple flag de consentement ne prouve pas l'opt-in confirmé.
+
+Toutes les requêtes ont renvoyé `changed_db=false`, `rows_written=0`.
+Décision : **aucun email marketing ou transactionnel ne doit être envoyé à partir de cette table tant que le flux de confirmation et les destinataires confirmés ne sont pas démontrés**. Aucun envoi effectué.
