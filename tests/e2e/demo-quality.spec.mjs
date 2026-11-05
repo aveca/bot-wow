@@ -328,7 +328,7 @@ test('French demo: locale stays French and all key navigation targets are locali
   await expect(page.locator('.sim-banner')).toContainText('ne démontre pas le déplacement automatique');
   await expect(page.locator('nav .langs a[lang="en"]')).toHaveAttribute('href', '../demo.html');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './demo.html');
-  await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
+  await expect(page.locator('nav a[data-cta-id="purchase-status"]')).toHaveAttribute('href', './buy.html');
   const mobileOffer = page.locator('.demo-mobile-offer');
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
