@@ -237,5 +237,13 @@ for (const [file, staleLabel] of [
   check(file + ' : aucune étiquette de composant sous un autre nom de produit', !staleLabel.test(read(file)));
 }
 
+
+for (const [file, staleMachineBinding] of [
+  ['index.html', /licence is tied to your machine, not to a date/i],
+  ['fr/index.html', /licence est liée à votre machine, pas à une date/i],
+]) {
+  check(file + ' : aucun entitlement machine présenté comme confirmé', !staleMachineBinding.test(read(file)));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
