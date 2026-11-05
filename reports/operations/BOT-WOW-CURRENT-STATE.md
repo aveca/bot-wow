@@ -1316,7 +1316,7 @@ Sources:
 ### GitHub
 - Current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33` (PR #88 merged).
 - Relevant open drafts: PR #87 (Mollie credential-specific `profileId` fix, head `c39157d5180752f03af9900fe7a5517dc576f591`) and PR #89 (this operational snapshot, head before this addendum `b881f58e25598fb91577d571741ae5254c687ed6`).
-- Both PR #87 workflows and both PR #89 workflows completed SUCCESS on their recorded heads. This does not imply a production Worker change.
+- PR #87 Validate and UI/Playwright both completed SUCCESS on head `c39157d`. PR #89 Validate and UI/Playwright both completed SUCCESS on its prior head `b881f58`; the latest documentation-only commit `d66e357` did not trigger new workflows under the repository's path filters. No production Worker change is implied.
 - PR #19 is CLOSED/MERGED; its versioned-R2-only download behavior is already part of main. Do not create a competing duplicate fix.
 - Branch search returned 79 branches over the completed pagination; many are historical. The repository currently has 17 open PRs in the latest search result.
 
