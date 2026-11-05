@@ -412,14 +412,14 @@ for (const item of [
   {
     file: 'index.html',
     intent: /data-intent="fish">Explore the fishing scope<\/button>/i,
-    price: /<span class="v-val">€20 target price — unavailable<\\/span>/i,
+    price: /<span class="v-val">€20 target price — unavailable<\/span>/i,
     intro: /gameplay-automation offer is not available for purchase/i,
     forbidden: /Automate my fishing|€20 lifetime — no renewal|really does today/i,
   },
   {
     file: 'fr/index.html',
     intent: /data-intent="fish">Découvrir le périmètre pêche<\/button>/i,
-    price: /<span class="v-val">20 € prix cible — achat indisponible<\\/span>/i,
+    price: /<span class="v-val">20 € prix cible — achat indisponible<\/span>/i,
     intro: /L’offre d’automatisation du gameplay n’est pas disponible à l’achat/i,
     forbidden: /Automatiser ma pêche|20 € à vie — pas de renouvellement|fait réellement aujourd’hui/i,
   },
