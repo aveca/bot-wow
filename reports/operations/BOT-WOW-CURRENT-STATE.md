@@ -1309,3 +1309,60 @@ A generic outdoor fishing spot/route planner is not automatically a better comme
 Sources:
 - https://fishmarks.com/
 - https://www.lunkerr.com/
+
+
+## P0.34 — production revalidation and payment readiness — 2026-11-05T01:49Z
+
+### GitHub
+- Current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33` (PR #88 merged).
+- Relevant open drafts: PR #87 (Mollie credential-specific `profileId` fix, head `c39157d5180752f03af9900fe7a5517dc576f591`) and PR #89 (this operational snapshot, head before this addendum `b881f58e25598fb91577d571741ae5254c687ed6`).
+- Both PR #87 workflows and both PR #89 workflows completed SUCCESS on their recorded heads. This does not imply a production Worker change.
+- PR #19 is CLOSED/MERGED; its versioned-R2-only download behavior is already part of main. Do not create a competing duplicate fix.
+- Branch search returned 79 branches over the completed pagination; many are historical. The repository currently has 17 open PRs in the latest search result.
+
+### Cloudflare production
+- Latest Pages production deployment: `54aacb90-1cce-4055-b2ab-f2241afc4792`, created `2026-11-05T00:47:14Z`, branch `main`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, deploy stage SUCCESS. Aliases: `bot-wow.com` and `www.bot-wow.com`.
+- Worker `botwow-api`: latest deployment still `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% version `c3dcc842-c422-42d3-9828-405f30d70b5f` (v50), created `2026-10-27T07:46:28Z`. No new Worker deployment.
+- Worker settings expose binding names including `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` and `RESEND_API_KEY` as `secret_text`. Secret values are intentionally unavailable; binding presence does not prove credential validity or the configured profile's ownership.
+- No secret, binding, Worker, Pages configuration, D1, R2, checkout or payment mutation was performed.
+
+### Public site
+- A fresh web extraction of `https://bot-wow.com/buy` (crawled today) shows €20, intended v1.2.0 scope, package/delivery unverified and checkout unavailable/disabled. It still returns an older platform-warning sentence (“play on servers where it is allowed”).
+- Current main sources `buy.html` (blob `94e63a535ae757df8a19e85f8f9e7efe16a1eccc`) and `fr/buy.html` (blob `9202d0a3fe311445721891521f1c204cd8d2a12e`) contain the newer explicit “no Blizzard authorization is claimed or documented / do not use with Blizzard-operated services” notice and disabled checkout.
+- The web reader could not retrieve `/fr/buy` or the deployment-specific `pages.dev` URL in this check. No raw HTTP response headers (CF-Cache-Status, Age, ETag) were obtained. Therefore the difference between current source and the extracted custom-domain copy remains unresolved; do not assert a cache cause or purge anything.
+
+### D1 production — read-only, fresh query
+Every D1 query returned `changed_db=false` and `rows_written=0`.
+- Orders: 25 total — Bitcoin manual `paid=5` (test-domain rows), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Fulfillment: licenses 5; download tokens 5; delivery receipts 0; activations 0.
+- Webhooks: 16 total; 11 matched to orders using `webhook_events.id = 'payment:' || orders.provider_id`; 5 unmatched.
+- No production delivery record exists in `deliveries`. The five Bitcoin `paid` rows are test data and are not sales. No commercial payment is verified; confirmed revenue remains €0.00.
+
+### Analytics production — events, not users/sessions
+Filter `test=0`:
+- `page_view=1,668` (latest `2026-11-05T00:56:00.633Z`).
+- `journey_view=659` (latest `2026-11-05T00:55:57.485Z`).
+- `cta_click=48` (latest `2026-11-04T02:47:00.736Z`).
+- `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`.
+- No grouped `payment_confirmed`, `conversion`, `delivery_sent`, `activation` or `delivery_failed` events were returned.
+- These are event counts, not unique visitors or sessions.
+
+### Worker / delivery code
+- Current main `worker/index.js` contains `resumeFulfillment` and the redacted email/admin logs.
+- Main still appends `MOLLIE_PROFILE_ID` whenever a caller requests it; PR #87 contains the credential-type-aware fix (omit for standard `test_*/live_*` API keys, include for organization/OAuth credentials). PR #87 is still DRAFT; do not merge/deploy until the dedicated BOT-WOW profile/credential and explicit production authorization are in place.
+- Main `generateLicenseKey2` still uses `Math.random()`; this is a security-hardening candidate, not changed in this cycle because it requires a separate security review/authorization.
+- `RESEND_API_KEY` binding name is present, but its value and validity are not observable here. The delivery code records a pending receipt when Resend rejects/fails; production currently has zero delivery rows and no verified real paid order. Do not claim the key is invalid without a permitted, controlled provider check.
+
+### Commercial and compliance decision
+- The public offer remains €20 lifetime, but checkout is disabled because delivery is not certified.
+- Current offer says one-machine activation; Worker default and licence creation use `max_activations=2`. This entitlement mismatch remains unresolved; do not silently change the backend or sales copy.
+- The current product automates WoW gameplay and the public disclosure says no Blizzard authorization is claimed/documented and not to use it with Blizzard-operated services. Do not run paid acquisition or represent the automated bot as authorized. A manual WoW planner is not automatically outside the EULA because software that facilitates gameplay may also be restricted.
+- No payment, customer email, D1/R2 write, Worker deployment, checkout change, price change or campaign was performed.
+
+### Next actions
+1. Keep checkout closed; do not market the automated bot for Blizzard-operated services.
+2. Resolve the commercial/legal product scope before any sale campaign; validate any game-independent alternative's distinct demand before building it.
+3. Obtain a dedicated BOT-WOW Mollie profile and credential through the account operator; never reuse another product's profile. Then review/authorize PR #87 separately.
+4. Certify the Resend sender/key with a controlled test destination only after explicit authorization; do not infer validity from the binding name.
+5. Resolve the one-machine versus two-activation entitlement.
+6. Prepare, but do not deploy, the Worker update/rollback until payment routing and post-payment fulfillment are authorized and verified.
