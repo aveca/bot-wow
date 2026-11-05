@@ -1535,3 +1535,60 @@ Lecture seule de `botwow-production.botwow_emails`, agrégation uniquement, aucu
 
 Toutes les requêtes ont renvoyé `changed_db=false`, `rows_written=0`.
 Décision : **aucun email marketing ou transactionnel ne doit être envoyé à partir de cette table tant que le flux de confirmation et les destinataires confirmés ne sont pas démontrés**. Aucun envoi effectué.
+
+
+---
+
+# P0.37 — revalidation live, D1 et décision commerciale — 2026-11-05T03:13Z
+
+## GitHub — état confirmé
+- Branche par défaut : `main`, dernier commit observé `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- PR #89 (ce rapport) : OPEN / DRAFT / mergeable ; HEAD `96dffc1cba22fd04f50f6d1758bb2a419c3df1c9`. Les workflows Validate (`41953975395`) et UI quality / Playwright (`41953975557`) sont maintenant tous deux SUCCESS sur ce HEAD.
+- PR #90 : OPEN / DRAFT / mergeable ; HEAD `1f61a451d962fd9d8f3a8464acbdfca25e283032`, 2 fichiers (`worker/index.js`, `tests/payment-flow.test.mjs`). Validate (`41952467280`) et UI quality / Playwright (`41952467153`) sont SUCCESS. Ne pas merger/déployer : le profil Mollie BOT-WOW dédié est absent et le changement touche au chemin de paiement.
+- PR #66 demeure OPEN / DRAFT ; son contenu porte un garde-fou et une proposition de pivot, pas une autorisation commerciale.
+- La recherche de branches a retourné les branches connues du dépôt, dont plusieurs anciennes branches divergées. Ne pas réutiliser telles quelles `fix/www-alias-redirect-20261104` (1 commit ahead / 39 behind), `p0/prepare-checkout-reopen-20261104` (1 ahead / 20 behind) ni les branches de refonte du checkout/revenue fortement divergées.
+
+## Cloudflare Pages et site public — revalidation qui remplace P0.36b
+- Projet Pages `bot-wow`, branche de production `main`, build `node scripts/build-site.mjs _site`.
+- Déploiement canonique de production : `54aacb90-1cce-4055-b2ab-f2241afc4792`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, statut deploy SUCCESS. Le dernier objet listé comme déploiement est un preview documentaire `5debcc4e`, marqué `is_skipped=true` avec `preview_deployments_disabled` ; il ne remplace pas la production.
+- Domaines Pages : `bot-wow.com` et `www.bot-wow.com` actifs. DNS `www.bot-wow.com` = CNAME `bot-wow.pages.dev`, proxied=true.
+- **Nouvelle vérification web du 2026-11-05 : la discordance de contenu www/fr décrite en P0.36b n'est plus reproductible dans les pages consultées.** `https://bot-wow.com/`, `https://www.bot-wow.com/`, `https://bot-wow.com/fr`, `https://bot-wow.com/buy`, `https://bot-wow.com/fr/buy.html`, `https://www.bot-wow.com/buy.html` et `https://www.bot-wow.com/fr` présentent désormais les mêmes avertissements de conformité et la même indisponibilité du checkout. Les pages d'achat EN/FR indiquent le prix 20 €, livraison v1.2.0 non confirmée, formulaire désactivé et absence d'autorisation Blizzard documentée.
+- Limite : l'outil web ne fournit pas les en-têtes HTTP bruts (CF-Cache-Status, Age, ETag, Last-Modified). La cohérence du contenu visible est vérifiée, mais la réponse edge/origine n'est pas certifiée par curl/Playwright dans ce cycle.
+- La zone n'a toujours aucun entrypoint `http_request_dynamic_redirect` (GET renvoie 404 `could not find entrypoint ruleset`). Il n'y a donc pas de 301 www→apex. **Ce n'est plus un P0 de conformité puisque le contenu public consulté est cohérent ; cela reste une amélioration SEO/canonicalisation P1.** Ne pas créer la règle ni retirer le domaine Pages sans autorisation explicite prévue par `AGENTS.md`.
+- Références publiques : `https://bot-wow.com/`, `https://bot-wow.com/fr`, `https://bot-wow.com/buy`, `https://bot-wow.com/fr/buy.html`, `https://www.bot-wow.com/`, `https://www.bot-wow.com/fr`, `https://www.bot-wow.com/buy.html`.
+
+## Worker et code source
+- Production `botwow-api` : version 50 à 100 %, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`. Aucun nouveau déploiement.
+- Source main `worker/index.js`, blob `725d98e4595b27aa60e88758ecac20c711a38b6b` : `RELEASE_STATUS = "pending"` par défaut ; `handleCheckout` retourne 409 `delivery_unverified` si le statut runtime n'est pas explicitement `confirmed`. La valeur runtime du binding n'est pas visible et n'est pas inférée.
+- Source main contient `resumeFulfillment`. La comparaison directe précédente de P0.31 reste la preuve que le bundle v50 ne l'inclut pas ; le bundle n'a pas été re-téléchargé pendant P0.37.
+- Défaut de sécurité confirmé dans la source main : les deux fonctions `generateLicenseKey()` et `generateLicenseKey2()` utilisent encore `Math.random()`. Le remplacement par `crypto.getRandomValues()` doit être préparé dans une PR sécurité séparée avec tests, mais n'a pas été modifié ici.
+- Écart d'entitlement confirmé : `DEFAULT_MAX_ACTIVATIONS = 2` et les insertions de licences fixent `max_activations=2`, alors que `PRODUCT.md` et les pages EN/FR annoncent une activation sur une machine. Ne pas changer silencieusement cette règle ; clarifier la politique avant toute vente.
+
+## Mollie — lecture seule
+- `ListProfiles` retourne un seul profil : `pfl_t8KCk4Cm2C`, site `https://sargasses-martinique.com/`. Aucun profil BOT-WOW dédié visible.
+- Ne jamais utiliser le profil Sargasses pour BOT-WOW. Aucun paiement n'a été créé.
+- Les 16 paiements Mollie BOT-WOW avaient été vérifiés individuellement dans P0.30 (16/16 expirés) ; pas de nouvel appel sur ces mêmes IDs dans P0.37.
+
+## D1 production et analytics — lecture seule
+Toutes les requêtes D1 de ce cycle ont renvoyé `changed_db=false` et `rows_written=0`.
+- Commandes inchangées : `bitcoin_manual/paid=5`, `bitcoin_manual/pending_payment=8`, `bitcoin_manual/rejected=1`, `mollie/failed=11` (25 au total). Les cinq lignes Bitcoin `paid` sont les données de test `@example.com`, pas des ventes.
+- Licences 5 ; jetons de téléchargement 5 ; livraisons 0 ; activations 0 ; webhooks 16 ; contacts `botwow_emails` 12.
+- Contacts : 0/12 avec `confirmed_at` renseigné. Aucun envoi marketing/transactionnel depuis cette table.
+- Analytics `test=0`, comptages d'événements (pas utilisateurs/sessions uniques) : `page_view=1694`, `journey_view=672`, `cta_click=48`, `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`. Aucun `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Dernier `page_view` : `2026-11-05 02:18:43 UTC`; dernier `journey_view` : `02:18:40 UTC`. Dernier `cta_click` et `checkout_requested` : `2026-11-04 02:47:00 UTC`. Dernier `checkout_created` : `2026-10-27 23:07:01 UTC`; dernier `checkout_failed` : `2026-10-27 23:23:17 UTC`.
+- Sources observées : `direct` représente 1 075 page views et 568 journeys ; `reddit` 8 page views / 8 journeys ; `yt` 8/8 ; `discord` 6/6 ; `forum` 3/3 ; `google` 1/1 ; les autres événements ont des sources nulles ou `other`. Ce sont des événements bruts, pas des personnes uniques. L'attribution qualifiée reste faible et/ou incomplète ; ne pas acheter de trafic.
+
+## Revenu, conformité et décision
+- Revenu commercial BOT-WOW vérifié : **0,00 €** ; aucune vente payée et aucune livraison client démontrée. Prix public observé : 20 € ; checkout toujours fermé.
+- Le site dit désormais clairement qu'aucune autorisation Blizzard n'est revendiquée/documentée et déconseille l'utilisation sur les services Blizzard. L'EULA officielle §1.C.2 interdit notamment d'offrir, promouvoir, mettre à disposition ou distribuer des bots non autorisés et des logiciels qui facilitent le gameplay : https://www.blizzard.com/en-us/legal/bfbbb648-bcc6-4b78-a5c7-e2fe20c135df/blizzard-end-user-license-agreement (dernière révision indiquée : 2024-03-21).
+- Ne pas commercialiser ni promouvoir l'automatisation du gameplay pour les services Blizzard sans autorisation documentée. La compatibilité technique avec un serveur tiers n'est pas une autorisation générale.
+- Aucune modification de prix, checkout, credential, secret, binding, paiement, email, D1/R2, Worker, DNS, ruleset, domaine Pages, cache ou production.
+
+## Prochaine action classée
+1. **P0 — périmètre commercial autorisé** : obtenir une autorisation écrite applicable ou définir une offre réellement indépendante du gameplay ; valider la demande avant de développer ou promouvoir.
+2. **P0 — paiement/livraison** : profil Mollie BOT-WOW dédié + credential dédié, puis test contrôlé et certification du webhook, de la licence, du mail, du téléchargement et de l'activation ; garder #90 draft et le checkout fermé jusque-là.
+3. **P1 — sécurité** : préparer une PR isolée pour le RNG cryptographique des clés de licence ; ne pas déployer sans validation.
+4. **P1 — entitlements** : résoudre la contradiction une machine / deux activations.
+5. **P1 — SEO** : la consolidation 301 www→apex est optionnelle désormais que le contenu consulté est cohérent ; la préparer séparément avec rollback, sans modifier Cloudflare sans autorisation.
+6. **P2 — acquisition** : aucun achat média ; améliorer l'attribution organique seulement après validation d'une offre commercialisable.
+
