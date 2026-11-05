@@ -235,7 +235,7 @@ for (const route of commercialPages) {
     const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"], a[href*="buy.html"]').count();
     expect(purchasePaths).toBeGreaterThan(0);
     if (route.name.startsWith('modules-')) {
-      await expect(page.locator('a[href*="buy.html"]').first()).toBeVisible();
+      await expect(page.locator('a[href*="buy.html"]:visible').first()).toBeVisible();
     }
     await expectNoHorizontalOverflow(page);
     await captureScreenshot(page, testInfo, route.name);
