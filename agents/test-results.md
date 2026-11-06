@@ -11,5 +11,6 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `npm test` | sandbox local, 2026-11-06T14:23Z, après le correctif HEAD | exit 0. Python du planificateur absent (`spawnSync python ENOENT`) : ce contrôle est ignoré, les autres suites passent |
 | `npm run validate` | local, 2026-11-06T14:20Z | exit 0, `BOT-WOW validation PASS` |
 | `git diff --check` | local, 2026-11-06T14:23Z | exit 0 |
+| `curl` GET et HEAD `https://api.bot-wow.com/`, `/health`, `/api/config` | production, 2026-11-06T14:48:30Z, après le déploiement Worker | `/` 308 vers `https://bot-wow.com/` ; `/health` 200 ; `/api/config` 200 et `priceEur` 20. Corps HEAD vide sur les trois |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
