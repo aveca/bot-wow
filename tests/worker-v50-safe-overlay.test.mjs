@@ -77,7 +77,7 @@ check('legacy landing dispatch removed', !candidate.includes('return handleLandi
 check('download uses configured R2 key only', candidate.includes('env2.R2_OBJECT_KEY') && !candidate.includes('Casinababe-v1.0.38.zip'));
 check('download checks R2 before quota reservation', candidate.indexOf('R2_BINARIES.get(objectKey)') >= 0 && candidate.indexOf('R2_BINARIES.get(objectKey)') < candidate.indexOf('UPDATE downloads SET count = count + 1'));
 check('download quota update is atomic', candidate.includes('UPDATE downloads SET count = count + 1 WHERE token = ? AND count < max_count'));
-check('download filename follows the served object key', candidate.includes('Content-Disposition: "attachment; filename=\\\"" + safeFilename + "\\\""'));
+check('download filename follows the served object key', candidate.includes('const safeFilename = objectKey;') && candidate.includes('"Content-Disposition": "attachment; filename=') && candidate.includes(' + safeFilename + '));
 check('checkout release gate remains present', extractFunction(candidate, 'handleCheckout')?.includes('RELEASE_STATUS') === true);
 check('all API route declarations remain byte-identical', JSON.stringify(apiRoutes(candidate)) === JSON.stringify(overlay.preserved_api_route_lines));
 
@@ -182,7 +182,7 @@ try {
 
   // Run the existing payment/security suites against the generated v50 candidate,
   // not against main. These tests make no real Mollie request (fetch is intercepted).
-  for (const name of ['payment-flow.test.mjs', 'checkout-security.test.mjs']) {
+  for (const name of ['payment-flow.test.mjs', 'checkout-security.test.mjs', 'worker-fulfillment-reconciliation.test.mjs']) {
     copyFileSync(join(ROOT, 'tests', name), join(testsDir, name));
     const run = spawnSync(process.execPath, [join(testsDir, name)], {
       cwd: temp, encoding: 'utf8', timeout: 120000
