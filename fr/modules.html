@@ -24,7 +24,7 @@
 <body>
 
 <div class="topbar">
-  <div class="w"><span><b>v1.2.0</b> livraison non vérifiée</span><span>Windows 10/11 · Python 3.11+</span><span>Registre technique uniquement</span><span>Paiement fermé — aucun moyen disponible</span></div>
+  <div class="w"><span><b>v1.2.0</b> livraison non vérifiée</span><span>Registre technique uniquement</span><span>Paiement fermé — aucun moyen disponible</span></div>
 </div>
 
 <nav>
@@ -59,24 +59,24 @@
       Le registre marque la pêche comme disponible, mais les chemins source et tests qu'il référence
       sont absents de cette version du dépôt. L'archive v1.2.0 n'est pas récupérable actuellement
       depuis le stockage de livraison et la livraison après paiement n'est pas certifiée.
-      Le paiement est fermé. Trois rôles sont en développement et quatre sont planifiés.
+      Le paiement est fermé. Un ancien module n'est pas vérifié, trois rôles sont en développement et quatre sont planifiés.
       <strong style="color:var(--txt)">Un statut de registre ne prouve pas qu'un produit est téléchargeable.</strong>
     </p>
     <p class="honest-note" style="margin-inline:0;max-width:72ch">
       Instantané du registre interne <span class="mono">v1.2.0</span> — la pêche porte le statut
       <span class="mono">available</span> dans <span class="mono">assets/modules.json</span> ;
-      3 modules sont en développement et 4 sont planifiés. Les chemins source/tests référencés
+      1 module n'est pas vérifié, 3 modules sont en développement et 4 sont planifiés. Les chemins source/tests référencés
       sont absents de cette version du dépôt. Le test de parité Python facultatif est ignoré
       lorsque la source externe est absente. Cette page ne prouve ni la provenance du paquet,
       ni sa lisibilité dans R2, ni l'ouverture du paiement, ni la livraison client.
-    </p>
+    </p><p class="honest-note" style="margin-inline:0;max-width:72ch"><b>Destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Les règles de chaque serveur s'appliquent.</b> Aucune version n'est actuellement confirmée sans serveur nommé et date de test.</p>
   </div>
 </section>
 
 <!-- ====================================================== DISPONIBLE -->
 <section class="pad" style="padding-top:34px">
   <div class="w">
-    <div class="band"><span class="st st-no"><i></i>Statut du registre : disponible (non vérifié)</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">distribution et source non vérifiées</span></div>
+    <div class="band"><span class="st st-no"><i></i>Ancien statut du registre : disponible (non vérifié)</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">distribution et source non vérifiées</span></div>
 
     <div class="modrow">
       <div class="m-main">
@@ -98,7 +98,7 @@
           <div class="mod-col dep">
             <div class="mod-label">Limites</div>
             <ul>
-              <li>Clients Classic 1.13 uniquement, Windows 10/11</li>
+              <li>Aucune version de jeu actuellement confirmée ; voir la matrice de compatibilité</li>
               <li>L'addon runtime observe l'état du jeu ; il ne simule jamais d'entrées</li>
             </ul>
           </div>
@@ -237,7 +237,7 @@
     <div class="modrow">
       <div class="m-main">
         <h3>Autres clients (TBC / WotLK / Retail)</h3>
-        <p class="m-desc">Classic 1.13 est le périmètre testé aujourd'hui. Un addon runtime TBC
+        <p class="m-desc">Aucune version n'est actuellement confirmée ; voir la matrice de compatibilité datée. Un addon runtime TBC
           Anniversary existe dans le dépôt, mais la couverture suit la validation du noyau, profil
           par profil. La <a href="./compatibility.html" style="color:var(--cyan)">page compatibilité</a>
           reste la référence de ce qui tourne aujourd'hui.</p>
@@ -247,20 +247,7 @@
   </div>
 </section>
 
-<!-- =========================================================== JAMAIS -->
-<section class="pad" style="padding-top:26px">
-  <div class="w">
-    <div class="band"><span class="st st-no"><i></i>Jamais</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">refus fermes, pas des entrées de feuille de route</span></div>
-    <div class="callout warn" style="margin-inline:0;max-width:none">
-      <span class="ico" aria-hidden="true"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.6 5.6l8.8 8.8M14.4 5.6l-8.8 8.8"/></svg></span>
-      <span><strong>Ceci n'est pas des fonctionnalités et ne sera jamais annoncé :</strong>
-        toute prétention d'indétectabilité · toute promesse que votre compte serait à l'abri de
-        sanctions · lecture mémoire ou injection de processus. BOT-WOW observe des pixels et
-        envoie des messages fenêtres, et il peut violer les conditions d'utilisation du jeu —
-        la page compatibilité le dit avant l'achat, pas après.</span>
-    </div>
-  </div>
-</section>
+
 
 <!-- =========================================================== FINAL -->
 <section class="pad final">
@@ -311,7 +298,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <div class="disclaimer">© 2026 BOT-WOW. Non affilié à Blizzard Entertainment et non approuvé par Blizzard. L'accord anti-triche de Blizzard interdit les logiciels tiers non autorisés qui permettent le botting ou facilitent le gameplay. Aucune autorisation de Blizzard n'est revendiquée ni documentée pour BOT-WOW. N'utilisez pas BOT-WOW avec les services exploités par Blizzard. La compatibilité technique avec un serveur tiers ne vaut pas autorisation.</div>
+      <div class="disclaimer">BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment. World of Warcraft est une marque de Blizzard Entertainment.</div>
       <span class="mono">v1.2.0 · contenus : <a href="../legal/terms.html">conditions</a> ·
         <a href="../legal/privacy.html">confidentialité</a> · <a href="../legal/refund.html">remboursements</a></span>
     </div>

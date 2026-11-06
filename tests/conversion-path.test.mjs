@@ -66,14 +66,33 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
-// 5. Comparaison : la formule BOT-WOW mène au statut de disponibilité, le calculateur est instrumenté
+// 5. Comparaison publique : statut honnete, sources datees et CTA vers des pages reelles
 {
-  const t = read('compare.html');
-  check('compare : CTA de statut de la formule BOT-WOW', /data-cta-id="formula-ours-status"/.test(t));
-  check('compare : CTA de statut present dans la formule', /data-cta-id="formula-ours-status"/.test(t));
-  check('compare : calculateur de cout present', /id="ownership"/.test(t));
-  check('compare : source et date des prix citees', /pixelwowbot\.com/.test(t) && /2026-10-22/.test(t));
-  check('compare : aucun prix de concurrent invente (30 / 90 jours absent)', !/30 \/ 90/.test(t));
+  const en = read('compare.html');
+  const fr = read('fr/compare.html');
+  check('compare EN : BOT-WOW indique clairement que rien n’est en vente',
+    /BOT-WOW is not currently offered for purchase/i.test(en) && /Not for sale/i.test(en));
+  check('compare FR : BOT-WOW indique clairement que rien n’est commercialise',
+    /n'est actuellement pas proposé à l'achat/i.test(fr) && /Non commercialisé/i.test(fr));
+  check('compare EN : CTA demo vers la demo simulee',
+    /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
+  check('compare EN : CTA statut vers la page achat',
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(en));
+  check('compare FR : CTA demo vers la demo simulee',
+    /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(fr));
+  check('compare FR : CTA statut vers la page achat',
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(fr));
+  check('compare : aucun lien interne mort vers #buy', !/href="#buy"/.test(en + fr));
+  check('compare : sources concurrentes et dates de consultation visibles',
+    /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
+      && /https:\/\/pixelwowbot\.com\//.test(fr) && /06\/11\/2026/.test(fr));
+  check('compare EN : prix concurrent conformes à la page publique',
+    /€1\.99 for 48 hours; €19\.99 per 30 days; individual roles from €6\.99/.test(en));
+  check('compare FR : prix concurrent conformes à la page publique',
+    /1,99 € pour 48 h ; 19,99 € par 30 jours ; rôles individuels à partir de 6,99 €/.test(fr));
+  check('compare : compatibilité WoW Forever attribuée au vendeur, pas à BOT-WOW',
+    /WoW Forever/.test(en) && /WoW Forever/.test(fr));
+  check('compare : ancien calculateur de cout retire', !/id="ownership"/.test(en + fr));
 }
 
 // 6. Instrumentation : module present, charge, et evenements documentes

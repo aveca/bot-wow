@@ -179,7 +179,7 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
 
 
 
-test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
+test('comparison EN/FR: status CTAs navigate to the status page and never start checkout', async ({ page }) => {
   const checkoutRequests = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
@@ -187,13 +187,13 @@ test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
   });
 
   for (const route of [
-    { path: '/compare.html', label: 'Check purchase status', bar: 'Purchase status' },
-    { path: '/fr/compare.html', label: 'Vérifier la disponibilité', bar: 'Statut de disponibilité' },
+    { path: '/compare.html', label: 'Purchase status', bar: 'Purchase status', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: "Statut d'achat", bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
     await expect(page.locator('#release-availability-notice')).toBeVisible();
-    const statusCta = page.locator('a[data-cta-id="formula-ours-status"]');
+    const statusCta = page.locator('a[data-cta-id="compare-status"]');
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
@@ -203,7 +203,8 @@ test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
     await expect(page.locator('[data-cta-id="formula-ours-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
-    await expect(page.locator('#buy')).toBeInViewport();
+    await expect(page).toHaveURL(route.target);
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
 

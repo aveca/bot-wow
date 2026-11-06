@@ -35,7 +35,9 @@ for (const [page, file, claimRe] of [
   // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
   check(`${page} : avis de disponibilite present`,
-    /id="release-availability-notice"/.test(html) && /role="alert"/.test(html));
+    /id="release-availability-notice"/.test(html) && /role="status"/.test(html));
+  check(`${page} : mention « Avant d'acheter » des serveurs privés`,
+    /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
   check(`${page} : avis de disponibilité présent et formulaire de paiement absent`,
     html.includes('id="release-availability-notice"') &&
     !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(html));
@@ -102,34 +104,42 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
     !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
 
-for (const file of ['fr/index.html', 'fr/buy.html', 'fr/compatibility.html', 'fr/faq.html']) {
-  const html = read(file);
-  check(file + ' : référence Blizzard localisée en français',
-    /blizzard\.com\/fr-fr\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/charte-anti-triche/i.test(html));
-  check(file + ' : aucune référence Blizzard anglaise sur la page FR',
-    !/blizzard\.com\/en-us\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/anti-cheating-agreement/i.test(html));
+// Sales pages use the requested neutral private-server scope and non-affiliation statement.
+for (const [file, notice, footer] of [
+  ['index.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/index.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['buy.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/buy.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['faq.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/faq.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['compare.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compare.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['features.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/features.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['modules.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/modules.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : mention exacte des serveurs privés', notice.test(flat));
+  check(file + ' : non-affiliation et marque', footer.test(flat));
+  // A legal anti-cheating warning is allowed; evasion, bypass and detection promises are not.
+  check(file + ' : aucun terme de contournement ou promesse de détection',
+    !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
+}
+// The comparison page must not present historical BOT-WOW features as a current offer.
+for (const [file, noOffer, sourceLink] of [
+  ['compare.html', /BOT-WOW is not currently offered for purchase/i, /pixelwowbot\.com/],
+  ['fr/compare.html', /BOT-WOW n'est actuellement pas proposé à l'achat/i, /pixelwowbot\.com/],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : statut non commercialisé visible', noOffer.test(flat));
+  check(file + ' : sources publiques du concurrent citées', sourceLink.test(flat));
+  check(file + ' : aucune ancienne promesse runtime BOT-WOW',
+    !/308 ms|308\s*ms|12\/12|Persistent spot memory|Mémoire persistante des spots|build du bot de pêche v1\.2\.0/i.test(flat));
 }
 
-// Platform compliance: technical compatibility is not authorization.
-const platformDisclosureFiles = [
-  ['index.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
-  ['buy.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
-  ['compatibility.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
-  ['faq.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
-  ['fr/index.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
-  ['fr/buy.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
-  ['fr/compatibility.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
-  ['fr/faq.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
-];
-for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDisclosureFiles) {
-  const html = read(file);
-  const flat = html.replace(/\s+/g, ' ');
-  check(file + ' : référence à l’accord anti-triche', agreement.test(flat));
-  check(file + ' : absence d’autorisation Blizzard clairement indiquée', noAuthorization.test(flat));
-  check(file + ' : avertissement contre l’utilisation sur les services Blizzard', noBlizzardServices.test(flat));
-  check(file + ' : aucune invitation à utiliser le bot dans les règles du serveur',
-    !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));
-}
 for (const [file, unavailable] of [
   ['faq.html', /None are currently available for BOT-WOW/i],
   ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
@@ -326,28 +336,28 @@ for (const item of purchaseStatusPageCases) {
 }
 
 
-// Comparison pages must not imply a live price, payment provider, delivery,
-// activation policy or Blizzard authorization while the offer is unavailable.
+// Comparison pages must show a real status route, historical pricing only,
+// and the legal boundary without implying a live purchase or delivery.
 for (const item of [
   {
     file: 'compare.html',
-    formula: /data-cta-id="formula-ours-status"[^>]*>Check purchase status<\/a>/i,
-    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a>/i,
-    target: /documented target price/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Purchase status<\/a>/i,
+    target: /€20 is a historical target only; not an offer/i,
     scope: /No Blizzard authorization is claimed or documented/i,
   },
   {
     file: 'fr/compare.html',
-    formula: /data-cta-id="formula-ours-status"[^>]*>Vérifier la disponibilité<\/a>/i,
-    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a>/i,
-    target: /prix cible documenté/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Statut d'achat<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Statut d'achat<\/a>/i,
+    target: /20 € est un ancien prix cible/i,
     scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
   },
 ]) {
   const html = read(item.file);
-  check(item.file + ' : CTA de formule = statut de disponibilité', item.formula.test(html));
+  check(item.file + ' : CTA principal vers le statut d’achat', item.cta.test(html));
   check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement présenté comme cible', item.target.test(html));
+  check(item.file + ' : prix explicitement historique, pas une offre', item.target.test(html));
   check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
   check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
   check(item.file + ' : aucune promesse de machine ou renvoi de licence',
