@@ -63,7 +63,7 @@ Il applique uniquement :
 1. `handleDownload` : clé R2 configurée uniquement, existence vérifiée avant réservation, réservation atomique `count < max_count`, nom de fichier dérivé de l'objet réellement servi ;
 2. suppression de l'ancien générateur landing et redirection 308 vers `https://bot-wow.com`.
 
-Le test candidat reconstruit le Worker depuis le bundle v50, compare les 110 fonctions préservées, les déclarations `PRICE_TABLE`, `RATE_LIMITS`, `RELEASE_STATUS`, et toutes les déclarations de routes API. Il exécute aussi les suites paiement, sécurité et fulfillment sur le candidat avec fetch/D1/R2 simulés uniquement.
+Le test candidat reconstruit le Worker depuis le bundle v50, compare les 110 fonctions préservées, les déclarations `PRICE_TABLE`, `RATE_LIMITS`, `RELEASE_STATUS`, et toutes les déclarations de routes API. Le test exécute les suites `payment-flow` et `checkout-security` sur le candidat avec mocks, plus les scénarios runtime download/landing et un test de non-envoi du renvoi d'e-mail v50. La suite `worker-fulfillment-reconciliation` reste incluse dans `npm test` pour le Worker main ; ses assertions Resend ne sont pas réutilisables telles quelles sur v50, car elles imposeraient le changement d'e-mail exclu du patch.
 
 ## Décision opérationnelle
 
