@@ -2699,3 +2699,75 @@ La PR #104 (documentation seule, `reports/operations/BOT-WOW-CURRENT-STATE.md`) 
 - Pour la suite : ne pas deduire « doc-only = pas de deploiement » ; **verifier systematiquement** avec `wrangler pages deployment list --project-name bot-wow` et controler le `source` du deploiement avant d'annoncer un etat de production.
 - Rollbacks toujours disponibles : `af45d9ec` (source `f958684`), `321aeb92` (source `a4bb457`), `ea59f77e` (source `0bba14d`).
 - Aucun autre changement : pas de prix, checkout, paiement, Worker, secret, binding, D1/R2, e-mail, DNS ni cache. Le site n'a pas ete modifie, seul son artefact a ete reconstruite a l'identique.
+
+
+---
+
+# P0.59 bis — Revalidation live Home/Buy, Pages, D1, Mollie et PR #103 — 2026-11-06T00:42Z
+
+## Snapshot GitHub
+- Depot : `aveca/bot-wow`, branche par defaut `main`.
+- `main` confirme : `21c2e3ef9d164e45e42323a39a9a3cbf983d370e` (commit documentaire #105).
+- PR #100 est fusionnee : merge SHA `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`.
+- PR #103 reste ouverte : HEAD `462e13609454521a8525962321b1f8f336146db2`, branche `fix/p0.56-worker-fulfillment-reconciliation-20261105`.
+- Comparaison actuelle `main...PR103` : diverged, ahead_by=1, behind_by=3 ; merge-base `a4bb4572079ba939df05e87a221ccaddea1e08b2`.
+- CI PR103 sur l'ancien HEAD : Validate run `42136060489` SUCCESS ; UI Quality run `42136060542` SUCCESS. Rebase et rerun necessaires avant toute decision.
+- Revue PR103 : le test `tests/worker-fulfillment-reconciliation.test.mjs` cree `tests/.worker-under-test.mjs` sans le supprimer. Commentaire ajoute : deplacer vers `os.tmpdir()` ou nettoyer avec `unlinkSync` en `finally`.
+- 17 PR ouvertes au dernier listing. PR #90 et #66 restent draft.
+
+## Cloudflare Pages — production
+- Dernier deploiement : `ff13930a-4c97-441a-a828-2b1818e9e6b3`.
+- Source : `main` / `21c2e3ef9d164e45e42323a39a9a3cbf983d370e`.
+- Etape Deploy : SUCCESS, terminee le `2026-11-06T00:40:58Z`.
+- Alias production : `https://bot-wow.com` et `https://www.bot-wow.com`.
+- Le commit #105 est documentaire, mais l'integration Git Cloudflare Pages declenche quand meme un rebuild. Le fingerprint de l'artefact reste celui deja documente ; verifier les deploiements avec l'API Cloudflare, pas seulement les workflows Actions.
+
+## Defaut P0.59 confirme sur le site live
+Les quatre routes primaires ont ete ouvertes le 2026-11-06 et refletent le contenu de `main` :
+- Home EN : `https://bot-wow.com/` — hero « The WoW Classic fishing bot », description de lecture d'ecran/clics, promesse de remboursement 14 jours, instructions « Unzip the package, paste your licence key, press F9 ».
+- Home FR : `https://bot-wow.com/fr/` — « Le bot de pêche WoW Classic », CTA « Automatiser ma pêche », instructions de decompresser/coller la cle/appuyer sur F9, promesse de remboursement.
+- Buy EN : `https://bot-wow.com/buy.html` — description operationnelle du bot, build v1.2.0 et mises a jour, formulaire de checkout desactive, promesse de remboursement, guide d'installation.
+- Buy FR : `https://bot-wow.com/fr/buy.html` — memes incoherences en francais.
+- Les avis « achat indisponible » et « aucune autorisation Blizzard » sont presents, mais ils coexistent avec des instructions et avantages operationnels non verifies. Ce n'est pas un probleme de cache : le deploiement Pages correspond a `main`, et le code source contient ces textes.
+- Issue de suivi : #102. Commentaire de revalidation ajoute le 2026-11-06T00:42Z.
+
+## D1 production — SELECT uniquement
+Toutes les requetes ont retourne `changed_db=false` et `rows_written=0`.
+- Orders : `bitcoin_manual/paid=5` (les 5 domaines email sont `example.com`), `pending_payment=8`, `rejected=1`, `mollie/failed=11`.
+- Commandes payees hors domaine de test : 0.
+- Pending : 7 domaines `gmail.com`, 1 `example.com` ; aucun n'est une vente confirmee.
+- Licences : 5 active ; downloads : 5 ; deliveries : 0 ; activations : 0 ; webhook_events : 16 ; botwow_emails : 12, tous status `subscribed`.
+- Analytics `test=0` : 1,944 page_view (dernier `2026-11-06T00:42:34.089Z`), 781 journey_view, 48 cta_click (dernier `2026-11-04T02:47:00.736Z`), 29 checkout_requested, 4 checkout_start, 6 checkout_created, 6 checkout_failed ; aucun payment_confirmed, conversion, delivery_sent ou activation.
+- Aucune vente commerciale verifiee ; revenu confirme : 0,00 EUR. Aucun paiement ni email n'a ete cree/envoye.
+
+## Mollie — lecture live
+- `ListProfiles` : un profil verifie, domaine different de BOT-WOW ; aucun profil BOT-WOW.
+- `ListWebhooks` live : un webhook actif, URL sur un autre domaine ; aucun webhook BOT-WOW.
+- Aucun paiement cree. Aucun profil externe reutilise.
+
+## Worker / paiement — etat et blocages
+- Worker `botwow-api` : version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% trafic.
+- PR #103 documente des sondes GET du 2026-11-06T00:10Z : le Worker v50 sert encore des pages marketing legacy sur `/bot-wow-gold`, `/best-wow-bot`, `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/` (HTTP 200 HTML), alors que le code `main` redirige ces GET vers le domaine canonique. PR #103 n'est ni fusionnee ni deployee.
+- `GET /api/config` (preuve rapportee dans PR #103) expose encore `product: "bot-wow-lifetime"`, `priceEur: 20`, `bitcoin.enabled=true`, `bitcoin.address=null`, sans champ de disponibilite. Ce n'est pas une preuve qu'un paiement peut aboutir ; ne pas changer ce drapeau ni le checkout sans autorisation.
+- Binding secret `RELEASE_STATUS` present mais valeur masquee/inconnue ; aucune requete de checkout valide n'a ete tentee.
+- Le chemin actif email est `sendDeliveryEmail2 -> sendEmail2 -> Resend`. Le helper historique `sendDeliveryEmail` etait mort/stub ; PR #103 le supprime. Aucun envoi reel reussi n'est confirme.
+- Issue #99 actualisee par commentaire ; aucun Worker deploye.
+
+## Conformite
+- L'EULA Blizzard revisee le 2024-03-21 interdit de creer, utiliser, offrir, promouvoir, annoncer, rendre disponible ou distribuer des bots non expressement autorises. L'accord anti-triche de Blizzard vise egalement les logiciels tiers non autorises facilitant le botting ou le gameplay.
+- Aucune autorisation applicable n'est documentee pour BOT-WOW. NO-GO commercial pour le bot actuel ; ne pas promouvoir ni distribuer l'automatisation.
+- Les corps des documents juridiques restent inchanges (issue #101, approbation proprietaire/juridique requise).
+
+## Actions de ce cycle
+- Commentaire de preuve ajoute a l'issue #102 (Home/Buy live + D1 + base/deploiement).
+- Commentaire de revue ajoute a PR #103 (nettoyage du fichier temporaire de test).
+- Commentaire de synchronisation ajoute a PR #103 : rebase sur le main courant (3 commits derriere), puis rerun CI.
+- Commentaire ajoute a l'issue #99 sur `bitcoin.enabled=true` avec adresse nulle et l'absence de champ de disponibilite.
+- Aucun fichier applicatif modifie, aucun commit applicatif, aucune commande shell locale executee dans ce runtime. Les instructions `AGENTS.md` confient l'execution locale et les tests a OpenCode/Factory ; aucune modification directe de fichiers n'a ete faite par contournement.
+- Aucun prix, checkout, secret, binding, Worker, D1/R2, email, DNS, cache ou depense modifie.
+
+## Prochaine priorite
+1. P0 : traiter issue #102 sur `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html` depuis le main courant ; remplacer le hero operationnel par un statut neutre de prototype archive ; supprimer les instructions d'installation/lancement et les promesses package/licence/activation/update/remboursement/livraison non verifiees ; conserver le prix cible 20 EUR uniquement comme reference historique non payable ; conserver l'avertissement Blizzard ; ne pas modifier les corps juridiques.
+2. P0 : mettre a jour `tests/release-availability.test.mjs` pour verifier les quatre pages primaires, l'absence de formulaire actif/CTA d'achat, l'absence d'instructions de gameplay et l'absence de promesses de livraison ; verifier que la consultation du statut n'emet pas `checkout_requested`.
+3. P1 : rebaser PR #103 sur `21c2e3e`, nettoyer le module temporaire du test, rerun Validate + UI Quality ; laisser la PR ouverte et ne pas deployer le Worker sans autorisation explicite.
+4. P1 : obtenir une decision proprietaire/juridique sur les conditions de vente et le perimetre commercial. Garder le checkout ferme.
