@@ -157,6 +157,8 @@ const p056Routes = [
   { path: '/fr/roadmap.html', statusHref: './buy.html', lang: 'fr' },
   { path: '/success.html', statusHref: './buy.html', lang: 'en' },
   { path: '/fr/success.html', statusHref: './buy.html', lang: 'fr' },
+  { path: '/cancel.html', statusHref: './buy.html', lang: 'en' },
+  { path: '/fr/cancel.html', statusHref: './buy.html', lang: 'fr' },
   { path: '/docs/install.html', statusHref: '../buy.html', lang: 'en' },
   { path: '/docs/fr/install.html', statusHref: '../../fr/buy.html', lang: 'fr' },
   { path: '/docs/license.html', statusHref: '../buy.html', lang: 'en' },
