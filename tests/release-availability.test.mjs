@@ -114,6 +114,8 @@ for (const [file, notice, footer] of [
   ['fr/faq.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['compare.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compare.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : mention exacte des serveurs privés', notice.test(flat));
@@ -121,6 +123,18 @@ for (const [file, notice, footer] of [
   check(file + ' : aucun terme de contournement ou promesse de détection', 
     !/anti-cheat|anti-triche|Warden|indétectable|undetectable|anti-ban/i.test(flat));
 }
+// The comparison page must not present historical BOT-WOW features as a current offer.
+for (const [file, noOffer, sourceLink] of [
+  ['compare.html', /BOT-WOW is not currently offered for purchase/i, /pixelwowbot\.com/],
+  ['fr/compare.html', /BOT-WOW n'est actuellement pas proposé à l'achat/i, /pixelwowbot\.com/],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : statut non commercialisé visible', noOffer.test(flat));
+  check(file + ' : sources publiques du concurrent citées', sourceLink.test(flat));
+  check(file + ' : aucune ancienne promesse runtime BOT-WOW',
+    !/308 ms|308\s*ms|12\/12|Persistent spot memory|Mémoire persistante des spots|build du bot de pêche v1\.2\.0/i.test(flat));
+}
+
 for (const [file, unavailable] of [
   ['faq.html', /None are currently available for BOT-WOW/i],
   ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
