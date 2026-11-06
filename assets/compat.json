@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "policy": "A version is compatible only when both server and test_date are recorded and status is tested.",
+  "records": [
+    {
+      "id": "classic-era",
+      "version": "WoW Classic Era / 1.13",
+      "server": null,
+      "test_date": null,
+      "status": "historical_unverified",
+      "coverage": [],
+      "note": "Historical internal claim only. The public evidence does not identify a server or a test date."
+    },
+    {
+      "id": "tbc",
+      "version": "The Burning Crusade (TBC)",
+      "server": null,
+      "test_date": null,
+      "status": "not_tested",
+      "coverage": [],
+      "note": "No dated test record available."
+    },
+    {
+      "id": "wotlk",
+      "version": "Wrath of the Lich King (WotLK)",
+      "server": null,
+      "test_date": null,
+      "status": "not_tested",
+      "coverage": [],
+      "note": "No dated test record available."
+    },
+    {
+      "id": "cataclysm",
+      "version": "Cataclysm",
+      "server": null,
+      "test_date": null,
+      "status": "not_tested",
+      "coverage": [],
+      "note": "No dated test record available."
+    },
+    {
+      "id": "wow-forever",
+      "version": "WoW Forever",
+      "server": null,
+      "test_date": null,
+      "status": "not_tested",
+      "coverage": [],
+      "note": "No dated test record available."
+    }
+  ]
+}
