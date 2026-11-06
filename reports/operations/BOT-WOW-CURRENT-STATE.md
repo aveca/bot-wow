@@ -3380,3 +3380,43 @@ Terminer par le prompt complet du cycle suivant.
 1. Attendre UI Quality / Playwright SUCCESS sur le head final de PR #113 ; si tous les checks sont verts, fusionner uniquement cette correction statique réversible et vérifier le déploiement Pages.
 2. Garder le checkout et le Worker fermés/protégés ; aucun paiement, envoi ou profil Mollie à créer.
 3. Continuer la récupération de provenance de l'archive et l'étude d'une offre indépendante du gameplay, sans prétendre qu'elle est validée commercialement.
+
+
+## P0.67 — suppression du pseudo-checkout et revalidation post-merge (2026-11-06T08:12Z)
+
+### GitHub / changement livré
+- Main actuel : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- PR #113 `fix(checkout-ui): remove disabled payment forms while sales are closed` fusionnée en squash : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Head CI de PR #113 : `562a45d539d4b5ac628b0961b63e2f7aa036ba7b`. Validate SUCCESS, UI Quality/Playwright SUCCESS, GitGuardian SUCCESS sur ce même SHA.
+- Diff inspecté : 15 fichiers, six pages publiques EN/FR (Home, Buy, Compare) et tests. Les formulaires désactivés, boutons de paiement et champs e-mail ont été retirés. Les pages indiquent qu'aucun formulaire, aucune collecte d'e-mail et aucun paiement ne sont disponibles.
+- Aucun prix, endpoint, règle serveur de checkout, Worker, secret, profil/webhook Mollie, D1/R2, e-mail, DNS ou cache n'a été modifié.
+
+### Vérification GitHub / arbre
+- Arbre Git de main : 443 entrées, 401 blobs, non tronqué.
+- 100 branches retournées par la recherche GitHub (dont main ; aucune page suivante).
+- Validate sur le merge SHA : SUCCESS ; workflow Deploy GitHub Pages : SUCCESS.
+- PR #103 reste OPEN, head `f91e80a509bc05ddc17b4c475b85b74cd00cc89e`. Checks Validate, UI Quality/Playwright et GitGuardian SUCCESS sur ce head exact. Après PR #113, comparaison avec main : 5 commits ahead / 1 behind ; mergeable=true. Aucun merge ni déploiement Worker.
+
+### Cloudflare Pages / contenu public
+- Déploiement production courant : `abdf07ce-facd-4601-bfcb-7a26f3060e49`.
+- Source SHA : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Build et Deploy SUCCESS ; aliases apex et www attachés ; déploiement précédent `b8e1adc7-813e-4ab0-9f7c-06d53d079d19` conservé.
+- Lecture du site par l'outil Web après le déploiement renvoie encore l'ancien pseudo-checkout sur / et /buy. Les pages FAQ et pages.dev ne sont pas lisibles via cet outil. Les six fichiers sur main ont bien été vérifiés sans buyForm/buyBtn/input email. Le contenu réellement servi en HTTP brut n'a pas pu être vérifié depuis l'environnement disponible ; cause non établie (outil d'extraction vs réponse live). Aucune purge cache/DNS.
+
+### D1 / ventes — SELECT uniquement
+- `botwow-production` : 5 commandes bitcoin_manual/paid, toutes test `example.com`; 8 pending, 1 rejected ; 11 Mollie failed.
+- Licences actives=5 (tests), deliveries=0, activations=0, webhook_events=16 (dernier événement le 2026-10-27), download tokens=5, téléchargements cumulés=8.
+- `botwow-analytics`, dernières 24 h non-test : 326 page_view, 119 journey_view ; aucun CTA ou checkout. Total non-test : 2 052 page_view, 799 journey_view, 48 CTA, 29 checkout_requested, 6 checkout_created, 6 checkout_failed, 4 checkout_start, 1 planner_mode.
+- Toutes les requêtes : `changed_db=false`, `rows_written=0`.
+- Ventes non-test vérifiées : 0 ; revenu commercial vérifié : 0 €.
+
+### Mollie / conformité
+- Liste live filtrée sur les éléments BOT-WOW : aucun profil BOT-WOW, aucun webhook BOT-WOW.
+- Aucune transaction Mollie consultée, créée ou modifiée.
+- Aucun accord Blizzard autorisant le bot historique n'est documenté. L'EULA interdit d'offrir/promouvoir/distribuer des bots non autorisés permettant le contrôle automatisé du jeu. Le checkout reste fermé ; la démo est simulée et n'est pas une offre commerciale autonome validée.
+
+### Prochaine action
+1. Obtenir une vérification HTTP brute des six routes après déploiement depuis l'environnement Factory ; ne pas purger le cache sans preuve.
+2. Rafraîchir PR #103 par un merge normal de main, jamais force-push, puis relancer CI. La garder en préparation : issue #99 requiert l'autorisation explicite avant fusion/déploiement Worker.
+3. Continuer la provenance de l'archive R2 et la faisabilité d'un planificateur autonome, sans exécuter les deux fichiers hors manifeste.
+4. Aucun achat de trafic et aucune réouverture du checkout avant produit autorisé, paquet source vérifié et livraison reproductible.
