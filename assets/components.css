@@ -226,3 +226,13 @@ nav .logo{display:inline-flex;align-items:center}
   .band > .st{max-width:100%;white-space:normal;overflow-wrap:anywhere}
   .band > .mono{flex:1 1 100%;min-width:0;white-space:normal;overflow-wrap:anywhere}
 }
+
+
+/* P0.58 — archived documentation headings must fit 320px viewports. */
+@media (max-width: 360px) {
+  .docs-archive .panel h1 {
+    font-size: clamp(30px, 9.5vw, 34px);
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}

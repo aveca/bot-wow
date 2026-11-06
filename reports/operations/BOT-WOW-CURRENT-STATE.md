@@ -2364,3 +2364,72 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 2. Execute issue #97 as a static EN/FR copy/test PR; keep checkout and Worker unchanged.
 3. Prepare, but do not deploy, a Worker reconciliation for the confirmed legacy landing and old-archive fallback. Worker deployment requires separate explicit authorization.
 4. Verify package bytes/provenance and the effective release gate through authorized non-disclosing paths before any sales enablement.
+
+
+---
+
+# P0.58 — 320px documentation overflow fixed; PR #100 revalidated; primary-route claims still open — 2026-11-05T23:33Z
+
+## GitHub / PR #100
+- Current `main`: `a4bb4572079ba939df05e87a221ccaddea1e08b2`.
+- PR #100 remains OPEN, base SHA matches main, mergeable=true. Branch: `fix/p0.54-secondary-route-status-copy-20261105`.
+- Latest code head before this report update: `9656c544a53b898665f5a7530827959bfa69bb5b`; 12 commits, 40 changed files. Static copy/tests only.
+- Validate run `42129873947`: SUCCESS on that head.
+- UI Quality run `42129873965`: IN PROGRESS at the latest check; do not merge until it completes green on the exact final head.
+- Previous UI Quality run `42127563795` completed with 422 PASS and 6 FAIL. All six failures were the 320px overflow assertion for `/docs/index.html`, `/docs/fr/index.html`, and `/docs/fr/install.html` in desktop and mobile projects. Recorded document widths were 335px, 335px and 342px against 321px allowed.
+- Root cause: long 40px documentation heading words exceed the 320px content width. This is a real responsive defect, not a stale assertion.
+- Corrective commits added `.docs-archive` to the four archived documentation index/install pages and a scoped `@media(max-width:360px)` rule in `assets/components.css` reducing the archived-page heading to 30–34px with safe wrapping. The overflow assertion was not weakened.
+- PR comment with exact failure and fix: https://github.com/aveca/bot-wow/pull/100#issuecomment-6672278374
+
+## Cloudflare Pages — read-only verification
+- Project `bot-wow`, production branch `main`, build `node scripts/build-site.mjs _site`, output `_site`; Git source is `aveca/bot-wow`; preview setting reports `none`.
+- Latest production deployment remains `321aeb92-5a58-4e83-a80a-293038c1d610`, source `a4bb4572079ba939df05e87a221ccaddea1e08b2`; queued, initialize, clone, build and deploy stages all SUCCESS.
+- `bot-wow.com` and `www.bot-wow.com` domains are ACTIVE.
+- PR branch preview deployment records exist but show stage `idle`; they are not production deployments. PR #100 has not been merged and its changes are not live.
+- Rollback remains `321aeb92-5a58-4e83-a80a-293038c1d610`.
+- No Pages production mutation occurred during this run.
+
+## Public routes — fresh web-reader check
+- Home `https://bot-wow.com/` and Buy `https://bot-wow.com/buy.html` were readable.
+- Both state that purchase/delivery are unavailable. However, the live primary pages still describe the intended gameplay-automation product, measured bot behavior, an operational unzip/key/F9 installation step, a 14-day refund promise tied to activation, and an installation guide. The Buy page continues to describe intended package entitlements and delivery as unverified.
+- These claims are still in current main source; PR #100 covers secondary routes, not Home/Buy. This is not a cache discrepancy: the Pages production source is exactly current main.
+- Created issue #102: https://github.com/aveca/bot-wow/issues/102 to align Home/Buy EN/FR with closed checkout and unverified commercial scope. Legal document bodies remain excluded; issue #101 still requires owner/legal approval.
+- Features and docs/install direct web-reader opens returned internal errors in this run; no live claim is made for those routes. Source changes in PR #100 remain pending.
+
+## Production D1 — read-only
+- Queries used SELECT-only statements/batch. Every returned query reports `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (all test-domain records; amount sum is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test orders: `0`; paid non-test amount: `0`.
+- Licences: 5; deliveries: 0; activations: 0; webhook events: 16; email contacts: 12; confirmed contacts: 0.
+- These test orders/licence rows do not prove a commercial sale or delivery.
+
+## Analytics D1 — read-only, test=0
+- `page_view=1,897`; latest recorded page event `2026-11-05T23:31:49.716Z`.
+- `journey_view=760`; latest `2026-11-05T23:31:49.737Z`.
+- `cta_click=48`; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- Counts are events, not unique visitors or sessions.
+
+## Mollie / Worker
+- Live `ListProfiles`: one verified profile for `https://sargasses-martinique.com/`; no BOT-WOW-specific profile.
+- Live `ListWebhooks`: one enabled live webhook to `https://sargasses-martinique.com/api/mollie-webhook.php`; no BOT-WOW webhook.
+- No Mollie payment was created; no profile from another activity was reused.
+- Worker `botwow-api` remains deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic.
+- Binding names include `RELEASE_STATUS`, `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RESEND_API_KEY`; secret values were not read. `MAIL_FROM` is `BOT-WOW <licences@bot-wow.com>`; `R2_OBJECT_KEY` is `casinobabe-fishing-1.2.0.zip`.
+- The effective `RELEASE_STATUS` value remains unknown. Do not probe it with a valid checkout request.
+- Resend integration code exists (`sendDeliveryEmail2` → `sendEmail2`), but successful delivery and credential validity are unverified. No email was sent.
+- Issue #99 title/body were corrected to reflect that the Resend integration exists; only successful production delivery remains unverified.
+
+## Commercial state / safety
+- Verified commercial sales: **0**. Confirmed commercial revenue: **€0.00**.
+- Public checkout UI is closed. Effective Worker-side gate remains unknown; do not assume the UI proves the secret value.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell this scope for Blizzard-operated services.
+- No price, checkout, payment, secret, binding, Worker, D1/R2, email, DNS, cache or production setting was changed. No campaign or paid traffic.
+
+## Next action
+1. Wait for UI Quality run `42129873965` and require SUCCESS on the exact final PR #100 head; inspect any new failures rather than weakening tests.
+2. If green, inspect the complete diff and merge the reversible static PR #100; verify the automatic Pages production deployment source SHA and the changed routes.
+3. Execute issue #102 as a separate static EN/FR PR for Home/Buy copy; do not change legal bodies from issue #101.
+4. Keep checkout closed until the product scope is authorized, the exact package bytes/provenance are verified, a dedicated BOT-WOW payment profile/webhook exists, and end-to-end fulfillment is proven.
+5. Keep Worker v50 reconciliation separate and do not deploy Worker or change secrets without specific authorization.

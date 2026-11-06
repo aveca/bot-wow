@@ -431,5 +431,99 @@ for (const item of [
   check(item.file + ' : anciennes affirmations commerciales supprimées', !item.forbidden.test(html));
 }
 
+
+
+// Secondary EN/FR routes must describe status, not an available purchase or install.
+const secondaryStatusRoutes = [
+  ['demo.html', './buy.html'],
+  ['fr/demo.html', './buy.html'],
+  ['features.html', './buy.html'],
+  ['fr/features.html', './buy.html'],
+  ['getting-started.html', './buy.html'],
+  ['fr/getting-started.html', './buy.html'],
+  ['fishing.html', './buy.html'],
+  ['fr/fishing.html', './buy.html'],
+  ['faq.html', './buy.html'],
+  ['fr/faq.html', './buy.html'],
+  ['compatibility.html', './buy.html'],
+  ['fr/compatibility.html', './buy.html'],
+  ['roadmap.html', './buy.html'],
+  ['fr/roadmap.html', './buy.html'],
+  ['success.html', './buy.html'],
+  ['fr/success.html', './buy.html'],
+  ['docs/install.html', '../buy.html'],
+  ['docs/fr/install.html', '../../fr/buy.html'],
+  ['docs/license.html', '../buy.html'],
+  ['docs/fr/license.html', '../../fr/buy.html'],
+  ['docs/index.html', '../buy.html'],
+  ['docs/fr/index.html', '../../fr/buy.html'],
+];
+for (const [file, statusHref] of secondaryStatusRoutes) {
+  const html = read(file);
+  check(file + ' : aucun ancien lien #offre/#buy', !/href=["'][^"']*#(?:offre|buy)/i.test(html));
+  check(file + ' : lien vers la page de statut', html.includes('href="' + statusHref + '"'));
+  check(file + ' : aucun CTA d’achat immédiat résiduel',
+    !/Buy — €20\.00|Acheter — 20,00 €|Get the lifetime licence|Prendre la licence à vie|Buy licence|Acheter la licence/i.test(html));
+}
+for (const [file, forbidden] of [
+  ['demo.html', /lifetime licence|before you buy|One-time · lifetime|Buy licence/i],
+  ['fr/demo.html', /licence à vie|avant d’acheter|Paiement unique · licence à vie|Acheter la licence/i],
+  ['features.html', /Mollie|Bitcoin|Machine-locked licence keys/i],
+  ['fr/features.html', /Mollie|Bitcoin|Clés verrouillées à une machine/i],
+  ['getting-started.html', /python scripts\/fishing_bot\.py|clickAfterBiteMs|After payment you receive|Your key activates on one machine/i],
+  ['fr/getting-started.html', /python scripts\/fishing_bot\.py|clickAfterBiteMs|Après le paiement, vous recevez|Votre clé s’active sur une machine/i],
+  ['success.html', /Thank you — your order is in|You receive an email with your|licence key.*download link/i],
+  ['fr/success.html', /Commande confirmée|Vous recevez par e-mail votre|clé de licence.*lien de téléchargement/i],
+  ['docs/install.html', /python scripts\/fishing_bot\.py|clickAfterBiteMs|Casinababe\.toc|pip install opencv/i],
+  ['docs/fr/install.html', /python scripts\/fishing_bot\.py|clickAfterBiteMs|Casinababe\.toc|pip install opencv/i],
+]) {
+  const html = read(file);
+  check(file + ' : anciennes promesses ou instructions non disponibles supprimées', !forbidden.test(html));
+}
+
+
+for (const [file, forbidden] of [
+  ['roadmap.html', /Live now — v1\.2\.0|machine activation|manual bitcoin rail|Farm your/i],
+  ['fr/roadmap.html', /En place aujourd'hui — v1\.2\.0|activation par machine|rail bitcoin manuel|farm d'XP/i],
+  ['docs/index.html', /Everything you need to install, use|Prerequisites, addon, configuration, first run/i],
+  ['docs/fr/index.html', /Tout ce qu'il faut pour installer, utiliser|Prérequis, addon, configuration, lancement/i],
+]) {
+  const html = read(file);
+  check(file + ' : page archivée sans promesse de release ou d’installation', !forbidden.test(html));
+}
+
+
+const additionalStatusRoutes = [
+  ['cancel.html', './buy.html'],
+  ['fr/cancel.html', './buy.html'],
+  ['docs/changelog.html', '../buy.html'],
+  ['docs/fr/changelog.html', '../../fr/buy.html'],
+  ['docs/known-issues.html', '../buy.html'],
+  ['docs/fr/known-issues.html', '../../fr/buy.html'],
+  ['404.html', './buy.html'],
+  ['fr/404.html', './buy.html'],
+  ['legal/terms.html', '../buy.html'],
+  ['legal/fr/terms.html', '../../fr/buy.html'],
+  ['legal/privacy.html', '../buy.html'],
+  ['legal/fr/privacy.html', '../../fr/buy.html'],
+  ['legal/refund.html', '../buy.html'],
+  ['legal/fr/refund.html', '../../fr/buy.html'],
+];
+for (const [file, statusHref] of additionalStatusRoutes) {
+  const html = read(file);
+  check(file + ' : aucun ancien lien commercial #offre/#buy', !/href=["'][^"']*#(?:offre|buy)/i.test(html));
+  check(file + ' : lien vers la page de statut', html.includes('href="' + statusHref + '"'));
+  check(file + ' : aucun CTA Buy/Acheter à 20 €', !/Buy — €20\.00|Acheter — 20,00 €|Buy now|Acheter maintenant/i.test(html));
+}
+for (const [file, forbidden] of [
+  ['cancel.html', /Payment cancelled\.|Nothing was charged|Back to the offer/i],
+  ['fr/cancel.html', /Paiement annulé\.|Rien n'a été débité|Revenir à l'offre/i],
+  ['404.html', /Use automation software responsibly and within the rules/i],
+  ['fr/404.html', /Utilisez les logiciels d'automatisation de manière responsable/i],
+]) {
+  const html = read(file);
+  check(file + ' : ne présente pas une annulation ou une autorisation non vérifiée', !forbidden.test(html));
+}
+
 console.log(failures === 0 ? '\nRELEASE AVAILABILITY : OK' : `\nRELEASE AVAILABILITY : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
