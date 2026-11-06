@@ -3681,3 +3681,42 @@ route live ne contient plus d'identifiant capable d'en émettre un nouveau.
    aucun checkout, aucun secret, aucune écriture D1/R2 dans ce périmètre.
    Tant que ce point n'est pas autorisé, le cycle reste **préparation seulement** (état de
    `main` prêt, CI verte, tests de réconciliation verts).
+
+---
+
+## Cycle 2026-11-06 (UTC) - PR #118 fusionnee, ecart de stamp des assets corrige (PR #121)
+
+**Faits directement verifies le 2026-11-06. Lecture seule, sauf le commit de la PR #121.**
+
+| Element | Valeur | Preuve |
+|---|---|---|
+| `main` apres fusion | `555bb076` (merge PR #118, 2026-11-06T10:36:15Z) | `gh pr view 118 --json mergeCommit` |
+| PR #118 | **MERGED** (head `49fe77ed`, 13 commits apres `f1c43d20`) | GitHub |
+| CI de `main` @555bb076 | `Validate Bot-Wow` + `Deploy Bot-Wow to GitHub Pages` : success | `gh run list --branch main` (run 42203942762 / 42203942842) |
+| `npm test` sur checkout propre de `555bb076` | **ECHEC** : `le stamp correspond au contenu actuel des assets (attendu 560cff9a, trouve b4232c44)` | execution locale reelle, 2026-11-06 |
+| Cause | `assets/compatibility.js` (PR #118) entre dans l'empreinte (`560cff9a`) sans restamp des pages ; les 3 workflows lançaient `versionne-assets` **avant** `npm test`, ce qui masquait l'ecart | `.github/workflows/validate.yml`, `ui-quality.yml`, `pages.yml` |
+| Correctif | PR #121, branche `fix/asset-stamp-resync-20261106`, commit `bdab8bee` : restamp de 54 fichiers + `npm test` execute avant `versionne-assets` | https://github.com/aveca/bot-wow/pull/121 |
+| Preuve que le correctif tient | dans la CI de #121, `npm test` passe **avant** le restamp, puis `0 fichier(s) versionne(s) - stamp v=560cff9a` (arbre deja juste) | run 42204512827 |
+
+### Worker et paiement (lecture seule)
+
+- Dernier deploiement du Worker `botwow-api` : version `1513595c` (numero 51), 2026-11-06T09:16:54Z, message « Deploy BOT-WOW PR #103 fulfillment reconciliation » (`wrangler deployments list`). Le blocage « Worker v50 encore en ligne » de la section precedente est donc **resolu**.
+- `api.bot-wow.com/` et `api.bot-wow.com/de/` repondent **308** ; `GET /api/config` = 200 avec `priceEur=20`, `currency=eur` (prix inchange).
+- Bindings du Worker : `RELEASE_STATUS` existe mais de type `secret_text` (valeur masquee). Le code exige `RELEASE_STATUS === "confirmed"` pour ouvrir le checkout et son defaut est `pending` (`worker/index.js:424`, `488-501`). **La fermeture du checkout n'est pas prouvee par la valeur elle-meme**, seulement par le code, l'absence de `RELEASE_STATUS="confirmed"` declare dans `wrangler.toml`, et l'absence de commande depuis le 2026-10-27.
+- D1 `botwow-production` (SELECT en lecture seule) : 25 commandes = 11 `failed` (mollie), 8 `pending_payment` (`bitcoin_manual`), 5 `paid` (`bitcoin_manual`), 1 `rejected` (`bitcoin_manual`). Derniere commande : 2026-10-27T23:23Z. Derniere commande `paid` : 2026-10-04T02:30Z. `licenses` = 5 (5 actives), `deliveries` = 0, `activations` = 0, `downloads` = 5, `webhook_events` = 16.
+  - Les 5 commandes `paid` sont **manuelles** (`bitcoin_manual`) : **aucune vente Mollie confirmee**, aucune livraison e-mail consignee. Le CA confirme reste **0,00 EUR**.
+- Aucun connecteur Mollie n'est disponible dans cet environnement ; la cle API est un `secret_text` non lisible. Le profil Sargasses `pfl_t8KCk4Cm2C` n'a pas ete utilise et reste interdit.
+
+### Blocages et decisions
+
+1. **Titre commercial obligatoire absent** de `main` et de tout l'historique git. L'inserer tel quel (« le bot complet ... Classic Era, TBC, WotLK, Cataclysm et suivantes, WoW Forever ») affirmerait une compatibilite multi-versions alors que `assets/compat.json` declare 4 versions `not_tested` et Classic Era `historical_unverified`. **Conflit direct avec la regle « aucune affirmation de compatibilite sans preuve datee »** : decision proprietaire requise. Choix conservateur applique : pas d'ajout.
+2. **Identite du vendeur absente** des pages legales EN/FR (`legal/terms.html`, `legal/fr/terms.html`) : ni raison sociale, ni adresse, ni SIREN/RCS, ni numero de TVA, ni mediateur de la consommation. De plus `legal/terms.html:54` affirme encore « This page describes the offer currently on sale » alors que le checkout est ferme. Corps juridiques geles (issue #101) : **non modifies**.
+3. Valeurs `RELEASE_STATUS`, `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `RESEND_API_KEY` masquees : validite reelle **non prouvee**.
+
+### Prochaine action (une seule)
+
+Faire valider et fusionner la PR #121 (correctif de stamp et de fidelite CI), puis trancher la question du titre commercial (point 1) avant toute decision de reouverture des ventes.
+
+### Perimetre respecte
+
+Aucun paiement, checkout POST, e-mail, changement de secret/binding, modification de prix/devise/`PRICE_TABLE`, ecriture D1/R2, deploiement Worker ou Pages, modification juridique, merge ou publication n'a ete effectue dans ce cycle.
