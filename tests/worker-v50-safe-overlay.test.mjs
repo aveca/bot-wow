@@ -114,7 +114,7 @@ try {
     landing.headers.get('location') === 'https://bot-wow.com/bot-wow-gold?utm_source=overlay',
     'location=' + landing.headers.get('location'));
 
-  async function downloadCase(object, changes = 1, key = 'casinababe-fishing-1.2.0.zip') {
+  async function downloadCase(object, changes = 1, key = 'casinobabe-fishing-1.2.0.zip') {
     const state = { events: [], quotaWrites: 0 };
     const env = {
       R2_OBJECT_KEY: key,
@@ -158,16 +158,16 @@ try {
   check('missing R2 artifact returns 503', missing.response.status === 503, 'status=' + missing.response.status);
   check('missing R2 artifact does not consume quota', missing.state.quotaWrites === 0);
   check('missing R2 artifact checks only the configured key',
-    missing.state.events.filter(x => x.startsWith('r2:')).join(',') === 'r2:casinababe-fishing-1.2.0.zip');
+    missing.state.events.filter(x => x.startsWith('r2:')).join(',') === 'r2:casinobabe-fishing-1.2.0.zip');
 
   const present = await downloadCase({ body: new Response('PK\\u0003\\u0004test').body });
   check('present R2 artifact returns ZIP 200', present.response.status === 200, 'status=' + present.response.status);
   check('Content-Disposition matches the configured artifact',
-    present.response.headers.get('content-disposition') === 'attachment; filename="casinababe-fishing-1.2.0.zip"',
+    present.response.headers.get('content-disposition') === 'attachment; filename="casinobabe-fishing-1.2.0.zip"',
     'header=' + present.response.headers.get('content-disposition'));
   check('R2 lookup precedes atomic quota reservation',
-    present.state.events.indexOf('r2:casinababe-fishing-1.2.0.zip') >= 0 &&
-    present.state.events.indexOf('r2:casinababe-fishing-1.2.0.zip') < present.state.events.indexOf('quota'),
+    present.state.events.indexOf('r2:casinobabe-fishing-1.2.0.zip') >= 0 &&
+    present.state.events.indexOf('r2:casinobabe-fishing-1.2.0.zip') < present.state.events.indexOf('quota'),
     'events=' + present.state.events.join('>'));
 
   const exhausted = await downloadCase({ body: new Response('PK\\u0003\\u0004test').body }, 0);
@@ -184,7 +184,7 @@ try {
   // not against main. These tests make no real Mollie request (fetch is intercepted).
   for (const name of ['payment-flow.test.mjs', 'checkout-security.test.mjs', 'worker-fulfillment-reconciliation.test.mjs']) {
     copyFileSync(join(ROOT, 'tests', name), join(testsDir, name));
-    const run = spawnSync(process.execPath, [join(testsDir, name)], {
+    const run = spawnSync('node', [join(testsDir, name)], {
       cwd: temp, encoding: 'utf8', timeout: 120000
     });
     check('candidate executes ' + name, run.status === 0,
