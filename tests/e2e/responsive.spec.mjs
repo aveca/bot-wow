@@ -47,7 +47,8 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeAttached();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
     await captureScreenshot(page, testInfo, `responsive-buy-${vp.name}`);
@@ -61,7 +62,8 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeAttached();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
     await captureScreenshot(page, testInfo, `responsive-buy-fr-${vp.name}`);
@@ -117,7 +119,8 @@ test('responsive: price card shows blocked state on all viewports', async ({ pag
 
     await expect(page.locator('.checkout-blocked')).toBeVisible();
     await expect(page.locator('#release-availability-notice')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
 
     await captureScreenshot(page, testInfo, `responsive-blocked-${vp.name}`);
   }
