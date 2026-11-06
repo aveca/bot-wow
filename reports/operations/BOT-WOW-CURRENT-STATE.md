@@ -3315,3 +3315,37 @@ Terminer par le prompt complet du cycle suivant.
 3. Effective masked `RELEASE_STATUS` value, Resend credential validity, and R2 release-object bytes/provenance remain unverified.
 4. PR #103 is a separate Worker preparation PR; issue #99 requires explicit authorization for Worker merge/deploy. No merge or Worker deployment was performed.
 5. Next: wait for PR #112 Validate + UI Quality on the exact head; inspect all checks and the final diff. If green, merge only the reversible static FAQ correction under the standing authorization and verify the resulting Pages deployment/live EN/FR FAQ. Keep checkout and Worker untouched.
+
+
+## P0.65 — revalidation publique FAQ, artefact et PRs (2026-11-06T06:52Z)
+
+### GitHub / PR #112
+- Main confirmé : `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`.
+- Inventaire complet du tree Git : 443 entrées, 401 fichiers, tree non tronqué. 99 branches distantes et 19 PR ouvertes au relevé.
+- PR #112 (`fix/p0.64-faq-current-status-20261106`) : head avant cette note `1e7f62d2531b612c0a8a725a5e446ba08190746f`, base main `22406cc`, 12 commits ahead / 0 behind, 4 fichiers. Modifications : FAQ EN/FR, assertions de statut et de pied de page, présentations des notes d'installation comme archives, rapport opérationnel.
+- Sur ce head exact, Validate SUCCESS (`42177030735`) et GitGuardian SUCCESS ; UI Quality `42177030697` était encore PENDING à 06:52Z. Aucun résultat local n'est revendiqué. Ne pas merger avant UI Quality SUCCESS sur le head final.
+- Le contrôle Codex intégré n'a pas produit de revue de code : quota de revues atteint. Il ne s'agit pas d'un finding technique.
+
+### Site public
+- GET via le lecteur Web sur `/faq` (EN) et `/fr/faq` a encore renvoyé l'ancienne FAQ : CTA Buy/Acheter à 20 €, bot présenté comme produit payant, capacités runtime, compatibilité tierce et remboursement sous 14 jours. Cause (cache, indexation ou routage) non établie ; aucun purge/cache/DNS n'a été effectué.
+- `/` et `/buy` renvoient le statut actuel : aucun produit proposé, démo simulée, pas de téléchargement/installation/activation/livraison, avertissement Blizzard. Le lecteur Web n'a pas fourni de réponse exploitable pour `/fr/buy`.
+- PR #112 corrige les FAQ EN/FR et ajoute les assertions correspondantes. Correction additionnelle : pied de page sans ancienne description de bot comme produit actuel ; liens d'installation explicitement étiquetés comme notes archivées.
+- Cloudflare Pages production : déploiement `0737706b-4f65-4d5f-a044-0ad93a2097d9`, source main `22406cc`, build/deploy SUCCESS. Le push PR a créé un preview `84004fbe-0594-40e2-8dff-1c8fc7ad4a51`, ignoré avec `preview_deployments_disabled`. Un déploiement production antérieur `5a4556ce-3578-4f15-84d8-7e60979a5290` reste disponible comme rollback.
+- Cloudflare Pages possède sa propre intégration Git : le merge sur main déclenchera un déploiement de production. Vérifier le source SHA et les stages après merge ; ne pas supposer le déploiement.
+
+### Worker / paiement
+- Worker `botwow-api` toujours v50, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100 % trafic ; aucun déploiement effectué.
+- PR #103 : head `939c042d5070e06f42fad4f8cc6cbbf471ae4b63`, 4 commits ahead / 0 behind, 5 fichiers ; Validate et UI Quality SUCCESS sur ce head exact. PR ouverte, préparation seulement. Description mise à jour pour refléter la vérification R2 ci-dessous.
+- Mollie live, lecture seule : un seul profil vérifié pour Sargasses-Martinique et un seul webhook live vers ce domaine ; aucun profil ni webhook BOT-WOW. Ne pas réutiliser ce profil.
+- R2 `botwow-binaries/casinobabe-fishing-1.2.0.zip` : 1 387 543 octets ; SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f` ; ZIP 30 entrées ; 26/26 fichiers déclarés dans le manifeste ont la taille et le SHA conformes. Deux exécutables hors manifeste : `Lancer-Casinababe-Fishing-Assistant.bat` et `restaurer_previous.ps1`. Provenance Git, rebuild reproductible et revue de sécurité de ces deux exécutables non établis. Aucun exécutable n'a été lancé ; aucune écriture R2.
+- Issue #99 conserve les preuves de cette lecture R2 et les limites associées.
+
+### Ventes / données financières
+- Pas de nouvelle requête D1 dans ce cycle ; le dernier relevé SELECT-only disponible reste : 5 commandes paid toutes de test, 8 pending, 1 rejected, 11 échecs Mollie, 0 livraison, 0 activation. Aucun paiement commercial non-test confirmé ; revenu commercial vérifié : 0 € au dernier relevé.
+- Aucun paiement, e-mail, checkout POST, changement de secret ou modification D1 n'a été effectué.
+
+### Prochaine action
+1. Attendre UI Quality SUCCESS sur le head final de PR #112.
+2. Si Validate + UI Quality + GitGuardian sont verts sur le même head, merger uniquement cette correction statique FAQ (rollback Pages disponible), sans toucher au Worker ou au checkout.
+3. Vérifier le déploiement Pages qui suit, puis relire `/faq` et `/fr/faq`. Garder le checkout fermé.
+4. Continuer la récupération de provenance des sources de l'archive et l'analyse non-exécutable des deux fichiers hors manifeste.
