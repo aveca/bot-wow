@@ -82,6 +82,17 @@ The authorized `GET .../content/v2` endpoint returned the current script content
 - Current main/live v51 `handleDownload` uses the configured versioned R2 key, refuses a missing/invalid artifact, reserves the quota atomically after confirming the object exists, and uses the exact object key for `Content-Disposition`.
 - The current main/live v51 Worker no longer contains `handleLanding`; legacy API-host landing paths are intended to redirect rather than serve the old marketing HTML. Live HTTP probing of `api.bot-wow.com` was blocked by the execution environment's outbound-request policy, so those API-host routes are **not re-verified in this capture**.
 
+## R2 artifact metadata (read-only)
+
+The R2 bucket `botwow-binaries` lists the exact configured object key `casinobabe-fishing-1.2.0.zip`:
+- Size: `1,387,543` bytes
+- ETag: `d9d7ab22ec076873b8fed656a53460bc`
+- Last modified: `2026-10-27T06:31:06.784Z`
+- Storage class: `Standard`
+- Listed alongside the legacy `Casinababe-v1.0.38.zip` object.
+
+The v50 and v51 `R2_OBJECT_KEY` values are byte-for-byte identical to the listed object key. A direct Cloudflare R2 API object-body GET nevertheless returned HTTP 404 / `10007: The specified key does not exist`, while List Objects returned the metadata above. This API-level inconsistency means the object is **listed but its body was not verified** in this run. No object download or customer delivery was attempted.
+
 ## PR #103 and CI
 
 PR #103 is merged at `8744a3e2bbaec449e16548f89117a05f0d7f20dc`. Its reviewed diff changes the Worker only by removing the unused log-only `sendDeliveryEmail` helper; other changes are tests and reports.
