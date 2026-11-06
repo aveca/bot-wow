@@ -200,16 +200,16 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 // 8. No activation or refund entitlement is advertised while no product is offered.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  const heroGuarantee = (html.match(/hero__guarantee-text">([\\s\\S]*?)<\\/span>/) || ['', ''])[1]
-    .replace(/<[^>]+>/g, '').replace(/\\s+/g, ' ');
-  check(`${file} : le hero renvoie vers la politique publiée`,
-    /legal\\/(fr\\/)?refund\\.html/.test(html), '(aucun lien vers la politique)');
-  check(`${file} : aucune garantie de remboursement inconditionnelle`,
-    !/No catch|Sans piège/i.test(heroGuarantee), `("${heroGuarantee}")`);
-  check(`${file} : le hero précise qu’aucune licence ne peut être activée`,
-    /No licence can be activated|Aucune licence ne peut être activée/i.test(heroGuarantee), `("${heroGuarantee}")`);
-  check(`${file} : aucune promesse de remboursement n’est faite`,
-    /No refund promise is made|Aucune promesse de remboursement n’est faite/i.test(heroGuarantee), `("${heroGuarantee}")`);
+  const heroGuarantee = (html.match(/hero__guarantee-text">([\s\S]*?)<\/span>/) || ['', ''])[1]
+    .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+  check(file + ' : le hero renvoie vers la politique publiée',
+    /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
+  check(file + ' : aucune garantie de remboursement inconditionnelle',
+    !/No catch|Sans piège/i.test(heroGuarantee), '("' + heroGuarantee + '")');
+  check(file + ' : le hero précise qu’aucune licence ne peut être activée',
+    /No licence can be activated|Aucune licence ne peut être activée/i.test(heroGuarantee), '("' + heroGuarantee + '")');
+  check(file + ' : aucune promesse de remboursement n’est faite',
+    /No refund promise is made|Aucune promesse de remboursement n’est faite/i.test(heroGuarantee), '("' + heroGuarantee + '")');
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
