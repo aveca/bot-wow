@@ -131,13 +131,35 @@ for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDis
     !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));
 }
 for (const [file, unavailable] of [
-  ['faq.html', /Card checkout is currently unavailable/i],
-  ['fr/faq.html', /paiement par carte est actuellement indisponible/i],
+  ['faq.html', /None are currently available for BOT-WOW/i],
+  ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
   check(file + ' : aucune affirmation de checkout Mollie actif',
     !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
+}
+
+// FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
+for (const [file, unavailable, simulated, staleClaims] of [
+  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /browser planner demo with simulated data.*does not connect to a game/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
+  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /démo de planification dans le navigateur avec des données simulées.*ne se connecte à aucun jeu/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : indisponibilité du produit annoncée dès la FAQ', unavailable.test(flat));
+  check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
+  check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
+  check(file + ' : aucune instruction de paiement historique', /Do not send payment|N'envoyez aucun paiement/i.test(flat));
+  const expectedFooter = file === 'faq.html'
+    ? 'Historical BOT-WOW project. No current game-integrated product is offered.'
+    : "Projet BOT-WOW historique. Aucun produit intégré à un jeu n'est actuellement proposé.";
+  const archivedInstallLabel = file === 'faq.html'
+    ? 'Archived installation notes (not current instructions)'
+    : 'Notes d’installation archivées (instructions non actuelles)';
+  check(file + ' : pied de page cohérent avec le statut historique', flat.includes(expectedFooter));
+  check(file + ' : anciennes affirmations de produit actuel retirées du pied de page',
+    !/Fishing assistant for WoW Classic|Assistant de pêche pour WoW Classic/i.test(flat));
+  check(file + ' : les notes d’installation sont explicitement archivées', flat.includes(archivedInstallLabel));
 }
 
 // Public module pages must distinguish internal registry status from commercial availability.
@@ -218,13 +240,13 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
-  ['faq.html', /offer is not currently available for purchase/i, /Activation limits are not confirmed/i,
+  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /Activation limits and terms are not confirmed/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /offre n'est pas actuellement disponible à l'achat/i, /limites d'activation ne sont pas confirmées/i,
+  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /limites et conditions d'activation ne sont pas confirmées/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
-  const flat = read(file).replace(/\\s+/g, ' ');
+  const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : disponibilité commerciale explicitement fermée', availability.test(flat));
   check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
   check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
