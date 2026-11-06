@@ -1,6 +1,6 @@
 # BOT-WOW — État courant Factory V3
 
-**État court au 2026-11-06T14:17Z : `PROJECT_STATE.md`.** Ce fichier reste l'historique. Les sections qui décrivent le Worker v50 comme la version en production, ou `www` comme un 200 permanent, sont périmées à partir de cette heure.
+**État court au 2026-11-06T14:48Z : `PROJECT_STATE.md`.** Ce fichier reste l'historique. Les sections qui décrivent le Worker v50 comme la version en production, `www` comme un 200 permanent, ou `HEAD` API encore en 404, sont périmées à partir de 14:48Z.
 
 **Dernière mise à jour de l'historique long : 2026-11-04T23:48Z**, complété par les sections P0.33 à P0.68 puis par le relevé du 2026-11-06 en fin de fichier.
 
@@ -3697,4 +3697,18 @@ Ce relevé remplace, pour les points qu'il mesure, les affirmations « Worker v5
 
 Prochaine action : une décision propriétaire sur ce qui peut être vendu. Ne pas rouvrir le checkout tant que cette décision, un profil Mollie dédié, la provenance du paquet et `RELEASE_STATUS` ne sont pas explicitement acceptés.
 
-Ajout 14:22Z : `HEAD https://api.bot-wow.com/` répond 404 alors que `GET` répond 308 (`HEAD /health` aussi 404 contre 200). Correctif de routeur dans la PR #129, non déployé. `www` répond 301 à 14:22:37Z. `/api/v1/*` et `/checkout` restent des absences voulues, pas des routes à inventer.
+Ajout 14:22Z : `HEAD https://api.bot-wow.com/` répond 404 alors que `GET` répond 308 (`HEAD /health` aussi 404 contre 200). Correctif de routeur dans la PR #129, non déployé à cette heure. `www` répond 301 à 14:22:37Z. `/api/v1/*` et `/checkout` restent des absences voulues, pas des routes à inventer.
+
+## Déploiement Worker 2026-11-06T14:48Z
+
+Autorisation : déploiement technique réversible du Worker `botwow-api` depuis `main` `017882a2ba29239801b4e0e6641a54872c4285a3` (squash PR #129). Pages, secrets, Mollie, prix, checkout, D1 et R2 ne sont pas modifiés.
+
+- Version uploadée `054cd158-4be2-42f8-92a6-ff9c4f059079` (numéro 52), `created_on` 2026-11-06T14:48:06Z. `compatibility_date` `2026-01-01`, `nodejs_compat`, `usage_model` `standard`. Annotation `workers/commit_sha` `017882a2ba29239801b4e0e6641a54872c4285a3`.
+- Les 18 bindings de production sont hérités (`version_id` littéral `latest`, qui était alors la version déployée `1513595c-6a53-4575-b013-9979b696dce3`) avec `bindings_inherit=strict`. Noms et types seulement : aucun secret envoyé ni affiché. Aucun binding `assets`.
+- Déploiement `6ca34fa3-198a-44b8-a6ed-300e7db37f99`, `created_on` 2026-11-06T14:48:17Z, source `api`, stratégie `percentage`, 100 % sur `054cd158-4be2-42f8-92a6-ff9c4f059079`. Message : « Production rollout HEAD suit les lectures GET, main 017882a ».
+- SHA-256 du module déployé : `10891fbd347418fbeeb7fa0697345736e239ff28f27de96e43707bec8aebace7`, 123 472 octets, identique à `worker/index.js` de ce `main`.
+- Sondes directes 2026-11-06T14:48:30Z : `GET` et `HEAD https://api.bot-wow.com/` → **308** vers `https://bot-wow.com/` ; `GET` et `HEAD /health` → **200** (HEAD sans corps) ; `GET` et `HEAD /api/config` → **200** (HEAD sans corps, `priceEur` 20).
+- Namespace KV temporaire `botwow-deploy-tmp-20261106` (`192f3501579a46138d1718a269865353`) supprimé après le déploiement.
+- Retour arrière immédiat : redéployer la version `1513595c-6a53-4575-b013-9979b696dce3` (déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884`).
+
+Prochaine action : décision du propriétaire sur le produit qui peut être vendu. Le checkout reste fermé.

@@ -1,6 +1,6 @@
 # BOT-WOW — état partagé
 
-**Relevé : 2026-11-06T14:17Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
+**Relevé : 2026-11-06T14:48Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
 Dépôt : https://github.com/aveca/bot-wow
 PR de ce relevé : https://github.com/aveca/bot-wow/pull/129 (branche `cursor/commercial-truth-agent-state-0086`)
@@ -15,8 +15,8 @@ Hôte canonique : `https://bot-wow.com` (confirmé par les `link rel="canonical"
 | HEAD au début du cycle | `ba720c0fce69f4121d5c5b0aa4a168ceac931b70` | `git rev-parse HEAD` |
 | CI de ce SHA | Validate `42210842281` SUCCESS ; Deploy GitHub Pages `42210842318` SUCCESS | GitHub Actions |
 | Pages production | déploiement `e1fe25a3-9032-48c5-a5ba-b2433cfc41eb`, source `ba720c0fce69f4121d5c5b0aa4a168ceac931b70`, stage deploy SUCCESS, 2026-11-06T11:31:08Z | API Cloudflare, lecture seule |
-| Worker `botwow-api` | déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884`, 2026-11-06T09:16:54Z, 100 % sur la version `1513595c-6a53-4575-b013-9979b696dce3`, annotation « Production rollout BOT-WOW PR #103 fulfillment reconciliation » | API Cloudflare, lecture seule |
-| Écart Worker / `main` | `worker/index.js` n'a pas changé depuis `8744a3e2bbaec449e16548f89117a05f0d7f20dc`, ancêtre de HEAD. Le comportement HTTP live (308, `/health`, `/api/config`) correspond à ce source | `git log` + sondes HTTP |
+| Worker `botwow-api` | déploiement `6ca34fa3-198a-44b8-a6ed-300e7db37f99`, 2026-11-06T14:48:17Z, 100 % sur la version `054cd158-4be2-42f8-92a6-ff9c4f059079`, annotation « Production rollout HEAD suit les lectures GET, main 017882a ». Source `worker/index.js` de `main` `017882a2ba29239801b4e0e6641a54872c4285a3`, SHA-256 `10891fbd347418fbeeb7fa0697345736e239ff28f27de96e43707bec8aebace7`, 123 472 octets. Les 18 bindings de production sont hérités par nom et type. | API Cloudflare + sondes HTTP 14:48:30Z |
+| Écart Worker / `main` | Le Worker en service porte le routeur HEAD de `017882a`. Le déploiement précédent `6aecab2d-6545-4c76-a6b3-cfb089372884` (version `1513595c-6a53-4575-b013-9979b696dce3`) reste le retour arrière immédiat. L'identifiant Pages après le merge de la PR #129 n'a pas été relu dans ce déploiement Worker. | API Cloudflare + `git rev-parse origin/main` |
 
 Le Worker v50 (`c3dcc842-c422-42d3-9828-405f30d70b5f`, 2026-10-27) n'est plus la version qui reçoit le trafic. Les sections de `reports/operations/BOT-WOW-CURRENT-STATE.md` qui le présentent comme déployé sont périmées.
 
@@ -62,7 +62,18 @@ Sondes GET/POST du 2026-11-06T14:15–14:16Z. Un HTTP 404 ici ne veut pas dire q
 
 Le même contrat est verrouillé sans réseau par `tests/api-route-map.test.mjs`.
 
-Correctif de code, pas encore en production : le 2026-11-06T14:22Z, `HEAD /` répond **404** JSON alors que `GET /` répond **308**, et `HEAD /health` répond **404** alors que `GET /health` répond **200**. Le routeur n'acceptait que `GET`. La PR #129 aligne `HEAD` sur les lectures sans effet de bord (`/`, pages non-API, `/health`, `/api/config`). `HEAD` ne déclenche pas le téléchargement, le checkout ni le webhook. Ce correctif n'est pas en ligne tant que le Worker n'est pas redéployé, ce qui exige une autorisation explicite. `/api/v1/*` reste introuvable : il n'y a pas d'API v1. `https://bot-wow.com/checkout` en **404** est attendu : il n'y a pas de page checkout.
+Le 2026-11-06T14:22Z, avant ce déploiement, `HEAD /` et `HEAD /health` répondaient **404** JSON. Le Worker déployé à 14:48:17Z est celui de `main` `017882a` (PR #129). Mesures directes à 14:48:30Z, User-Agent navigateur :
+
+| Requête | Résultat |
+|---|---|
+| `GET /` | **308**, `location: https://bot-wow.com/`, corps 0 octet |
+| `HEAD /` | **308**, `location: https://bot-wow.com/`, corps 0 octet |
+| `GET /health` | **200**, `application/json`, 72 octets, `status=ok`, `version=1.0.0` |
+| `HEAD /health` | **200**, `application/json`, corps 0 octet |
+| `GET /api/config` | **200**, `priceEur=20`, `product=bot-wow-lifetime`, `currency=eur` |
+| `HEAD /api/config` | **200**, `application/json`, corps 0 octet |
+
+`/api/v1/*` reste introuvable : il n'y a pas d'API v1. `https://bot-wow.com/checkout` en **404** est attendu : il n'y a pas de page checkout.
 
 `www` au 2026-11-06T14:22:37Z répond encore **301** vers l'apex. La branche `fix/www-alias-redirect-20261104` ne contient que le retrait des règles `_redirects` déjà inopérantes. Ne pas rouvrir ce chantier.
 
