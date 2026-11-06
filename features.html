@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Features — BOT-WOW</title>
-<meta name="description" content="The complete, honest feature list of BOT-WOW: what is available today, what is in development, what is planned, and what is out of scope.">
+<title>BOT-WOW features — verified status</title>
+<meta name="description" content="BOT-WOW features: simulated browser demo only; no game module or compatibility is currently confirmed.">
 <link rel="canonical" href="https://bot-wow.com/features.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html">
@@ -38,139 +38,19 @@
 <main class="page">
   <div class="w">
     <a class="backlink2" href="./">← Home</a>
-    <h1>Feature list <span class="grad">with real statuses</span></h1>
-    <p class="kp">Every capability carries its true status: <b>Historical record</b> (reported in project history, not verified in a customer release), <b>In development</b> (not available), <b>Planned</b> (not built), <b>Out of scope</b>.</p>
-
-    <div class="callout mt" role="note">Purchase is unavailable. The feature descriptions below are historical project records, not proof of a downloadable or authorized customer release. Do not use with Blizzard-operated services; no applicable authorization is documented.</div><div class="band"><span class="st st-dev"><i></i>Historical record</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">not certified for customer delivery</span></div>
+    <h1>Features <span class="grad">with verified status</span></h1>
+    <p class="kp">A feature is shown as available only after its source, downloadable build and tests have been verified.</p>
+    <div class="honest-note" role="note"><b>Intended for private servers, not official Blizzard servers. The rules of each server apply.</b> BOT-WOW is not currently offered for purchase. No game-integrated feature or compatible server version is currently confirmed.</div>
+    <div class="band"><span class="st st-no"><i></i>Current public demo</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">browser only · simulated data</span></div>
     <div class="feats">
-      <div class="feat">
-        <h3 style="margin-top:0">Float detection</h3>
-        <p>PrintWindow capture of the game window, HSV colour analysis, day/night water
-           ranges, texture discrimination, area thresholds. Detection parameters were
-           calibrated on real captures of a real client, not on screenshots found online.</p></div>
-
-      <div class="feat">
-        <h3 style="margin-top:0">Cast → bite → catch cycle</h3>
-        <p>Bite detection, instrumented bite → click latency (median 308 ms in our logged
-           sessions), background clicks without window focus. F9 stops everything cleanly,
-           at any time.</p></div>
-
-      <div class="feat">
-        <h3 style="margin-top:0">Persistent spot memory</h3>
-        <p>Each fishing spot: position, reliability measured over repeated visits, real
-           results, mobs seen nearby, time spent on site. Versioned schema with migrations
-           and backups; export / import as JSON.</p></div>
-
-      <div class="feat">
-        <h3 style="margin-top:0">Route planner</h3>
-        <p>Nearest neighbour + 2-opt optimiser over expected cost (travel time, mob risk,
-           failure probability), three modes: Cautious, Balanced, Exploration.
-           The site's JS planner and the bot's Python planner are compared on the same map
-           at each build.</p></div>
-
-      <div class="feat">
-        <h3 style="margin-top:0">Casinobabe runtime addon</h3>
-        <p>A WM-monitored in-game addon keeps the fishing journal (casts, targets, spots,
-           risks) visible to the bot. The addon deliberately performs no input simulation:
-           nothing it does can act on your character.</p></div>
-
-      <div class="feat">
-        <h3 style="margin-top:0">Payment &amp; delivery status</h3><p>Checkout is closed. No BOT-WOW-specific payment profile or verified customer package delivery is currently confirmed. Activation limits and delivery entitlements remain unverified.</p></div>
+      <div class="feat"><h3 style="margin-top:0">Browser route-planner demo</h3><p>An interactive browser demonstration using simulated data. It does not connect to a game, control a character or install a client.</p><a href="./demo.html">Open the demo</a></div>
+      <div class="feat"><h3 style="margin-top:0">Game-integrated modules</h3><p>No downloadable game-integrated module is currently verified for customer use. The historical fishing record is unverified; other roles remain in development or planned.</p><a href="./modules.html">View the module status ledger</a></div>
+      <div class="feat"><h3 style="margin-top:0">Compatibility</h3><p>No game version is currently listed as compatible because the published evidence does not contain both a named server and a dated test record.</p><a href="./compatibility.html">View dated compatibility records</a></div>
+      <div class="feat"><h3 style="margin-top:0">Purchase and delivery</h3><p>Checkout is closed. There is no active purchase button, customer download or verified end-to-end delivery flow.</p><a href="./buy.html">View purchase status</a></div>
     </div>
-
-    <div class="band" style="margin-top:44px"><span class="st st-dev"><i></i>In development</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">real code, offline-tested · in-game validation pending</span></div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>Movement between spots</h3>
-        <p class="m-desc">Minimap odometer and movement controller implemented and unit-tested
-           (zero drift at rest, observed-position arrival checks). Full spot-to-spot travel is
-           being validated in game before we claim it.</p>
-      </div>
-      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
-    </div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>Inventory & vendor</h3>
-        <p class="m-desc">Bag planning and vendor trips exist today as a tested offline planner
-           (free-slot math, sell/restock lists, bounded trip plan) with a defined BagSnapshot
-           data contract. Wiring it to the game is the current step — nothing runs in-game yet.</p>
-      </div>
-      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
-    </div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>Corpse-run recovery</h3>
-        <p class="m-desc">After character death the bot stops safely and asks for a human — that
-           part is tested. The full recovery state machine (detect death → confirm ghost →
-           navigate to corpse → resurrect) is specified and being implemented. Nothing is
-           promised.</p>
-      </div>
-      <div class="m-status"><span class="st st-dev"><i></i>In development</span></div>
-    </div>
-
-    <div class="band" style="margin-top:44px"><span class="st st-plan"><i></i>Planned</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">written design only — no code, no promise, no date</span></div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>Grind, gathering, questing, battlegrounds</h3>
-        <p class="m-desc">Design phase only. These combat roles need a detection layer (target
-           state, cooldowns) that does not exist yet; no code has been written and no date is
-           promised. When real work starts, the
-           <a href="./modules.html" style="color:var(--cyan)">module ledger</a> shows them as
-           In development first.</p>
-      </div>
-      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
-    </div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>Scripting & follower</h3>
-        <p class="m-desc">A bounded script runner and a follower mode are written designs,
-           sequenced after navigation and combat prove themselves. No editor ships while the
-           concept is unproved, and no date is promised.</p>
-      </div>
-      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
-    </div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>More game clients</h3>
-        <p class="m-desc">Only WoW Classic 1.13 (anniversary) is tested today. TBC / WotLK /
-           Retail profiles could follow once core in-game validation is done — when we can
-           name a date, we will.</p>
-      </div>
-      <div class="m-status"><span class="st st-plan"><i></i>Planned</span></div>
-    </div>
-
-    <div class="band" style="margin-top:44px"><span class="st st-no"><i></i>Out of scope</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">hard refusals, not roadmap items</span></div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>MacOS / Linux</h3>
-        <p class="m-desc">The bot relies on Windows display and input APIs of the game client.
-           No macOS or Linux build exists.</p>
-      </div>
-      <div class="m-status"><span class="st st-no"><i></i>Out of scope</span></div>
-    </div>
-
-    <div class="modrow">
-      <div class="m-main">
-        <h3>"Undetectable" operation</h3>
-        <p class="m-desc">No automation tool is undetectable. Behaviour analysis can spot
-           intensive automation. We document risks on the
-           <a href="./compatibility.html" style="color:var(--cyan)">compatibility page</a> instead
-           of promising safety we cannot prove.</p>
-      </div>
-      <div class="m-status"><span class="st st-no"><i></i>Out of scope</span></div>
-    </div>
-
-    <div class="callout mt"><svg class="mk" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16.6h4"/><path d="M9 19h2"/><path d="M8.2 16.6v-1.9H7a3.4 3.4 0 0 1 0-6.8 4.4 4.4 0 0 1 8.4 1.2 3.2 3.2 0 0 1-1 5.6h-1.2"/></svg> <span>Statuses on this page are checked against the test suites
-      of the repository (12 planner parity checks, 124 Python checks across 6 offline suites,
-      94 harness checks) and against the <a href="./modules.html" style="color:inherit;font-weight:700">module
-      ledger</a>. When a status improves, the changelog entry cites the tests that prove it.</span></div>
+    <div class="band" style="margin-top:36px"><span class="st st-dev"><i></i>Not available in a customer release</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">not offered or not yet verified</span></div>
+    <p class="kp">Leveling and XP tracking, quests, dungeons, mob farming, herbalism, mining, gold farming, class rotations, buffs and consumables, automated vendor rounds, reconnect, multi-account, saved profiles and automatic updates are not included in a verified downloadable BOT-WOW release. See the module ledger for internal development statuses; those statuses are not a sale promise.</p>
+    <div class="center"><a class="btn btn-ghost" href="./modules.html">Module ledger</a> <a class="btn btn-ghost" href="./compatibility.html">Compatibility records</a> <a class="btn btn-gold" href="./demo.html">Try the simulated demo</a></div>
   </div>
 </main>
 
@@ -201,7 +81,7 @@
         </ul>
       </div>
     </div>
-    <div class="foot-bottom"><div class="disclaimer">© 2026 Casinobabe — BOT-WOW. Not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment. Use automation software responsibly and within the rules of the server you play on.</div>
+    <div class="foot-bottom"><div class="disclaimer">BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment.</div>
       <span class="mono">v1.2.0</span></div>
   </div>
 </footer>
