@@ -2816,10 +2816,12 @@ Script : `botwow-p059-live-final.mjs` (GET seul ; ni paiement, ni checkout, ni P
   - *Cohérence R2_OBJECT_KEY* : binding `plain_text` = `casinobabe-fishing-1.2.0.zip`, conforme au garde `^casinobabe-fishing-\d+\.\d+\.\d+\.zip$` ; **une seule** lecture `R2_BINARIES.get(objectKey)` ; la réservation de quota (`count < max_count`) n'a lieu **qu'après** avoir trouvé l'artefact ; clé absente ou format invalide → HTTP 503 `artifact_unavailable`, R2 jamais interrogé, **aucun quota réservé**.
   - *Chemin e-mail* : le chemin actif est `sendDeliveryEmail2` → `sendEmail2` → `https://api.resend.com/emails`. Le helper historique `sendDeliveryEmail` (console.log seul) **n'a aucun appelant** sur `main` — il est du code mort, distinct du chemin actif. Sans `RESEND_API_KEY`, l'envoi échoue explicitement et la livraison est **consignée en base pour rejeu** (`deliveries`, statut `pending`, type `delivery`).
   - *Idempotence et reprise webhook* : verrouillés par `tests/delivery-replay.test.mjs` (inclus dans `npm test`, exit 0) — rejeu → 200, **une seule** licence, **un seul** jeton de téléchargement, **un seul** e-mail, une seule commande ; e-mail en échec puis rejeu → licence unique, reçu passé à `sent` ; activation → aucun doublon.
-- **PR #103** (`fix/p0.56-worker-fulfillment-reconciliation-20261105`, HEAD `462e13609454521a8525962321b1f8f336146db2`) : **OPEN**, `MERGEABLE` / `CLEAN`, non fusionnée, **non déployée**. CI verte sur ce HEAD : Validate `42136060489` **success**, UI Quality `42136060542` **success**. Rejeu local de `tests/worker-fulfillment-reconciliation.test.mjs` sur `462e136` → **OK, exit 0** (4 sections : aucune route marketing legacy, invariants de source, runtime du téléchargement, fournisseur e-mail fail-closed).
+- **PR #103** (`fix/p0.56-worker-fulfillment-reconciliation-20261105`) : **OPEN**, non fusionnée, **non déployée**. État **mis à jour par le propriétaire pendant ce cycle** : nouveau HEAD **`d16b54a`** (« test(worker): clean up temporary module outside repository »), qui corrige le défaut de fichier temporaire résiduel — `tests/worker-fulfillment-reconciliation.test.mjs` utilise désormais `mkdtempSync(join(tmpdir(), 'botwow-worker-'))` + `rmSync(tmpDir, { recursive: true, force: true })` au lieu d'écrire `tests/.worker-under-test.mjs` **dans le dépôt**. CI verte sur ce HEAD exact : Validate `42152809939` **success**, UI Quality `42152809854` **success** (auparavant `42136060489` / `42136060542` sur `462e136`). GitHub affiche désormais un diff de fusion propre de **4 fichiers, +470/−5** (`package.json` +2/−1, `reports/operations/BOT-WOW-WORKER-RECONCILIATION-P0.56.md` +106, `tests/worker-fulfillment-reconciliation.test.mjs` +355, `worker/index.js` +7/−4). `main` n'a modifié **ni** `package.json` **ni** `worker/index.js` depuis le merge-base `a4bb457` → **aucun conflit avec PR #100 / #107 / #109**, aucun de leurs changements ne serait révoqué par une fusion. PR #103 est `MERGEABLE` / `CLEAN`.
+- **PR #103 reste volontairement NON fusionnée et NON déployée** : l'issue #99 impose une préparation seule, et la fusion comme le déploiement du Worker exigent une **autorisation explicite du propriétaire**. Seule la mise à jour de la branche (HEAD `d16b54a`) a été faite par le propriétaire pendant ce cycle.
 - Diff `worker/index.js` de PR #103 : **11 lignes**, suppression du seul stub `sendDeliveryEmail` (+8/−3). Le chemin actif n'est pas touché. `package.json` : `test:worker-reconciliation` ajouté et la suite branchée sur `npm test`.
-- **Défaut confirmé sur PR #103** : `tests/worker-fulfillment-reconciliation.test.mjs` écrit `tests/.worker-under-test.mjs` (126 925 o) et **ne le supprime pas** — fichier résiduel confirmé après exécution. Correction demandée dans la revue : `os.tmpdir()` ou `unlinkSync` en `finally`.
-- Synchronisation demandée dans la revue : `main...PR103` est **diverged, ahead_by=1, behind_by=3** au moment de l'inspection (merge-base `a4bb457`) → rebase sur le `main` courant + rerun des deux workflows requis sur le HEAD exact.
+- **Défaut constaté sur PR #103 puis CORRIGÉ** : la version `462e136` écrivait `tests/.worker-under-test.mjs` (126 925 o) **dans le dépôt** et ne le supprimait pas — fichier résiduel confirmé après exécution. **Corrigé par le propriétaire dans `d16b54a`** (module temporaire écrit dans `os.tmpdir()` puis supprimé en `finally` via `rmSync`). Plus aucun fichier résiduel attendu.
+- Rejeu local de `tests/worker-fulfillment-reconciliation.test.mjs` sur `462e136` → **OK, exit 0** (4 sections : aucune route marketing legacy, invariants de source, runtime du téléchargement, fournisseur e-mail fail-closed). La suite est branchée sur `npm test` via `package.json` (`test:worker-reconciliation`).
+- Synchronisation demandée dans la revue : au moment de l'inspection initiale, `main...PR103` était **diverged, ahead_by=1, behind_by=3** (merge-base `a4bb457`). L'état est aujourd'hui : `main` = `f707c7b`, PR #103 = `d16b54a`, **merge-base toujours `a4bb457`**, PR #103 en avance de 2 commits et en retard de 7. Un **rebase sur `main` reste recommandé** (hygiène, CI sur la base courante) mais n'est **plus bloquant** : GitHub calcule un diff de fusion propre de 4 fichiers et `main` n'a touché ni `package.json` ni `worker/index.js` depuis le merge-base. **La fusion et le déploiement restent soumis à autorisation explicite.**
 
 ## Phase 9 — Revenus : réutilisation du snapshot, pas de nouvelle requête
 - Aucune évolution de production ni nouvelle écriture D1/R2 depuis la revalidation P0.59 bis du `2026-11-06T00:42Z` (`docs/p0.59-live-revalidation-20261106`, commit `e4ff57d`, requêtes **SELECT uniquement**, `changed_db=false`, `rows_written=0`). Conformément à la consigne, les requêtes **n'ont pas été répétées**.
@@ -2835,12 +2837,13 @@ Script : `botwow-p059-live-final.mjs` (GET seul ; ni paiement, ni checkout, ni P
 
 ## Cloudflare Pages — état vérifié
 - Projet `bot-wow` : `production_branch=main`, `build_command=node scripts/build-site.mjs _site`, `destination_dir=_site`, source Git `github` (`aveca/bot-wow`).
-- Déploiement canonique : `64cfe9f8-3670-48a3-8660-f3d68eb19824`, environnement `production`, branche `main`, `deployment_trigger=github:push`, commit source **`6fd1f5e45c4c0f6b66912d3b987bc84074d2a21a`** (= merge SHA de PR #108), créé le `2026-11-06T02:41:18Z`, étape `deploy` **SUCCESS** (`02:41:28Z` → `02:41:33Z`). Ce déploiement est celui **produit par la fusion de PR #108 lui-même** (cf. « Règle permanente » ci-dessous). Déploiements antérieurs toujours disponibles en rollback : `155a9b9e` (source `b2de2a6`, PR #107), `c8c05ca3` (source `0f86536`, PR #109), `ff13930a` (source `21c2e3e`), `e1892843` (`2b0dd14`), `af45d9ec` (`f958684`), `321aeb92` (`a4bb457`).
-- **Règle permanente (à appliquer à chaque cycle)** : l'intégration Git Cloudflare Pages déclenche un rebuild **sur tout push sur `main`, y compris un merge documentaire** (P0.56 bis). Le deployment ID consigné ci-dessus est donc **par construction le rebuild produit par le merge du présent document** ; le merge suivant produira un nouveau deployment ID. **Ne jamais déduire le deployment canonique de ce document** — le lire systématiquement en direct :
+- Déploiement canonique au moment de la rédaction : `5a4556ce-3578-4f15-84d8-7e60979a5290`, environnement `production`, branche `main`, `deployment_trigger=github:push`, commit source **`f707c7b`** (PR #110), statut **Active**. Ce déploiement est celui **produit par la fusion de PR #110 lui-même** (cf. « Règle permanente » ci-dessous). Déploiements antérieurs toujours disponibles en rollback : `64cfe9f8` (source `6fd1f5e`, PR #108), `155a9b9e` (source `b2de2a6`, PR #107), `c8c05ca3` (source `0f86536`, PR #109), `ff13930a` (source `21c2e3e`), `e1892843` (`2b0dd14`), `af45d9ec` (`f958684`), `321aeb92` (`a4bb457`).
+- **Règle permanente (à appliquer à chaque cycle)** : l'intégration Git Cloudflare Pages déclenche un rebuild **sur tout push sur `main`, y compris un merge documentaire** (P0.56 bis ; observé 4 fois sur ce cycle : `e1892843`, `64cfe9f8`, `5a4556ce`, et le précédent `e1892843`). Le deployment ID consigné ci-dessus est donc **par construction le rebuild produit par le merge du présent document** ; le merge suivant produira un nouveau deployment ID. **Ne jamais déduire le deployment canonique de ce document** — le lire systématiquement en direct :
   `wrangler pages deployment list --project-name bot-wow --environment production`
   puis contrôler que le `source` du deployment canonique **égale** le SHA de `main`. Les assertions **stables** (celles qui doivent rester vraies quel que soit l'ID du rebuild) sont : `source du deployment == SHA de main`, `stamp servi == b4232c44`, `contenu identique entre apex et www`, `80/80 HTTP 200`.
+- **Correctif recommandé (NON appliqué — autorisation propriétaire requise)** : le projet Pages `bot-wow` a `source.config.path_includes = ["*"]` et `source.config.path_excludes = []`. Régler **`path_excludes = ["reports/**"]`** supprimerait les rebuilds inutiles des merges documentaires, **sans aucun effet sur le contenu servi** : `reports/` ne figure ni dans la liste blanche `FILES`/`DIRS` ni dans la liste `DENY` de `scripts/build-site.mjs`, donc `reports/**` n'est **jamais publié** dans l'artefact. Vérifié empiriquement : chaque merge documentaire de ce cycle a produit un artefact **identique** (stamp `b4232c44`, apex == www octets identiques, 80/80 HTTP 200). Le `paths-ignore: reports/**` déjà présent dans le workflow Actions `pages.yml` ne couvre pas l'intégration Git Cloudflare (les deux chemins de déploiement coexistent) — `path_excludes` est l'équivalent côté projet. Réglage réversible (remettre `[]`). **Non appliqué : c'est un changement de configuration de production, hors périmètre d'autorisation de ce cycle.**
 - `preview_deployment_setting = "none"` : les previews sont **désactivés** au niveau du projet. Vingt déploiements `preview` existent néanmoins sur la branche `fix/p0.60-primary-routes-status-only-20261106` (créés entre `00:57:13Z` et `01:04:51Z` le 2026-11-06, `deployment_trigger=github:push`), antérieurement à la fusion de PR #107 ; ils appartiennent à la mission P0.60, pas à ce cycle. Aucun preview n'a été créé par ce cycle.
-- Correspondance main ↔ deployment ↔ contenu servi : `main` `6fd1f5e` → deployment `64cfe9f8` (source `6fd1f5e`) → contenu servi avec stamp `b4232c44`, identique à `versionne-assets` calculé sur ce même `main`, et identique entre apex et `www`. Les trois niveaux concordent.
+- Correspondance main ↔ deployment ↔ contenu servi : `main` `f707c7b` → deployment `5a4556ce` (source `f707c7b`) → contenu servi avec stamp `b4232c44`, identique à `versionne-assets` calculé sur ce même `main`, et identique entre apex et `www`. Les trois niveaux concordent.
 - **Mécanique du stamp** : `scripts/build-site.mjs` importe `computeStamp`/`applyStamp` de `scripts/versionne-assets.mjs` et applique le stamp **à l'artefact construit**, pas à la source. La source commitée conserve `?v=cb3925b6` ; l'artefact publié porte `?v=b4232c44`, dérivé du **contenu des assets**. Conséquence : une modification de balisage HTML **sans** changement d'asset laisse le stamp inchangé, et le resync mécanique n'a pas à être committé (convention du dépôt respectée).
 
 ## Phase 7 bis — Vérification live après la fusion de P0.60 (PR #107, `b2de2a6`)
@@ -2866,12 +2869,13 @@ Script : `botwow-p059-live-final.mjs` (GET seul ; ni paiement, ni checkout, ni P
 3. **Issue #99 — OUVERT** : Worker v50 non déployé : écart landing legacy / fallbacks archives / stub e-mail mort ; PR #103 ouverte, non fusionnée, non déployée ; **autorisation de déploiement explicite requise**.
 4. **Provenance de l'artefact** : SHA-256 conforme et archive ZIP cohérente, mais **contenu de `VERSION`/`MANIFEST.json` et compatibilité non validés** ; aucun chemin de lecture R2 autorisé pour re-vérifier.
 5. **`RELEASE_STATUS`** : secret masqué, valeur effective inconnue → comportement fail-closed ; validité de `RESEND_API_KEY` et des identifiants Mollie non vérifiable sans les exposer.
-6. **PR #103** : correction du fichier temporaire résiduel (`tests/.worker-under-test.mjs`, 126 925 o) + rebase sur `b2de2a6` + rerun CI requis avant toute décision de fusion.
-7. **Couverture de mesure (non bloquant)** : les liens de statut en prose des routes secondaires de PR #100 (`getting-started`, `roadmap`, `success`, `docs/index`, `docs/install`, `cancel` EN/FR) ne sont pas instrumentés en `cta_click`. Les CTA boutons le sont. Impact : `cta_click` sous-compté, **aucune** inexactitude commerciale.
-8. **`/api/config` (live v50)** : `bitcoin: { enabled: true, address: null }` — rail de paiement résiduel annoncé sans adresse. Hors périmètre de l'issue #99 ; **aucun front-end ne consomme `config.bitcoin`** ; signalé, inchangé.
+6. **PR #103** : le défaut de fichier temporaire résiduel est **corrigé** (HEAD `d16b54a`, CI verte, diff de fusion propre de 4 fichiers, `MERGEABLE`/`CLEAN`). Restent à faire **sur autorisation explicite** : le rebase (hygiène), la fusion squash, puis le déploiement du Worker et sa re-vérification live.
+7. **Rebuilds Pages inutiles** : chaque merge documentaire sur `main` déclenche un rebuild Cloudflare Pages (4 fois observé sur ce cycle). Correctif prêt mais **non appliqué** : `path_excludes = ["reports/**"]` sur le projet Pages (sans effet sur le contenu servi, car `reports/**` n'est jamais publié). **C'est un changement de configuration de production : autorisation propriétaire requise.**
+8. **Couverture de mesure (non bloquant)** : les liens de statut en prose des routes secondaires de PR #100 (`getting-started`, `roadmap`, `success`, `docs/index`, `docs/install`, `cancel` EN/FR) ne sont pas instrumentés en `cta_click`. Les CTA boutons le sont. Impact : `cta_click` sous-compté, **aucune** inexactitude commerciale.
+9. **`/api/config` (live v50)** : `bitcoin: { enabled: true, address: null }` — rail de paiement résiduel annoncé sans adresse. Hors périmètre de l'issue #99 ; **aucun front-end ne consomme `config.bitcoin`** ; signalé, inchangé.
 
 ## Action suivante (une seule)
-**P0 : préparer la fusion et le déploiement du Worker `botwow-api` (issue #99) — PR #103** — depuis `main` = `b2de2a6` : (1) supprimer le fichier temporaire résiduel `tests/.worker-under-test.mjs` (écriture dans `os.tmpdir()` ou `unlinkSync` en `finally`) ; (2) rebaser PR #103 sur `b2de2a6` ; (3) rerun Validate + UI Quality sur le HEAD exact ; (4) inspecter le diff final (attendu : suppression du seul stub mort `sendDeliveryEmail`, 11 lignes, chemin actif `sendDeliveryEmail2 -> sendEmail2 -> Resend` intact) ; (5) **fusionner en squash puis déployer uniquement si le propriétaire donne l'autorisation explicite de déploiement** — le déploiement est aujourd'hui interdit par défaut ; (6) après déploiement, re-vérifier en direct que `/bot-wow-gold`, `/best-wow-bot`, `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/` répondent **308 vers `https://bot-wow.com`** et ne rendent plus de HTML marketing, que `/health` et `/api/config` restent stables, sans déclencher de checkout, de paiement ni d'e-mail. Aucun checkout, aucun paiement, aucun profil Mollie, aucun secret modifié.
+**P0 : trancher la réconciliation du Worker `botwow-api` (issue #99) sur PR #103, HEAD `d16b54a`** — état réel : diff de fusion propre de 4 fichiers (+470/−5), `MERGEABLE`/`CLEAN`, Validate `42152809939` **success** et UI Quality `42152809854` **success** sur le **même** SHA `d16b54a`, défaut du fichier temporaire résiduel **corrigé**. Étapes : (1) rebase optionnel sur `main` + rerun CI ; (2) **fusion squash de PR #103** ; (3) **déployer le Worker — uniquement si le propriétaire donne l'autorisation explicite de déploiement** (le déploiement est aujourd'hui interdit par défaut, l'issue #99 n'autorisant que la préparation) ; (4) après déploiement, re-vérifier en direct que `/bot-wow-gold`, `/best-wow-bot`, `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/` répondent **308 vers `https://bot-wow.com`** et ne rendent plus de HTML marketing, que `/health` et `/api/config` restent stables, sans déclencher de checkout, de paiement ni d'e-mail ; (5) en parallèle, décider explicitement du réglage `path_excludes = ["reports/**"]` du projet Pages. Aucun checkout, aucun paiement, aucun profil Mollie, aucun secret modifié, aucune écriture D1/R2, aucun e-mail.
 ### Prompt complet du cycle suivant (P0.61)
 
 ```text
@@ -2889,7 +2893,10 @@ verifier le SHA reel de main au demarrage
 (attendu apres P0.59 : fusion de la PR #109 "fix(a11y): restore the
 missing h1 on the EN/FR cancel pages" puis de la PR #108
 "docs(operations): record P0.59 live revalidation on apex and www" ;
-si la PR #107 (P0.60) a ete fusionnee entre-temps, partir de ce SHA).
+si la PR #107 (P0.60) a ete fusionnee entre-temps, partir de ce SHA ;
+la PR #110 "docs(operations): record the P0.59 post-merge Pages
+deployment" peut aussi etre deja fusionnee -> dans ce cas main est
+f707c7b ou un descendant).
 
 PR #107:
 fix/p0.60-primary-routes-status-only-20261106
@@ -2897,6 +2904,8 @@ PR #108:
 docs/p0.59-live-verification-20261106
 PR #109:
 fix/p0.59-cancel-h1-20261106
+PR #110:
+docs/p0.59-post-merge-deployment-20261106
 PR #103 (Worker, preparation seule):
 fix/p0.56-worker-fulfillment-reconciliation-20261105
 
@@ -3129,33 +3138,62 @@ c3dcc842-c422-42d3-9828-405f30d70b5f
 Deployment :
 36227a4d-00e7-4c9f-94e0-0913b29049bc
 
+Etat PR #103 a la fin de P0.59 :
+HEAD d16b54a (le fichier temporaire residuel est corrige :
+mkdtempSync dans os.tmpdir() + rmSync en finally).
+Diff de fusion : 4 fichiers, +470/-5 (package.json,
+BOT-WOW-WORKER-RECONCILIATION-P0.56.md,
+tests/worker-fulfillment-reconciliation.test.mjs, worker/index.js).
+MERGEABLE / CLEAN. Validate 42152809939 success et UI Quality
+42152809854 success sur le MEME SHA d16b54a.
+PR #103 est restee OUVERTE et NON DEPLOYEE pendant P0.59.
+
 Constat P0.59 : la v50 sert encore du HTML marketing legacy sur
 /bot-wow-gold, /best-wow-bot, /bot-wow-classic, /bot-wow-gratuit,
 /de/, /en/, /ru/ et /, alors que main ne rend plus de HTML marketing et
 redirige en 308 vers https://bot-wow.com.
 
 Travail de preparation a faire :
-- PR #103 : supprimer le stub mort sendDeliveryEmail (aucun appelant sur
-  main ; ne pas le confondre avec le chemin actif
-  sendDeliveryEmail2 -> sendEmail2 -> Resend) ;
-- PR #103 : corriger le fichier temporaire residuel
-  tests/.worker-under-test.mjs (os.tmpdir() ou unlinkSync en finally) ;
-- PR #103 : rebaser sur le main courant et rerun Validate + UI Quality
-  sur le HEAD exact ;
+- PR #103 : rebase optionnel sur le main courant et rerun Validate +
+  UI Quality sur le HEAD exact ;
 - verifier sur le source : suppression landing legacy, suppression des
   fallbacks archives (Casinobabe-v1.0.38, v1.0.38.zip), Content-Disposition
   = cle R2 exacte, coherence R2_OBJECT_KEY, reservation de quota
   seulement apres finding de l'artefact, idempotence, livraison email,
-  reprise webhook.
+  reprise webhook ;
+- fusionner PR #103 (squash) si l'owner le demande ;
+- deployer le Worker UNIQUEMENT si le proprietaire donne l'autorisation
+  explicite de deploiement ; l'issue #99 n'autorise que la preparation.
 
-Ne pas deployer le Worker sans autorisation explicite du proprietaire.
-Si l'autorisation est donnee dans ce cycle, deployer la version resultante,
-puis re-verifier en direct :
+Si l'autorisation de deploiement est donnee dans ce cycle, deployer la
+version resultante, puis re-verifier en direct :
 - /bot-wow-gold, /best-wow-bot, /bot-wow-classic, /bot-wow-gratuit,
   /de/, /en/, /ru/ doivent repondre 308 vers https://bot-wow.com et ne
   plus rendre de HTML marketing ;
 - /health et /api/config doivent rester stables ;
 - aucune requete de checkout, aucun paiement, aucune e-mail.
+
+==================================================
+PHASE 8 bis — PAGES : REBUILDS INUTILES
+==================================================
+
+Un merge documentaire sur main declenche un rebuild Cloudflare Pages
+via l'integration Git (observe 4 fois sur P0.59). Le
+paths-ignore: reports/** du workflow Actions pages.yml ne couvre PAS
+ce chemin.
+
+Correctif pret, NON applique (autorisation proprietaire requise car
+c'est une configuration de production) :
+- projet Pages bot-wow : path_excludes = ["reports/**"]
+- sans effet sur le contenu servi : reports/ n'est ni dans la liste
+  blanche FILES/DIRS ni dans la liste DENY de scripts/build-site.mjs,
+  donc reports/** n'est jamais publie ;
+- reversible : remettre [].
+
+Verifier systematiquement :
+wrangler pages deployment list --project-name bot-wow --environment production
+et controler que le source du deployment canonique egale le SHA de main.
+Ne jamais deduire le deployment canonique du present document.
 
 ==================================================
 PHASE 9 — REVENUS
