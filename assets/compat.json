@@ -4,48 +4,78 @@
   "records": [
     {
       "id": "classic-era",
-      "version": "WoW Classic Era / 1.13",
+      "version": {
+        "en": "WoW Classic Era / 1.13",
+        "fr": "WoW Classic Era / 1.13"
+      },
       "server": null,
       "test_date": null,
       "status": "historical_unverified",
       "coverage": [],
-      "note": "Historical internal claim only. The public evidence does not identify a server or a test date."
+      "note": {
+        "en": "Historical internal claim only. The public evidence does not identify a server or a test date.",
+        "fr": "Ancienne mention interne uniquement. Les preuves publiques n'indiquent ni serveur ni date de test."
+      }
     },
     {
       "id": "tbc",
-      "version": "The Burning Crusade (TBC)",
+      "version": {
+        "en": "The Burning Crusade (TBC)",
+        "fr": "The Burning Crusade (TBC)"
+      },
       "server": null,
       "test_date": null,
       "status": "not_tested",
       "coverage": [],
-      "note": "No dated test record available."
+      "note": {
+        "en": "No dated test record available.",
+        "fr": "Aucun relevé de test daté disponible."
+      }
     },
     {
       "id": "wotlk",
-      "version": "Wrath of the Lich King (WotLK)",
+      "version": {
+        "en": "Wrath of the Lich King (WotLK)",
+        "fr": "Wrath of the Lich King (WotLK)"
+      },
       "server": null,
       "test_date": null,
       "status": "not_tested",
       "coverage": [],
-      "note": "No dated test record available."
+      "note": {
+        "en": "No dated test record available.",
+        "fr": "Aucun relevé de test daté disponible."
+      }
     },
     {
       "id": "cataclysm",
-      "version": "Cataclysm",
+      "version": {
+        "en": "Cataclysm",
+        "fr": "Cataclysm"
+      },
       "server": null,
       "test_date": null,
       "status": "not_tested",
       "coverage": [],
-      "note": "No dated test record available."
+      "note": {
+        "en": "No dated test record available.",
+        "fr": "Aucun relevé de test daté disponible."
+      }
     },
     {
       "id": "wow-forever",
-      "version": "WoW Forever",
+      "version": {
+        "en": "WoW Forever",
+        "fr": "WoW Forever"
+      },
       "server": null,
       "test_date": null,
       "status": "not_tested",
       "coverage": [],
-      "note": "No dated test record available."
+      "note": {
+        "en": "No dated test record available.",
+        "fr": "Aucun relevé de test daté disponible."
+      }
     }
   ]
 }
