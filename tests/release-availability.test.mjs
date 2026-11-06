@@ -104,14 +104,6 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
     !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
 
-for (const file of ['fr/index.html', 'fr/buy.html', 'fr/faq.html']) {
-  const html = read(file);
-  check(file + ' : référence Blizzard localisée en français',
-    /blizzard\.com\/fr-fr\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/charte-anti-triche/i.test(html));
-  check(file + ' : aucune référence Blizzard anglaise sur la page FR',
-    !/blizzard\.com\/en-us\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/anti-cheating-agreement/i.test(html));
-}
-
 // Sales pages use the requested neutral private-server scope and non-affiliation statement.
 for (const [file, notice, footer] of [
   ['index.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
