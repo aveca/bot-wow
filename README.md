@@ -148,3 +148,7 @@ Ce dépôt suit le système **Factory V3** d'amélioration continue (voir `FACTO
 ### État de la dernière livraison (voir FACTORY.md)
 
 Voir `FACTORY.md` pour : contrat fonctionnel, design system, composants, règles d'animation, contraintes, commandes, critères de qualité, problèmes connus, backlog priorisé, et état de la dernière livraison vérifiée.
+
+## Test dry-run bridge multi-repo
+
+Ce fichier a été modifié dans le cadre d'un test de validation du bridge multi-dépôt (dry-run, sans impact production sur `main`). Branche `p0/dryrun-test-botwow-001` — à ne pas merger.
