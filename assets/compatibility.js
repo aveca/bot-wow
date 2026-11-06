@@ -13,7 +13,7 @@ function hasDatedServerEvidence(record) {
     && /^\d{4}-\d{2}-\d{2}$/.test(record.test_date);
 }
 
-function appendCell(row, value) {
+function localized(value) {\n  if (typeof value === "string") return value;\n  return value?.[lang] || value?.en || "—";\n}\n\nfunction appendCell(row, value) {
   const cell = document.createElement("td");
   cell.textContent = value || "—";
   row.append(cell);
@@ -37,11 +37,11 @@ function render(records) {
     const status = verified ? statusText[lang].tested
       : record.status === "not_tested" ? statusText[lang].not_tested
       : statusText[lang].unverified;
-    appendCell(row, record.version);
+    appendCell(row, localized(record.version));
     appendCell(row, verified ? record.server : "—");
     appendCell(row, verified ? record.test_date : "—");
     appendCell(row, status);
-    appendCell(row, verified ? (Array.isArray(record.coverage) ? record.coverage.join(", ") : "") : record.note);
+    appendCell(row, verified ? (Array.isArray(record.coverage) ? record.coverage.join(", ") : "") : localized(record.note));
     tableBody.append(row);
   }
 }
