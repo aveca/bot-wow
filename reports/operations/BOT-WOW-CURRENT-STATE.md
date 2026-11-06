@@ -2699,3 +2699,50 @@ La PR #104 (documentation seule, `reports/operations/BOT-WOW-CURRENT-STATE.md`) 
 - Pour la suite : ne pas deduire « doc-only = pas de deploiement » ; **verifier systematiquement** avec `wrangler pages deployment list --project-name bot-wow` et controler le `source` du deploiement avant d'annoncer un etat de production.
 - Rollbacks toujours disponibles : `af45d9ec` (source `f958684`), `321aeb92` (source `a4bb457`), `ea59f77e` (source `0bba14d`).
 - Aucun autre changement : pas de prix, checkout, paiement, Worker, secret, binding, D1/R2, e-mail, DNS ni cache. Le site n'a pas ete modifie, seul son artefact a ete reconstruite a l'identique.
+
+
+---
+
+# P0.60 — état vérifié depuis ChatGPT, 2026-11-06T01:04Z
+
+## GitHub
+- Base de la branche de travail : `main` à `21c2e3ef9d164e45e42323a39a9a3cbf983d370e`.
+- PR #100 est fusionnée.
+- PR #107 : `fix/p0.60-primary-routes-status-only-20261106`, correction Home/Buy EN/FR, lien `#offre` conservé, tests de disponibilité, artefact et funnel mis à jour.
+- Code de pages et de tests avant ce rapport : `dc0b173310978fa8463a9979d6ea215e60f33565`.
+- Validate a passé sur le commit précédent `d2e15194908774c91b406a61cf16c45b00d0d048`; UI Quality doit être verte sur le SHA final avant toute fusion. Les premiers échecs ont révélé et conduit à corriger les assertions de comparaison, les ancres historiques, les CTA du parcours et deux regex de test.
+- PR #103 reste ouverte, CI verte sur son SHA `462e13609454521a8525962321b1f8f336146db2`, mais sa base documentée est ancienne (`a4bb457)); aucun déploiement Worker.
+
+## Changements Home/Buy en attente de fusion
+- Remplacement des pages principales EN/FR par un statut de projet : aucun produit, paquet, licence, activation, livraison ou support commercial actuellement proposé.
+- La démo est explicitement une simulation navigateur, sans connexion au jeu ni contrôle du gameplay.
+- Le montant de 20 € est conservé uniquement comme prix cible historique, pas comme prix de vente.
+- Instructions historiques d'installation et promesses de remboursement/livraison supprimées du marketing.
+- Avertissement Blizzard et lien vers l'accord anti-triche officiel conservés ; aucune autorisation n'est revendiquée.
+- Corps des documents juridiques non modifiés ; issue #101 reste ouverte.
+- Checkout toujours désactivé ; aucun événement de paiement ou d'envoi déclenché.
+
+## Pages Cloudflare
+- Dernier déploiement de production observé : `ff13930a-4c97-441a-a828-2b1818e9e6b3`, source `21c2e3ef9d164e45e42323a39a9a3cbf983d370e`, statut success.
+- Déploiement précédent/rollback : `e1892843-d91c-4b11-b853-57a1cbf68a12`, source `2b0dd1491dded9035116eebc85f005295fc3ba65`.
+- PR #107 n'est pas déployée. La production ne doit être considérée corrigée qu'après merge, déploiement Cloudflare confirmé et vérification HTTP du domaine.
+
+## D1 — lecture seule, 2026-11-06
+- `botwow-production` : 5 commandes `bitcoin_manual/paid`, toutes de test (`@example.com)); 0 commande payée hors domaine de test; 8 pending; 1 rejected; 11 Mollie failed.
+- 5 licences actives, 5 téléchargements, 0 livraison, 0 activation, 16 webhooks (dernier traité le 2026-10-27).
+- `botwow-analytics`, `test=0) : 1 957 page_view; 787 journey_view; 48 cta_click; 29 checkout_requested; 6 checkout_failed; 6 checkout_created; 4 checkout_start; aucun payment_confirmed, delivery_sent ou activation.
+- Toutes les requêtes D1 étaient SELECT/PRAGMA : `changed_db=false`, `rows_written=0`.
+
+## État commercial
+- Ventes commerciales payées vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Profil Mollie BOT-WOW dédié et webhook BOT-WOW : non vérifiés/absents au dernier relevé.
+- Livraison email réelle : non démontrée. Resend existe dans le code, mais aucun envoi n'a été effectué.
+- Worker `botwow-api` v50 : inchangé et non déployé. `RELEASE_STATUS` reste masqué/inconnu, traité fail-closed.
+- Aucun prix, checkout, paiement, secret, binding, Worker, D1/R2, email, DNS, cache ou dépense modifié.
+
+## Prochaine action réelle
+1. Attendre Validate et UI Quality SUCCESS sur le même SHA final de PR #107.
+2. Revoir le diff final, fusionner la PR statique si les deux contrôles sont verts et le rollback Pages disponible.
+3. Vérifier le déploiement Cloudflare (source SHA = merge SHA), puis contrôler le contenu HTTP réel sur Home/Buy EN/FR.
+4. Ensuite seulement, reprendre la réconciliation Worker #103 et la preuve de l'artefact ; aucun checkout ni promotion avant résolution du périmètre autorisé et de la livraison.
