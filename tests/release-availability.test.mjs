@@ -115,7 +115,7 @@ for (const [file, notice, footer] of [
   ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
 ]) {
-  const flat = read(file).replace(/\\s+/g, ' ');
+  const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : mention exacte des serveurs privés', notice.test(flat));
   check(file + ' : non-affiliation et marque', footer.test(flat));
   check(file + ' : aucun terme de contournement ou promesse de détection', 
