@@ -3813,8 +3813,10 @@ var index_default = {
       });
     }
     try {
-      if (path === "/api/config" && method === "GET") {
-        return handleConfigWithBitcoin(env2);
+      if (path === "/api/config" && (method === "GET" || method === "HEAD")) {
+        const configResponse = await handleConfigWithBitcoin(env2);
+        if (method !== "HEAD") return configResponse;
+        return new Response(null, { status: configResponse.status, headers: configResponse.headers });
       }
       if (path === "/api/claim" && method === "POST") {
         return handleClaim(request, env2);
@@ -3852,18 +3854,22 @@ var index_default = {
       if (path.startsWith("/api/admin/")) {
         return handleAdmin(request, env2);
       }
-      if (path === "/health" && method === "GET") {
-        return new Response(JSON.stringify({
+      if (path === "/health" && (method === "GET" || method === "HEAD")) {
+        const healthPayload = JSON.stringify({
           status: "ok",
           timestamp: (/* @__PURE__ */ new Date()).toISOString(),
           version: "1.0.0"
-        }), {
+        });
+        return new Response(method === "HEAD" ? null : healthPayload, {
           headers: { "Content-Type": "application/json" }
         });
       }
-      if (method === "GET" && !path.startsWith("/api/")) {
+      if ((method === "GET" || method === "HEAD") && !path.startsWith("/api/")) {
         // L'hote API ne rend plus de page marketing : il redirige vers
         // l'URL canonique unique (voir redirectToCanonicalSite).
+        // HEAD suit GET : un probe curl -I ne doit pas recevoir 404 alors
+        // que GET repond 308. Les routes a effet de bord (checkout,
+        // webhook, download) ne sont pas traitees ici.
         return redirectToCanonicalSite(request);
       }
       return jsonError2("not_found", "Endpoint not found", 404);

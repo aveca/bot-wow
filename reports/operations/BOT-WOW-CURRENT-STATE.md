@@ -3696,3 +3696,5 @@ Ce relevé remplace, pour les points qu'il mesure, les affirmations « Worker v5
 - Preuve de livraison : sandbox uniquement (`tests/delivery-replay.test.mjs`), pas un paiement de production.
 
 Prochaine action : une décision propriétaire sur ce qui peut être vendu. Ne pas rouvrir le checkout tant que cette décision, un profil Mollie dédié, la provenance du paquet et `RELEASE_STATUS` ne sont pas explicitement acceptés.
+
+Ajout 14:22Z : `HEAD https://api.bot-wow.com/` répond 404 alors que `GET` répond 308 (`HEAD /health` aussi 404 contre 200). Correctif de routeur dans la PR #129, non déployé. `www` répond 301 à 14:22:37Z. `/api/v1/*` et `/checkout` restent des absences voulues, pas des routes à inventer.

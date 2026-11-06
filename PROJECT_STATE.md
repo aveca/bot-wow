@@ -62,6 +62,10 @@ Sondes GET/POST du 2026-11-06T14:15–14:16Z. Un HTTP 404 ici ne veut pas dire q
 
 Le même contrat est verrouillé sans réseau par `tests/api-route-map.test.mjs`.
 
+Correctif de code, pas encore en production : le 2026-11-06T14:22Z, `HEAD /` répond **404** JSON alors que `GET /` répond **308**, et `HEAD /health` répond **404** alors que `GET /health` répond **200**. Le routeur n'acceptait que `GET`. La PR #129 aligne `HEAD` sur les lectures sans effet de bord (`/`, pages non-API, `/health`, `/api/config`). `HEAD` ne déclenche pas le téléchargement, le checkout ni le webhook. Ce correctif n'est pas en ligne tant que le Worker n'est pas redéployé, ce qui exige une autorisation explicite. `/api/v1/*` reste introuvable : il n'y a pas d'API v1. `https://bot-wow.com/checkout` en **404** est attendu : il n'y a pas de page checkout.
+
+`www` au 2026-11-06T14:22:37Z répond encore **301** vers l'apex. La branche `fix/www-alias-redirect-20261104` ne contient que le retrait des règles `_redirects` déjà inopérantes. Ne pas rouvrir ce chantier.
+
 ## Livraison sandbox
 
 Le chemin **production** webhook → PAID → licence → e-mail → téléchargement n'est pas prouvé. D1 `botwow-production`, SELECT seulement, `changed_db=false`, `rows_written=0`, 2026-11-06 :

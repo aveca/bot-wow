@@ -56,6 +56,13 @@ console.log('=== CARTE DES ROUTES API (sandbox, aucun paiement) ===');
     `(status=${res.status} location=${res.headers.get('location')})`);
 }
 {
+  const res = await call('/', 'HEAD');
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  check('HEAD / suit le 308 de GET, sans corps',
+    res.status === 308 && res.headers.get('location') === 'https://bot-wow.com/' && bytes.length === 0,
+    `(status=${res.status} location=${res.headers.get('location')} bytes=${bytes.length})`);
+}
+{
   const res = await call('/bot-wow-gold');
   check('GET /bot-wow-gold redirige 308 (plus de landing legacy)',
     res.status === 308 && res.headers.get('location') === 'https://bot-wow.com/bot-wow-gold',
@@ -67,6 +74,13 @@ console.log('=== CARTE DES ROUTES API (sandbox, aucun paiement) ===');
   check('GET /health est le controle de vie',
     res.status === 200 && body.status === 'ok',
     `(status=${res.status} ${JSON.stringify(body)})`);
+}
+{
+  const res = await call('/health', 'HEAD');
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  check('HEAD /health repond 200 sans corps',
+    res.status === 200 && res.headers.get('content-type') === 'application/json' && bytes.length === 0,
+    `(status=${res.status} type=${res.headers.get('content-type')} bytes=${bytes.length})`);
 }
 {
   const res = await call('/api/health');
@@ -81,6 +95,13 @@ console.log('=== CARTE DES ROUTES API (sandbox, aucun paiement) ===');
   check('GET /api/config expose le produit et le prix historique 20 EUR',
     res.status === 200 && body.product === 'bot-wow-lifetime' && body.priceEur === 20 && body.currency === 'eur',
     `(${JSON.stringify(body)})`);
+}
+{
+  const res = await call('/api/config', 'HEAD');
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  check('HEAD /api/config suit le 200 de GET, sans corps et sans Mollie',
+    res.status === 200 && bytes.length === 0 && mollieCalls === 0,
+    `(status=${res.status} bytes=${bytes.length} mollie=${mollieCalls})`);
 }
 {
   const res = await call('/api/checkout');
