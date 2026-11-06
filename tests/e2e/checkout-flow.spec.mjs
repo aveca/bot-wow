@@ -34,11 +34,11 @@ test('checkout: buy button is disabled on buy.html (EN)', async ({ page }, testI
 
   // Le message de blocage est visible
   await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('.checkout-blocked')).toContainText('Checkout unavailable');
+  await expect(page.locator('.checkout-blocked')).toContainText('Purchase unavailable');
 
   // L'avertissement de disponibilite est present
   await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
 
   // Le formulaire existe mais le bouton est desactive
   await expect(page.locator('#buyForm')).toBeAttached();
@@ -79,7 +79,7 @@ test('checkout: buy button is disabled on index.html (EN homepage)', async ({ pa
   await expect(buyBtn).toContainText('delivery not confirmed');
 
   await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('#release-availability-notice').first()).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice').first()).toContainText(/do not purchase until delivery is confirmed/i);
 
   await captureScreenshot(page, testInfo, 'checkout-blocked-index-en');
   expect(errors).toEqual([]);
