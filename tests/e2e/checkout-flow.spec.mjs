@@ -23,6 +23,7 @@ async function expectNoPurchaseForm(page) {
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('#buyBtn')).toHaveCount(0);
   await expect(page.locator('#email')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
 }
 
 test('purchase unavailable: no email or payment form on buy page (EN)', async ({ page }, testInfo) => {

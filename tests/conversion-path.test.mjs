@@ -7,7 +7,7 @@
  *  2. le radar interactif a une sortie vers la demonstration ;
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
- *  4. le formulaire d'achat est present, avec email + validation ;
+ *  4. aucun faux formulaire de paiement n'est expose tant que les ventes sont fermees ;
  *  5. la liste d'attente reste proposee en repli ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
@@ -59,9 +59,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
-  check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
-  check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
+  check('accueil : aucun formulaire d\'achat n'est expose', !/<form id="buyForm"/.test(t));
+  check('accueil : aucun champ email de paiement n'est expose', !/id="email"[^>]*type="email"/.test(t));
+  check('accueil : aucun bouton de paiement n'est expose', !/id="buyBtn"/.test(t));
+  check('accueil : statut de paiement sans collecte d\'e-mail', /No payment form is available|Aucun formulaire de paiement n'est disponible/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
@@ -265,12 +266,12 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
-// 13. Accessibilite du champ email : un outline:none global rend le champ
-// invisible a la navigation clavier. Le clavier doit retrouver un anneau.
+// 13. Le checkout fermé ne doit pas exposer un champ e-mail inutilisable.
+// Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : champ email avec type="email"`, /id="email"[^>]*type="email"/.test(html));
-  check(`${file} : label associe au champ email`, /<label[^>]*for="email"/.test(html));
+  check(`${file} : aucun champ e-mail de paiement n'est exposé`,
+    !/id="email"[^>]*type="email"|id="buyForm"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));
