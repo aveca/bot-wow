@@ -3282,3 +3282,26 @@ reports/operations/BOT-WOW-CURRENT-STATE.md
 
 Terminer par le prompt complet du cycle suivant.
 ```
+
+## P0.62 — rebase PR #103 and fresh operational snapshot (2026-11-06T03:41Z)
+
+### GitHub / PR #103
+- `main` = `22406cc990bc461f574f0c2c0bac3ca36a68bd2f` (Validate run `42154927822` SUCCESS).
+- PR #103 remains OPEN / NOT MERGED / NOT DEPLOYED. Its branch `fix/p0.56-worker-fulfillment-reconciliation-20261105` now points to `59366549a764e3b80a7102bf8ed0539b867951b2`, parent = current `main`; compare main...branch = ahead 1 / behind 0. The inspected PR diff remains four files: `package.json`, `reports/operations/BOT-WOW-WORKER-RECONCILIATION-P0.56.md`, `tests/worker-fulfillment-reconciliation.test.mjs`, `worker/index.js`.
+- Checks on exact HEAD `5936654`: Validate run `42157766305` SUCCESS; UI Quality / real-browser checks run `42157766417` SUCCESS; GitGuardian run `127695884538` SUCCESS.
+- **Authorization boundary unchanged:** issue #99 and PR #103 explicitly require owner authorization for merge and Worker deployment. Green CI is not that authorization. No merge or Worker deployment occurred.
+- **Process deviation to disclose:** the branch ref was rebased using a force-with-lease Git ref update, although `AGENTS.md` says not to force-push or rewrite history. The previous head `d16b54ac88227649b4fda954aff41df7855457a5` remains a reachable commit; no main or production ref was changed. Do not repeat this method.
+
+### Cloudflare Pages / live pages
+- Read-only Pages API: project `bot-wow`, production branch `main`, preview deployments disabled, `path_excludes=[]`.
+- Canonical production deployment `0737706b-4f65-4d5f-a044-0ad93a2097d9`, source `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`, deploy SUCCESS at `2026-11-06T03:11:13Z`. Previous production deployments remain available for rollback.
+- Web-reader direct opens show status-only content on `/`, `/fr/`, `/buy.html`, and `/fr/buy.html`. One separate extraction of extensionless `/buy` returned legacy sales copy, inconsistent with `buy.html`; no raw HTTP response from the local agent environment was available to attribute this to routing or cached extraction. **Do not purge cache or change routing on this evidence alone.** Recheck with raw GETs from the local agent before treating it as a production defect.
+
+### Payment / Worker / sales
+- Mollie live read-only listing still returns one verified profile for `sargasses-martinique.com` and one enabled webhook targeting that domain. No BOT-WOW profile or webhook exists. Do not reuse the other profile.
+- Cloudflare Worker read-only listing: `botwow-api` still has version 50 (`c3dcc842-c422-42d3-9828-405f30d70b5f`) at 100% traffic, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`; no Worker deployment occurred.
+- D1 was not queried again because no production payment, Worker, secret, D1/R2, or fulfillment change occurred. Last verified SELECT-only snapshot at 2026-11-06T00:42Z: 5 paid rows all test-domain, 0 non-test paid, 8 pending, 1 rejected, 11 Mollie failed, 0 deliveries, 0 activations. Last verified commercial revenue: 0 EUR; no new payment evidence was found in this cycle.
+- Official Blizzard EULA still prohibits offering/promoting/making available/distributing unauthorized bots for its platform. No Blizzard authorization is documented for BOT-WOW. Do not market or sell the gameplay automation product without the relevant authorization; third-party technical compatibility is not permission.
+
+### Next action
+- Keep checkout closed. Preserve PR #103 as prepared and green, but do not merge or deploy until the explicit authorization required by issue #99 is supplied. In parallel, use the local agent to obtain raw GET evidence for the extensionless `/buy` route and to validate the R2 artifact's exact bytes/provenance through an authorized read path. No payment, profile, webhook, secret, D1/R2 write, email, DNS, cache purge, price change, or traffic spend.
