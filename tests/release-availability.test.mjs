@@ -102,7 +102,7 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
     !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
 
-for (const file of ['fr/index.html', 'fr/buy.html', 'fr/compatibility.html', 'fr/faq.html']) {
+for (const file of ['fr/index.html', 'fr/buy.html', 'fr/faq.html']) {
   const html = read(file);
   check(file + ' : référence Blizzard localisée en français',
     /blizzard\.com\/fr-fr\/legal\/cd5930c0-2784-420c-a23d-1e0d6ff8599b\/charte-anti-triche/i.test(html));
@@ -114,11 +114,9 @@ for (const file of ['fr/index.html', 'fr/buy.html', 'fr/compatibility.html', 'fr
 const platformDisclosureFiles = [
   ['index.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
   ['buy.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
-  ['compatibility.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
   ['faq.html', /Anti-Cheating Agreement/, /no Blizzard authorization/i, /Do not use it with Blizzard-operated services/i],
   ['fr/index.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
   ['fr/buy.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
-  ['fr/compatibility.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
   ['fr/faq.html', /accord anti-triche de Blizzard/i, /aucune autorisation de Blizzard/i, /Ne l'utilisez pas avec les services exploités par Blizzard/i],
 ];
 for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDisclosureFiles) {
@@ -130,6 +128,17 @@ for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDis
   check(file + ' : aucune invitation à utiliser le bot dans les règles du serveur',
     !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));
 }
+for (const [file, privateServerNotice, footerNotice] of [
+  ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+]) {
+  const flat = read(file).replace(/\\s+/g, ' ');
+  check(file + ' : mention neutre des serveurs privés', privateServerNotice.test(flat));
+  check(file + ' : pied de page de non-affiliation et marque', footerNotice.test(flat));
+  check(file + ' : aucune référence anti-triche dans le texte de compatibilité',
+    !/anti-cheat|anti-triche|Warden|indétectable|undetectable/i.test(flat));
+}
+
 for (const [file, unavailable] of [
   ['faq.html', /None are currently available for BOT-WOW/i],
   ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
