@@ -2679,3 +2679,23 @@ reports/operations/BOT-WOW-CURRENT-STATE.md
 
 Terminer par le prompt complet du cycle suivant.
 ```
+
+---
+
+# P0.56 bis — CORRECTION : un commit documentaire declenche quand meme un rebuild Cloudflare Pages — 2026-11-06T00:38Z
+
+## Ce qui etait ecrit (et qui etait faux)
+La PR #104 (documentation seule, `reports/operations/BOT-WOW-CURRENT-STATE.md`) affirmait : « Documentation only: `reports/**` is in the Pages `paths-ignore`, so no Pages deployment is triggered. »
+
+## Etat reel verifie
+- Le workflow **GitHub Actions** `pages.yml` a bien ete **ignore** pour `2b0dd14` : aucun run Actions n'existe pour ce SHA (dernier run Pages = `42136308539`, SHA `f958684`). Le `paths-ignore: reports/**` fonctionne pour Actions.
+- Mais le projet Cloudflare Pages `bot-wow` a **sa propre integration Git** : `wrangler pages project list` -> `bot-wow ... Git Provider: Yes`. Un push sur `main` y declenche un build automatiquement, **sans consulter le `paths-ignore` d'Actions**.
+- Consequence observee : production **`e1892843-d91c-4b11-b853-57a1cbf68a12`**, branche `main`, **source `2b0dd14`**, statut Active. Le site a donc ete reconstruit et republie alors que la PR ne touchait que de la documentation.
+- **Contenu publie inchange** : `reports/**` est exclu de l'artefact par `build-site.mjs` (liste DENY), le fingerprint des assets reste `b4232c44` (`?v=b4232c44` en ligne), donc l'artefact servi est equivalent.
+- **Revérification live après ce rebuild** : les 10 preuves de la section precedente sont toujours vertes (`<h1>` success EN/FR, callout encapsulé EN/FR, `body.docs-archive` sur docs index EN/FR + install, regle `.docs-archive .panel h1` <=360px dans `assets/components.css` servi, stamp unique `b4232c44`) et la compliance reste de **34/36 routes**, les 2 memes exceptions `legal/terms` EN/FR (issue #101).
+
+## Consequence operationnelle
+- L'hypothese du depot « un commit documentaire ne declenche pas de deploiement applicatif » est **fausse du cote Cloudflare** : elle ne vaut que pour le workflow Actions. Deux chemins de deploiement coexistent (Actions + integration Git Cloudflare), donc un merge sur `main` peut produire un ou deux deploiements.
+- Pour la suite : ne pas deduire « doc-only = pas de deploiement » ; **verifier systematiquement** avec `wrangler pages deployment list --project-name bot-wow` et controler le `source` du deploiement avant d'annoncer un etat de production.
+- Rollbacks toujours disponibles : `af45d9ec` (source `f958684`), `321aeb92` (source `a4bb457`), `ea59f77e` (source `0bba14d`).
+- Aucun autre changement : pas de prix, checkout, paiement, Worker, secret, binding, D1/R2, e-mail, DNS ni cache. Le site n'a pas ete modifie, seul son artefact a ete reconstruite a l'identique.
