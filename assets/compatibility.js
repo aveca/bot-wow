@@ -13,7 +13,12 @@ function hasDatedServerEvidence(record) {
     && /^\d{4}-\d{2}-\d{2}$/.test(record.test_date);
 }
 
-function localized(value) {\n  if (typeof value === "string") return value;\n  return value?.[lang] || value?.en || "—";\n}\n\nfunction appendCell(row, value) {
+function localized(value) {
+  if (typeof value === "string") return value;
+  return value?.[lang] || value?.en || "—";
+}
+
+function appendCell(row, value) {
   const cell = document.createElement("td");
   cell.textContent = value || "—";
   row.append(cell);
