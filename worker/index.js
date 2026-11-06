@@ -382,10 +382,13 @@ async function handleResend(request, env2) {
   }
 }
 __name(handleResend, "handleResend");
-async function sendDeliveryEmail(env2, email, key, downloadUrl, lang) {
-  console.log("[EMAIL] Legacy resend path reached; provider delivery is not implemented");
-}
-__name(sendDeliveryEmail, "sendDeliveryEmail");
+// P0.56 : le stub `sendDeliveryEmail` (console.log seul) a ete SUPPRIME.
+// Il n'etait appele nulle part, mais sa presence laissait croire a un
+// chemin d'envoi fonctionnel : un futur appel aurait perdu le message du
+// client sans trace. Le seul chemin de livraison est `sendDeliveryEmail2`
+// (Resend, fail-closed : sans RESEND_API_KEY la commande est consignee
+// pour rejeu au lieu d'etre simulee). Regression verrouillee par
+// tests/worker-fulfillment-reconciliation.test.mjs.
 async function sendAdminNotification(env2, email, key) {
   console.log("[ADMIN] Registration notification helper reached");
 }

@@ -3349,3 +3349,74 @@ Terminer par le prompt complet du cycle suivant.
 2. Si Validate + UI Quality + GitGuardian sont verts sur le même head, merger uniquement cette correction statique FAQ (rollback Pages disponible), sans toucher au Worker ou au checkout.
 3. Vérifier le déploiement Pages qui suit, puis relire `/faq` et `/fr/faq`. Garder le checkout fermé.
 4. Continuer la récupération de provenance des sources de l'archive et l'analyse non-exécutable des deux fichiers hors manifeste.
+
+## P0.66 — pseudo-checkout public supprimé et branches réconciliées (2026-11-06T07:37Z)
+
+### GitHub / PR #113 — correction statique en cours
+- Main au début du cycle : 147774592763e63110838ef904b46c5105cb0f0b.
+- PR #113 fix/p0.66-remove-disabled-purchase-ui-20261106 : head courant bef c66032c72d0425b1ea507fa7280d312ee0fa1, 3 commits, 10 fichiers. Les six pages EN/FR d'accueil, d'achat et de comparaison ne présentent plus de formulaire de paiement désactivé ni de champ e-mail ; le message précise qu'aucune donnée n'est collectée et aucun paiement ne peut démarrer.
+- Le premier Validate avait révélé des invariants de tests encore attachés à l'ancien formulaire (site-artifact et conversion-path). Ces tests ont été adaptés ; Validate sur le head final befc660 est SUCCESS (42183249984), GitGuardian SUCCESS (127777489331). UI Quality / Playwright réel est encore IN_PROGRESS au relevé. Les deux runs antérieurs en échec sont des commits intermédiaires, pas le head final.
+- Aucun prix n'a été modifié : le montant de 20 € reste uniquement un prix cible historique dans la barre de statut. Aucun endpoint, règle serveur de checkout, Worker, secret, Mollie, D1, R2, e-mail, DNS ou cache n'a été modifié.
+
+### Pages publiques / limites HTTP
+- Cloudflare Pages production avant ce PR : deployment b8e1adc7-813e-4ab0-9f7c-06d53d079d19, source main 1477745, build/deploy SUCCESS. Aucun déploiement du PR #113 à ce stade.
+- Lecture Web du 2026-11-06 : /buy montre le statut indisponible mais aussi le champ e-mail et le bouton désactivé « Pay €20.00 » ; /fr/buy a renvoyé une ancienne présentation commerciale et le même pseudo-formulaire. L'extraction est incohérente avec le HTML courant de main et ne prouve pas à elle seule les octets HTTP servis.
+- Tentative HTTP brute via l'environnement d'exécution : échec DNS « Could not resolve host: bot-wow.com ». Cache/routage/origine restent NOT VERIFIED. Aucune purge de cache, modification DNS ou mutation Pages n'a été faite.
+
+### Worker / paiement
+- Worker botwow-api : version 50, ID c3dcc842-c422-42d3-9828-405f30d70b5f, 100 % du trafic ; aucun déploiement.
+- Mollie live en lecture seule : un seul profil et un webhook actif vers le domaine Sargasses ; aucun profil ou webhook BOT-WOW. Aucun appel de liste des paiements n'a été effectué.
+- Les bindings secrets sont masqués ; aucune valeur n'a été lue ou changée.
+
+### D1 / ventes / funnel — SELECT only
+- Commandes : 5 bitcoin_manual/paid (toutes example.com), 8 pending_payment, 1 rejected, 11 mollie/failed. Les 5 licences actives correspondent à des données de test. Livraisons = 0 ; activations = 0 ; événements webhook = 16.
+- Analytics non-test sur les dernières 24 h : 312 page_view, 119 journey_view, aucun cta_click ni événement checkout dans le résultat. Ces nombres sont des événements, pas des visiteurs uniques.
+- Toutes les requêtes D1 ont retourné changed_db=false, rows_written=0. Ventes commerciales vérifiées = 0 ; revenu commercial vérifié = 0 €.
+
+### Éligibilité commerciale
+- PRODUCT.md confirme que le concept historique automatise le gameplay et qu'aucune autorisation Blizzard n'est documentée. Le planificateur navigateur reste une démo simulée, pas une offre autonome validée. Ne pas commercialiser ni optimiser le bot de gameplay sans autorisation applicable.
+
+### Prochaine action
+1. Attendre UI Quality / Playwright SUCCESS sur le head final de PR #113 ; si tous les checks sont verts, fusionner uniquement cette correction statique réversible et vérifier le déploiement Pages.
+2. Garder le checkout et le Worker fermés/protégés ; aucun paiement, envoi ou profil Mollie à créer.
+3. Continuer la récupération de provenance de l'archive et l'étude d'une offre indépendante du gameplay, sans prétendre qu'elle est validée commercialement.
+
+
+## P0.67 — suppression du pseudo-checkout et revalidation post-merge (2026-11-06T08:12Z)
+
+### GitHub / changement livré
+- Main actuel : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- PR #113 `fix(checkout-ui): remove disabled payment forms while sales are closed` fusionnée en squash : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Head CI de PR #113 : `562a45d539d4b5ac628b0961b63e2f7aa036ba7b`. Validate SUCCESS, UI Quality/Playwright SUCCESS, GitGuardian SUCCESS sur ce même SHA.
+- Diff inspecté : 15 fichiers, six pages publiques EN/FR (Home, Buy, Compare) et tests. Les formulaires désactivés, boutons de paiement et champs e-mail ont été retirés. Les pages indiquent qu'aucun formulaire, aucune collecte d'e-mail et aucun paiement ne sont disponibles.
+- Aucun prix, endpoint, règle serveur de checkout, Worker, secret, profil/webhook Mollie, D1/R2, e-mail, DNS ou cache n'a été modifié.
+
+### Vérification GitHub / arbre
+- Arbre Git de main : 443 entrées, 401 blobs, non tronqué.
+- 100 branches retournées par la recherche GitHub (dont main ; aucune page suivante).
+- Validate sur le merge SHA : SUCCESS ; workflow Deploy GitHub Pages : SUCCESS.
+- PR #103 reste OPEN, head `f91e80a509bc05ddc17b4c475b85b74cd00cc89e`. Checks Validate, UI Quality/Playwright et GitGuardian SUCCESS sur ce head exact. Après PR #113, comparaison avec main : 5 commits ahead / 1 behind ; mergeable=true. Aucun merge ni déploiement Worker.
+
+### Cloudflare Pages / contenu public
+- Déploiement production courant : `abdf07ce-facd-4601-bfcb-7a26f3060e49`.
+- Source SHA : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Build et Deploy SUCCESS ; aliases apex et www attachés ; déploiement précédent `b8e1adc7-813e-4ab0-9f7c-06d53d079d19` conservé.
+- Lecture du site par l'outil Web après le déploiement renvoie encore l'ancien pseudo-checkout sur / et /buy. Les pages FAQ et pages.dev ne sont pas lisibles via cet outil. Les six fichiers sur main ont bien été vérifiés sans buyForm/buyBtn/input email. Le contenu réellement servi en HTTP brut n'a pas pu être vérifié depuis l'environnement disponible ; cause non établie (outil d'extraction vs réponse live). Aucune purge cache/DNS.
+
+### D1 / ventes — SELECT uniquement
+- `botwow-production` : 5 commandes bitcoin_manual/paid, toutes test `example.com`; 8 pending, 1 rejected ; 11 Mollie failed.
+- Licences actives=5 (tests), deliveries=0, activations=0, webhook_events=16 (dernier événement le 2026-10-27), download tokens=5, téléchargements cumulés=8.
+- `botwow-analytics`, dernières 24 h non-test : 326 page_view, 119 journey_view ; aucun CTA ou checkout. Total non-test : 2 052 page_view, 799 journey_view, 48 CTA, 29 checkout_requested, 6 checkout_created, 6 checkout_failed, 4 checkout_start, 1 planner_mode.
+- Toutes les requêtes : `changed_db=false`, `rows_written=0`.
+- Ventes non-test vérifiées : 0 ; revenu commercial vérifié : 0 €.
+
+### Mollie / conformité
+- Liste live filtrée sur les éléments BOT-WOW : aucun profil BOT-WOW, aucun webhook BOT-WOW.
+- Aucune transaction Mollie consultée, créée ou modifiée.
+- Aucun accord Blizzard autorisant le bot historique n'est documenté. L'EULA interdit d'offrir/promouvoir/distribuer des bots non autorisés permettant le contrôle automatisé du jeu. Le checkout reste fermé ; la démo est simulée et n'est pas une offre commerciale autonome validée.
+
+### Prochaine action
+1. Obtenir une vérification HTTP brute des six routes après déploiement depuis l'environnement Factory ; ne pas purger le cache sans preuve.
+2. Rafraîchir PR #103 par un merge normal de main, jamais force-push, puis relancer CI. La garder en préparation : issue #99 requiert l'autorisation explicite avant fusion/déploiement Worker.
+3. Continuer la provenance de l'archive R2 et la faisabilité d'un planificateur autonome, sans exécuter les deux fichiers hors manifeste.
+4. Aucun achat de trafic et aucune réouverture du checkout avant produit autorisé, paquet source vérifié et livraison reproductible.
