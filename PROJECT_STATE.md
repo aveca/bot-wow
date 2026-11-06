@@ -3,6 +3,7 @@
 **Relevé : 2026-11-06T14:17Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
 Dépôt : https://github.com/aveca/bot-wow
+PR de ce relevé : https://github.com/aveca/bot-wow/pull/129 (branche `cursor/commercial-truth-agent-state-0086`)
 Production : https://bot-wow.com/
 Hôte canonique : `https://bot-wow.com` (confirmé par les `link rel="canonical"`, `CANONICAL_SITE` du Worker, et la Redirect Rule de zone).
 
