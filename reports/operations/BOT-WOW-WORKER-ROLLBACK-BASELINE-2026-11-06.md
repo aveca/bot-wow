@@ -104,6 +104,10 @@ On the exact merge SHA, GitHub Actions reported:
 
 Important distinction: the active v51 deployment is a full Worker build whose source matches main, not merely the one-line runtime deletion from PR #103. Thus the already-active v51 also contains the accumulated main changes to webhook/fulfillment and download/landing behavior since v50. This is a production payment/fulfillment behavior difference; it was not changed by this manifest capture.
 
+## Recheck after static-site release
+
+After PR #118 was squash-merged as `555bb076cf1a784c865d1999109d47c51775abc0` and Cloudflare Pages deployed it, the Worker deployment list was re-read: `botwow-api` remains on version 51 at 100% traffic (deployment `6aecab2d-6545-4c76-a6b3-cfb089372884`). PR #118 changed static pages/tests only; it did not create a Worker version or deployment.
+
 ## Decision at capture time
 
 - No new Worker patch was justified: the current main Worker and active v51 source are identical, and the non-financial download/legacy-route corrections are already present there.
