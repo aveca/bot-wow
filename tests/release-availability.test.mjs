@@ -124,8 +124,9 @@ for (const [file, notice, footer] of [
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : mention exacte des serveurs privés', notice.test(flat));
   check(file + ' : non-affiliation et marque', footer.test(flat));
-  check(file + ' : aucun terme de contournement ou promesse de détection', 
-    !/anti-cheat|anti-triche|Warden|indétectable|undetectable|anti-ban/i.test(flat));
+  // A legal anti-cheating warning is allowed; evasion, bypass and detection promises are not.
+  check(file + ' : aucun terme de contournement ou promesse de détection',
+    !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
 }
 // The comparison page must not present historical BOT-WOW features as a current offer.
 for (const [file, noOffer, sourceLink] of [
@@ -335,28 +336,28 @@ for (const item of purchaseStatusPageCases) {
 }
 
 
-// Comparison pages must not imply a live price, payment provider, delivery,
-// activation policy or Blizzard authorization while the offer is unavailable.
+// Comparison pages must show a real status route, historical pricing only,
+// and the legal boundary without implying a live purchase or delivery.
 for (const item of [
   {
     file: 'compare.html',
-    formula: /data-cta-id="formula-ours-status"[^>]*>Check purchase status<\/a>/i,
-    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a>/i,
-    target: /documented target price/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Purchase status<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Purchase status<\/a>/i,
+    target: /€20 is a historical target only; not an offer/i,
     scope: /No Blizzard authorization is claimed or documented/i,
   },
   {
     file: 'fr/compare.html',
-    formula: /data-cta-id="formula-ours-status"[^>]*>Vérifier la disponibilité<\/a>/i,
-    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Voir le statut<\/a>/i,
-    target: /prix cible documenté/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Statut d'achat<\/a>/i,
+    bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?data-cta-id="mbar-status">Statut d'achat<\/a>/i,
+    target: /20 € est un ancien prix cible/i,
     scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
   },
 ]) {
   const html = read(item.file);
-  check(item.file + ' : CTA de formule = statut de disponibilité', item.formula.test(html));
+  check(item.file + ' : CTA principal vers le statut d’achat', item.cta.test(html));
   check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement présenté comme cible', item.target.test(html));
+  check(item.file + ' : prix explicitement historique, pas une offre', item.target.test(html));
   check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
   check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
   check(item.file + ' : aucune promesse de machine ou renvoi de licence',
