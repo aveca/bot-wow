@@ -372,7 +372,7 @@ for (const item of [
   {
     file: 'fr/index.html',
     hero: /<h1 class="hero__title">[\s\S]*?BOT-WOW[\s\S]*?statut[\s\S]*?du projet[\s\S]*?<\/h1>/i,
-    notice: /Aucun produit BOT-WOW n’est actuellement proposé à l’achat/i,
+    notice: /Nous ne proposons actuellement aucun produit BOT-WOW à l’achat/ii,
     price: /prix cible documenté/i,
     forbidden: /Décompressez le paquet|collez votre clé de licence|appuyez sur F9|Automatiser ma pêche|Remboursable\s*:/i,
   },
