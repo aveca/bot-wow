@@ -140,6 +140,18 @@ for (const [file, unavailable] of [
     !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
 }
 
+// FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
+for (const [file, unavailable, simulated, staleClaims] of [
+  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /browser planner demo with simulated data.*does not connect to a game/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
+  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /démo de planification dans le navigateur avec des données simulées.*ne se connecte à aucun jeu/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
+]) {
+  const flat = read(file).replace(/\\s+/g, ' ');
+  check(file + ' : indisponibilité du produit annoncée dès la FAQ', unavailable.test(flat));
+  check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
+  check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
+  check(file + ' : aucune instruction de paiement historique', /Do not send payment|N'envoyez aucun paiement/i.test(flat));
+}
+
 // Public module pages must distinguish internal registry status from commercial availability.
 for (const [file, unavailable, noMollie, noSafeHarbour, noAuthorization, noBlizzardUse] of [
   ['modules.html', /delivery unverified|distribution unverified|package provenance/i, /Mollie/i, /within the rules of the server you play on/i, /No Blizzard authorization is claimed or documented/i, /Do not use BOT-WOW with Blizzard-operated services/i],
