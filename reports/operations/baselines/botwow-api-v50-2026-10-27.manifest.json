@@ -1,0 +1,15 @@
+{
+  "worker": "botwow-api",
+  "version": 50,
+  "version_id": "c3dcc842-c422-42d3-9828-405f30d70b5f",
+  "created_on": "2026-10-27T07:46:28.277198Z",
+  "deployment_id": "36227a4d-00e7-4c9f-94e0-0913b29049bc",
+  "traffic_percent": 100,
+  "source_endpoint": "GET /accounts/{account_id}/workers/scripts/{script_name}/content/v2",
+  "multipart_part": "index.js",
+  "source_length_bytes": 263966,
+  "source_sha256": "aa8cf2bdd3c890d1b72ec19af3c13cd15384ce901bbfc598e55e43513a806ba8",
+  "baseline_commit": "8744a3e2bbaec449e16548f89117a05f0d7f20dc",
+  "baseline_branch": "ops/worker-v50-baseline-20261106",
+  "note": "Exact production v50 main module snapshot. No secrets or binding values are included. Cloudflare version 50 remains the direct rollback target."
+}
