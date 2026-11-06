@@ -2433,3 +2433,249 @@ These are source-level facts on the exact main SHA, not assumptions about crawle
 3. Execute issue #102 as a separate static EN/FR PR for Home/Buy copy; do not change legal bodies from issue #101.
 4. Keep checkout closed until the product scope is authorized, the exact package bytes/provenance are verified, a dedicated BOT-WOW payment profile/webhook exists, and end-to-end fulfillment is proven.
 5. Keep Worker v50 reconciliation separate and do not deploy Worker or change secrets without specific authorization.
+
+---
+
+# P0.56 — Secondary EN/FR routes merged and live; Worker fulfillment reconciled (PR #100 merged, PR #103 open) — 2026-11-06T00:25Z
+
+## Mission
+P0.56 — secondary routes (closed checkout / unverified release) + Worker fulfillment reconciliation. Scope: BOT-WOW only. Static pages only for the deployable part; Worker prepared but **not deployed**.
+
+## GitHub / merge
+- `main` before: `a4bb4572079ba939df05e87a221ccaddea1e08b2`. `main` after: `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`.
+- **PR #100 MERGED** 2026-11-06T00:22:08Z (squash), branch `fix/p0.54-secondary-route-status-copy-20261105`, head `0ba3395e7c51cec3e2a1d5577b51c2f79306441c`. 41 files changed (+418 / -431). Closes issue #97.
+- PR #100 final CI on the exact head `0ba3395`: **Validate SUCCESS** (run `42132869946`) and **UI Quality SUCCESS** (run `42132870177`), GitGuardian pass. Both green on the same SHA before merge.
+- **PR #103 OPEN** (not merged, not deployed): `fix/p0.56-worker-fulfillment-reconciliation-20261105`, head `462e13609454521a8525962321b1f8f336146db2`, base `main` @ `a4bb457`. Validate SUCCESS (run `42136060489`), UI Quality SUCCESS (run `42136060542`), GitGuardian pass. Closes issue #99 when merged.
+
+## Static changes merged (PR #100)
+- 22 mission routes EN/FR (`demo`, `features`, `fishing`, `faq`, `getting-started`, `compatibility`, `roadmap`, `success`, `docs/install`, `docs/license`, `docs/index`) + `cancel`, `404`, `docs/changelog`, `docs/known-issues` and the legal **navigation** CTAs: no active Buy/Acheter header, all CTAs point to the purchase-status page, no `href="#offre"`, no lifetime-licence claim, no active Mollie/Bitcoin/machine-lock claim, no guaranteed delivery / activation / delivery-email, no payment confirmation on visit, platform warnings preserved.
+- Two real defects found and fixed by the new coverage: `.callout` is a flex container, so the status link added inside the installation-unavailable callouts became a non-wrapping flex item and pushed the document past the viewport at 320px (361px on `fr/getting-started.html`); `success.html` / `fr/success.html` had no `<h1>` at all.
+- One CI-only defect: the 40px heading word “Documentation” measures 332px against the 286px usable at 320px under the CI runner's fallback font metrics. Fixed with a scoped `@media(max-width:360px)` rule on the archived documentation pages (`body.docs-archive`) — the assertion was not weakened.
+- Regression coverage: `tests/e2e/responsive.spec.mjs` now covers the 22 secondary routes at 320 / 375 / 391 / 430 / 768 / 1280 (264 assertions) plus a **deterministic no-webfont guard** (44 assertions) that blocks `fonts.googleapis.com` / `fonts.gstatic.com` before load, so the CI-only failure can no longer pass locally. `tests/release-availability.test.mjs` extended to 36 EN/FR routes.
+- Legal document **bodies** deliberately unchanged pending owner/legal approval (issue #101). `ab/` variants are not published (`build-site.mjs` excludes them).
+
+## Local verification (real runs)
+- `npm run validate` → exit 0 · `node scripts/versionne-assets.mjs` → 51 files stamped · `npm test` → exit 0 · `npm run audit:css` → exit 0 · `node scripts/build-site.mjs _site` → exit 0 · `git diff --check` → exit 0.
+- Playwright (`node node_modules/@playwright/test/cli.js test`): **472 passed / 0 failed** (342 in `tests/e2e/responsive.spec.mjs` alone). Note: `npm run test:e2e` is not usable as-is under npm/PowerShell on this machine; the Playwright CLI is the equivalent command used by CI.
+- The mechanical `versionne-assets` stamp resync is **not** committed (same convention as PR #95, #96, #100): CI regenerates it before the test and build steps.
+
+## Cloudflare Pages — production
+- Automatic deploy after the merge: deployment **`af45d9ec-729a-45e3-9562-ab34ebc7fc71`**, branch `main`, **source `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`** (matches the merge commit).
+- Rollback targets still reachable: `321aeb92-5a58-4e83-a80a-293038c1d610` (source `a4bb457`) and the mission target `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c` (source `0bba14d`).
+- No Pages production mutation other than the automatic post-merge deploy.
+
+## Live verification (read-only GET on https://bot-wow.com, 2026-11-06T00:24Z)
+- **34 of the 36 affected routes are compliant**: HTTP 200 after the Pages `.html` → extensionless 308 (canonical URLs `/demo`, `/docs/install`, `/fr/success`, …), a valid purchase-status link present, and none of the eight commercial assertions (no immediate-purchase CTA, no lifetime licence, no active Mollie, no guaranteed delivery / activation / delivery-email, no payment confirmation on visit, no `#offre`).
+- The **2 remaining exceptions are `legal/terms.html` and `legal/fr/terms.html`**: their bodies still describe the licence key + download link sent by email and one-machine activation. This is the known and intentional freeze (issue #101, owner/legal approval required); PR #100 changed only their navigation. **Not a regression.**
+- Home / Buy EN/FR were out of scope for PR #100 and are tracked in issue #102.
+
+## Worker / fulfillment (PR #103, prepared only — NOT deployed)
+- Deployed Worker `botwow-api` is **still version 50** (`c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`), created 2026-10-27T07:46:28Z. No new deployment, no secret change, no binding change.
+- Read-only GET probes (2026-11-06T00:10Z) confirm the deployed Worker is **stale**: `/bot-wow-gold` and `/best-wow-bot` still return HTTP 200 legacy marketing HTML (16 765 bytes), as do `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/`. `main` already answers 308 to the canonical site on all of them.
+- `main` also already removed the `Casinobabe-v1.0.38.zip` fallback (PR #19), reserves the download quota **only after** the configured artifact is found, and serves `Content-Disposition` = the exact served object key. PR #103 makes these guarantees executable with `tests/worker-fulfillment-reconciliation.test.mjs` (legacy routes, no older-archive fallback, quota ordering, filename, `429 limit_reached`, fail-closed email) and removes the dead `sendDeliveryEmail` log-only stub.
+- The v50 bundle body is **not retrievable** with the available Cloudflare OAuth token (the version content endpoint returns metadata JSON only): the gap is established by observed HTTP behavior, not by reading the bundle.
+
+## RELEASE_STATUS / payment / email state
+- `RELEASE_STATUS` (`secret_text`) exists; its value is **masked, unknown and never revealed**. The Worker is treated as **fail-closed**; no valid checkout request was attempted.
+- `/api/config` exposes **no availability state** — live body: `{"contactEmail":"support@bot-wow.com","product":"bot-wow-lifetime","priceEur":20,"currency":"eur","bitcoin":{"enabled":true,"address":null}}`. There is no `releaseStatus` / `available` field, so the effective release gate cannot be read from the public API.
+- Residual reported, **not changed**: `/api/config` still publishes `bitcoin.enabled: true` with a null address, which contradicts the closed-checkout message on the site. Nothing in the front-end consumes `config.bitcoin`. It is a payment-rail decision outside issue #99 and left for an explicit owner decision.
+- Email: the Resend integration (`sendDeliveryEmail2` → `sendEmail2`) exists in both `main` and v50; `RESEND_API_KEY` is present as a masked `secret_text`; **credential validity and any successful production delivery remain unverified**. Without the key the path is fail-closed (delivery recorded `pending` for replay). No email was sent, tested or enabled.
+- Mollie / D1 / analytics were **not re-audited** in this cycle (no demonstrated change); see the P0.58 addendum above for the read-only snapshot of 2026-11-05T23:33Z (no BOT-WOW profile, one live webhook on another domain, 0 paid non-test orders, 0 deliveries, 0 activations, no `payment_confirmed` / `delivery_sent` / `activation` events).
+
+## Commercial state / safety
+- Verified commercial sales: **0**. Confirmed commercial revenue: **0,00 €**.
+- No price, checkout, payment, secret, binding, Worker, D1/R2, email, DNS, cache or production setting was changed. No campaign or paid traffic. No archive was fabricated.
+
+## Blockers
+1. Deployed Worker v50 still serves legacy marketing pages — reconciling production requires a **Worker deployment with explicit authorization** (checklist in `reports/operations/BOT-WOW-WORKER-RECONCILIATION-P0.56.md`).
+2. `RELEASE_STATUS` effective value unknown → fail-closed; `/api/config` exposes no availability state.
+3. Delivery artifact unverified: no provenance, no SHA-256, no content inspection, no confirmed compatibility → delivery stays `503 artifact_unavailable`.
+4. No dedicated BOT-WOW Mollie profile and no BOT-WOW webhook.
+5. Legal bodies EN/FR still describe a delivered licence key and one-machine activation (issue #101).
+6. Home / Buy EN/FR still describe the intended gameplay-automation product (issue #102).
+
+## Next action
+1. Review and merge PR #103 (Worker reconciliation) — green, no deployment; a Worker deploy itself needs a separate explicit authorization after the checklist is executed.
+2. Execute issue #102 (Home/Buy EN/FR) as a separate static PR; leave the legal bodies of issue #101 untouched.
+3. Verify the exact R2 artifact bytes / provenance / SHA-256 and the effective release gate through authorized non-disclosing paths before any sales enablement.
+4. Decide explicitly on the `/api/config` `bitcoin.enabled` residual before the checkout is ever reopened.
+
+### Prompt complet du cycle suivant
+
+```
+MISSION BOT-WOW P0.59
+LIVRAISON REELLE + PORTE DE RELEASE VERIFIEE
+
+REPOSITORY:
+https://github.com/aveca/bot-wow
+
+SCOPE:
+BOT-WOW uniquement.
+
+MAIN:
+f95868421e994db46c5cd2fdfbb0f3d8d74f2516
+
+PRs:
+#100 (statique, mergée 2026-11-06T00:22:08Z, merge f958684)
+#103 (Worker, ouverte, verte, NON déployée, head 462e136)
+
+TRACKERS:
+Issue #97 — routes secondaires (clos)
+Issue #99 — Worker et fulfillment
+Issue #101 — corps des pages légales (approbation propriétaire/juridique)
+Issue #102 — Home/Buy EN/FR
+
+================================================
+PHASE 1 — REPRISE
+================================================
+Lire :
+AGENTS.md
+PRODUCT.md
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Vérifier :
+- main SHA ;
+- PR #103 (état, CI, diff complet) ;
+- dernières Pages (production af45d9ec, rollback 321aeb92 et ea59f77e) ;
+- état Worker botwow-api (toujours v50 ?).
+
+Préserver tout changement local.
+Ne pas recommencer les audits D1/Mollie sans évolution démontrable.
+
+================================================
+PHASE 2 — PR #103 : REVUE ET FUSION (SANS DEPLOIEMENT)
+================================================
+- Inspecter le diff complet de PR #103 (4 fichiers).
+- Vérifier que la suite tests/worker-fulfillment-reconciliation.test.mjs
+  couvre : aucune route marketing legacy, aucun repli archive ancienne,
+  quota réservé après artefact trouvé, Content-Disposition = clé exacte,
+  fournisseur d'e-mail fail-closed.
+- Fusionner PR #103 si et seulement si la CI est verte sur le SHA final.
+- NE PAS deployer le Worker. NE PAS toucher aux secrets ni aux bindings.
+- NE PAS ouvrir le checkout. Aucun paiement, aucun e-mail, aucune écriture
+  D1/R2.
+
+================================================
+PHASE 3 — PHASE 3 STATIQUE : ISSUE #102 (HOME / BUY EN+FR)
+================================================
+Créer une branche dédiée depuis main, sur le modèle de PR #100.
+
+Objectifs :
+- plus aucun header Buy/Acheter actif ;
+- plus de CTA d'achat immédiat ; tout pointe vers la page de statut ;
+- aucune description du produit comme « produit d'automatisation de jeu »
+  disponible ou autorisé ;
+- aucune promesse de licence à vie, de clé, de téléchargement, de
+  livraison ou d'activation ;
+- le guide d'installation ne doit plus présenter l'installation comme
+  disponible ;
+- conserver l'avertissement de plateforme et l'avertissement Blizzard ;
+- corps des pages légales : NE PAS TOUCHER (issue #101).
+
+Tests :
+- étendre tests/release-availability.test.mjs à Home/Buy EN+FR ;
+- étendre la couverture responsive aux viewports 320/375/391/430/768/1280.
+
+Exécuter réellement :
+npm run validate
+node scripts/versionne-assets.mjs
+npm test
+npm run audit:css
+node scripts/build-site.mjs _site
+node node_modules/@playwright/test/cli.js test
+git diff --check
+
+================================================
+PHASE 4 — PR STATIQUE #102
+================================================
+- commit ciblé, push, PR inspectable ;
+- exiger Validate SUCCESS ET UI Quality SUCCESS sur le MÊME SHA ;
+- inspecter le diff complet ;
+- fusionner selon la politique de livraison statique réversible ;
+- rollback Pages de référence : ea59f77e-4fbe-42ea-b9e5-e5d22f94569c ;
+- vérifier le déploiement automatique (source = SHA de fusion) ;
+- re-vérifier en live toutes les pages concernées.
+
+================================================
+PHASE 5 — PORTE DE RELEASE (LECTURE SEULE, SANS CHECKOUT)
+================================================
+- vérifier le RELEASE_STATUS effectif via un chemin Cloudflare autorisé
+  SANS jamais afficher la valeur ; sinon fail-closed ;
+- décider explicitement du résidu /api/config bitcoin.enabled:true ;
+- ne jamais tenter de checkout valide ; aucun paiement de test.
+
+================================================
+PHASE 6 — PREUVE DE L'ARTEFACT
+================================================
+- obtenir un chemin de lecture R2 AUTORISÉ ;
+- consigner : provenance, version exacte, SHA-256, contenu inspecté,
+  compatibilité confirmée ;
+- NE PAS fabriquer d'archive ; NE PAS écrire dans R2 ;
+- si la preuve est impossible, documenter le blocage et laisser
+  artifact_unavailable en place.
+
+================================================
+PHASE 7 — EMAIL
+================================================
+- ne PAS activer l'envoi ;
+- documenter l'absence de procédure de test-send autorisée ;
+- exiger : procédure de test-send, destinataire de test, preuve de
+  réception, rejouabilité — avant tout envoi réel.
+
+================================================
+GARDE-FOUS
+================================================
+NE PAS :
+- modifier prix ;
+- ouvrir checkout ;
+- créer paiement ;
+- modifier secrets ou bindings ;
+- déployer le Worker sans autorisation spécifique ;
+- écrire D1 ou R2 ;
+- envoyer email ;
+- modifier DNS ;
+- purger cache ;
+- acheter du trafic ;
+- promouvoir un bot non autorisé ;
+- fusionner PR #66 ou #90 sans audit spécifique ;
+- modifier les corps des pages légales sans approbation (issue #101) ;
+- travailler sur un autre produit.
+
+================================================
+RAPPORT FINAL
+================================================
+1. MAIN SHA
+2. BRANCH
+3. COMMITS
+4. PR STATIQUE
+5. PR WORKER
+6. VALIDATE
+7. PLAYWRIGHT
+8. TEST COUNT
+9. HOME EN/FR
+10. DEMO EN/FR
+11. FEATURES EN/FR
+12. GETTING STARTED EN/FR
+13. SUCCESS EN/FR
+14. DOCS EN/FR
+15. PAGES DEPLOYMENT
+16. LIVE VERIFICATION
+17. WORKER VERSION
+18. WORKER SOURCE DIFF
+19. RELEASE_STATUS STATE
+20. MOLLIE
+21. WEBHOOK
+22. D1
+23. ANALYTICS
+24. PACKAGE SHA256
+25. EMAIL DELIVERY
+26. SALES
+27. REVENUE
+28. BLOCKERS
+29. NEXT PRIORITY
+
+Actualiser :
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Terminer par le prompt complet du cycle suivant.
+```
