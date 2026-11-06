@@ -34,10 +34,13 @@ jobs:
         run: npm ci
       - name: Validate static project
         run: npm run validate
-      - name: Recompute deterministic asset fingerprint and URLs
-        run: node scripts/versionne-assets.mjs
+      # Le stamp des assets est verifie par npm test : il doit deja etre juste
+      # dans l'arbre committe. Le recalculer AVANT les tests masquait un stamp
+      # perime (PR #118 : HTML b4232c44, empreinte 560cff9a, CI verte a tort).
       - name: Run unit and integration tests
         run: npm test
+      - name: Recompute deterministic asset fingerprint and URLs
+        run: node scripts/versionne-assets.mjs
       - name: Audit all CSS selectors and tokens
         run: npm run audit:css
 
