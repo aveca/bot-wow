@@ -93,7 +93,7 @@ test('purchase unavailable: status navigation cannot call checkout', async ({ pa
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expectNoPurchaseForm(page);
-  await page.locator('a[href="#buy"]').first().click();
+  await page.locator('a[data-cta-id="buy-status-primary"]').click();
   expect(checkoutRequests).toEqual([]);
 });
 

@@ -64,7 +64,7 @@ test('accessibility: closed checkout exposes no email field or purchase form', a
       path.startsWith('/fr') ? 'Aucun formulaire de paiement' : 'No payment form is available'
     );
 
-    await captureScreenshot(page, testInfo, `closed-checkout-accessibility-${path.replace(/\\//g, '-')}`);
+    await captureScreenshot(page, testInfo, `closed-checkout-accessibility-${path.replaceAll('/', '-')}`);
   }
   expect(errors).toEqual([]);
 });
