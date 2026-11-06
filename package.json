@@ -14,6 +14,7 @@
     "test:telemetry": "node tests/telemetry.test.mjs && node tests/telemetry-source-allowlist.test.mjs && node tests/analytics-source.test.mjs",
     "test:release": "node tests/release-availability.test.mjs",
     "test:worker-reconciliation": "node tests/worker-fulfillment-reconciliation.test.mjs",
+    "test:compatibility": "node tests/compatibility-data.test.mjs",
     "test:gate": "node tests/checkout-gate.test.mjs && node tests/checkout-gate-mollie.test.mjs",
     "test:delivery": "node tests/delivery-replay.test.mjs",
     "test:funnel": "node tests/funnel.test.mjs",
