@@ -131,8 +131,8 @@ for (const [file, agreement, noAuthorization, noBlizzardServices] of platformDis
     !/within the rules of the server you play on|dans le respect des règles du serveur sur lequel vous jouez|Play on servers where it is allowed|Jouez sur des serveurs où c'est autorisé/i.test(flat));
 }
 for (const [file, unavailable] of [
-  ['faq.html', /Card checkout is currently unavailable/i],
-  ['fr/faq.html', /paiement par carte est actuellement indisponible/i],
+  ['faq.html', /None are currently available for BOT-WOW/i],
+  ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
@@ -230,13 +230,13 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
-  ['faq.html', /offer is not currently available for purchase/i, /Activation limits are not confirmed/i,
+  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /Activation limits and terms are not confirmed/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /offre n'est pas actuellement disponible à l'achat/i, /limites d'activation ne sont pas confirmées/i,
+  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /limites et conditions d'activation ne sont pas confirmées/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
-  const flat = read(file).replace(/\\s+/g, ' ');
+  const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : disponibilité commerciale explicitement fermée', availability.test(flat));
   check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
   check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
