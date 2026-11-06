@@ -45,23 +45,21 @@
 #   les deux pages servent le meme contenu (stamp d'assets cb3925b6)
 #   -> la regle etait bien ignoree, sans effet de bord.
 #
-# REMEDIATION (hors depot, necessite une autorisation explicite) :
-# la consolidation www -> apex doit etre fait au niveau de la ZONE
-# Cloudflare, pas dans ce fichier :
-#   1. creer une regle "Single Redirect" (Redirect Rules) sur la zone
-#      bot-wow.com :
-#      source  = http(s)://www.bot-wow.com/*
-#      cible   = https://bot-wow.com/:splat
-#      statut  = 301 ;
-#   2. faire pointer le DNS "www" vers l'apex via un enregistrement
-#      proxied (A 192.0.2.0 / CNAME apex), comme decrit par la
-#      documentation Cloudflare "Redirect between www and root domain" ;
-#   3. supprimer www.bot-wow.com comme "custom domain"/alias du projet
-#      Pages pour eviter que Pages continue de servir le www en 200.
-# Rollback : supprimer la regle Redirect Rules et re-pointer le DNS.
-#
-# En attendant, le signal SEO repose sur <link rel="canonical"> (apex) et
-# sur le sitemap, qui pointent deja vers https://bot-wow.com/.
+# Remediation de zone observee le 2026-11-06 (lecture seule, non creee par
+# ce depot) : une Redirect Rule active
+#   (http.host eq "www.bot-wow.com") -> 301 https://bot-wow.com + chemin
+#   (query conservee) a ete vue en API a 14:16:56Z. A 14:15:35Z les deux
+#   hotes repondaient encore 200. A 14:17:33Z :
+#   GET https://www.bot-wow.com/        -> 301 https://bot-wow.com/
+#   GET https://www.bot-wow.com/buy     -> 301 https://bot-wow.com/buy
+#   GET https://www.bot-wow.com/fr/?utm -> 301 https://bot-wow.com/fr/?utm
+#   GET http://www.bot-wow.com/         -> 301 https://bot-wow.com/
+#   GET https://bot-wow.com/            -> 200
+# L'alias Pages www.bot-wow.com etait toujours present : la regle de zone
+# s'applique avant l'origine. Ne pas ajouter une seconde redirection dans
+# ce fichier ni une Pages Function tant que cette regle repond 301.
+# Hote canonique confirme : https://bot-wow.com
+# Rollback de la regle de zone : autorisation proprietaire, hors depot.
 #
 # Note : le deploiement GitHub Pages n'applique pas non plus ce fichier
 # (limite documentee dans reports/operations/BOT-WOW-REVENUE-STATE-2026-11-04.md).

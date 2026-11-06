@@ -1,6 +1,8 @@
 # Agent instructions — BOT-WOW
 
-Before doing any work in this repository, read `reports/operations/BOT-WOW-CURRENT-STATE.md`.
+Before doing any work in this repository, read `PROJECT_STATE.md`, `agents/locks.md`, and `reports/operations/BOT-WOW-CURRENT-STATE.md`.
+
+Do not start a task scope that is `active` and unexpired in `agents/locks.md` or in another open pull request. Publish the result in `PROJECT_STATE.md` and `agents/` before finishing. GitHub is the shared source of truth. See `agents/README.md`.
 
 ## Session-resumption rules
 

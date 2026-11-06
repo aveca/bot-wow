@@ -1,0 +1,11 @@
+# Bloqueurs
+
+| id | bloquant | preuve | qui peut lever |
+|---|---|---|---|
+| B-compliance | La page publique dit que le projet est historique et qu'aucun logiciel d'automatisation n'est offert. Aucune autorisation de plateforme n'est documentée dans ce dépôt. | GET `https://bot-wow.com/` 2026-11-06T14:15Z | Propriétaire |
+| B-package | L'objet R2 `casinobabe-fishing-1.2.0.zip` est présent (1 387 543 octets). La page le marque « not verified ». Provenance et exécutables hors manifeste non revalidés dans ce cycle. | Liste R2 lecture seule ; issue #18 | Propriétaire, sans réécriture R2 |
+| B-mollie | Pas de preuve, dans ce cycle, d'un profil Mollie BOT-WOW dédié. Ne pas réutiliser un autre produit. `profileId` est encore envoyé avec la clé API sur `main` ; le correctif est la PR #90. | Code `mollieFetch` ; PR #90 | Propriétaire pour le profil ; revue de #90 pour le code |
+| B-secrets | Les noms de secrets sont liés au Worker. Les valeurs et leur validité fonctionnelle ne sont pas prouvées. | API settings, types seulement | Propriétaire si une clé doit être créée. Ne pas faire de `wrangler secret put` sans accord |
+| B-release-status | `RELEASE_STATUS` est masqué. Le checkout code renvoie 409 tant que la valeur n'est pas `confirmed`. | `worker/index.js` ; secret présent par nom | Propriétaire |
+| B-revenue | 0 commande payée hors `example.com`. 0 livraison. 0 activation. 0 événement `payment_confirmed`. | D1 SELECT 2026-11-06, `rows_written=0` | Un paiement de test autorisé, plus tard |
+| B-legal | Issue #101 : les corps juridiques décrivent encore une licence. Non modifiés. | Issue #101 | Propriétaire / juridique |
