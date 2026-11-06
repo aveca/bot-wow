@@ -59,10 +59,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check('accueil : aucun formulaire d\'achat n'est expose', !/<form id="buyForm"/.test(t));
-  check('accueil : aucun champ email de paiement n'est expose', !/id="email"[^>]*type="email"/.test(t));
-  check('accueil : aucun bouton de paiement n'est expose', !/id="buyBtn"/.test(t));
-  check('accueil : statut de paiement sans collecte d\'e-mail', /No payment form is available|Aucun formulaire de paiement n'est disponible/i.test(t));
+  check("accueil : formulaire de paiement absent", !/<form id="buyForm"/.test(t));
+  check("accueil : champ e-mail de paiement absent", !/id="email"[^>]*type="email"/.test(t));
+  check("accueil : bouton de paiement absent", !/id="buyBtn"/.test(t));
+  check("accueil : statut sans collecte de données", /No payment form is available|Aucun formulaire de paiement n'est disponible/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
