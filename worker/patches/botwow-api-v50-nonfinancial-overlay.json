@@ -152,5 +152,22 @@
     "all Mollie/Bitcoin/admin order functions",
     "handleResend and both email delivery helpers",
     "all D1 schemas, secrets and Worker bindings"
+  ],
+  "preserved_api_route_lines": [
+    "  const isPublic = path === \"/api/admin/login\" || path === \"/api/admin/logout\";",
+    "      if (path === \"/api/config\" && method === \"GET\") {",
+    "      if (path === \"/api/claim\" && method === \"POST\") {",
+    "      if (path === \"/api/activate\" && method === \"POST\") {",
+    "      if (path === \"/api/subscribe\" && method === \"POST\") {",
+    "      if (path === \"/api/download\" && method === \"GET\") {",
+    "      if (path === \"/api/resend\" && method === \"POST\") {",
+    "      if (path === \"/api/checkout\" && method === \"POST\") {",
+    "      if (path === \"/api/mollie-webhook\" && method === \"POST\") {",
+    "      if (path === \"/api/bitcoin/checkout\" && method === \"POST\") {",
+    "      if (path === \"/api/bitcoin/paid\" && method === \"POST\") {",
+    "      if (path.startsWith(\"/api/admin/orders/\") && path.endsWith(\"/approve\") && method === \"POST\") {",
+    "      if (path.startsWith(\"/api/admin/orders/\") && path.endsWith(\"/reject\") && method === \"POST\") {",
+    "      if (path.startsWith(\"/api/admin/\")) {",
+    "      if (method === \"GET\" && !path.startsWith(\"/api/\")) {"
   ]
 }
