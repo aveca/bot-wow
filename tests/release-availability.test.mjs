@@ -150,6 +150,10 @@ for (const [file, unavailable, simulated, staleClaims] of [
   check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
   check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
   check(file + ' : aucune instruction de paiement historique', /Do not send payment|N'envoyez aucun paiement/i.test(flat));
+  check(file + ' : le pied de page ne présente pas un bot de jeu comme produit actuel',
+    !/Fishing assistant for WoW Classic\\. Published by Casinababe|Assistant de pêche pour WoW Classic\\. Édité par Casinababe/i.test(flat));
+  check(file + ' : les notes d’installation sont explicitement archivées',
+    /Archived installation notes \\(not current instructions\\)|Notes d’installation archivées \\(instructions non actuelles\\)/i.test(flat));
 }
 
 // Public module pages must distinguish internal registry status from commercial availability.
