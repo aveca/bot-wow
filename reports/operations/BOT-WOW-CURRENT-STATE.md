@@ -3452,16 +3452,25 @@ Terminer par le prompt complet du cycle suivant.
 - CI sur `main` : Validate SUCCESS et Deploy GitHub Pages SUCCESS sur `8744a3e2b`.
 
 ### Pages production
-- Déploiement production courant : **`98ad7ea5-7210-42ad-a870-a8bf1635cb0c`**, branche `main`,
-  **source `8744a3e` = `main`**, URL `https://98ad7ea5.bot-wow.pages.dev`.
-- Rollback immédiat disponible : `abdf07ce-facd-4601-bfcb-7a26f3060e49` (source `7ad7d4d`).
-  La cible `321aeb92-5a58-4e83-a80a-293038c1d610` du prompt est antérieure à P0.60.
-- Après la fusion de PR #115 : nouveau déploiement production
-  **`fa034b8f-5b9e-48d4-a939-6d3a1593a59d`**, source `f7186ed` = nouveau `main`.
+- **Déploiement production courant : `2ee2384a-9356-4275-a963-e986039fffa6`**, branche `main`,
+  **source `5125dcf` = `main`**, URL `https://2ee2384a.bot-wow.pages.dev`.
+- Chaîne des déploiements de ce cycle :
+  | Déploiement | Source | Origine |
+  |---|---|---|
+  | `2ee2384a-9356-4275-a963-e986039fffa6` | `5125dcf` | merge PR #116 (ce document) — **courant** |
+  | `fa034b8f-5b9e-48d4-a939-6d3a1593a59d` | `f7186ed` | merge PR #115 (stamp resync) |
+  | `98ad7ea5-7210-42ad-a870-a8bf1635cb0c` | `8744a3e` | `main` au début du cycle |
+  | `abdf07ce-facd-4601-bfcb-7a26f3060e49` | `7ad7d4d` | rollback antérieur (PR #113) |
+- Rollback immédiat disponible : `fa034b8f-…` (source `f7186ed`), puis `98ad7ea5-…`
+  (source `8744a3e`). La cible `321aeb92-5a58-4e83-a80a-293038c1d610` du prompt est antérieure
+  à P0.60.
 - Cloudflare Pages possède sa **propre intégration Git** : **tout** push sur `main` (y compris
   un merge documentaire) déclenche un rebuild. `paths-ignore: reports/**` ne s'applique qu'aux
-  workflows GitHub Actions. La configuration `path_excludes = ["reports/**"]` est préparée mais
-  **non appliquée** (changement de configuration de production : autorisation propriétaire requise).
+  workflows GitHub Actions — c'est pourquoi le run **« Deploy Bot-Wow to GitHub Pages » a été
+  correctement SAUTÉ** pour le merge documentaire `5125dcf`, tandis que Cloudflare Pages a
+  quand même reconstruit `2ee2384a`. La configuration `path_excludes = ["reports/**"]` est
+  préparée mais **non appliquée** (changement de configuration de production : autorisation
+  propriétaire requise).
 - `reports/**` n'est pas dans les répertoires publiés par `scripts/build-site.mjs`
   (`DIRS = assets, docs, legal, fr`) : un merge documentaire produit un **artefact identique**.
 
@@ -3513,8 +3522,9 @@ Terminer par le prompt complet du cycle suivant.
   protège que l'artefact, pas l'état committé.
 - **Correctif** : application de l'outil du dépôt lui-même — `node scripts/versionne-assets.mjs`,
   **51 fichiers**, commit `5c8694742e7721d30559efe707d69025f28a7379`, squash
-  **`f7186edd95835159f39b072fc58d501e35c68ef1`**, PR **#115**. Validate SUCCESS, UI Quality
-  SUCCESS, GitGuardian SUCCESS **sur le même head** `5c86947` ; diff 51 fichiers, +159/−159.
+  **`f7186edd95835159f39b072fc58d501e35c68ef1`**, PR **#115** (`merged_at` `2026-11-06T09:42:52Z`).
+  Validate SUCCESS (run `42196277366`), UI Quality SUCCESS (run `42196277091`), GitGuardian
+  SUCCESS **sur le même head** `5c86947` ; diff 51 fichiers, +159/−159.
 - **Preuve que rien d'autre n'a changé** : pour les 51 fichiers, le blob `HEAD` dont `?v=` est
   normalisé en `b4232c44` (et les fins de ligne normalisées, `core.autocrlf=true` sur cette
   machine) est **octet pour octet identique** au fichier de l'arbre de travail —
@@ -3523,6 +3533,11 @@ Terminer par le prompt complet du cycle suivant.
 - **Impact production : nul.** `scripts/build-site.mjs` recalcule `computeStamp(ROOT)` et
   l'applique à l'artefact : les pages serviesendaient déjà `?v=b4232c44` avant ce commit.
   L'artefact reconstruit est identique.
+- **Critère d'acceptation vérifié sur un clone NEUF** : `git clone --branch main` de
+  `aveca/bot-wow` → HEAD `f7186ed`, stamp committé `b4232c44` **sans aucune étape
+  préalable**, puis `npm ci` (3 paquets, 0 vulnérabilité) et `npm test` → **exit 0**
+  (26 suites). Le défaut est donc bien **corrigé dans l'état committé**, et pas seulement
+  masqué par l'auto-réparation de la CI.
 
 ### Worker `botwow-api` — v50 vs `main`, AUCUN DÉPLOIEMENT
 - **État live : version 50**, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment
@@ -3606,6 +3621,18 @@ route live ne contient plus d'identifiant capable d'en émettre un nouveau.
   vérifié) et un seul webhook actif vers ce domaine ; **aucun profil BOT-WOW, aucun webhook BOT-WOW**.
   **Ne jamais réutiliser ce profil externe.** Aucun paiement créé, aucun appel de liste de
   paiements, aucune modification.
+
+### PRs ouvertes et fusionnées par ce cycle
+| PR | Branche | Contenu | head | Merge (squash) | CI sur le head |
+|---|---|---|---|---|---|
+| **#115** | `chore/p0.68-asset-stamp-resync-20261106` | resynchronisation du stamp d'assets (51 fichiers, +159/−159) | `5c86947` | `f7186edd95835159f39b072fc58d501e35c68ef1` | Validate `42196277366` SUCCESS · UI Quality `42196277091` SUCCESS · GitGuardian SUCCESS |
+| **#116** | `docs/p0.68-stamp-resync-and-revalidation-20261106` | cette section d'état (1 fichier, +224/−0) | `e475c58` | `5125dcf993a2818cc60a51c82589ea557b7554e7` | Validate `42198612553` SUCCESS · UI Quality `42198612647` SUCCESS · GitGuardian SUCCESS |
+
+- Les deux PR ont été **inspectées** avant fusion (`mergeable=MERGEABLE`,
+  `mergeStateStatus=CLEAN`, diff complet relu) et fusionnées en **squash** sur `main`.
+- `main` final au 2026-11-06 : **`5125dcf993a2818cc60a51c82589ea557b7554e7`**.
+- **Aucun checkout, prix, règle de paiement, secret, `RELEASE_STATUS`, fichier Worker,
+  fichier juridique, DNS, cache, D1 ou R2 n'a été modifié** par ces deux PR.
 
 ### Conformité et garde-fous
 - **4 exceptions** sur les 80 chargements, toutes sur `legal/terms` EN/FR : les corps juridiques
