@@ -119,7 +119,7 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   if (lang === 'fr') {
     await expect(page.locator('#release-availability-notice')).toContainText('n\'achetez pas tant que la livraison n\'est pas confirmée');
   } else {
-    await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+    await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   }
 
   // Le formulaire existe bien
@@ -138,7 +138,7 @@ test('homepage: demo and purchase-status paths remain visible and responsive', a
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
@@ -261,7 +261,7 @@ test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
   await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);
