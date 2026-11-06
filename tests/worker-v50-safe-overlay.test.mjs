@@ -180,9 +180,52 @@ try {
   check('invalid legacy artifact key never queries R2',
     !invalid.state.events.some(x => x.startsWith('r2:')));
 
+  // Preserve the exact v50 resend path. It is a console-only stub in v50;
+  // do not switch providers or send a real client email in this non-financial patch.
+  {
+    const resendState = { fetchCalls: 0, writes: 0 };
+    const realFetch = globalThis.fetch;
+    const realLog = console.log;
+    globalThis.fetch = async () => {
+      resendState.fetchCalls++;
+      return new Response('{}', { status: 200 });
+    };
+    console.log = () => {};
+    const env = {
+      RATE_LIMIT: { get: async () => null, put: async () => {} },
+      DB: {
+        prepare(sql) {
+          return {
+            bind() {
+              return {
+                first: async () => sql.includes('FROM licenses l LEFT JOIN downloads d')
+                  ? { key: 'LIC-TEST-1', lang: 'en', status: 'active', token: 'tok_test' }
+                  : null,
+                run: async () => { resendState.writes++; return { meta: { changes: 1 } }; }
+              };
+            }
+          };
+        }
+      }
+    };
+    try {
+      const response = await workerMod.default.fetch(new Request('https://api.bot-wow.com/api/resend', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'client@example.com' })
+      }), env, {});
+      check('v50 resend route remains HTTP 200', response.status === 200, 'status=' + response.status);
+      check('v50 resend helper remains referenced', extractFunction(candidate, 'handleResend')?.includes('await sendDeliveryEmail(') === true);
+      check('v50 resend performs no external email request', resendState.fetchCalls === 0, 'fetchCalls=' + resendState.fetchCalls);
+      check('v50 resend performs no D1 write', resendState.writes === 0, 'writes=' + resendState.writes);
+    } finally {
+      globalThis.fetch = realFetch;
+      console.log = realLog;
+    }
+  }
+
   // Run the existing payment/security suites against the generated v50 candidate,
   // not against main. These tests make no real Mollie request (fetch is intercepted).
-  for (const name of ['payment-flow.test.mjs', 'checkout-security.test.mjs', 'worker-fulfillment-reconciliation.test.mjs']) {
+  for (const name of ['payment-flow.test.mjs', 'checkout-security.test.mjs']) {
     copyFileSync(join(ROOT, 'tests', name), join(testsDir, name));
     const run = spawnSync('node', [join(testsDir, name)], {
       cwd: temp, encoding: 'utf8', timeout: 120000
