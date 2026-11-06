@@ -86,6 +86,12 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('compare : sources concurrentes et dates de consultation visibles',
     /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
       && /https:\/\/pixelwowbot\.com\//.test(fr) && /06\/11\/2026/.test(fr));
+  check('compare EN : prix concurrent conformes à la page publique',
+    /€1\.99 for 48 hours; €19\.99 per 30 days; individual roles from €6\.99/.test(en));
+  check('compare FR : prix concurrent conformes à la page publique',
+    /1,99 € pour 48 h ; 19,99 € par 30 jours ; rôles individuels à partir de 6,99 €/.test(fr));
+  check('compare : compatibilité WoW Forever attribuée au vendeur, pas à BOT-WOW',
+    /WoW Forever/.test(en) && /WoW Forever/.test(fr));
   check('compare : ancien calculateur de cout retire', !/id="ownership"/.test(en + fr));
 }
 
