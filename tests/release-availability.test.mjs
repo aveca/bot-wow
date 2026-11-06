@@ -89,39 +89,18 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 }
 
 
-for (const [page, file, oldClaim, newDisclosure, newHeading] of [
-  ['buy.html', 'buy.html',
-    /Everything below is delivered and working now/i,
-    /The list below describes the intended product scope; package availability and delivery are not yet verified/i,
-    /What the intended v1\.2\.0 build includes/i],
-  ['fr/buy.html', 'fr/buy.html',
-    /Tout ce qui suit est livré et fonctionne maintenant/i,
-    /La liste ci-dessous décrit le périmètre prévu du produit ; la disponibilité du paquet et sa livraison ne sont pas encore vérifiées/i,
-    /Périmètre prévu du build v1\.2\.0/i],
-]) {
+for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(`${page} : aucune affirmation de livraison déjà vérifiée`, !oldClaim.test(flat));
-  check(`${page} : périmètre explicitement présenté comme prévu et non vérifié`,
-    newDisclosure.test(flat) && newHeading.test(flat));
+  check(file + ' : la page présente un statut de projet, pas une offre ouverte',
+    /no purchase available|aucun achat disponible|purchase unavailable|achat indisponible/i.test(flat));
+  check(file + ' : aucune procédure de lancement présentée comme disponible',
+    !/Unzip the package|paste your licence key|press F9|Décompressez le paquet|collez votre clé de licence|appuyez sur F9/i.test(flat));
+  check(file + ' : aucune promesse de remboursement dans le marketing',
+    !/Refundable:|Remboursable\s*:/i.test(flat));
+  check(file + ' : aucune promesse de licence, activation ou livraison disponible',
+    !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
-
-for (const [page, file, oldClaims, newScope] of [
-  ['index.html', 'index.html',
-    /The one role BOT-WOW ships today|Fishing ships today|BOT-WOW ships one role|1 shipped \+ 3 in development|packaged build, delivered with a SHA-256 manifest/i,
-    /The intended v1\.2\.0 scope is one role: fishing/i],
-  ['fr/index.html', 'fr/index.html',
-    /Le seul rôle que BOT-WOW livre aujourd'hui|La pêche livre aujourd'hui|BOT-WOW livre un seul rôle|1 livré \+ 3 en développement|paquet de livraison, avec un manifeste SHA-256/i,
-    /Le périmètre prévu de la v1\.2\.0 couvre un seul rôle : la pêche/i],
-]) {
-  const html = read(file);
-  const flat = html.replace(/\\s+/g, ' ');
-  check(`${page} : aucune affirmation que le produit est déjà livré`, !oldClaims.test(flat));
-  check(`${page} : périmètre prévu et disponibilité non vérifiée clairement indiqués`, newScope.test(flat));
-}
-
-
- 
 
 for (const file of ['fr/index.html', 'fr/buy.html', 'fr/compatibility.html', 'fr/faq.html']) {
   const html = read(file);
@@ -197,38 +176,18 @@ check('PRODUCT.md : compatibilité tierce ne vaut pas autorisation', /sans autor
 check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut de configuration à 2 activations/i.test(productFlat));
 
 
-// Public offer copy must not claim an unverified archive component or entitlement.
-for (const [file, componentDisclosure, activationDisclosure, staleComponent, staleActivation] of [
-  ['buy.html',
-    /presence in the current v1\.2\.0 archive and its per-file SHA-256 manifest have not been verified/i,
-    /Activation terms under verification/i,
-    /The Casinobabe addon|shipped with a SHA-256 manifest per file/i,
-    /Activation on one machine|One machine activation|A licence activates on one machine/i],
-  ['fr/buy.html',
-    /présence dans l'archive v1\.2\.0 actuelle et son manifeste SHA-256 par fichier ne sont pas vérifiés/i,
-    /Conditions d'activation en cours de vérification/i,
-    /L'addon Casinobabe|livré avec un manifeste SHA-256 par fichier/i,
-    /Activation sur une machine|Une activation sur une machine|Une licence active une machine/i],
-]) {
+// Primary purchase pages must not describe historical scope as a current deliverable.
+for (const [file, lang] of [['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : composant d’archive et manifeste non vérifiés', componentDisclosure.test(flat));
-  check(file + ' : aucun nom de produit tiers présenté comme composant livré', !staleComponent.test(flat));
-  check(file + ' : entitlement machine explicitement non confirmé', activationDisclosure.test(flat));
-  check(file + ' : aucune promesse de limite machine non réconciliée', !staleActivation.test(flat));
+  check(file + ' : les notes historiques sont explicitement non commerciales',
+    /Historical project notes — not an offer|Notes historiques du projet — pas une offre/i.test(flat));
+  check(file + ' : aucun client téléchargeable n’est proposé',
+    /No game client|Aucun client de jeu/i.test(flat));
+  check(file + ' : aucune activation ou mise à jour n’est vendue',
+    /No licence, activation, update or recovery process is currently offered|Aucun processus de licence, d’activation, de mise à jour ou de récupération n’est actuellement offert/i.test(flat));
+  check(file + ' : aucune promesse de machine ou de livraison',
+    !/Activation on one machine|Activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
-for (const [file, disclosure, stale] of [
-  ['index.html',
-    /Activation terms are under verification; machine limits and licence re-sends are not currently confirmed/i,
-    /Activation on one machine|One machine activation|licence re-sent on request/i],
-  ['fr/index.html',
-    /Les conditions d'activation sont en cours de vérification ; les limites de machines et le renvoi de licence ne sont pas encore confirmés/i,
-    /Activation sur une machine|Une activation sur une machine|clé réexpédiée sur demande/i],
-]) {
-  const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : conditions d’activation non confirmées', disclosure.test(flat));
-  check(file + ' : aucune promesse de machine non réconciliée', !stale.test(flat));
-}
-
 
 for (const [file, staleLabel] of [
   ['index.html', /The Casin[oa]babe addon/i],
@@ -246,10 +205,9 @@ for (const [file, staleMachineBinding] of [
 }
 
 
-check('index.html : le contenu de l’archive et son manifeste restent explicitement non vérifiés',
-  /current archive and its SHA-256 manifest are not verified/i.test(read('index.html')) &&
-  !/The addon and the packaged build, with a SHA-256 manifest/i.test(read('index.html')));
-
+check('index.html : aucun paquet ou guide d’installation présenté comme disponible',
+  /No client package|Aucun paquet client/i.test(read('index.html')) &&
+  !/Unzip the package|paste your licence key|press F9/i.test(read('index.html')));
 
 
 // Licence and FAQ claims must remain aligned with the currently unverified
@@ -271,12 +229,10 @@ for (const [file, availability, activation, stale] of licenceTruthCases) {
   check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
   check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
 }
-const frHomeCopy = read('fr/index.html').replace(/\\s+/g, ' ');
-check('fr/index.html : renvoi de licence explicitement non confirmé',
-  /modalités de récupération ou de renvoi d'une licence ne sont pas confirmées/i.test(frHomeCopy));
-check('fr/index.html : aucune promesse de licence réexpédiée sur demande',
-  !/(?:clé|licence) réexpédiée sur demande/i.test(frHomeCopy));
-
+const frHomeCopy = read('fr/index.html').replace(/\s+/g, ' ');
+check('fr/index.html : aucun paquet ou guide d’installation présenté comme disponible',
+  /Aucun paquet client/i.test(frHomeCopy) &&
+  !/Décompressez le paquet|collez votre clé de licence|appuyez sur F9/i.test(frHomeCopy));
 
 
 // Licence and FAQ claims must remain aligned with the currently unverified
@@ -291,7 +247,7 @@ const homepagePurchaseStatusCases = [
     file: 'index.html',
     hero: /data-cta-id="hero-status"[^>]*>Check purchase status<\/a>/i,
     bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?data-cta-id="mbar-status">Check status<\/a><\/div>/i,
-    targetPrice: /documented target price|target price/i,
+    targetPrice: /documented target price|historical target price/i,
     allowedStatusLabel: /check (?:purchase )?status|check availability|purchase status/i,
   },
   {
@@ -309,21 +265,19 @@ for (const item of homepagePurchaseStatusCases) {
   check(item.file + ' : CTA principal de statut présent', item.hero.test(html));
   check(item.file + ' : barre mobile annonce le statut, pas un achat', item.bar.test(html));
   check(item.file + ' : prix explicitement présenté comme cible', item.targetPrice.test(html));
-  check(item.file + ' : tous les liens vers la section achat sont des liens de statut',
-    statusLinks.length >= 6 && labels.every((label) => item.allowedStatusLabel.test(label)));
+  check(item.file + ' : les liens vers l’achat sont uniquement des liens de statut',
+    statusLinks.length >= 2 && labels.every((label) => item.allowedStatusLabel.test(label)));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
     !/(?:hero-offer|journey-fish-buy|journey-licence-buy|steps-buy|final-buy|mbar-buy)/i.test(html));
   check(item.file + ' : aucun lien footer ne prétend ouvrir un achat',
     !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
 }
 
-
-
 // The standalone Buy routes are currently status pages, not purchasable offers.
 const purchaseStatusPageCases = [
   {
     file: 'buy.html',
-    title: /<title>BOT-WOW purchase status/i,
+    title: /<title>BOT-WOW — purchase unavailable/i,
     nav: /data-cta-id="nav-status"[^>]*>Check purchase status<\/a>/i,
     hero: /data-cta-id="buy-status-primary"[^>]*>Check purchase status<\/a>/i,
     bar: /<div class="mbar" role="region" aria-label="Purchase status">[\s\S]*?target price/i,
@@ -331,7 +285,7 @@ const purchaseStatusPageCases = [
   },
   {
     file: 'fr/buy.html',
-    title: /<title>BOT-WOW — statut d'achat/i,
+    title: /<title>BOT-WOW — achat indisponible/i,
     nav: /data-cta-id="nav-status"[^>]*>Vérifier la disponibilité<\/a>/i,
     hero: /data-cta-id="buy-status-primary"[^>]*>Vérifier la disponibilité<\/a>/i,
     bar: /<div class="mbar" role="region" aria-label="Statut de disponibilité">[\s\S]*?prix cible/i,
@@ -344,11 +298,10 @@ for (const item of purchaseStatusPageCases) {
   check(item.file + ' : CTA de navigation décrit la disponibilité', item.nav.test(html));
   check(item.file + ' : CTA principal décrit la disponibilité', item.hero.test(html));
   check(item.file + ' : barre persistante annonce le statut et le prix cible', item.bar.test(html));
-  check(item.file + ' : 20 € est présenté comme prix cible', item.targetPrice.test(html));
+  check(item.file + ' : 20 € est présenté comme prix cible historique', item.targetPrice.test(html));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
     !/(?:nav-buy|buy-hero-primary)/i.test(html));
 }
-
 
 
 // Comparison pages must not imply a live price, payment provider, delivery,
@@ -400,38 +353,37 @@ for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html', 'c
     : /Email — no data is submitted while checkout is closed\./i;
   const expectedNote = fr
     ? /Tant qu'il est fermé, ce formulaire ne peut pas être envoyé\./i
-    : /While it is closed, this form cannot submit\./i;
+    : /While it is closed, this form cannot submit./i;
   check(file + ' : le libellé email ne promet plus une livraison', expectedLabel.test(html));
   check(file + ' : la note explique que le formulaire ne peut pas être envoyé', expectedNote.test(html));
   check(file + ' : le bouton de paiement reste désactivé', /id="buyBtn" disabled/.test(html));
 }
 
 
-// Residual homepage copy must not imply an available gameplay-automation offer.
+// Home pages must present a project status and simulated demo, not a gameplay-automation offer.
 for (const item of [
   {
     file: 'index.html',
-    intent: /data-intent="fish">Explore the fishing scope<\/button>/i,
-    price: /<span class="v-val">€20 target price — unavailable<\/span>/i,
-    intro: /gameplay-automation offer is not available for purchase/i,
-    forbidden: /Automate my fishing|€20 lifetime — no renewal|really does today/i,
+    hero: /<h1 class="hero__title">[\s\S]*?BOT-WOW[\s\S]*?project[\s\S]*?status[\s\S]*?<\/h1>/i,
+    notice: /No BOT-WOW product is currently offered for purchase/i,
+    price: /historical target price/i,
+    forbidden: /Unzip the package|paste your licence key|press F9|Automate my fishing|Refundable:/i,
   },
   {
     file: 'fr/index.html',
-    intent: /data-intent="fish">Découvrir le périmètre pêche<\/button>/i,
-    price: /<span class="v-val">20 € prix cible — achat indisponible<\/span>/i,
-    intro: /L’offre d’automatisation du gameplay n’est pas disponible à l’achat/i,
-    forbidden: /Automatiser ma pêche|20 € à vie — pas de renouvellement|fait réellement aujourd’hui/i,
+    hero: /<h1 class="hero__title">[\s\S]*?BOT-WOW[\s\S]*?statut[\s\S]*?du projet[\s\S]*?<\/h1>/i,
+    notice: /Aucun produit BOT-WOW n’est actuellement proposé à l’achat/i,
+    price: /prix cible documenté/i,
+    forbidden: /Décompressez le paquet|collez votre clé de licence|appuyez sur F9|Automatiser ma pêche|Remboursable\s*:/i,
   },
 ]) {
   const html = read(item.file);
-  check(item.file + ' : onglet pêche neutre, pas une incitation à automatiser', item.intent.test(html));
-  check(item.file + ' : ancien prix à vie remplacé par un prix cible indisponible', item.price.test(html));
-  check(item.file + ' : introduction rappelle que l’offre est indisponible', item.intro.test(html));
-  check(item.file + ' : anciennes affirmations commerciales supprimées', !item.forbidden.test(html));
+  check(item.file + ' : titre principal annonce le statut du projet', item.hero.test(html));
+  check(item.file + ' : avis indique qu’aucun produit n’est disponible', item.notice.test(html));
+  check(item.file + ' : prix conservé comme cible historique', item.price.test(html));
+  check(item.file + ' : aucune instruction d’automatisation ni promesse de remboursement', !item.forbidden.test(html));
+  check(item.file + ' : CTA démo et statut présents', /data-cta-id="hero-demo"/i.test(html) && /data-cta-id="hero-status"/i.test(html));
 }
-
-
 
 // Secondary EN/FR routes must describe status, not an available purchase or install.
 const secondaryStatusRoutes = [
