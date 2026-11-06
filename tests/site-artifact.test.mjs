@@ -66,11 +66,13 @@ check('FR : la homepage expose le statut du projet et retire les comparaisons co
   !/<section class="pad compare(?:-section)?" id="compare">/.test(frHome));
 const enNoticeAt = enHome.indexOf('id="release-availability-notice"');
 const frNoticeAt = frHome.indexOf('id="release-availability-notice"');
-check('EN : avertissement de disponibilité avant le formulaire d\'achat',
-  enNoticeAt >= 0 && enNoticeAt < enHome.indexOf('<form id="buyForm"') &&
+check('EN : avertissement de disponibilité présent et formulaire d\'achat absent',
+  enNoticeAt >= 0 &&
+  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(enHome) &&
   /do not purchase until delivery is confirmed/i.test(enHome));
-check('FR : avertissement de disponibilité avant le formulaire d\'achat',
-  frNoticeAt >= 0 && frNoticeAt < frHome.indexOf('<form id="buyForm"') &&
+check('FR : avertissement de disponibilité présent et formulaire d\'achat absent',
+  frNoticeAt >= 0 &&
+  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(frHome) &&
   /n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));

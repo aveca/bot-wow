@@ -36,15 +36,16 @@ for (const [page, file, claimRe] of [
   const flat = html.replace(/\s+/g, ' ');
   check(`${page} : avis de disponibilite present`,
     /id="release-availability-notice"/.test(html) && /role="alert"/.test(html));
-  check(`${page} : avis place AVANT le formulaire d'achat`,
-    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
+  check(`${page} : avis de disponibilité présent et formulaire de paiement absent`,
+    html.includes('id="release-availability-notice"') &&
+    !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(html));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
     !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
   check(`${page} : invitation a contacter le support avant paiement`,
     /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée/i.test(flat));
-  check(`${page} : le vrai formulaire de checkout est conserve`,
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
+  check(`${page} : aucun champ e-mail ni formulaire d'achat n'est exposé`,
+    !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
     /20,00\s*€/.test(html));
   check(`${page} : CTAs instrumentes pour la mesure`,
@@ -78,12 +79,11 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 ]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  const button = (html.match(/<button\b[^>]*id="buyBtn"[^>]*disabled[^>]*>[\s\S]*?<\/button>/i) || [])[0] || '';
-  check(page + ' : avis de livraison présent avant le formulaire',
+  check(page + ' : avis de disponibilité présent sans formulaire d’achat',
     html.indexOf('id="release-availability-notice"') >= 0 &&
-    html.indexOf('id="release-availability-notice"') < html.indexOf('id="buyForm"'));
-  check(page + ' : bouton de checkout réellement désactivé', !!button);
-  check(page + ' : libellé du bouton explique le blocage', blockedLabel.test(button));
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
+  check(page + ' : aucun CTA de paiement n’est affiché',
+    !/id="buyBtn"|>Pay €20\.00|>Payer 20,00 €/.test(html));
   check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
     !forbiddenClaim.test(flat));
 }
@@ -366,19 +366,17 @@ for (const file of ['modules.html', 'fr/modules.html']) {
 
 
 
-// The disabled form must not imply that entering an email will trigger delivery.
+// Closed checkout pages must not expose a fake email field or disabled payment form.
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html', 'compare.html', 'fr/compare.html']) {
   const html = read(file);
   const fr = file.startsWith('fr/');
-  const expectedLabel = fr
-    ? /E-mail — aucune donnée n'est transmise tant que le paiement est fermé\./i
-    : /Email — no data is submitted while checkout is closed\./i;
-  const expectedNote = fr
-    ? /Tant qu'il est fermé, ce formulaire ne peut pas être envoyé\./i
-    : /While it is closed, this form cannot submit./i;
-  check(file + ' : le libellé email ne promet plus une livraison', expectedLabel.test(html));
-  check(file + ' : la note explique que le formulaire ne peut pas être envoyé', expectedNote.test(html));
-  check(file + ' : le bouton de paiement reste désactivé', /id="buyBtn" disabled/.test(html));
+  const expectedStatus = fr
+    ? /Aucun formulaire de paiement n'est disponible\. Aucune adresse e-mail n'est collectée et aucun paiement ne peut être lancé\./i
+    : /No payment form is available\. No email is collected and no payment can be started\./i;
+  check(file + ' : aucun formulaire, bouton ou champ e-mail de paiement n’est exposé',
+    !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(html));
+  check(file + ' : le statut indique explicitement qu’aucune donnée n’est collectée',
+    expectedStatus.test(html));
 }
 
 

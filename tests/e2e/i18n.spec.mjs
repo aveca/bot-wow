@@ -30,7 +30,7 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('h1')).toContainText('Purchase unavailable');
-  await expect(page.locator('#buyBtn')).toContainText('delivery not confirmed');
+  await expect(page.locator('.pay-note')).toContainText('No payment form is available');
   await expect(page.locator('.checkout-blocked')).toContainText('Purchase unavailable');
   await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
 
@@ -50,7 +50,7 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expect(page.locator('h1')).toContainText('Achat indisponible');
-  await expect(page.locator('#buyBtn')).toContainText('livraison à confirmer');
+  await expect(page.locator('.pay-note')).toContainText('Aucun formulaire de paiement');
   await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
   await expect(page.locator('#release-availability-notice')).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
 

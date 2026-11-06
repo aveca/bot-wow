@@ -81,8 +81,6 @@ async function expectNoHorizontalOverflow(page) {
 }
 
 async function verifyPurchaseBlocked(page, testInfo, lang) {
-  const buyBtn = page.locator('#buyBtn');
-  const buyForm = page.locator('#buyForm');
 
   // Les liens de navigation et le CTA principal annoncent le statut,
   // jamais un achat disponible.
@@ -109,8 +107,13 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
-  // Le bouton de paiement reste desactive
-  await expect(buyBtn).toBeDisabled();
+  // Checkout is status-only: no email field or payment form is rendered.
+  await expect(page.locator('#buyBtn')).toHaveCount(0);
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
+  await expect(page.locator('.pay-note')).toContainText(
+    lang === 'fr' ? 'Aucun formulaire de paiement' : 'No payment form is available'
+  );
 
   // Le message de blocage est visible
   await expect(page.locator('.checkout-blocked')).toBeVisible();
@@ -122,14 +125,9 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
     await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   }
 
-  // Le formulaire existe bien
-  await expect(buyForm).toBeAttached();
-
-  // Soumission du formulaire bloquee (meme via Enter) - pas de redirection
-  await page.fill('#email', 'test@example.com');
-  await page.press('#email', 'Enter');
-  await expect(page.locator('#buyErr')).not.toContainText('redirect');
-  await expect(page.locator('#buyOk')).not.toContainText('redirect');
+  // No fake form can be submitted with Enter because no form or email field exists.
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('#email')).toHaveCount(0);
 }
 
 test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
@@ -167,7 +165,9 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
     await expect(page.locator('[data-cta-id="hero-offer"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="final-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
     await statusCta.click();
     await expect(page.locator('#buy')).toBeInViewport();
@@ -197,7 +197,9 @@ test('comparison EN/FR: status CTAs never start checkout', async ({ page }) => {
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('#buyBtn')).toBeDisabled();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
     await expect(page.locator('[data-cta-id="formula-ours-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
@@ -221,12 +223,13 @@ test('closed checkout: pressing Enter cannot submit the email form EN/FR', async
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
     const before = page.url();
-    await expect(page.locator('#buyBtn')).toBeDisabled();
-    await page.locator('#email').fill('probe@example.com');
-    await page.locator('#email').press('Enter');
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
     await expect(page).toHaveURL(before);
-    await expect(page.locator('#buyBtn')).toBeDisabled();
-    await expect(page.locator('#buyOk')).toHaveText('');
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
   }
 
   expect(checkoutRequests).toEqual([]);
