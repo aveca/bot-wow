@@ -4,7 +4,7 @@
   "version": "1.1.0",
   "scripts": {
     "validate": "node scripts/validate.mjs",
-    "test": "node tests/route-planner-parity.test.mjs && node tests/modules-parity.test.mjs && node tests/distribution-package.test.mjs && node tests/payment-flow.test.mjs && node tests/checkout-security.test.mjs && node tests/legacy-landing.test.mjs && node tests/worker-fulfillment-reconciliation.test.mjs && node tests/funnel-dedup.test.mjs && node tests/payment-mode.test.mjs && node tests/funnel.test.mjs && node tests/site-artifact.test.mjs && node tests/link-check.test.mjs && node tests/action-bar.test.mjs && node tests/conversion-path.test.mjs && node tests/telemetry.test.mjs && node tests/telemetry-source-allowlist.test.mjs && node tests/analytics-source.test.mjs && node tests/release-availability.test.mjs && node tests/ab-variants.test.mjs && node tests/checkout-gate.test.mjs && node tests/checkout-gate-mollie.test.mjs && node tests/delivery-replay.test.mjs && node --experimental-sqlite tests/migrations.test.mjs && node --experimental-sqlite tests/d1-order-id-regression.test.mjs && node --experimental-sqlite tests/d1-order-id-migration.test.mjs",
+    "test": "node tests/route-planner-parity.test.mjs && node tests/modules-parity.test.mjs && node tests/distribution-package.test.mjs && node tests/payment-flow.test.mjs && node tests/checkout-security.test.mjs && node tests/legacy-landing.test.mjs && node tests/worker-fulfillment-reconciliation.test.mjs && node tests/funnel-dedup.test.mjs && node tests/payment-mode.test.mjs && node tests/funnel.test.mjs && node tests/site-artifact.test.mjs && node tests/link-check.test.mjs && node tests/action-bar.test.mjs && node tests/conversion-path.test.mjs && node tests/telemetry.test.mjs && node tests/telemetry-source-allowlist.test.mjs && node tests/analytics-source.test.mjs && node tests/release-availability.test.mjs && node tests/ab-variants.test.mjs && node tests/checkout-gate.test.mjs && node tests/checkout-gate-mollie.test.mjs && node tests/delivery-replay.test.mjs && node --experimental-sqlite tests/migrations.test.mjs && node --experimental-sqlite tests/d1-order-id-regression.test.mjs && node --experimental-sqlite tests/d1-order-id-migration.test.mjs && node tests/worker-v50-safe-overlay.test.mjs",
     "test:parity": "node tests/route-planner-parity.test.mjs",
     "test:modules": "node tests/modules-parity.test.mjs",
     "test:distribution": "node tests/distribution-package.test.mjs",
@@ -20,7 +20,8 @@
     "test:telemetry:e2e": "node scripts/telemetry-e2e.mjs",
     "test:migrations": "node --experimental-sqlite tests/migrations.test.mjs",
     "audit:css": "node scripts/audit-classes.mjs && node scripts/audit-tokens.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:worker-v50-overlay": "node tests/worker-v50-safe-overlay.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1"
