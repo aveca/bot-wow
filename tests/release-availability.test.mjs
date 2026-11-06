@@ -145,7 +145,7 @@ for (const [file, unavailable, simulated, staleClaims] of [
   ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /browser planner demo with simulated data.*does not connect to a game/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
   ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /démo de planification dans le navigateur avec des données simulées.*ne se connecte à aucun jeu/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
 ]) {
-  const flat = read(file).replace(/\\s+/g, ' ');
+  const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : indisponibilité du produit annoncée dès la FAQ', unavailable.test(flat));
   check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
   check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
