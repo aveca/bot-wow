@@ -3282,3 +3282,36 @@ reports/operations/BOT-WOW-CURRENT-STATE.md
 
 Terminer par le prompt complet du cycle suivant.
 ```
+
+## P0.64 — FAQ EN/FR public-claims correction (2026-11-06T05:11:24.750Z)
+
+### GitHub / delivery
+- Verified default branch `main` = `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`.
+- PR #103 remains OPEN, not merged: head `939c042d5070e06f42fad4f8cc6cbbf471ae4b63`; Validate and UI Quality workflow runs both completed SUCCESS on that exact head. No Worker deployment.
+- New PR #112: `fix/p0.64-faq-current-status-20261106`, head `7529352afbb4be272a34e5be26b528edb61738ad`; changes `faq.html`, `fr/faq.html`, and `tests/release-availability.test.mjs`. Compare against main: 4 commits ahead / 0 behind, 3 files, +58/-84. Validate run `42166875664` was QUEUED at snapshot time; no CI result or local test result is claimed yet.
+- PR #112 is static copy + regression tests only. No payment, checkout, price, legal-document, Worker, secret, D1/R2, email, DNS, cache or production mutation.
+
+### Public site — directly observed this cycle
+- Cloudflare Pages project `bot-wow`: latest canonical production deployment `0737706b-4f65-4d5f-a044-0ad93a2097d9`, source SHA `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`, deploy stage SUCCESS at `2026-11-06T03:11:13Z`; apex and www aliases attached.
+- Web-reader GET: `/`, `/fr/`, `/buy`, and `/buy.html` show no product offered, no verified package, no activation or delivery; demo links describe simulated data only.
+- `/demo` is a simulated browser planner with no game integration or character control.
+- `/modules` and `/features` label the registry/feature material as unverified or historical, but retain detailed legacy runtime descriptions.
+- `/faq` was a newly confirmed inconsistency: it still said “It fishes...”, called the bot a paid product, described third-party build tests as compatibility, and promised a 14-day refund despite no current offer. PR #112 replaces both EN/FR FAQs with status-only answers and adds regression assertions. No live deployment of PR #112 has occurred.
+- Web reader could not fetch `api.bot-wow.com`; no raw HTTP probe from the local agent environment is claimed in this cycle.
+
+### Worker / payment provider
+- Cloudflare read-only API: `botwow-api` still routes 100% traffic to v50 `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, created 2026-10-27. Binding names were inspected only; secret values were not read.
+- Mollie live read-only: one profile, `pfl_t8KCk4Cm2C`, website `https://sargasses-martinique.com/`, verified; one enabled live webhook targets `https://sargasses-martinique.com/api/mollie-webhook.php`. No BOT-WOW profile or webhook was found. Do not reuse this profile. No Mollie payment listing was called because its connector requires explicit confirmation of the selected profile.
+
+### D1 / commercial evidence — SELECT only
+- Correct production D1 database `botwow-production`: 5 `bitcoin_manual/paid` rows, all test-domain; 8 pending; 1 rejected; 11 Mollie failed. Five active licences are all test-domain. 0 delivery rows, 0 activations; 5 download tokens / 8 cumulative downloads; 16 webhook event rows.
+- Correct analytics D1: last 24h has 314 `page_view` and 125 `journey_view`; no CTA or checkout event in that window. Lifetime non-test event counts in the queried table: 2,018 page views, 799 journey views, 48 CTA clicks, 29 checkout_requested, 6 checkout_created, 6 checkout_failed, 4 checkout_start, 1 planner_mode.
+- Every D1 query returned `changed_db=false`, `rows_written=0`. Email counts only were read; no addresses or secrets were exposed.
+- Verified non-test paid orders: 0. Verified commercial revenue: €0. Pending/failed/test rows are not revenue.
+
+### Blockers / next action
+1. No documented Blizzard authorization for the historical gameplay-automation concept; no current BOT-WOW offer is being sold.
+2. Dedicated BOT-WOW Mollie profile/webhook absent.
+3. Effective masked `RELEASE_STATUS` value, Resend credential validity, and R2 release-object bytes/provenance remain unverified.
+4. PR #103 is a separate Worker preparation PR; issue #99 requires explicit authorization for Worker merge/deploy. No merge or Worker deployment was performed.
+5. Next: wait for PR #112 Validate + UI Quality on the exact head; inspect all checks and the final diff. If green, merge only the reversible static FAQ correction under the standing authorization and verify the resulting Pages deployment/live EN/FR FAQ. Keep checkout and Worker untouched.
