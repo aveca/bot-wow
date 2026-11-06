@@ -102,6 +102,7 @@ try {
   mkdirSync(testsDir, { recursive: true });
   const candidatePath = join(workerDir, 'worker-under-test.mjs');
   writeFileSync(candidatePath, candidate);
+  writeFileSync(join(workerDir, 'index.js'), candidate);
   workerMod = await import('file://' + candidatePath.replace(/\\/g, '/') + '?t=' + Date.now());
 
   const landing = await workerMod.default.fetch(
