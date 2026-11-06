@@ -85,7 +85,21 @@ function makeDb(state) {
               return { meta: { changes: 1, last_row_id: state.nextLicenseId - 1 } };
             }
             if (/^INSERT INTO downloads/i.test(key)) {
-              state.downloads.push({ token: args[0], license_id: args[1], count: 0, max_count: args[4] });
+              // VALUES (?, ?, ?, 0, ?, ?) = token, license_id, expires_at, max_count, created_at
+              state.downloads.push({
+                token: args[0],
+                license_id: args[1],
+                expires_at: args[2],
+                count: 0,
+                max_count: args[3],
+                created_at: args[4],
+              });
+              return { meta: { changes: 1 } };
+            }
+            if (/^UPDATE downloads SET count = count \+ 1/i.test(key)) {
+              const row = state.downloads.find((d) => d.token === args[0] && d.count < d.max_count);
+              if (!row) return { meta: { changes: 0 } };
+              row.count += 1;
               return { meta: { changes: 1 } };
             }
             if (/^INSERT INTO deliveries/i.test(key)) {
@@ -158,6 +172,16 @@ function makeDb(state) {
             if (/FROM licenses WHERE key/i.test(key)) {
               return state.licenses.find((l) => l.key === args[0]) || null;
             }
+            if (/FROM downloads d/i.test(key) && /JOIN licenses/i.test(key)) {
+              const dl = state.downloads.find((d) => d.token === args[0]);
+              if (!dl) return null;
+              const lic = state.licenses.find((l) => l.id === dl.license_id);
+              return {
+                ...dl,
+                lic_status: lic ? lic.status : null,
+                license_key: lic ? lic.key : null,
+              };
+            }
             if (/FROM downloads WHERE license_id/i.test(key)) {
               return state.downloads.find((d) => d.license_id === args[0]) || null;
             }
@@ -206,7 +230,13 @@ function makeEnv(state, opts = {}) {
     DB: makeDb(state),
     TELEMETRY_DB: telemetry,
     RATE_LIMIT: kv,
-    R2_BINARIES: { get: async () => null },
+    R2_BINARIES: {
+      get: async (key) => {
+        state.r2Gets.push(key);
+        return state.r2.get(key) || null;
+      },
+    },
+    R2_OBJECT_KEY: opts.r2Key === undefined ? 'casinobabe-fishing-1.2.0.zip' : opts.r2Key,
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     LICENSE_SECRET: 'test_license_secret',
@@ -221,6 +251,7 @@ function newState() {
   return {
     calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [],
     activations: [], telemetry: [], emails: [], customers: [],
+    r2: new Map(), r2Gets: [],
     nextLicenseId: 1, nextDeliveryId: 1,
     failOrderInsert: false, failLicenseInsert: false,
   };
@@ -556,6 +587,116 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   check('renvoi admin : le lien de telechargement est en production',
     /https:\/\/api\.bot-wow\.com\/api\/download\?t=\$\{license\.token\}/.test(workerCode),
     '(URL de production absente)');
+}
+
+const RELEASE_KEY = 'casinobabe-fishing-1.2.0.zip';
+const ZIP_BYTES = Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x62, 0x6f, 0x74, 0x77]);
+
+function seedArtifact(state) {
+  state.r2.set(RELEASE_KEY, { body: ZIP_BYTES });
+}
+
+/* --- 11. Webhook paid -> licence -> octets de telechargement (sandbox) --- */
+{
+  const state = newState();
+  seedArtifact(state);
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_DOWNLOAD1', 'client-download@example.com');
+
+  const paid = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_DOWNLOAD1' }, env });
+  const token = state.downloads[0]?.token;
+  const order = state.orders[0];
+
+  check('telechargement : le webhook paid repond 200', paid.status === 200, `(status=${paid.status})`);
+  check('telechargement : la commande est paid', order && order.status === 'paid', `(${order?.status})`);
+  check('telechargement : une licence active et un jeton existent',
+    state.licenses.length === 1 && state.licenses[0].status === 'active' && typeof token === 'string' && token.length > 8,
+    `(licences=${state.licenses.length})`);
+  check('telechargement : l\'e-mail contient le meme jeton',
+    state.emails.length === 1 && String(state.emails[0].text || '').includes(token),
+    '(jeton absent de l\'e-mail)');
+
+  const res = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const bytes = new Uint8Array(await res.arrayBuffer());
+
+  check('telechargement : HTTP 200 et type zip',
+    res.status === 200 && res.headers.get('content-type') === 'application/zip',
+    `(status=${res.status} type=${res.headers.get('content-type')})`);
+  check('telechargement : le nom de fichier est la cle R2 exacte',
+    res.headers.get('content-disposition') === `attachment; filename="${RELEASE_KEY}"`,
+    `(${res.headers.get('content-disposition')})`);
+  check('telechargement : les octets sont ceux de l\'objet R2 simule',
+    bytes.length === ZIP_BYTES.length && ZIP_BYTES.every((b, i) => bytes[i] === b),
+    `(${bytes.length} octets)`);
+  check('telechargement : le quota passe a 1',
+    state.downloads[0].count === 1, `(count=${state.downloads[0].count})`);
+
+  const again = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  check('telechargement : un second appel livre encore (sous le plafond)',
+    again.status === 200 && state.downloads[0].count === 2,
+    `(status=${again.status} count=${state.downloads[0].count})`);
+
+  state.downloads[0].max_count = 2;
+  const limited = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const limitedBody = await limited.json();
+  check('telechargement : le plafond renvoie 429 sans incrementer',
+    limited.status === 429 && limitedBody.error === 'limit_reached' && state.downloads[0].count === 2,
+    `(status=${limited.status} ${JSON.stringify(limitedBody)} count=${state.downloads[0].count})`);
+}
+
+/* --- 12. Sans artefact, jeton expire ou licence revoquee : pas d'octets --- */
+{
+  const state = newState();
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_DOWNLOAD2', 'client-missing@example.com');
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_DOWNLOAD2' }, env });
+  const token = state.downloads[0].token;
+
+  const missing = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const missingBody = await missing.json();
+  check('artefact absent : 503 et quota inchange',
+    missing.status === 503 && missingBody.error === 'artifact_unavailable' && state.downloads[0].count === 0,
+    `(status=${missing.status} count=${state.downloads[0].count})`);
+
+  seedArtifact(state);
+  state.downloads[0].expires_at = Date.now() - 1000;
+  const expired = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const expiredBody = await expired.json();
+  check('jeton expire : 410 et quota inchange',
+    expired.status === 410 && expiredBody.error === 'expired' && state.downloads[0].count === 0,
+    `(status=${expired.status} ${JSON.stringify(expiredBody)})`);
+
+  state.downloads[0].expires_at = Date.now() + 864e5;
+  state.licenses[0].status = 'revoked';
+  const revoked = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const revokedBody = await revoked.json();
+  check('licence revoquee : 403 et quota inchange',
+    revoked.status === 403 && revokedBody.error === 'revoked' && state.downloads[0].count === 0,
+    `(status=${revoked.status} ${JSON.stringify(revokedBody)})`);
+
+  const bare = await callWorker('/api/download', { env });
+  const bareBody = await bare.json();
+  check('telechargement sans jeton : 400 missing_token',
+    bare.status === 400 && bareBody.error === 'missing_token',
+    `(status=${bare.status})`);
+}
+
+/* --- 13. Cle R2 invalide : aucun appel au seau --- */
+{
+  const state = newState();
+  seedArtifact(state);
+  const env = makeEnv(state, { r2Key: 'archive-inconnue.zip' });
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_DOWNLOAD3', 'client-key@example.com');
+  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_DOWNLOAD3' }, env });
+  const beforeGets = state.r2Gets.length;
+  const res = await callWorker('/api/download?t=' + encodeURIComponent(state.downloads[0].token), { env });
+  const body = await res.json();
+  check('cle R2 invalide : 503 sans lire le seau',
+    res.status === 503 && body.error === 'artifact_unavailable' && state.r2Gets.length === beforeGets,
+    `(status=${res.status} lectures=${state.r2Gets.length - beforeGets})`);
 }
 
 /* --------------------------------------------------------------- fin */

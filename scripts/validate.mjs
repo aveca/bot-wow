@@ -240,6 +240,11 @@ if (fs.existsSync(path.join(root, "wrangler.toml"))) {
   if (!cfg.includes("migrations/analytics")) failures.push("wrangler.toml : migrations_dir analytics manquant");
 }
 
+const lockCheck = spawnSync(process.execPath, ["scripts/check-agent-state.mjs"], { encoding: "utf8" });
+if (lockCheck.status !== 0) {
+  failures.push("etat agent invalide\n" + (lockCheck.stdout || "") + (lockCheck.stderr || ""));
+}
+
 if (failures.length) {
   console.error("BOT-WOW validation FAILED");
   for (const f of failures) console.error(" - " + f);

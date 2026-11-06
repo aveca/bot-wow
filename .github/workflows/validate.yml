@@ -19,6 +19,13 @@ jobs:
       - name: Validate static project
         run: npm run validate
 
+      - name: Reject duplicate active agent locks on other open pull requests
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECK_OPEN_PR_LOCKS: "1"
+        run: node scripts/check-agent-state.mjs
+
       # Tests de la demonstration (parite JS/Python des regles de ronde) et
       # de la distribution (integrite du paquet, absence de donnees client).
       # La parite est IGNOREE si Python n'est pas disponible sur le runner.

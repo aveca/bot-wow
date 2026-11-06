@@ -1,6 +1,8 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T23:48Z** (revalidation P0.32 — GitHub, Pages, Mollie, D1, Analytics et alias www) (PR #78 et #80 fusionnées — CA BOT-WOW corrigé à 0,00 €, chemin de paiement réel mesuré, R18 fermé côté Sargasses)
+**État court au 2026-11-06T14:17Z : `PROJECT_STATE.md`.** Ce fichier reste l'historique. Les sections qui décrivent le Worker v50 comme la version en production, ou `www` comme un 200 permanent, sont périmées à partir de cette heure.
+
+**Dernière mise à jour de l'historique long : 2026-11-04T23:48Z**, complété par les sections P0.33 à P0.68 puis par le relevé du 2026-11-06 en fin de fichier.
 
 ---
 
@@ -3681,3 +3683,16 @@ route live ne contient plus d'identifiant capable d'en émettre un nouveau.
    aucun checkout, aucun secret, aucune écriture D1/R2 dans ce périmètre.
    Tant que ce point n'est pas autorisé, le cycle reste **préparation seulement** (état de
    `main` prêt, CI verte, tests de réconciliation verts).
+
+## Relevé 2026-11-06T14:17Z — vérité live, état partagé, sandbox
+
+Ce relevé remplace, pour les points qu'il mesure, les affirmations « Worker v50 toujours en ligne » et « www répond 200 ». Le détail et les tableaux sont dans `PROJECT_STATE.md`. Aucun prix, checkout, secret, déploiement, écriture D1/R2 ou e-mail réel n'a été fait par ce cycle.
+
+- `main` au départ : `ba720c0fce69f4121d5c5b0aa4a168ceac931b70`. Pages production `e1fe25a3-9032-48c5-a5ba-b2433cfc41eb`, même SHA, deploy SUCCESS 11:31:08Z.
+- Worker en service : déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884` du 2026-11-06T09:16:54Z, version `1513595c-6a53-4575-b013-9979b696dce3`, 100 %. Le v50 reste le rollback, plus le trafic.
+- HTTP 14:15Z : apex 200, achat explicitement fermé. `GET api/health` 404 parce que la route n'existe pas. `GET /health` 200. `GET /api/config` 200. `POST /api/checkout` `{}` → 400 `invalid_email`. `GET /` sur l'API → 308.
+- HTTP 14:15:35Z : `www` encore 200. Redirect Rule de zone `last_updated` 14:16:56Z (non créée par ce cycle). HTTP 14:17:33Z : `www` → 301 apex. Ne pas doubler cette règle dans `_redirects`.
+- D1 SELECT : 0 payé hors `@example.com`, 0 livraison, 0 activation, `rows_written=0`.
+- Preuve de livraison : sandbox uniquement (`tests/delivery-replay.test.mjs`), pas un paiement de production.
+
+Prochaine action : une décision propriétaire sur ce qui peut être vendu. Ne pas rouvrir le checkout tant que cette décision, un profil Mollie dédié, la provenance du paquet et `RELEASE_STATUS` ne sont pas explicitement acceptés.
