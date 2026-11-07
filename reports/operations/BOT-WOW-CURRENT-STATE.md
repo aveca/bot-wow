@@ -3818,3 +3818,55 @@ checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
 `BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` et
 `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
 attaquer la preuve de provenance du runtime Gold/PvP/XP.
+
+
+---
+
+# Runner Factory V3 redémarré sur `main` fusionné — 2026-11-07T22:43Z
+
+**Rapport complet :** `reports/operations/2026-11-07-runner-restart-merged-main.md`
+
+Le pont Factory V3 est fusionné dans `main` (`9a01a5098b8025cf6b1ca338f426033224459c99`).
+Le **runner local** a été redémarré sur cette version : c'est la dernière étape
+qui manquait pour que le pont soit actif sur le PC. Elle ne peut pas être
+déclenchée depuis GitHub — la preuve est une exécution réelle.
+
+| Élément | Valeur | Statut |
+|---|---|---|
+| `main` | `9a01a50` (merge PR #146) — contient `1c438d0` (merge PR #145) | **[vérifié]** |
+| Worktree de redémarrage | `C:\factory\worktrees\botwow-main-9a01a50`, branche `ops/runner-restart-main-20261107` | **[vérifié]** |
+| Code exécuté | blob du pont `89024846861608eec7afb675eaec7d0eb2adfb77` = blob `origin/main` | **[vérifié]** |
+| Mémoire du runner | `.ai/autopilot/` (hors dépôt) copiée — **8 opportunités** | **[vérifié]** |
+| Séance à blanc | `MULTI-REPO-BRIDGE DRY · imported=0 relayed=8 ignored=8 rejected=0 statusFailures=0 local=aveca/bot-wow` | **[vérifié]** |
+| Passage réel | `MULTI-REPO-BRIDGE PASS · imported=0 relayed=8 ignored=8 rejected=0 statusFailures=0 local=aveca/bot-wow relayStatus=off` | **[vérifié]** |
+| Idempotence | 0 import, 0 doublon, queue toujours à 8 opportunités (mêmes task_id) | **[vérifié]** |
+| Audit commentaires (16 issues, 2 dépôts) | **0 commentaire ajouté** ; `aveca/sargagame` #1362 toujours à 0 commentaire | **[vérifié]** |
+| `npm run validate` | `BOT-WOW validation PASS` — exit 0 | **[vérifié]** |
+| `npm test` | exit 0 — `AGENT STATE LOCKS: OK (36 contrôles)`, `MULTI-REPO-BRIDGE TESTS : OK (0 échec)` | **[vérifié]** |
+| Gate des verrous sur `main` | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK`, exit 0 | **[vérifié]** |
+| `git status --porcelain` | 0 ligne | **[vérifié]** |
+
+## Limite de la preuve
+
+Le pont est un programme **local** (`scripts/autopilot/**`, exclu du build
+Pages) : aucun déploiement ne l'active. Si le checkout du propriétaire n'est pas
+mis à jour vers `9a01a50` et le runner relancé, le pont fusionné n'y tourne pas
+— c'est une action locale, pas une action GitHub. Le commit de fusion n'est donc
+pas, à lui seul, la preuve de l'activation.
+
+## Ce qui n'a pas été fait
+
+Aucun merge, aucun déploiement Worker/Pages, aucun `workflow_dispatch`, aucun
+checkout rouvert, aucun paiement, aucun e-mail, aucun secret/binding, aucune
+écriture D1/R2/webhook, aucune mutation de production. `aveca/sargagame` lu en
+lecture seule stricte (0 commentaire écrit).
+
+## Prochaine action (une seule)
+
+**Paquet reproductible + provenance runtime** : porter le travail non commité
+(`scripts/build-package.cjs`, `scripts/canonical-package-digest.mjs`, tests) sur
+une branche dédiée créée depuis `origin/main` (`9a01a50`), mettre à jour
+`runtime/INTEGRATION.md` + `runtime/sha256.txt`, publier
+`reports/operations/2026-11-07-runtime-provenance-reproducible-package.md`,
+ouvrir la PR **sans fusion** — l'objet R2 live reste inchangé (écriture R2
+prohibée sans autorisation explicite).

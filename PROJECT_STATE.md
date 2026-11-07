@@ -122,3 +122,12 @@ Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `av
 ## Prochaine action
 
 Le checkout public reste fermé. La vente n'attend plus une décision unique : les textes juridiques, la provenance R2 et le profil Mollie dédié avancent en parallèle, et la réouverture ne se fusionne qu'après ces trois-là. La PR #90 reste le seul correctif de credential Mollie.
+
+
+## Pont Factory V3 — runner local redémarré sur `main` (2026-11-07T22:43Z)
+
+- `main` = `9a01a50` (PR #145 verrous `1c438d0` + PR #146 pont `9a01a50` fusionnées).
+- Le runner local a été **redémarré sur la version fusionnée** depuis un checkout au commit de fusion : `imported=0 relayed=8 ignored=8 rejected=0 statusFailures=0`, queue inchangée à 8 opportunités, **0 commentaire** écrit dans `aveca/sargagame` (audit avant/après sur 16 issues).
+- `npm run validate` et `npm test` verts sur `main` ; gate des verrous `AGENT STATE : OK` (exit 0).
+- Preuve : `reports/operations/2026-11-07-runner-restart-merged-main.md`.
+- Limite : le pont est un programme local, pas un déploiement. Le propriétaire doit mettre à jour son checkout et relancer le runner.
