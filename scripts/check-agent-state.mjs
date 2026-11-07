@@ -11,9 +11,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIRS, FILES } from './build-site.mjs';
+import {
+  classifyRemoteFetchError,
+  findScopeConflicts,
+  parseLockTable,
+  summarizeRemoteFetchError,
+} from './agent-lock-gate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const failures = [];
+/** Instantane unique : toutes les comparaisons d'expiration utilisent ce `now`. */
+const NOW = Date.now();
 
 const REQUIRED = [
   'PROJECT_STATE.md',
@@ -55,54 +63,13 @@ if (fs.existsSync(statePath)) {
   }
 }
 
-function splitRow(line) {
-  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
-}
-
+/**
+ * Parse la table des verrous et reporte ses problemes dans `failures`.
+ * La lecture elle-meme est pure et testee dans `tests/agent-state-locks.test.mjs`.
+ */
 function parseLocks(markdown, label) {
-  const rows = [];
-  const lines = markdown.split(/\r?\n/).filter((line) => line.trim().startsWith('|'));
-  if (lines.length < 2) {
-    failures.push(`${label} : table de verrous absente`);
-    return rows;
-  }
-  const header = splitRow(lines[0]);
-  const expected = ['id', 'scope', 'agent', 'branch', 'status', 'expires', 'result'];
-  if (expected.some((name, i) => header[i] !== name)) {
-    failures.push(`${label} : en-tete attendu ${expected.join(' | ')}`);
-    return rows;
-  }
-  for (const line of lines.slice(1)) {
-    if (/^\|\s*-+/.test(line.trim())) continue;
-    const cells = splitRow(line);
-    if (cells.length < expected.length) {
-      failures.push(`${label} : ligne incomplete`);
-      continue;
-    }
-    const row = Object.fromEntries(expected.map((name, i) => [name, cells[i]]));
-    if (!/^[a-z0-9][a-z0-9-]{2,80}$/.test(row.id)) failures.push(`${label} : id invalide ${row.id}`);
-    if (!['active', 'done', 'released'].includes(row.status)) {
-      failures.push(`${label} : statut invalide ${row.status}`);
-    }
-    if (Number.isNaN(Date.parse(row.expires))) failures.push(`${label} : expiration illisible ${row.expires}`);
-    row.scopes = row.scope.split(',').map((s) => s.trim()).filter(Boolean);
-    if (row.scopes.length === 0) failures.push(`${label} : scope vide pour ${row.id}`);
-    rows.push(row);
-  }
-  const seen = new Set();
-  for (const row of rows) {
-    if (seen.has(row.id)) failures.push(`${label} : id duplique ${row.id}`);
-    seen.add(row.id);
-  }
-  const active = new Map();
-  for (const row of rows.filter((r) => r.status === 'active')) {
-    for (const scope of row.scopes) {
-      if (active.has(scope)) {
-        failures.push(`${label} : scope actif en double ${scope} (${active.get(scope)} et ${row.id})`);
-      }
-      active.set(scope, row.id);
-    }
-  }
+  const { rows, problems } = parseLockTable(markdown, label, NOW);
+  for (const problem of problems) failures.push(problem);
   return rows;
 }
 
@@ -125,28 +92,38 @@ if (process.env.CHECK_OPEN_PR_LOCKS === '1') {
     failures.push(`lecture des PR ouvertes impossible : ${error.message}`);
     prs = [];
   }
-  const localActive = new Map();
-  for (const row of localLocks.filter((r) => r.status === 'active')) {
-    for (const scope of row.scopes) localActive.set(scope, row.id);
-  }
   for (const pr of prs) {
     if (ownBranch && pr.headRefName === ownBranch) continue;
+    // Lecture de `agents/locks.md` sur la branche de la PR.
+    //   - 404         : le fichier n'existe pas sur cette branche => ABSENCE.
+    //                    La PR est ignoree pour cette comparaison (ce n'est
+    //                    ni une erreur, ni une preuve de conflit).
+    //   - autre erreur : elle reste VISIBLE. Elle ne doit jamais etre
+    //                    transformee en succes silencieux.
     let remote = '';
     try {
       remote = execFileSync('gh', [
         'api', '-H', 'Accept: application/vnd.github.raw',
         `/repos/${repo}/contents/agents/locks.md?ref=${encodeURIComponent(pr.headRefName)}`,
-      ], { encoding: 'utf8' });
-    } catch {
+      ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (error) {
+      if (classifyRemoteFetchError(error) === 'absent') continue;
+      failures.push(
+        `lecture de agents/locks.md impossible pour PR #${pr.number} : ${summarizeRemoteFetchError(error)}`,
+      );
       continue;
     }
     const remoteRows = parseLocks(remote, `PR #${pr.number}`);
-    for (const row of remoteRows.filter((r) => r.status === 'active')) {
-      for (const scope of row.scopes) {
-        if (localActive.has(scope)) {
-          failures.push(`scope actif deja pris : ${scope} (${localActive.get(scope)} et PR #${pr.number} ${row.id})`);
-        }
-      }
+    // Un verrou distant de MEME identite (id + agent + branch) est un verrou
+    // herite du meme base commit : pas un conflit. Un autre verrou actif et
+    // non expire sur le meme scope reste un conflit reel.
+    for (const conflict of findScopeConflicts({
+      localRows: localLocks,
+      remoteRows,
+      prNumber: pr.number,
+      now: NOW,
+    })) {
+      failures.push(conflict.message);
     }
   }
 }
