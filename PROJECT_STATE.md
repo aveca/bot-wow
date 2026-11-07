@@ -1,6 +1,6 @@
 # BOT-WOW — état partagé
 
-**Relevé : 2026-11-06T14:48Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
+**Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
 Dépôt : https://github.com/aveca/bot-wow
 PR de ce relevé : https://github.com/aveca/bot-wow/pull/129 (branche `cursor/commercial-truth-agent-state-0086`)
@@ -101,6 +101,24 @@ Le chemin **sandbox** est exécuté par `tests/delivery-replay.test.mjs` sur le 
 - 2026-11-06T14:17:33Z : `www` répond **301** vers l'apex (`/`, `/buy`, `/fr/?utm=test`, et `http://www`). L'apex reste **200**. L'alias Pages `www.bot-wow.com` est toujours attaché : la règle de zone prime.
 - `_redirects` ne peut pas faire cette redirection (limitation Pages, déjà mesurée). Ne pas ajouter une seconde redirection dans le dépôt tant que la règle de zone répond 301.
 
+## Qui travaille sur quoi
+
+Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `aveca` (Coco). Ne pas ouvrir un second chantier sur le même scope.
+
+| Sujet | Où | Décision |
+|---|---|---|
+| État du déploiement Worker HEAD | #130, déjà fusionnée (`9499d5d`) | rien à rebaser |
+| Absence du runtime Gold/PvP/XP | #128, déjà fusionnée (`f502029`) | rien à rebaser |
+| Copie du paquet historique sur les pages d'achat | #132, déjà fusionnée (`a843c13`) | ne pas réécrire `buy.html` |
+| Copie d'accueil archive EN/FR | #133, ouverte, CI verte | ne pas éditer `index.html` / `fr/index.html` |
+| Diagnostic d'offre | #135, ouverte | ne pas choisir le produit à vendre ici |
+| Preuve runtime et hash R2 | #124, ouverte, CI verte | hash live revérifié, pas de seconde PR |
+| Dry-run multi-dépôt | #126 | le README de la PR dit de ne pas la fusionner ; elle contredit #124 sur la présence R2 |
+| Honnêteté commerciale large | #123, en conflit | périmée par #132, #133 et le chantier juridique dédié |
+| Overlay Worker v50 | #114, brouillon, en conflit | v50 n'a plus le trafic ; production = version `054cd158` |
+| Pivot checkout d'octobre | #66, brouillon, en conflit | remplacé par une PR brouillon à flag, non fusionnée |
+| `profileId` Mollie | #90, brouillon, mergeable | reste brouillon ; il ne manque que l'identifiant fourni par le propriétaire |
+
 ## Prochaine action
 
-Une seule : décision du propriétaire sur le produit qui peut être vendu. Tant que la posture publique reste « projet historique, achat indisponible », le prochain travail utile n'est pas un CTA de paiement. Si une offre non automatisante est choisie, il faudra un profil Mollie BOT-WOW dédié, une valeur `RELEASE_STATUS` assumée, un paquet dont la provenance est acceptée, et un paiement de test vers une boîte contrôlée — chacun avec une autorisation explicite. La PR #90 reste le correctif de credential Mollie déjà ouvert ; ne pas en ouvrir un second.
+Le checkout public reste fermé. La vente n'attend plus une décision unique : les textes juridiques, la provenance R2 et le profil Mollie dédié avancent en parallèle, et la réouverture ne se fusionne qu'après ces trois-là. La PR #90 reste le seul correctif de credential Mollie.
