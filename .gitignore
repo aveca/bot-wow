@@ -26,3 +26,7 @@ captures/
 # Artefacts d'audit locaux (logs de deploiement, sorties de test, scripts de
 # patch jetables) : jamais versionnes.
 .audit/
+
+# Memoire locale du runner Factory V3 (queue des opportunites, fiches, runs) :
+# jamais versionnee.
+.ai/
