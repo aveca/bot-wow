@@ -469,6 +469,8 @@ console.log('=== 6. ingestMultiRepo ===');
     check('publishStatus bloque un dépôt distant avant tout appel gh', remoteWriteRejected && ghCalls === 0);
   }
 
+}
+
 // ── 7. detectLocalRepo (variable d'environnement, remote, repli) ────────────
 
 console.log('=== 7. detectLocalRepo ===');
