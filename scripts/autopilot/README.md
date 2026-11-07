@@ -28,6 +28,13 @@ Il prolonge le pont `bridge.cjs` de Factory V3 pour deux dépôts **autorisés**
 3. Les dépendances `lib/common.cjs` et `lib/memory.cjs` sont portées en local,
    en sous-ensemble strict de ce que le pont utilise (pas de runner autopilot
    complet inventé).
+4. `ensureDirs` est injectable : les tests n'écrivent aucun dossier dans le
+   dépôt (comportement de production inchangé).
+5. La publication du **statut de relais** sur l'issue du dépôt distant est
+   désactivable (`--relay-status=false`, ou `AUTOPILOT_RELAY_STATUS=0`) :
+   `aveca/sargagame` est en **lecture seule** pour l'agent BOT-WOW. Le
+   **routage ne change jamais** — la mission distante reste dans son dépôt et
+   n'est jamais enfilée ici.
 
 La mémoire locale du runner vit dans `.ai/autopilot/` (ignoré par git) :
 `queue.json`, `opportunities/`, `runs/`, `decisions/`.
@@ -43,6 +50,9 @@ npm run autopilot:bridge:dry
 
 # 3. Import réel (écrit la queue locale + publie les statuts GitHub)
 npm run autopilot:bridge
+
+# 3 bis. Import réel SANS écrire dans le dépôt distant (lecture seule)
+node scripts/autopilot/multi-repo-bridge.cjs --relay-status=false
 
 # 4. Publier un statut de cycle de vie
 node scripts/autopilot/multi-repo-bridge.cjs --status started --repo aveca/bot-wow --issue 142 --task <TASK_ID>

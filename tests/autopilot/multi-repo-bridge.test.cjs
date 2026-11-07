@@ -422,6 +422,44 @@ console.log('=== 6. ingestMultiRepo ===');
     check('la tâche reste importée', result.imported === 1);
   }
 
+  // 6h. Dépôt distant en lecture seule : le relais reste strict, mais AUCUN
+  //     statut n'est publié sur le dépôt distant.
+  {
+    const queue = { opportunities: [] };
+    const statuses = [];
+    const localTask = taskBlock({ id: 'T-LOCAL-RO', task_id: 'T-LOCAL-RO', issue_number: 8000, repository_full_name: LOCAL });
+    const remoteTask = taskBlock({ id: 'T-REMOTE-RO', task_id: 'T-REMOTE-RO', issue_number: 8001, repository_full_name: OTHER });
+    const result = bridge.ingestMultiRepo({
+      dry: false,
+      log: () => {},
+      localRepo: LOCAL,
+      queue,
+      saveQueue: () => {},
+      writeOpportunityFile: () => {},
+      ensureDirs: () => {},
+      relayStatus: false,
+      publishStatus: (repo, issueNumber, status) => {
+        statuses.push({ repo, issueNumber, status });
+        return true;
+      },
+      loadIssues: (repo) =>
+        repo === LOCAL ? [issue(8000, localTask)] : [issue(8001, remoteTask, OTHER)],
+    });
+    check('lecture seule : la mission distante reste relayée', result.relayed === 1, JSON.stringify(result.perRepo));
+    check('lecture seule : la mission distante n\'est pas enfilée', queue.opportunities.length === 1);
+    check(
+      'lecture seule : aucun statut publié sur le dépôt distant',
+      !statuses.some((s) => s.repo === OTHER),
+      JSON.stringify(statuses),
+    );
+    check(
+      'lecture seule : le statut local est publié',
+      statuses.some((s) => s.repo === LOCAL && s.issueNumber === 8000),
+      JSON.stringify(statuses),
+    );
+    check('lecture seule : aucun échec de publication compté', result.statusFailures === 0);
+  }
+
   // 6g. Dépôt hors allowlist : jamais lu.
   {
     const seen = [];
@@ -495,6 +533,11 @@ console.log('=== 8. parseArgs ===');
   const a = bridge.parseArgs(['--status', 'started', '--repo', LOCAL, '--issue', '1337', '--task', 'T-1']);
   check('option avec valeur', a.status === 'started' && a.repo === LOCAL && a.issue === '1337');
   check('option sans valeur', bridge.parseArgs(['--dry']).dry === true);
+  check('forme --clé=valeur', bridge.parseArgs(['--relay-status=false'])['relay-status'] === 'false');
+  check('relayStatus activé par défaut', bridge.resolveRelayStatus({}) === true);
+  check('relayStatus désactivé par --relay-status=false', bridge.resolveRelayStatus({ 'relay-status': 'false' }) === false);
+  check('relayStatus désactivé par --relay-status 0', bridge.resolveRelayStatus({ 'relay-status': '0' }) === false);
+  check('relayStatus activé par --relay-status true', bridge.resolveRelayStatus({ 'relay-status': 'true' }) === true);
 }
 
 // ── 9. Aucune écriture sur le disque pendant la suite ───────────────────────

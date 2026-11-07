@@ -19,6 +19,11 @@
  *   4. la création des dossiers de mémoire est injectable (`ensureDirs`) pour
  *      que les tests n'écrivent aucun dossier dans le dépôt : le comportement
  *      en production est inchangé (les dossiers sont créés en mode réel).
+ *   5. la publication du statut de relais sur le dépôt distant est
+ *      désactivable (`--relay-status=false`, `AUTOPILOT_RELAY_STATUS=0`) :
+ *      `aveca/sargagame` est en LECTURE SEULE pour l'agent BOT-WOW. Le
+ *      ROUTAGE, lui, ne change jamais — la mission distante reste dans son
+ *      dépôt et n'est jamais enfilée ici.
  *
  * Dans `aveca/sargagame`, ce module étend `scripts/autopilot/bridge.cjs` du
  * runner Factory V3. BOT-WOW n'a pas de `bridge.cjs` local : ce module EST le
@@ -409,6 +414,9 @@ function publishStatus(repoFullName, issueNumber, status, details = '', options 
  * @param {function} options.writeOpportunityFile
  * @param {function} options.publishStatus
  * @param {function} options.ensureDirs         (tests) : création des dossiers
+ * @param {boolean}  options.relayStatus        publier le statut « relayé »
+ *                                                 sur l'issue du dépôt distant
+ *                                                 (défaut : true)
  */
 function ingestMultiRepo(options = {}) {
   const dry = options.dry === true;
@@ -421,6 +429,11 @@ function ingestMultiRepo(options = {}) {
   const saveQueue = options.saveQueue || mem.saveQueue;
   const writeOppFile = options.writeOpportunityFile || mem.writeOpportunityFile;
   const ensureDirs = options.ensureDirs || C.ensureDirs;
+  // Publication du statut de relais sur le dépôt distant : activée par défaut
+  // (contrat du port). Elle peut être désactivée quand le dépôt distant est en
+  // lecture seule pour cet agent : le ROUTAGE, lui, ne change jamais — la
+  // mission reste dans son dépôt et n'est jamais enfilée ici.
+  const relayStatus = options.relayStatus !== false;
 
   if (!dry) ensureDirs();
 
@@ -492,6 +505,10 @@ function ingestMultiRepo(options = {}) {
         if (!dry) {
           relayed += 1;
           perRepo[repoFullName].relayed += 1;
+          if (!relayStatus) {
+            log(`[bridge] relay ${repoFullName} #${opp.issue_number} → ${opp.id} : statut NON publié (dépôt distant en lecture seule)`);
+            continue;
+          }
           const ok = publish(
             repoFullName,
             opp.issue_number,
@@ -573,6 +590,12 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith('--')) {
+      const eq = a.indexOf('=');
+      if (eq > 0) {
+        // Forme `--clé=valeur`.
+        out[a.slice(2, eq)] = a.slice(eq + 1);
+        continue;
+      }
       const key = a.slice(2);
       const next = argv[i + 1];
       if (next !== undefined && !next.startsWith('--')) {
@@ -586,6 +609,24 @@ function parseArgs(argv) {
     }
   }
   return out;
+}
+
+/** Faux explicite : `false`, `0`, `no`, `off` (insensible à la casse). */
+function isFalse(value) {
+  return ['false', '0', 'no', 'off'].includes(String(value).trim().toLowerCase());
+}
+
+/**
+ * Publication du statut de relais sur l'issue du dépôt distant.
+ * Activée par défaut (contrat du port Sargagame). Désactivable par
+ * `--relay-status=false` ou `AUTOPILOT_RELAY_STATUS=0`, pour les exécutions
+ * où le dépôt distant est en LECTURE SEULE pour cet agent : le routage reste
+ * strictement identique, seule la publication distante est omise.
+ */
+function resolveRelayStatus(args) {
+  if (args['relay-status'] !== undefined) return !isFalse(args['relay-status']);
+  if (process.env.AUTOPILOT_RELAY_STATUS !== undefined) return !isFalse(process.env.AUTOPILOT_RELAY_STATUS);
+  return true;
 }
 
 function runCli(argv = process.argv.slice(2)) {
@@ -614,12 +655,14 @@ function runCli(argv = process.argv.slice(2)) {
 
   // ── Ingestion ────────────────────────────────────────────────────────────
   const dry = args.dry === true || args.dry === 'true';
-  const result = ingestMultiRepo({ dry, log: console.log });
+  const relayStatus = resolveRelayStatus(args);
+  const result = ingestMultiRepo({ dry, log: console.log, relayStatus });
   const imported = dry ? result.wouldImport : result.imported;
   const relayed = dry ? result.wouldRelay : result.relayed;
   console.log(
     `MULTI-REPO-BRIDGE ${dry ? 'DRY' : 'PASS'} · imported=${imported} relayed=${relayed} ` +
-    `ignored=${result.ignored} rejected=${result.rejected} statusFailures=${result.statusFailures} local=${result.localRepo}`,
+    `ignored=${result.ignored} rejected=${result.rejected} statusFailures=${result.statusFailures} ` +
+    `local=${result.localRepo} relayStatus=${relayStatus ? 'on' : 'off'}`,
   );
   for (const [repo, stats] of Object.entries(result.perRepo)) {
     const repoImported = dry ? stats.wouldImport : stats.imported;
@@ -662,5 +705,6 @@ module.exports = {
   publishStatus,
   ingestMultiRepo,
   parseArgs,
+  resolveRelayStatus,
   runCli,
 };
