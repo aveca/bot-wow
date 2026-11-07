@@ -19,11 +19,10 @@
  *   4. la création des dossiers de mémoire est injectable (`ensureDirs`) pour
  *      que les tests n'écrivent aucun dossier dans le dépôt : le comportement
  *      en production est inchangé (les dossiers sont créés en mode réel).
- *   5. la publication du statut de relais sur le dépôt distant est
- *      désactivable (`--relay-status=false`, `AUTOPILOT_RELAY_STATUS=0`) :
- *      `aveca/sargagame` est en LECTURE SEULE pour l'agent BOT-WOW. Le
- *      ROUTAGE, lui, ne change jamais — la mission distante reste dans son
- *      dépôt et n'est jamais enfilée ici.
+ *   5. la publication de statuts sur le dépôt distant est DÉSACTIVÉE
+ *      en permanence : aveca/sargagame reste en LECTURE SEULE pour BOT-WOW.
+ *      Une mission distante est journalisée mais jamais enfilée dans la queue
+ *      locale ni publiée sur l'autre dépôt.
  *
  * Dans `aveca/sargagame`, ce module étend `scripts/autopilot/bridge.cjs` du
  * runner Factory V3. BOT-WOW n'a pas de `bridge.cjs` local : ce module EST le
@@ -33,10 +32,9 @@
  * Le CONTRAT du port Sargagame est repris à l'identique :
  *
  *   - une ALLOWLIST stricte : tout autre dépôt est rejeté, jamais exécuté ;
- *   - un ROUTAGE strict : une mission `aveca/sargagame` reste dans Sargagame.
- *     Elle n'est JAMAIS enfilée dans la queue locale BOT-WOW — elle est
- *     seulement relayée (statut publié sur son issue d'origine) pour que le
- *     runner de Sargagame la prenne en charge chez elle ;
+ *   - un ROUTAGE strict : une mission aveca/sargagame reste dans Sargagame.
+ *     Elle n'est JAMAIS enfilée dans la queue locale BOT-WOW et aucun statut
+ *     ou commentaire n'est publié sur l'issue distante (lecture seule) ;
  *   - une IDEMPOTENCE par dépôt + issue + task_id, compatible avec la clé
  *     existante de bridge.cjs pour qu'aucune tâche ne soit importée deux fois ;
  *   - des STATUTS GitHub corrélés : imported / started / heartbeat / blocked /
@@ -66,11 +64,9 @@ const mem = require('./lib/memory.cjs');
 const ALLOWED_REPOS = ['aveca/bot-wow', 'aveca/sargagame'];
 
 /**
- * Dépôt de repli quand le remote n'est pas déterminable.
- * BOT-WOW : le repli est NOTRE dépôt, jamais `aveca/sargagame`. Un repli vers
- * Sargagame ferait passer une mission étrangère pour locale — donc
- * exécutable chez nous. Le repli vers BOT-WOW ne peut, au pire, faire
- * qu'ignorer des missions distantes : le routage strict reste respecté.
+ * Dépôt de repli uniquement lorsque le répertoire n'est PAS un checkout Git.
+ * Dans un checkout Git, un remote absent, illisible ou hors allowlist bloque
+ * explicitement : le dépôt local n'est jamais deviné.
  */
 const DEFAULT_LOCAL_REPO = 'aveca/bot-wow';
 
@@ -145,29 +141,69 @@ function gh(args, cwd = C.ROOT) {
  * Dépôt de ce checkout. C'est lui qui décide de l'exécution : une mission
  * d'un AUTRE dépôt autorisé est relayée, pas exécutée ici.
  */
-function detectLocalRepo(cwd = C.ROOT) {
+function detectLocalRepo(cwd = C.ROOT, deps = {}) {
   const fromEnv = process.env.AUTOPILOT_LOCAL_REPO;
-  if (fromEnv && isAllowedRepo(fromEnv)) return fromEnv;
-  try {
-    const url = execFileSync('git', ['remote', 'get-url', 'origin'], {
-      cwd,
+  if (fromEnv !== undefined && String(fromEnv).trim() !== '') {
+    const repo = String(fromEnv).trim().toLowerCase();
+    if (!isAllowedRepo(repo)) {
+      throw new Error(`AUTOPILOT_LOCAL_REPO hors allowlist : ${repo}`);
+    }
+    return repo;
+  }
+
+  const isGitWorktree = deps.isGitWorktree || ((dir) =>
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: dir,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 15000,
       windowsHide: true,
-    }).trim();
-    const m = url.match(/github\.com[:/]+([^/]+)\/([^/\s]+?)(?:\.git)?$/);
-    if (m) {
-      const full = `${m[1]}/${m[2]}`;
-      if (isAllowedRepo(full)) return full;
-    }
-  } catch (_) {
-    // remote illisible : on retombe sur le dépôt par défaut (BOT-WOW), et on
-    // le JOURNALISE — un dépôt local deviné en silence serait un risque
-    // d'exécution croisée.
-    console.log(`[bridge] remote origin illisible : dépôt local par défaut ${DEFAULT_LOCAL_REPO}`);
+    }).trim() === 'true');
+
+  let inWorktree = false;
+  try { inWorktree = isGitWorktree(cwd) === true; } catch (_) { inWorktree = false; }
+  if (!inWorktree) {
+    console.log(`[bridge] aucun checkout Git détecté : dépôt local par défaut ${DEFAULT_LOCAL_REPO}`);
+    return DEFAULT_LOCAL_REPO;
   }
-  return DEFAULT_LOCAL_REPO;
+
+  const getOrigin = deps.getOrigin || ((dir) =>
+    execFileSync('git', ['remote', 'get-url', 'origin'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 15000,
+      windowsHide: true,
+    }).trim());
+
+  let url;
+  try {
+    url = String(getOrigin(cwd) || '').trim();
+  } catch (e) {
+    throw new Error(`remote origin illisible dans un checkout Git : ${e.message}`);
+  }
+  if (!url) throw new Error('remote origin absent dans un checkout Git : détection du dépôt refusée');
+
+  let full;
+  const ssh = url.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
+  if (ssh) {
+    full = `${ssh[1]}/${ssh[2]}`;
+  } else {
+    let parsed;
+    try { parsed = new URL(url); } catch (_) {
+      throw new Error(`remote origin non reconnu : ${url}`);
+    }
+    if (parsed.hostname.toLowerCase() !== 'github.com') {
+      throw new Error(`hôte remote origin non autorisé : ${parsed.hostname}`);
+    }
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    if (parts.length !== 2) throw new Error(`remote origin GitHub invalide : ${url}`);
+    full = `${parts[0]}/${parts[1].replace(/\.git$/i, '')}`;
+  }
+
+  full = full.toLowerCase();
+  if (!isAllowedRepo(full)) throw new Error(`remote origin hors allowlist : ${full}`);
+  return full;
 }
 
 // ── Contrat ──────────────────────────────────────────────────────────────────
@@ -414,9 +450,8 @@ function publishStatus(repoFullName, issueNumber, status, details = '', options 
  * @param {function} options.writeOpportunityFile
  * @param {function} options.publishStatus
  * @param {function} options.ensureDirs         (tests) : création des dossiers
- * @param {boolean}  options.relayStatus        publier le statut « relayé »
- *                                                 sur l'issue du dépôt distant
- *                                                 (défaut : true)
+ * @param {boolean}  options.relayStatus        ignoré : BOT-WOW ne publie
+ *                                                 jamais sur le dépôt distant
  */
 function ingestMultiRepo(options = {}) {
   const dry = options.dry === true;
@@ -429,11 +464,9 @@ function ingestMultiRepo(options = {}) {
   const saveQueue = options.saveQueue || mem.saveQueue;
   const writeOppFile = options.writeOpportunityFile || mem.writeOpportunityFile;
   const ensureDirs = options.ensureDirs || C.ensureDirs;
-  // Publication du statut de relais sur le dépôt distant : activée par défaut
-  // (contrat du port). Elle peut être désactivée quand le dépôt distant est en
-  // lecture seule pour cet agent : le ROUTAGE, lui, ne change jamais — la
-  // mission reste dans son dépôt et n'est jamais enfilée ici.
-  const relayStatus = options.relayStatus !== false;
+  // BOT-WOW traite toujours le dépôt distant en lecture seule. L'option
+  // historique est ignorée : aucune exécution ne peut publier sur Sargagame.
+  const relayStatus = false;
 
   if (!dry) ensureDirs();
 
@@ -617,16 +650,18 @@ function isFalse(value) {
 }
 
 /**
- * Publication du statut de relais sur l'issue du dépôt distant.
- * Activée par défaut (contrat du port Sargagame). Désactivable par
- * `--relay-status=false` ou `AUTOPILOT_RELAY_STATUS=0`, pour les exécutions
- * où le dépôt distant est en LECTURE SEULE pour cet agent : le routage reste
- * strictement identique, seule la publication distante est omise.
+ * Politique BOT-WOW : le dépôt distant est TOUJOURS en lecture seule.
+ * Les anciens flags restent acceptés pour compatibilité, mais ne peuvent
+ * jamais réactiver la publication distante.
  */
-function resolveRelayStatus(args) {
-  if (args['relay-status'] !== undefined) return !isFalse(args['relay-status']);
-  if (process.env.AUTOPILOT_RELAY_STATUS !== undefined) return !isFalse(process.env.AUTOPILOT_RELAY_STATUS);
-  return true;
+function resolveRelayStatus(args = {}) {
+  const requested = args['relay-status'] !== undefined
+    ? args['relay-status']
+    : process.env.AUTOPILOT_RELAY_STATUS;
+  if (requested !== undefined && !isFalse(requested)) {
+    console.log('[bridge] publication distante interdite par la politique BOT-WOW; relayStatus=off');
+  }
+  return false;
 }
 
 function runCli(argv = process.argv.slice(2)) {
