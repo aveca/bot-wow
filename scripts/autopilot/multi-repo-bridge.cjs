@@ -38,7 +38,8 @@
  *   - une IDEMPOTENCE par dépôt + issue + task_id, compatible avec la clé
  *     existante de bridge.cjs pour qu'aucune tâche ne soit importée deux fois ;
  *   - des STATUTS GitHub corrélés : imported / started / heartbeat / blocked /
- *     completed / failed, publiés sur l'issue de la mission.
+ *     completed / failed, publiés uniquement sur les issues BOT-WOW ; aucune
+ *     écriture n'est faite sur les issues Sargagame.
  *
  * AUCUN nouveau runner, AUCUNE API LLM payante, AUCUN runner dans le cloud :
  * ce module est une CLI du runner Factory V3 existant.
