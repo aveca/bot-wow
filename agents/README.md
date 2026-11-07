@@ -10,6 +10,15 @@ GitHub est la seule source commune. Ce dépôt ne donne accès à aucune tâche 
 
 Ne pas démarrer un `scope` déjà `active` et non expiré, ni dans `agents/locks.md` de `main`, ni dans une autre PR ouverte. `node scripts/check-agent-state.mjs` vérifie le format. En CI de pull request, le workflow Validate relance ce script avec `CHECK_OPEN_PR_LOCKS=1`.
 
+En CI, le contrôle croisé des PR ouvertes compare chaque verrou distant à l'**identité** du verrou (`id` + `agent` + `branche`) :
+
+- même identité ⇒ même verrou hérité du même base commit ⇒ **pas** de conflit (cas normal de toute PR qui hérite de `main`) ;
+- identité différente + statut `active` + expiration future ⇒ **conflit réel**, le gate échoue ;
+- statut `done`/`released` ou expiration passée ⇒ le scope est libre, aucun conflit ;
+- branche distante sans `agents/locks.md` (404) ⇒ absence : la PR est ignorée pour cette comparaison ; toute autre erreur de lecture reste visible et fait échouer le gate.
+
+Les règles pures sont dans `scripts/agent-lock-gate.mjs`, testées par `tests/agent-state-locks.test.mjs`.
+
 ## Publier à la fin
 
 Mettre à jour, dans la même branche :
