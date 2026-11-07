@@ -112,7 +112,8 @@ Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `av
 | Copie du paquet historique sur les pages d'achat | #132, déjà fusionnée (`a843c13`) | ne pas réécrire `buy.html` |
 | Copie d'accueil archive EN/FR | #133, ouverte, CI verte | ne pas éditer `index.html` / `fr/index.html` |
 | Diagnostic d'offre | #135, ouverte | ne pas choisir le produit à vendre ici |
-| Preuve runtime et hash R2 | #124, ouverte, CI verte | hash live revérifié, pas de seconde PR |
+| Preuve runtime et hash R2 | #124, fusionnée (`5ddae0f`) | hash de l'objet 1.2.0 inchangé |
+| Paquet R2 1.2.1 | nouvelle clé seulement | `casinobabe-fishing-1.2.1.zip`, SHA-256 `ef294998a1ac5ce703739f7541ac63d0e61191f55fa8a7129b420b38adf79132`. `R2_OBJECT_KEY` reste `casinobabe-fishing-1.2.0.zip`. |
 | Dry-run multi-dépôt | #126 | le README de la PR dit de ne pas la fusionner ; elle contredit #124 sur la présence R2 |
 | Honnêteté commerciale large | #123, en conflit | périmée par #132, #133 et le chantier juridique dédié |
 | Overlay Worker v50 | #114, brouillon, en conflit | v50 n'a plus le trafic ; production = version `054cd158` |
