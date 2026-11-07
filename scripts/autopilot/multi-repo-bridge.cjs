@@ -145,6 +145,9 @@ function gh(args, cwd = C.ROOT) {
 function detectLocalRepo(cwd = C.ROOT, deps = {}) {
   const overrideRaw = process.env.AUTOPILOT_LOCAL_REPO;
   const override = overrideRaw === undefined ? '' : String(overrideRaw).trim().toLowerCase();
+  if (override && !isAllowedRepo(override)) {
+    throw new Error(`AUTOPILOT_LOCAL_REPO hors allowlist : ${override}`);
+  }
   if (override && override !== DEFAULT_LOCAL_REPO) {
     throw new Error(`AUTOPILOT_LOCAL_REPO doit désigner BOT-WOW, pas ${override}`);
   }
