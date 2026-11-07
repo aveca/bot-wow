@@ -3818,3 +3818,49 @@ checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
 `BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` et
 `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
 attaquer la preuve de provenance du runtime Gold/PvP/XP.
+
+
+---
+
+# Paquet runtime reproductible + provenance chiffrée — 2026-11-07T23:05Z
+
+**Rapport complet :** `reports/operations/2026-11-07-runtime-provenance-reproducible-package.md`
+**Branche :** `p0/reproducible-runtime-package-20261107` (base `origin/main` @ `9a01a5098b8025cf6b1ca338f426033224459c99`)
+**Verrou posé :** `20261107-package-reproducibility` / scope `runtime-package-reproducibility` — scope **distinct** de `r2-provenance` (PR #124 fusionnée le 2026-11-07T15:59Z), ligne `r2-provenance` laissée intacte.
+
+| Élément | Valeur | Statut |
+|---|---|---|
+| Paquet **reproductible au bit** | SHA-256 `F8138F3C52EB2498114AD5BCD3988DB39A105BD4B757646BF1C2B7548DA79781`, 1 344 366 o, 17 entrées ZIP, 16 entrées de manifeste | **[vérifié]** |
+| Reproductibilité | **4 builds** (LF, LF, CRLF, LF restauré) → SHA-256 **identique** à chaque fois | **[vérifié]** |
+| Empreinte canonique du contenu | `f69be8b34f74b2df68a177e0210b9bd73f6c99452c9279c291f2961173c90a53` (17 fichiers, 3 004 035 o) | **[vérifié]** |
+| Provenance inscrite au manifeste | `aveca/Casinobabe` @ `257418c9a0c2…`, `feat/fishing-route-intelligence-v2`, `builtAt = 2026-10-22T02:18:01.000Z` | **[vérifié]** |
+| Build python d'origine | **non reproductible** : `D225E63F…` puis `9FC19FEE…` (champ `builtAt`) | **[vérifié]** |
+| Objet R2 live (`1C132F36…`, 1 387 543 o, 30 entrées) | **non reproductible** : 20 fichiers identiques à `257418c`, **6 différents**, **3 hors manifeste** (2 exécutables + `VERSION`) | **[vérifié sur copie locale déjà téléchargée]** |
+| Licence de la source | **aucune** (`LICENSE`/`COPYING`/`NOTICE` absents, `license: null`) | **[vérifié]** |
+| Périmètre runtime | pêche uniquement — aucun runtime Gold/PvP/XP | **[vérifié]** (`docs/historical-runtime-absence-20261106.md`) |
+| Nouveau contrôle d'intégrité | `scripts/canonical-package-digest.mjs` (empreinte canonique + contrôle `MANIFEST.json` ↔ contenu) | **[vérifié]** |
+| Tests | `node tests/canonical-package-digest.test.mjs` → `CANONICAL DIGEST : OK` (20 contrôles) ; `node tests/distribution-package.test.mjs` → `DISTRIBUTION : OK` (28 contrôles) ; `npm run validate` exit 0 ; `npm test` exit 0 ; gate des verrous `AGENT STATE : OK` | **[vérifié]** |
+
+## Nouveaux bloqueurs (registre `agents/blockers.md`)
+
+- **B-licence** — les droits de redistribution du runtime `aveca/Casinobabe` ne sont
+  documentés nulle part. Levable par le propriétaire seul.
+- **B-r2-live** — l'artefact en production n'est pas reproductible ; son remplacement
+  par `F8138F3C…` exige une **autorisation explicite d'écriture R2** (et fait
+  disparaître les 2 exécutables hors manifeste).
+
+## Ce qui n'a pas été fait
+
+Aucune écriture R2, aucun upload/delete, aucun changement Worker/Pages/secret/
+binding/D1/webhook, aucun prix, aucun checkout rouvert, aucun paiement, aucun
+e-mail. `aveca/Casinobabe` en **lecture seule** : le clone local déjà présent a
+été basculé CRLF/LF pour la mesure puis **restauré** (HEAD `257418c`, `core.autocrlf=false`,
+`git status` vide) ; aucun push, aucun commit, aucun commentaire dans ce dépôt.
+Aucun exécutable de l'artefact live n'a été lancé. Aucun merge, aucun déploiement.
+
+## Prochaine action (une seule)
+
+**Décision du propriétaire** : expliciter les droits de redistribution du runtime
+(ou les refuser), puis autoriser — ou refuser — le remplacement de l'objet R2 live
+par le paquet reproductible `F8138F3C…`. Tant que la licence n'est pas écrite,
+le checkout reste fermé et aucune vente du runtime ne peut être justifiée.

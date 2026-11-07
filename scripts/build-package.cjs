@@ -15,9 +15,22 @@
  * ne doit se retrouver dans le paquet. Le script echoue explicitement s'il
  * en trouve.
  *
+ * REPRODUCTIBILITE (2026-11-07) : deux constructions du meme commit source
+ * doivent produire le MEME SHA-256. Trois sources de non-determinisme ont ete
+ * supprimees :
+ *   1. `builtAt` etait l'heure de la machine -> il vaut maintenant
+ *      SOURCE_DATE_EPOCH, sinon la date de commit de la source, sinon null ;
+ *   2. le tri des fichiers utilisait `localeCompare`, qui depend de la
+ *      locale -> tri byte-stable ;
+ *   3. le manifeste est ecrit avec des cles triees.
+ * L'archive ZIP utilise deja une date fixe (1996-01-01) et des entrees
+ * triees. Le manifeste porte en plus la PROVENANCE de la source
+ * (depot, ref, commit) pour que l'artefact soit auto-documentant.
+ *
  * Usage :
  *   node scripts/build-package.cjs --source <dossier> --version 1.2.0 \
- *        [--out dist] [--notes <fichier>]
+ *        [--out dist] [--notes <fichier>] \
+ *        [--source-repo <owner/repo>] [--source-ref <ref>] [--source-commit <sha>]
  */
 'use strict';
 
@@ -25,6 +38,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { execFileSync } = require('node:child_process');
 
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);
@@ -70,6 +84,88 @@ function sha256(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
+/** Extensions texte : leurs fins de ligne sont normalisees (LF) dans le paquet. */
+const TEXT_EXTENSIONS = new Set(['.py', '.lua', '.md', '.toc', '.json', '.ps1', '.txt', '.cfg', '.ini']);
+
+/**
+ * Normalise les fins de ligne d'un fichier texte (CRLF -> LF).
+ * Le contenu livre est alors identique a celui du blob Git, quel que soit le
+ * `core.autocrlf` du poste qui a construit le paquet : sans cela, le meme
+ * commit produit deux SHA-256 differents (mesure : 3046DEAB... en LF contre
+ * AAC97DB3... en CRLF, sur le meme poste).
+ */
+function normalizeText(buf) {
+  let crlf = 0;
+  for (let i = 1; i < buf.length; i++) {
+    if (buf[i] === 0x0a && buf[i - 1] === 0x0d) crlf++;
+  }
+  if (!crlf) return { buf, normalized: false };
+  const out = Buffer.allocUnsafe(buf.length - crlf);
+  let j = 0;
+  for (let i = 0; i < buf.length; i++) {
+    if (buf[i] === 0x0d && buf[i + 1] === 0x0a) continue;
+    out[j++] = buf[i];
+  }
+  return { buf: out.subarray(0, j), normalized: true };
+}
+
+/**
+ * Provenance Git de la source, lue dans le checkout source.
+ * Renvoie null quand la source n'est pas un depot Git : le build doit rester
+ * possible, mais la provenance sera alors declaree comme inconnue.
+ */
+function gitInfo(dir) {
+  const run = (args) => {
+    try {
+      return execFileSync('git', args, {
+        cwd: dir, encoding: 'utf8', timeout: 15000, windowsHide: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+    } catch (_) {
+      return '';
+    }
+  };
+  const commit = run(['rev-parse', 'HEAD']);
+  if (!commit) return null;
+  let repository = '';
+  const url = run(['config', '--get', 'remote.origin.url']);
+  const m = url.match(/github\.com[:/]+([^/]+)\/([^/\s]+?)(?:\.git)?$/);
+  if (m) repository = `${m[1]}/${m[2]}`;
+  const commitDate = run(['show', '-s', '--format=%cI', 'HEAD']);
+  let ref = run(['rev-parse', '--abbrev-ref', 'HEAD']);
+  if (!ref || ref === 'HEAD') ref = run(['name-rev', '--name-only', 'HEAD']);
+  // HEAD detache : `name-rev` renvoie remotes/origin/<branche> → on garde la
+  // branche lisible.
+  ref = ref.replace(/^remotes\/origin\//, '');
+  return { repository, ref, commit, commitDate: commitDate || null };
+}
+
+/**
+ * Horodatage de build DETERMINISTE.
+ * Ordre : SOURCE_DATE_EPOCH (norme reproductible-builds), sinon la date de
+ * commit de la source, sinon null. L'heure de la machine n'est JAMAIS
+ * utilisee : elle changeait le SHA-256 a chaque construction.
+ */
+function resolveBuiltAt(source, provenance) {
+  const epoch = process.env.SOURCE_DATE_EPOCH;
+  if (epoch !== undefined && epoch !== '') {
+    const seconds = Number(epoch);
+    if (Number.isFinite(seconds)) return new Date(seconds * 1000).toISOString();
+  }
+  if (provenance && provenance.commitDate) {
+    const d = new Date(provenance.commitDate);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  return null;
+}
+
+/** Tri byte-stable : `localeCompare` depend de la locale de la machine. */
+function byName(a, b) {
+  const x = Buffer.from(a.name, 'utf8');
+  const y = Buffer.from(b.name, 'utf8');
+  return Buffer.compare(x, y);
+}
+
 /**
  * Ecrit une archive ZIP en pur Node (deflate brut, CRC-32 calcule).
  * Pourquoi : le build ne doit dependre ni de PowerShell (absent sur les
@@ -95,7 +191,7 @@ function crc32(buf) {
 function zipDirectory(dir, outFile, prefix = '') {
   const entries = [];
   (function walk(d, base = d) {
-    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort(byName)) {
       const full = path.join(d, e.name);
       if (e.isDirectory()) walk(full, base);
       else entries.push(full);
@@ -176,7 +272,19 @@ function main() {
   fs.rmSync(pkgDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(stage, 'scripts'), { recursive: true });
 
-  const manifest = { name: 'casinobabe-fishing', version: VERSION, builtAt: new Date().toISOString(), files: {} };
+  const manifest = { name: 'casinobabe-fishing', version: VERSION, builtAt: null, source: null, files: {} };
+
+  // Provenance de la source : arguments CLI (priorite) sinon checkout Git.
+  const git = gitInfo(SOURCE);
+  const provenance = {
+    repository: arg('source-repo', git ? git.repository : '') || null,
+    ref: arg('source-ref', git ? git.ref : '') || null,
+    commit: arg('source-commit', git ? git.commit : '') || null,
+    commitDate: git ? git.commitDate : null,
+  };
+  manifest.source = (provenance.repository || provenance.ref || provenance.commit) ? provenance : null;
+  manifest.builtAt = resolveBuiltAt(SOURCE, provenance);
+
   const copy = (rel, destRel) => {
     const from = path.join(SOURCE, rel);
     if (!fs.existsSync(from)) return false;
@@ -186,9 +294,20 @@ function main() {
     const key = destRel.replace(/\\/g, '/');
     const to = path.join(stage, key);
     fs.mkdirSync(path.dirname(to), { recursive: true });
-    const buf = fs.readFileSync(from);
+    const raw = fs.readFileSync(from);
+    const ext = path.extname(from).toLowerCase();
+    let buf = raw;
+    let normalized = false;
+    if (TEXT_EXTENSIONS.has(ext)) {
+      const res = normalizeText(raw);
+      buf = res.buf;
+      normalized = res.normalized;
+    }
     fs.writeFileSync(to, buf);
     manifest.files[key] = { sha256: sha256(buf), bytes: buf.length, source: rel.replace(/\\/g, '/') };
+    // Politique de fins de ligne declaree de facon STABLE : le manifeste
+    // doit etre identique que le checkout source soit en LF ou en CRLF.
+    if (TEXT_EXTENSIONS.has(ext)) manifest.files[key].eol = 'LF';
     return true;
   };
 
@@ -229,18 +348,22 @@ function main() {
     sha256: sha256(fs.readFileSync(path.join(stage, 'config.example.json'))),
     bytes: fs.statSync(path.join(stage, 'config.example.json')).size,
     source: '(genere)',
+    eol: 'LF',
   };
 
   // 4. notes de version + documentation
   const docSrc = path.join(REPO_ROOT, 'distribution', 'INSTALL.md');
   if (fs.existsSync(docSrc)) {
-    const buf = fs.readFileSync(docSrc);
+    const res = normalizeText(fs.readFileSync(docSrc));
+    const buf = res.buf;
     fs.writeFileSync(path.join(stage, 'INSTALL.md'), buf);
-    manifest.files['INSTALL.md'] = { sha256: sha256(buf), bytes: buf.length, source: 'distribution/INSTALL.md' };
+    manifest.files['INSTALL.md'] = { sha256: sha256(buf), bytes: buf.length, source: 'distribution/INSTALL.md', eol: 'LF' };
   }
   if (NOTES && fs.existsSync(NOTES)) {
-    const buf = fs.readFileSync(NOTES);
+    const res = normalizeText(fs.readFileSync(NOTES));
+    const buf = res.buf;
     fs.writeFileSync(path.join(pkgDir, 'RELEASE-NOTES.md'), buf);
+    manifest.files['RELEASE-NOTES.md'] = { sha256: sha256(buf), bytes: buf.length, source: '(genere)', eol: 'LF' };
   }
 
   // 5. controle final : aucune donnee client dans le paquet
@@ -251,8 +374,19 @@ function main() {
     process.exit(1);
   }
 
+  // Le fichier VERSION est ecrit AVANT le manifeste et declare comme les
+  // autres : le manifeste couvre ainsi TOUS les fichiers livres, sauf
+  // MANIFEST.json lui-meme (un index ne peut pas contenir son propre hash).
+  const versionBuf = Buffer.from(VERSION + '\n', 'utf8');
+  fs.writeFileSync(path.join(pkgDir, 'VERSION'), versionBuf);
+  manifest.files['VERSION'] = { sha256: sha256(versionBuf), bytes: versionBuf.length, source: '(genere)', eol: 'LF' };
+
+  // Cles triees : le manifeste ne doit pas dependre de l'ordre de copie.
+  const sortedFiles = {};
+  for (const key of Object.keys(manifest.files).sort()) sortedFiles[key] = manifest.files[key];
+  manifest.files = sortedFiles;
+
   fs.writeFileSync(path.join(pkgDir, 'MANIFEST.json'), JSON.stringify(manifest, null, 2) + '\n');
-  fs.writeFileSync(path.join(pkgDir, 'VERSION'), VERSION + '\n');
 
   // 6. archive (ZIP ecrit en pur Node : portable, sans dependance externe)
   const zip = path.join(OUT, `casinobabe-fishing-${VERSION}.zip`);
@@ -261,6 +395,8 @@ function main() {
 
   console.log(`Paquet construit : ${zip}`);
   console.log(`  version   : ${VERSION}`);
+  console.log(`  source    : ${manifest.source ? `${manifest.source.repository || '?'}@${(manifest.source.commit || '?').slice(0, 12)} (${manifest.source.ref || '?'})` : 'provenance inconnue'}`);
+  console.log(`  builtAt   : ${manifest.builtAt || '(non horodate : SOURCE_DATE_EPOCH / date de commit absente)'}`);
   console.log(`  addon     : ${addonCount} fichier(s)`);
   console.log(`  bot       : ${botCount} script(s)`);
   console.log(`  archive   : ${count} entree(s)`);

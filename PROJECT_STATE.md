@@ -2,6 +2,11 @@
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
+**Ajout 2026-11-07T23:05Z — cycle « paquet reproductible »** : voir la section
+« Paquet runtime — provenance et reproductibilité ». Mesures directes de ce
+cycle ; rapport `reports/operations/2026-11-07-runtime-provenance-reproducible-package.md`.
+Aucune écriture R2, aucun checkout rouvert, aucun prix modifié.
+
 Dépôt : https://github.com/aveca/bot-wow
 PR de ce relevé : https://github.com/aveca/bot-wow/pull/129 (branche `cursor/commercial-truth-agent-state-0086`)
 Production : https://bot-wow.com/
@@ -94,6 +99,30 @@ Analytique `botwow-analytics`, `test=0` : `page_view` 2168 (dernier 2026-11-06T1
 
 Le chemin **sandbox** est exécuté par `tests/delivery-replay.test.mjs` sur le Worker du dépôt, avec Mollie, Resend, D1 et R2 simulés : webhook `paid` → commande `paid` → une licence → un jeton → e-mail contenant ce jeton → `GET /api/download?t=` renvoie les octets de l'objet simulé sous le nom `casinobabe-fishing-1.2.0.zip`. Plafond, absence d'objet, clé invalide, expiration et révocation ne livrent pas d'octets et n'incrémentent pas le quota. Ce n'est pas un paiement réel.
 
+## Paquet runtime — provenance et reproductibilité (2026-11-07T23:05Z)
+
+Directement vérifié dans ce cycle (builds locaux, comparaison octet par octet) :
+
+| Constat | Valeur |
+|---|---|
+| Paquet **reproductible au bit** | SHA-256 `F8138F3C52EB2498114AD5BCD3988DB39A105BD4B757646BF1C2B7548DA79781`, 1 344 366 octets, 17 entrées ZIP, 16 entrées de manifeste — **identique** sur 4 builds (LF, LF, CRLF, LF restauré) |
+| Empreinte canonique du **contenu** | `f69be8b34f74b2df68a177e0210b9bd73f6c99452c9279c291f2961173c90a53` (17 fichiers, 3 004 035 octets) — via `scripts/canonical-package-digest.mjs` |
+| Build python d'origine | **non reproductible** : 2 builds de la même source → `D225E63F…` puis `9FC19FEE…` (champ `builtAt`) |
+| Provenance inscrite | `aveca/Casinobabe` @ `257418c9a0c2…`, branche `feat/fishing-route-intelligence-v2`, `builtAt = 2026-10-22T02:18:01.000Z` |
+| Intégrité manifeste ↔ contenu livré | `ok` — 0 écart, 0 fichier hors manifeste, 0 fichier déclaré manquant |
+| Objet R2 **live** (`1C132F36…`, 1 387 543 o, 30 entrées) | **non reproductible** : 20 fichiers identiques à `257418c`, **6 différents**, **3 hors manifeste** (`Lancer-Casinobabe-Fishing-Assistant.bat`, `restaurer_previous.ps1`, `VERSION`) |
+| Licence de la source | **aucune** (`LICENSE`/`COPYING`/`NOTICE` absents, `license: null`) → droits de redistribution **non documentés** |
+| Périmètre du runtime | **pêche uniquement** — aucun runtime Gold/PvP/XP (`docs/historical-runtime-absence-20261106.md`) |
+
+Deux conséquences directes pour la posture publique :
+
+1. Le paquet « not verified » affiché sur les pages d'achat peut désormais être
+   remplacé par une référence **reproductible et vérifiable** (`F8138F3C…`) —
+   mais seulement si le propriétaire autorise l'écriture R2, et seulement en
+   acceptant que les 2 exécutables hors manifeste disparaissent du paquet livré.
+2. Tant que la **licence** n'est pas explicite, la redistribution n'est pas
+   justifiée : le checkout reste fermé.
+
 ## www
 
 - 2026-11-06T14:15:35Z : `https://www.bot-wow.com/` et l'apex répondaient tous les deux **200**, même titre, canonical apex. Directement vérifié.
@@ -112,7 +141,7 @@ Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `av
 | Copie du paquet historique sur les pages d'achat | #132, déjà fusionnée (`a843c13`) | ne pas réécrire `buy.html` |
 | Copie d'accueil archive EN/FR | #133, ouverte, CI verte | ne pas éditer `index.html` / `fr/index.html` |
 | Diagnostic d'offre | #135, ouverte | ne pas choisir le produit à vendre ici |
-| Preuve runtime et hash R2 | #124, ouverte, CI verte | hash live revérifié, pas de seconde PR |
+| Preuve runtime et hash R2 | #124, **fusionnée** le 2026-11-07T15:59Z (base de `runtime/INTEGRATION.md`) | le scope `r2-provenance` reste verrouillé jusqu'au 2026-11-10 par `p0/runtime-integration-20261106` ; ce cycle prend un **scope distinct** (`runtime-package-reproducibility`), aucune écriture R2 |
 | Dry-run multi-dépôt | #126 | le README de la PR dit de ne pas la fusionner ; elle contredit #124 sur la présence R2 |
 | Honnêteté commerciale large | #123, en conflit | périmée par #132, #133 et le chantier juridique dédié |
 | Overlay Worker v50 | #114, brouillon, en conflit | v50 n'a plus le trafic ; production = version `054cd158` |
@@ -122,3 +151,10 @@ Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `av
 ## Prochaine action
 
 Le checkout public reste fermé. La vente n'attend plus une décision unique : les textes juridiques, la provenance R2 et le profil Mollie dédié avancent en parallèle, et la réouverture ne se fusionne qu'après ces trois-là. La PR #90 reste le seul correctif de credential Mollie.
+
+**Cycle du 2026-11-07T23:05Z — une seule action pour le propriétaire :**
+expliciter les **droits de redistribution** du runtime `aveca/Casinobabe`
+(aucune licence dans la source : `B-licence`), puis décider — ou refuser — le
+remplacement de l'artefact R2 live par le paquet reproductible `F8138F3C…`
+(`B-r2-live`). Sans réponse écrite, aucune vente du runtime ne peut être
+justifiée et le checkout reste fermé.
