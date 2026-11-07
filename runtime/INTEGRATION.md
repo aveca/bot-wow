@@ -24,6 +24,17 @@
 
 **Note :** les deux SHA diffèrent car le `dist/` existant dans le worktree `casinobabe-v2` a été construit à partir d'un état incluant des modifications locales non commitées (fichiers `M` sur plusieurs `scripts/fishing_*.py`). Le paquet reproduit depuis le commit propre `257418c` est la référence reproductible.
 
+### État R2 et configuration live — vérifiés le 2026-11-07
+
+L'objet `casinababe-fishing-1.2.0.zip` **est déjà présent** dans le bucket `botwow-binaries` :
+- taille : **1 387 543 octets** ;
+- dernière modification : `2026-10-27T06:31:06.784Z` ;
+- SHA-256 recalculé sur les octets téléchargés : `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`.
+
+Le Worker `botwow-api` v52 (version `054cd158-4be2-42f8-92a6-ff9c4f059079`, 100 % du trafic au contrôle) utilise `R2_OBJECT_KEY=casinababe-fishing-1.2.0.zip` avec le bucket `R2_BINARIES`. Aucune valeur de secret n'a été lue et aucun objet R2 n'a été modifié.
+
+**Conséquence :** le fichier actuellement configuré est l'ancien build avec modifications locales non commitées, pas le build propre reproductible ci-dessus. La présence de l'objet ne certifie donc pas la distribution du build propre. Son remplacement nécessiterait une écriture R2 explicitement autorisée.
+
 ## Procédure de build (reproductible)
 
 Depuis une copie propre du dépôt aveca/Casinobabe à `257418c` :
@@ -48,9 +59,10 @@ Couvre : détection flotteur (eau diurne + nocturne), garde "pas d'eau pas de la
 Le runtime source est identifié et auditable. Au moins une fonction (pêche) est réellement testée. Le paquet est reproductible et vérifié SHA-256.
 
 **Blocages restants pour la commercialisation :**
-- Le paquet n'est pas encore uploadé sur R2 `botwow-binaries` (credentials R2 nécessaires, non accessibles en lecture seule).
+- Le paquet propre reproductible n'est pas celui actuellement configuré dans R2 ; son remplacement reste à autoriser.
 - Aucune compatibilité serveur n'est datée (matrice `assets/compat.json` de BOT-WOW : tout `not_tested`).
-- Le checkout de BOT-WOW reste fermé (`RELEASE_STATUS != "confirmed"`).
-- Aucun profil Mollie dédié BOT-WOW n'est configuré.
+- Le checkout public reste fermé. La valeur du secret `RELEASE_STATUS` n'a pas été lue.
+- Aucun profil Mollie dédié BOT-WOW n'est confirmé par les preuves disponibles.
+- Aucune installation, activation ou livraison E2E n'est certifiée.
 
 Ce document ne prétend pas que le produit est prêt à la vente. Il constate l'existence et la reproductibilité du runtime source.
