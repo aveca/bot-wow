@@ -490,6 +490,8 @@ const additionalStatusRoutes = [
   ['legal/fr/privacy.html', '../../fr/buy.html'],
   ['legal/refund.html', '../buy.html'],
   ['legal/fr/refund.html', '../../fr/buy.html'],
+  ['legal/mentions.html', '../buy.html'],
+  ['legal/fr/mentions.html', '../../fr/buy.html'],
 ];
 for (const [file, statusHref] of additionalStatusRoutes) {
   const html = read(file);
