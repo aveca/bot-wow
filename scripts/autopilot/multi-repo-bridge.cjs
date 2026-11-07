@@ -145,8 +145,8 @@ function gh(args, cwd = C.ROOT) {
 function detectLocalRepo(cwd = C.ROOT, deps = {}) {
   const overrideRaw = process.env.AUTOPILOT_LOCAL_REPO;
   const override = overrideRaw === undefined ? '' : String(overrideRaw).trim().toLowerCase();
-  if (override && !isAllowedRepo(override)) {
-    throw new Error(`AUTOPILOT_LOCAL_REPO hors allowlist : ${override}`);
+  if (override && override !== DEFAULT_LOCAL_REPO) {
+    throw new Error(`AUTOPILOT_LOCAL_REPO doit désigner BOT-WOW, pas ${override}`);
   }
 
   const isGitWorktree = deps.isGitWorktree || ((dir) =>
@@ -212,6 +212,9 @@ function detectLocalRepo(cwd = C.ROOT, deps = {}) {
 
   full = full.toLowerCase();
   if (!isAllowedRepo(full)) throw new Error(`remote origin hors allowlist : ${full}`);
+  if (full !== DEFAULT_LOCAL_REPO) {
+    throw new Error(`remote origin ne correspond pas au checkout BOT-WOW : ${full}`);
+  }
   if (override && override !== full) {
     throw new Error(`AUTOPILOT_LOCAL_REPO ne correspond pas au remote origin : ${override} != ${full}`);
   }
@@ -470,6 +473,9 @@ function ingestMultiRepo(options = {}) {
   const log = options.log || console.log;
   const ghFn = options.gh || gh;
   const localRepo = options.localRepo || detectLocalRepo();
+  if (localRepo !== DEFAULT_LOCAL_REPO) {
+    throw new Error(`ce bridge BOT-WOW ne peut tourner que dans ${DEFAULT_LOCAL_REPO} (reçu: ${localRepo})`);
+  }
   const loadIssues = options.loadIssues || ((repo) => loadOpenAutopilotIssuesForRepo(repo, ghFn));
   const publish = options.publishStatus || publishStatus;
   const loadQueue = options.loadQueue || mem.loadQueue;
