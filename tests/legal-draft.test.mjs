@@ -35,8 +35,15 @@ for (const rel of pages) {
   check(rel + ' ne pretend pas que l offre est en vente', !/currently on sale|offre actuellement en vente/i.test(html));
 }
 const terms = fs.readFileSync(path.join(root, 'legal/terms.html'), 'utf8');
+const termsFr = fs.readFileSync(path.join(root, 'legal/fr/terms.html'), 'utf8');
 check('les CGV parlent du contenu numerique', /digital content/i.test(terms));
 check('les CGV disent que le checkout est ferme', /checkout stays closed/i.test(terms));
+check('CGV EN : pas d affiliation Blizzard', /neither affiliated with nor endorsed by Blizzard Entertainment/i.test(terms));
+check('CGV EN : risque de sanction de compte', /Account sanctions, including suspension or closure, are possible/i.test(terms));
+check('CGV EN : pas de promesse de non-detection', /do not promise that the software will not be detected/i.test(terms));
+check('CGV FR : pas d affiliation Blizzard', /ni affilié, ni approuvé par Blizzard Entertainment/i.test(termsFr));
+check('CGV FR : risque de sanction de compte', /sanctions de compte, y compris une suspension ou une fermeture, sont possibles/i.test(termsFr));
+check('CGV FR : pas de promesse de non-detection', /ne promettent pas que le logiciel ne sera pas détecté/i.test(termsFr));
 
 console.log(failures === 0 ? '\nBROUILLON JURIDIQUE : OK' : `\nBROUILLON JURIDIQUE : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
