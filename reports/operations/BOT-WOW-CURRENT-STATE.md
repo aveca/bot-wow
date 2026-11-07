@@ -3712,3 +3712,109 @@ Autorisation : déploiement technique réversible du Worker `botwow-api` depuis 
 - Retour arrière immédiat : redéployer la version `1513595c-6a53-4575-b013-9979b696dce3` (déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884`).
 
 Prochaine action : décision du propriétaire sur le produit qui peut être vendu. Le checkout reste fermé.
+
+---
+
+# 2026-11-07 — Pont Factory V3 multi-dépôt (#143) et gate des verrous (#141)
+
+État daté de ce cycle. Faits marqués **[vérifié]** = observés dans cette
+session (lien ou sortie d'outil) ; **[rapporté]** = reprise d'un rapport
+antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
+
+## Issues traitées
+
+| Issue | task_id | Dépôt | Résultat |
+|---|---|---|---|
+| #143 | `BOTWOW-FACTORY-MULTIREPO-BRIDGE-INSTALL-20261107` | `aveca/bot-wow` | pont installé, PR ouverte |
+| #141 | `BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` | `aveca/bot-wow` | gate corrigé, PR ouverte |
+
+ACK Factory V3 publié sur #143 : <https://github.com/aveca/bot-wow/issues/143#issuecomment-6711832670> **[vérifié]**
+
+## #141 — gate `check-agent-state` (faux positif des verrous hérités)
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/ci-lock-checker-identity-20261107` (base `origin/main` @ `dab8722af28ac10e2f3f28e44a15bab2f2f54862`) |
+| Commit | `42076c2cb73fae1cc6d1590cbb28e21421fe9d48` |
+| PR | <https://github.com/aveca/bot-wow/pull/145> (ouverte, **non mergée**) |
+| CI sur le SHA exact | Validate **success** — run `42410751941` · UI quality **success** — run `42410751946` · GitGuardian **success** **[vérifié]** |
+
+- **Cause (directement vérifiée)** : le gate comparait les *scopes* seuls. Toute
+  PR qui hérite de `agents/locks.md` de `main` était rejetée comme si elle
+  reprenait un scope détenu par une autre PR. Sur `main` **pristine**, la même
+  commande échoue avec 6 conflits (`legal-draft`, `r2-provenance`,
+  `mollie-profile-prep`, `checkout-flag-draft`, `commercial-offer`,
+  `homepage-archive-copy`), tous pointant la PR #139 dont le fichier est
+  identique octet pour octet. Après correction : `AGENT STATE : OK`, exit 0.
+- **Correctif** : identité de verrou = `id` + `agent` + `branch`
+  (`scripts/agent-lock-gate.mjs`) ; même identité ⇒ pas de conflit ; identité
+  différente + `active` + non expiré ⇒ conflit réel conservé ; `done`,
+  `released` ou expiré ⇒ scope libre ; 404 distant ⇒ absence ; autre erreur de
+  lecture ⇒ visible (elle ne devient plus un succès silencieux).
+- **Tests** : `tests/agent-state-locks.test.mjs`, 36 contrôles déterministes,
+  câblé dans `npm test`. `npm run validate` exit 0, `npm test` exit 0,
+  `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` exit 0.
+- `agents/locks.md` **inchangé** : aucun verrou supprimé, expiré
+  artificiellement ni réattribué.
+- PR #137 et #140 : **non modifiées, non fermées**. La correction leur rend
+  la CI possible, mais **leurs tests ne sont pas considérés comme repassés**
+  tant qu'ils n'ont pas été relancés sur leur propre SHA.
+
+## #143 — pont Factory V3 multi-dépôt
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/factory-multirepo-bridge-20261107` (base `origin/main` @ `dab8722`) |
+| Commits | `64f830969aa5508c9ce0b39cdb5442873170e3b7` (pont) · `54570ec50f7734618610256cb5a264621908f2e2` (merge #141) · `f130a46770669574c341e549011512f6111dc69e` (tests sans écriture) |
+| PR | <https://github.com/aveca/bot-wow/pull/146> (ouverte, **non mergée**) |
+| Source | `aveca/sargagame` PR #1349, merge commit `87702066a79c03ff930500a2bad524df58c1f6f7` — **lecture seule**, dépôt non modifié **[vérifié]** |
+| CI sur le SHA exact | Validate **success** — run `42412792812` · GitGuardian **success** · UI quality run `42412792956` **[vérifié]** |
+
+- **PR empilée** : #146 contient le correctif #141 (`42076c2`). Sans lui, le
+  job Validate échoue sur le faux positif et `npm test` est skippé. Ordre de
+  fusion recommandé : **#145 puis #146**.
+- **Contrat repris à l'identique** : allowlist fermée des deux dépôts,
+  routage strict par dépôt local, déduplication dépôt/issue/task_id (clé
+  canonique + clé historique + id seul), statuts GitHub corrélés, blocage
+  humanGate/moneyPath, aucun runner cloud.
+- **Adaptations BOT-WOW (4, documentées dans le code)** : `DEFAULT_LOCAL_REPO`
+  = `aveca/bot-wow` (jamais Sargagame) ; repli journalisé ; libs
+  `lib/common.cjs` + `lib/memory.cjs` portées en sous-ensemble strict ;
+  `ensureDirs` injectable (les tests n'écrivent rien).
+- **Tests** : `tests/autopilot/multi-repo-bridge.test.cjs`, **84 contrôles**,
+  0 échec, aucun appel réseau, aucune écriture disque.
+- **Dry-run depuis le checkout BOT-WOW (preuve du routage)** : `local=aveca/bot-wow`,
+  #141 et #142 détectées **localement** avec leur task_id exact, 7 missions
+  Sargagame **relayées** (`imported=0 relayed=7` pour `aveca/sargagame`),
+  `ignored=0 rejected=0 statusFailures=0`, `.ai/` **non créé**,
+  `git status --porcelain` = 0 ligne. **[vérifié]**
+- `scripts/` et `tests/` sont dans la liste `DENY` de `scripts/build-site.mjs` :
+  ces fichiers ne peuvent pas être publiés sur Pages.
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement, aucun `workflow_dispatch`.
+- Aucun checkout, paiement, Mollie, prix, Worker, Pages, secret, binding, D1,
+  R2, webhook, e-mail ni mutation de production.
+- Aucune mission métier #141 / #142 **exécutée** ; le dry-run ne mute rien.
+- Aucune mission Sargagame importée ni exécutée dans ce checkout.
+- `aveca/sargagame` lu en lecture seule, non modifié.
+
+## Bloqueurs (inchangés)
+
+- **[non vérifié]** Profil marchand Mollie BOT-WOW et raccordement au Worker :
+  non établis depuis cet environnement ; aucun secret lu ni affiché.
+- **[non vérifié]** Provenance, licence et artefact reproductible du runtime
+  WoW Gold/PvP/XP : non établis à ce jour ; l'addon de pêche n'est pas le bot
+  complet.
+- **[rapporté]** Le checkout reste fermé ; aucune vente réelle n'est prouvée.
+  Voir <https://github.com/aveca/bot-wow/pull/139> et le runbook Mollie.
+
+## Prochaine action (une seule)
+
+**Importer les missions métier existantes dans la queue locale avec leur
+task_id exact, via le pont validé** (`npm run autopilot:bridge` depuis le
+checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
+`BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` et
+`BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
+attaquer la preuve de provenance du runtime Gold/PvP/XP.
