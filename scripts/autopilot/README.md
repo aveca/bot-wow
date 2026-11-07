@@ -12,7 +12,7 @@ Il prolonge le pont `bridge.cjs` de Factory V3 pour deux dépôts **autorisés**
 | Règle | Comportement |
 |---|---|
 | **Allowlist fermée** | seuls `aveca/bot-wow` et `aveca/sargagame` sont lus ; tout autre dépôt est rejeté, jamais exécuté |
-| **Routage par dépôt local** | le dépôt local est déduit du remote `origin` (ou de `AUTOPILOT_LOCAL_REPO`) ; un checkout Git sans origin valide ou avec un dépôt hors allowlist échoue ; seul un répertoire hors Git utilise le repli BOT-WOW ; une mission distante est journalisée, jamais enfilée localement et jamais publiée sur le dépôt distant |
+| **Routage par dépôt local** | le checkout local doit être BOT-WOW et correspondre au remote `origin` ; tout autre dépôt/host, origin absent ou illisible échoue ; seul un répertoire hors Git utilise le repli BOT-WOW ; une mission Sargagame est journalisée, jamais enfilée localement ni publiée à distance |
 | **Déduplication** | clé canonique `chatgpt-issue|<dépôt>|<issue>|<task_id>` + clé historique `chatgpt-issue|<issue>|<task_id>` + `task_id` seul : une mission déjà importée (y compris par `bridge.cjs`) n'est jamais réimportée |
 | **Statuts corrélés** | statuts de cycle de vie publiés uniquement sur les issues BOT-WOW ; `aveca/sargagame` est strictement en lecture seule |
 | **Garde-fous** | `humanGate` ou `moneyPath` ⇒ mission **jamais** exécutée automatiquement (statut `blocked`) ; contrat de mission vérifié champ par champ, écart signalé et jamais silencieusement comblé |
@@ -22,8 +22,10 @@ Il prolonge le pont `bridge.cjs` de Factory V3 pour deux dépôts **autorisés**
 
 1. `DEFAULT_LOCAL_REPO = 'aveca/bot-wow'` — utilisé uniquement si le
    répertoire n'est pas un checkout Git.
-2. Dans un checkout Git, un origin absent, illisible, non-GitHub ou hors
-   allowlist provoque un **échec explicite** : aucun fallback vers BOT-WOW.
+2. Dans un checkout Git, l'origin doit être exactement BOT-WOW. Un origin
+   absent, illisible, Sargagame, non-GitHub ou tiers provoque un **échec
+   explicite** : aucun fallback vers BOT-WOW. L'override env doit également
+   désigner BOT-WOW et correspondre à l'origin.
 3. Les dépendances `lib/common.cjs` et `lib/memory.cjs` sont portées en local,
    en sous-ensemble strict de ce que le pont utilise (pas de runner autopilot
    complet inventé).
@@ -61,9 +63,9 @@ node scripts/autopilot/multi-repo-bridge.cjs --status started --repo aveca/bot-w
 3. Contrôler le dépôt local reconnu :
    `node scripts/autopilot/multi-repo-bridge.cjs --dry` → la sortie doit afficher
    `local=aveca/bot-wow`.
-4. Dry-run : les missions BOT-WOW (#141, #142, #143) doivent apparaître en
-   `wouldImport`, les missions Sargagame en `wouldRelay`, et aucune écriture
-   ne doit avoir eu lieu.
+4. Dry-run : les missions BOT-WOW doivent apparaître en `wouldImport`, les
+   missions Sargagame en `wouldRelay`, et aucune écriture ne doit avoir eu
+   lieu. Un remote Sargagame ne peut jamais être détecté comme checkout local.
 5. Import réel : `npm run autopilot:bridge`. Les statuts ne sont publiés que
    sur les issues BOT-WOW ; aucune écriture n'est faite dans Sargagame. Le
    runner ne traite ensuite que la queue locale.
