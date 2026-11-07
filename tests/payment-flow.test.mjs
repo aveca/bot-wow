@@ -213,9 +213,9 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('le checkout renvoie une URL de paiement', res.status === 200 && !!data.checkoutUrl,
     `(status=${res.status} ${JSON.stringify(data).slice(0, 120)})`);
   const payment = mollieCalls.find((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST');
-  check('une API Key test_ ne transmet jamais profileId à la création du paiement',
-    payment && !new URL(payment.url).searchParams.has('profileId'),
-    `(url=${payment && payment.url})`);
+  check('une API Key test_ ne transmet jamais profileId (URL et corps) à la création du paiement',
+    payment && !new URL(payment.url).searchParams.has('profileId') && payment.body.profileId === undefined,
+    `(url=${payment && payment.url} corps=${JSON.stringify(payment && payment.body.profileId)})`);
   check('le montant envoyé a Mollie est 20,00 EUR (fixe par le serveur)',
     payment && payment.body.amount.value === '20.00' && payment.body.amount.currency === 'EUR',
     `(recu ${JSON.stringify(payment && payment.body.amount)})`);
@@ -279,9 +279,9 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     method: 'POST', body: { email: 'org-client@test.fr', lang: 'fr' }, env,
   });
   const payment = mollieCalls.find((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST');
-  check('un token organisation transmet profileId a la creation du paiement',
-    res.status === 200 && payment && new URL(payment.url).searchParams.get('profileId') === 'pfl_test_profile',
-    `(status=${res.status} url=${payment && payment.url})`);
+  check('un token organisation transmet profileId dans le corps de POST /payments (doc Mollie)',
+    res.status === 200 && payment && payment.body.profileId === 'pfl_test_profile' && !new URL(payment.url).searchParams.has('profileId'),
+    `(status=${res.status} corps=${JSON.stringify(payment && payment.body.profileId)} url=${payment && payment.url})`);
 }
 
 /* 3b. un token organisation transmet profileId a la lecture webhook */
@@ -295,8 +295,8 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     method: 'POST', body: { id: 'tr_org' }, env,
   });
   const paymentRead = mollieCalls.find((c) => c.method === 'GET' && c.url.includes('/payments/tr_org'));
-  check('un token organisation transmet profileId a la lecture webhook',
-    res.status === 200 && paymentRead && new URL(paymentRead.url).searchParams.get('profileId') === 'pfl_test_profile',
+  check('un token organisation lit le paiement sans parametre d-URL profileId (non defini par Mollie sur Get payment)',
+    res.status === 200 && paymentRead && !new URL(paymentRead.url).searchParams.has('profileId'),
     `(status=${res.status} url=${paymentRead && paymentRead.url})`);
 }
 
@@ -309,9 +309,9 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     method: 'POST', body: { email: 'live-key@test.fr', lang: 'fr' }, env,
   });
   const payment = mollieCalls.find((c) => new URL(c.url).pathname.endsWith('/payments') && c.method === 'POST');
-  check('une API Key live_ ne transmet pas profileId',
-    res.status === 200 && payment && !new URL(payment.url).searchParams.has('profileId'),
-    `(status=${res.status} url=${payment && payment.url})`);
+  check('une API Key live_ ne transmet pas profileId (URL et corps)',
+    res.status === 200 && payment && !new URL(payment.url).searchParams.has('profileId') && payment.body.profileId === undefined,
+    `(status=${res.status} url=${payment && payment.url} corps=${JSON.stringify(payment && payment.body.profileId)})`);
 }
 
 /* 3d. un token organisation sans profileId n'appelle pas Mollie */

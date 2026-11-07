@@ -961,7 +961,7 @@ async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
 }
 __name(fetchMolliePayment, "fetchMolliePayment");
 async function mollieFetch(env2, method, path, body, includeProfileId = false) {
-  let url = `${MOLLIE_API_BASE}${path}`;
+  const url = `${MOLLIE_API_BASE}${path}`;
   // Standard Mollie API keys are already bound to one profile. Mollie rejects
   // profileId when these keys are used; organization/OAuth tokens require it.
   const key = String(env2.MOLLIE_API_KEY || "");
@@ -970,10 +970,16 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   if (isOrganizationToken && !env2.MOLLIE_PROFILE_ID) {
     throw new Error("Mollie organization token requires MOLLIE_PROFILE_ID");
   }
-  const sendProfileId = includeProfileId && isOrganizationToken && env2.MOLLIE_PROFILE_ID;
-  if (sendProfileId) {
-    const separator = url.includes("?") ? "&" : "?";
-    url += `${separator}profileId=${encodeURIComponent(env2.MOLLIE_PROFILE_ID)}`;
+  // Precedent de la doc Mollie (reference/create-payment) : avec un jeton
+  // d'organisation, profileId est une PROPRIETE DU CORPS JSON de la
+  // requete, pas un parametre d'URL. Get payment (reference/get-payment) ne
+  // definit aucun parametre d'URL profileId ; envoyer le champ a un endroit
+  // non defini pourrait ecrire une 422 "profileId required" invisible dans
+  // nos tests simules. Le corps est donc le seul transport conforme ici.
+  let sendBody = body;
+  const wantsProfileId = includeProfileId && isOrganizationToken && env2.MOLLIE_PROFILE_ID;
+  if (wantsProfileId && method === "POST") {
+    sendBody = { ...(body || {}), profileId: env2.MOLLIE_PROFILE_ID };
   }
   const headers = {
     "Authorization": `Bearer ${env2.MOLLIE_API_KEY}`,
@@ -983,7 +989,7 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   const response = await fetch(url, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : void 0
+    body: sendBody ? JSON.stringify(sendBody) : void 0
   });
   if (!response.ok) {
     const error = await response.text();
