@@ -966,10 +966,11 @@ async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   // profileId when these keys are used; organization/OAuth tokens require it.
   const key = String(env2.MOLLIE_API_KEY || "");
   const isApiKey = /^(test_|live_)/.test(key);
-  if (!isApiKey && !env2.MOLLIE_PROFILE_ID) {
+  const isOrganizationToken = key.length > 0 && !isApiKey;
+  if (isOrganizationToken && !env2.MOLLIE_PROFILE_ID) {
     throw new Error("Mollie organization token requires MOLLIE_PROFILE_ID");
   }
-  const sendProfileId = includeProfileId && !isApiKey && env2.MOLLIE_PROFILE_ID;
+  const sendProfileId = includeProfileId && isOrganizationToken && env2.MOLLIE_PROFILE_ID;
   if (sendProfileId) {
     const separator = url.includes("?") ? "&" : "?";
     url += `${separator}profileId=${encodeURIComponent(env2.MOLLIE_PROFILE_ID)}`;
