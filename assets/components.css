@@ -213,3 +213,26 @@ nav .logo{display:inline-flex;align-items:center}
    colonne et faire deborder la page. On remet a zero. */
 .formula,.modrow,.ledger-row,.dl-card,.step,.metric-card,.vs-card,.price-card{min-width:0}
 .formula-grid > *,.steps > *,.docstrip-alt > *,.metrics-grid > *{min-width:0}
+
+
+/* ============================================================ P0.49 — module status bands on narrow screens
+   The Modules page places a no-wrap status badge, a flexible divider and a
+   monospace descriptor in one flex row. On narrow viewports their min-content
+   widths can exceed the page. Stack the descriptor below the badge instead of
+   allowing the document to grow horizontally. */
+@media (max-width:760px){
+  .band{flex-wrap:wrap;align-items:flex-start;gap:8px}
+  .band .line{display:none}
+  .band > .st{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+  .band > .mono{flex:1 1 100%;min-width:0;white-space:normal;overflow-wrap:anywhere}
+}
+
+
+/* P0.58 — archived documentation headings must fit 320px viewports. */
+@media (max-width: 360px) {
+  .docs-archive .panel h1 {
+    font-size: clamp(30px, 9.5vw, 34px);
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}

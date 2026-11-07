@@ -1,6 +1,8 @@
 # BOT-WOW — État courant Factory V3
 
-**Dernière mise à jour de ce document : 2026-11-04T18:20Z** (PR #78 et #80 fusionnées — CA BOT-WOW corrigé à 0,00 €, chemin de paiement réel mesuré, R18 fermé côté Sargasses)
+**État court au 2026-11-06T14:48Z : `PROJECT_STATE.md`.** Ce fichier reste l'historique. Les sections qui décrivent le Worker v50 comme la version en production, `www` comme un 200 permanent, ou `HEAD` API encore en 404, sont périmées à partir de 14:48Z.
+
+**Dernière mise à jour de l'historique long : 2026-11-04T23:48Z**, complété par les sections P0.33 à P0.68 puis par le relevé du 2026-11-06 en fin de fichier.
 
 ---
 
@@ -1014,3 +1016,2699 @@ Comparaison de journalisation :
 Le bundle actif contient donc également des logs contenant des données personnelles et des clés de licence qui ont été redigés dans main.
 
 **Décision :** préparer le déploiement du Worker main avec un rollback vers la version 50, mais ne pas déployer dans ce cycle. Le Worker est le chemin paiement/livraison de production ; sa mise à niveau exige la confirmation d'un profil Mollie BOT-WOW dédié et une autorisation explicite. Ne pas réutiliser le profil Sargasses. Aucun POST, paiement, secret, binding ou déploiement n'a été effectué.
+
+
+---
+
+# P0.32 — Réconciliation live et blocages commerciaux — 2026-11-04T23:48Z
+
+## GitHub — état vérifié
+
+- Dépôt : `aveca/bot-wow`.
+- `main` : `3786bcec75a22a4a4af2c968c83ad39263cb7958` (merge PR #85).
+- Arbre Git récursif : 443 entrées, non tronqué.
+- Branches : 78.
+- PR ouvertes : 17.
+- PR #85 : MERGED ; son CI Validate + UI quality/Playwright est SUCCESS.
+- Run Validate sur le SHA main : `41927264705`, SUCCESS.
+- PR #81 : documentation ancienne, OPEN, non mergeable.
+- PR #77 : OPEN/DRAFT, `mergeable_state=dirty`; 3 fichiers, dont `worker/index.js` et `tests/payment-flow.test.mjs`.
+- PR #66 : OPEN/DRAFT, `mergeable_state=dirty`, 63 fichiers ; ne pas fusionner.
+- PR #67 : OPEN, `mergeable_state=dirty`, 56 fichiers ; instrumentation historique à réconcilier avant toute intégration.
+
+## Site public et Pages
+
+Lecture web directe du domaine apex :
+- `https://bot-wow.com/` : avertissement de livraison non vérifiée, prix unique 20 €, paiement unique, démo navigateur simulée.
+- `https://bot-wow.com/buy` : checkout indiqué temporairement indisponible ; le texte dit explicitement de ne pas payer tant que la livraison n'est pas confirmée.
+- `https://bot-wow.com/fr/buy.html` redirige vers `/fr/buy` et affiche le même état en français : 20,00 €, achat indisponible, livraison non confirmée.
+- Aucune preuve de checkout fonctionnel ou de paiement n'est déduite de la présence du formulaire HTML.
+
+Cloudflare Pages :
+- Projet `bot-wow`.
+- Déploiement production `5711fb21-f674-4bf2-9712-615a76ad4332`, commit `3786bcec75a22a4a4af2c968c83ad39263cb7958`, stage `deploy=success` à `2026-11-04T22:40:21Z`.
+- Domaines personnalisés apex et www : tous deux actifs.
+- Les previews sont désactivées.
+
+### Alias www — blocage de canonicalisation
+
+Lecture Cloudflare en lecture seule :
+- DNS `www.bot-wow.com` : CNAME vers `bot-wow.pages.dev`, `proxied=true`.
+- Le domaine www reste associé au projet Pages.
+- Aucun ruleset de redirection dynamique `http_request_dynamic_redirect` n'existe sur la zone ; l'endpoint d'entrypoint renvoie 404.
+- L'extraction web de `https://www.bot-wow.com/`, dont le crawl est daté de la semaine précédente, retourne une ancienne copie contenant encore des affirmations Mollie. Cette extraction n'est **pas** une preuve de la réponse d'origine actuelle : aucun GET no-cache ni en-tête CF-Cache-Status/Age/ETag n'a pu être obtenu dans cet environnement.
+
+Action préparée, non exécutée : créer une règle Cloudflare Single Redirect `www.bot-wow.com/*` vers l'apex en conservant chemin et query string, puis vérifier le domaine. Cela nécessite l'autorisation explicite prévue par AGENTS.md ; ne pas modifier DNS/rulesets ni retirer l'alias Pages sans cette autorisation.
+
+## Mollie — paiements BOT-WOW
+
+- `ListProfiles` retourne un seul profil vérifié : `pfl_t8KCk4Cm2C`, associé à `sargasses-martinique.com`.
+- Les 16 IDs Mollie référencés par les 11 commandes et 5 webhooks orphelins ont été relus individuellement via `GetPayment` en mode live, lecture seule.
+- Résultat : 16/16 `expired`, 16/16 montant `20.00 EUR`, 16/16 `method=null`, 16/16 `profile_id=pfl_t8KCk4Cm2C`.
+- Aucun profil BOT-WOW dédié n'est visible. Ne jamais utiliser le profil Sargasses pour BOT-WOW.
+
+### Correction d'un diagnostic de code
+
+Sur `main`, `createMolliePayment()` appelle `mollieFetch(..., true)` et `mollieFetch()` ajoute `profileId` dès que `MOLLIE_PROFILE_ID` est présent. Le code ne distingue donc pas encore une API Key Mollie (`test_*`/`live_*`) d'un token d'organisation.
+
+La PR #77 contient une proposition de distinction par type de credential, mais elle est en draft et en conflit. Les 16 paiements historiques sont tous rattachés au profil Sargasses ; cela établit la contamination de profil, pas la cause exacte de leur expiration.
+
+Les valeurs des secrets Cloudflare restent masquées. Le fait que les bindings existent ne prouve ni leur valeur ni leur validité.
+
+## D1 production — lecture seule
+
+Base `botwow-production` :
+- `bitcoin_manual/paid` : 5, toutes liées à des adresses `@example.com` ; commandes de test, pas des ventes.
+- `bitcoin_manual/pending_payment` : 8.
+- `bitcoin_manual/rejected` : 1.
+- `mollie/failed` : 11.
+- Licences : 5, toutes liées aux 5 commandes Bitcoin de test.
+- Jetons de téléchargement : 5 ; ils ne prouvent pas qu'un téléchargement a eu lieu.
+- `deliveries` : 0 ligne.
+- `activations` : 0 ligne.
+- `webhook_events` : 16 ; jointure `w.id = 'payment:' || o.provider_id` : 5 événements sans commande associée.
+- `botwow_emails` : 12 enregistrements, dont 11 adresses de test ; aucun n'établit une vente.
+
+Base `botwow-analytics`, événements (pas des utilisateurs/sessions uniques) :
+- `page_view` test=0 : 1 621 ; dernier événement `2026-11-04T22:39:12Z`.
+- `journey_view` test=0 : 635 ; dernier `22:39:09Z`.
+- `cta_click` test=0 : 48 ; dernier `02:47:00Z`.
+- `checkout_requested` test=0 : 29 ; dernier `02:47:00Z`.
+- `checkout_start` : 4 ; `checkout_created` : 6 ; `checkout_failed` : 6.
+- Aucun événement `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Les 235 page_view et 128 journey_view du 4 novembre sont des événements, pas des visiteurs uniques.
+
+Toutes les requêtes D1 de ce relevé sont des SELECT/PRAGMA : `changed_db=false`, `rows_written=0`.
+
+## Worker — état et divergence
+
+- Worker actif `botwow-api` : version 50, ID `c3dcc842-c422-42d3-9828-405f30d70b5f`.
+- Déploiement actif `36227a4d-00e7-4c9f-94e0-0913b29049bc`, créé le `2026-10-27T07:46:28.277Z`.
+- Aucun nouveau déploiement depuis cette version ; aucune annotation `workers/commit_sha`.
+- Les bindings `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` et `RESEND_API_KEY` existent par nom ; valeurs non visibles.
+- Le source main contient `resumeFulfillment` et les logs redigés. La dernière comparaison directe du bundle actif, consignée dans P0.31, indiquait que la version 50 n'avait pas `resumeFulfillment` et journalisait encore e-mail/clé de licence. La version active est inchangée ; le bundle brut n'a pas pu être relu par le connecteur Cloudflare pendant P0.32, donc cette comparaison reste la dernière preuve disponible.
+- Le statut effectif du secret `RELEASE_STATUS` n'est pas vérifié. Le checkout public reste fermé ; aucun POST n'a été envoyé.
+
+## Sécurité et cohérence d'offre — nouveaux points
+
+- Le source main génère les clés de licence avec `Math.random()`, alors que les jetons de téléchargement utilisent `crypto.getRandomValues()`. La génération des clés de licence devrait être durcie avec un CSPRNG et un test de régression. C'est un changement de sécurité : préparer le correctif dans une PR séparée, ne pas fusionner/déployer sans autorisation.
+- `DEFAULT_MAX_ACTIVATIONS = 2` dans le Worker, tandis que les pages annoncent une activation sur une machine. Décision produit requise ; ne pas modifier silencieusement la limite ni la promesse.
+- La commercialisation du bot automatisant le gameplay reste suspendue à une revue de conformité contractuelle. Ne pas supposer qu'un serveur privé ou un planificateur associé au gameplay est automatiquement autorisé.
+
+## Chiffre d'affaires et décision
+
+- Ventes commerciales payées et vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Aucun téléchargement client, e-mail client ou activation commerciale démontré.
+- Checkout public toujours fermé.
+
+## Une prochaine action prioritaire
+
+Préparer un correctif Mollie minimal et isolé (distinction API Key vs token d'organisation, tests unitaires) sur une branche propre depuis ce main, en laissant la PR en draft. Ne pas le déployer et ne pas créer de paiement tant qu'un profil BOT-WOW dédié et une credential BOT-WOW ne sont pas disponibles. Ensuite seulement, préparer le test contrôlé de bout en bout et le déploiement Worker avec rollback, sous autorisation explicite.
+
+
+---
+
+# P0.33 — live funnel, platform-rules disclosure and clean Mollie successor — 2026-11-05
+
+## Current baseline
+
+Current `main` at the start of this cycle: `3786bcec75a22a4a4af2c968c83ad39263cb7958`.
+
+### D1 production — read-only, 2026-11-05
+
+Database query metadata confirms `changed_db=false` and `rows_written=0`.
+
+Orders:
+- `bitcoin_manual / paid`: 5 rows; all five email domains are `example.com` and are excluded as test data.
+- `bitcoin_manual / pending_payment`: 8.
+- `bitcoin_manual / rejected`: 1.
+- `mollie / failed`: 11.
+- Total orders: 25.
+
+Fulfillment tables:
+- Licenses: 5.
+- Download tokens: 5.
+- Deliveries: 0.
+- Activations: 0.
+- Webhook events: 16.
+- Webhook events without an order match using `webhook_events.id = 'payment:' || orders.provider_id`: 5.
+- Email records: 12.
+
+**Commercial paid orders verified in D1: 0; confirmed commercial revenue: €0.00.** The five `paid` Bitcoin rows are test-domain records, not sales. A download token is not proof of a completed download or delivery.
+
+Analytics (`test=0`, event counts, not unique visitors/sessions):
+- `page_view`: 1,630; latest observed 2026-11-05 00:05:37 UTC.
+- `journey_view`: 640.
+- `cta_click`: 48; latest 2026-11-04 02:47:00 UTC.
+- `checkout_requested`: 29.
+- `checkout_start`: 4.
+- `checkout_created`: 6.
+- `checkout_failed`: 6.
+- `planner_mode`: 1.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events in the queried production aggregate.
+
+### Mollie profile — read-only
+
+Latest `ListProfiles` returns one verified profile associated with a different domain. No BOT-WOW-dedicated profile is visible. Do not reuse the returned profile or its credentials. The previously documented individual check of the 16 BOT-WOW-referenced Mollie IDs remains 16/16 expired; this cycle did not create a payment or query another product's global payment registry.
+
+### Public site
+
+Direct web reads of `https://bot-wow.com/`, `/buy`, and `https://www.bot-wow.com/` show:
+- €20 one-time offer remains displayed.
+- v1.2.0 delivery is explicitly unverified.
+- Card checkout is unavailable and the purchase form is disabled.
+- The English copy still said “play on servers where it is allowed” and described third-party servers as a reference environment; this could imply that operator permission is sufficient.
+- The French `/fr/buy` page could not be retrieved by the web reader in this cycle. Its live HTML is therefore not confirmed.
+
+No live HTTP no-cache headers were available from the web reader. Do not claim a cache or origin defect without a direct response.
+
+## Platform-rules finding
+
+The live product is described as software that reads the game screen and clicks on fishing bites. Blizzard's published Anti-Cheating Agreement states that unauthorized third-party programs for botting or changing/facilitating gameplay are a serious violation. The EULA page reports a revision date of 2024-03-21; the Anti-Cheating Agreement search result reports last updated 2016-02-03.
+
+References:
+- https://www.blizzard.com/en-us/legal/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement
+- https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement
+
+This is a serious contractual/compliance blocker, not a legal opinion. BOT-WOW has no demonstrated Blizzard authorization. Do not promote the automated bot as permitted or safe. Technical compatibility with a third-party server does not itself establish authorization from Blizzard or other rights holders.
+
+## New code PR — Mollie credential-specific profileId
+
+PR #87: https://github.com/aveca/bot-wow/pull/87  
+Branch: `fix/p0.33-mollie-profileid-main-20261104`  
+Head: `c39157d5180752f03af9900fe7a5517dc576f591`.
+
+This is a clean successor to conflicting draft PR #77, based on current main. It changes only:
+- `worker/index.js`: omit `profileId` for standard `test_*` / `live_*` API keys; send it for organization/OAuth credentials.
+- `tests/payment-flow.test.mjs`: regressions for test API key, live API key and organization token on payment creation and webhook retrieval.
+
+GitHub Validate and UI quality workflows both succeeded. This is a payment-integration code change only on a draft PR; it is not merged or deployed. It does not solve the missing dedicated BOT-WOW profile or account separation. Keep it draft until the account operator confirms a dedicated profile/credential and explicitly authorizes a controlled payment test and production deployment.
+
+Official Mollie references:
+- https://docs.mollie.com/reference/authentication
+- https://docs.mollie.com/reference/create-payment
+
+## New public-copy PR — platform and payment disclosures
+
+PR #88: https://github.com/aveca/bot-wow/pull/88  
+Branch: `fix/p0.33-platform-compliance-copy-20261105`  
+Head: `4f0f6427861c62c552ac033223775f28d7cc5fdf`.
+
+Changes are limited to eight EN/FR pages and `tests/release-availability.test.mjs`:
+- state clearly that BOT-WOW has no Blizzard authorization and must not be used with Blizzard-operated services;
+- clarify that third-party technical compatibility is not authorization and operator permission alone is not sufficient evidence of rights-holder authorization;
+- remove “play on servers where it is allowed” / “within the rules of the server” wording;
+- replace “no network detection” with a technical-scope statement;
+- correct the FAQ so it no longer claims Mollie card checkout and a manual Bitcoin lane are currently available.
+
+At snapshot time, Validate and UI/Playwright workflows were still in progress. No local tests are claimed. This PR changes no price, checkout rule, Worker, credential, D1, R2, email or production configuration. If both workflows pass and the diff remains limited to these reversible copy/test changes, it is eligible for the repository's normal safe merge/deploy procedure with a Pages rollback available.
+
+## Production changes
+
+None in this cycle:
+- no Worker deployment;
+- no Pages deployment;
+- no checkout/payment change;
+- no secret or binding change;
+- no D1 writes;
+- no R2 writes;
+- no payment creation;
+- no customer email.
+
+## Next action
+
+Finish PR #88 CI and publish the corrected EN/FR disclosure if all checks pass; keep PR #87 and all payment/Worker production changes blocked until a dedicated BOT-WOW Mollie profile/credential and explicit production-test authorization exist. Do not start paid acquisition for the automated bot while the platform-rules blocker remains unresolved.
+
+
+## P0.33 follow-up — CI correction, PR hygiene and production rollback evidence — 2026-11-05
+
+- Current `main` remains `3786bcec75a22a4a4af2c968c83ad39263cb7958`; no production Worker or Pages change was made in this cycle.
+- PR #77 is now closed as superseded by clean current-main PR #87. The closing comment points to #87 and explicitly warns against merging the conflicting historical branch.
+- PR #87 head remains `c39157d5180752f03af9900fe7a5517dc576f591`. Validate and UI/Playwright both succeeded:
+  - https://github.com/aveca/bot-wow/actions/runs/41942381755
+  - https://github.com/aveca/bot-wow/actions/runs/41942381702
+  It remains draft because it changes payment-integration code and BOT-WOW still has no dedicated Mollie profile/credential.
+- PR #88 was corrected after its first CI run exposed two French legal-link allowlist failures. The French pages now use Blizzard's French Charte anti-triche URL; the conversion-path test allows only the exact official EN/FR Blizzard legal URLs. The authorization wording was also narrowed to “no authorization is claimed or documented” to avoid asserting facts outside the repository evidence.
+- PR #88 latest head: `c3069f0f011f86f84c432daeb336a815bf53989e`. Validate succeeded on this head: https://github.com/aveca/bot-wow/actions/runs/41943517766. UI quality / real-browser Playwright was still in progress at the time of this update: https://github.com/aveca/bot-wow/actions/runs/41943517802. Do not merge until that run completes successfully.
+- PR #88 scope remains eight EN/FR pages plus two static test files. No price, CTA checkout behavior, Worker, credentials, secrets, bindings, D1, R2 or email action is changed.
+- Cloudflare Pages production before this PR: deployment `5711fb21-f674-4bf2-9712-615a76ad4332`, commit `3786bcec75a22a4a4af2c968c83ad39263cb7958`, aliases `bot-wow.com` and `www.bot-wow.com`. Cloudflare exposes a Pages deployment rollback endpoint; keep this deployment as the known-good rollback target if PR #88 is safely merged and the new production content fails verification.
+- Worker `botwow-api` remains version 50 (`c3dcc842-c422-42d3-9828-405f30d70b5f`), 100% of the latest Worker deployment. No deployment or secret/binding mutation was made.
+- Latest read-only D1 baseline remains 25 orders, 5 test-domain Bitcoin `paid` rows, 11 Mollie `failed`, 0 deliveries and 0 activations. Commercial paid sales remain 0; revenue remains €0.00. Latest analytics event totals are in the P0.33 section above.
+
+### Next action
+
+Finish PR #88 UI/Playwright on the exact latest head. If green, squash-merge the reversible copy/test correction and verify the resulting Pages production deployment plus EN/FR live pages. Keep PR #87 draft and the Worker untouched until a dedicated BOT-WOW Mollie profile/credential and explicit payment-production authorization exist.
+
+
+### P0.33 final head correction — 2026-11-05
+
+- PR #88 latest head is now `c3069f0f011f86f84c432daeb336a815bf53989e` (after localizing the Blizzard anti-cheating source link on all four French pages and qualifying the metadata wording as “not documented” rather than asserting an unverified absolute).
+- Latest Validate run on this exact head: SUCCESS — https://github.com/aveca/bot-wow/actions/runs/41943517766.
+- Latest UI quality run on this exact head: still IN_PROGRESS at the time of this note — https://github.com/aveca/bot-wow/actions/runs/41943517802. Its unit/integration tests, CSS audit, build and Chromium installation have passed; real-browser Playwright is the remaining step.
+- Static branch inspection confirms the old “play on servers where it is allowed” / “within the rules of the server” wording is absent from all eight updated EN/FR pages. All eight now contain the platform warning; the four French pages link to Blizzard's French Charte anti-triche.
+- PR #77 is closed; PR #87 is the clean draft successor and both its Validate and UI/Playwright workflows passed. No production payment change has been made.
+
+
+### Additional offer inconsistency confirmed — activation allowance
+
+Current `main` `worker/index.js` sets `DEFAULT_MAX_ACTIVATIONS = 2` (line 40), and both licence-creation paths persist `max_activations = 2` (current source around lines 806-809 and 1357-1361). The activation handler counts distinct `machine_id` rows for the licence and rejects only when the count reaches that stored maximum.
+
+The public EN/FR buy pages still say “Activation on one machine” / “Activation sur une machine” and the FAQ says the licence activates on one machine.
+
+This is a proven commercial-entitlement mismatch. Do not silently change the backend limit or the public offer copy. The product owner must decide whether the offer is one machine (then code must enforce one) or up to two distinct machine activations (then copy/terms must state the exact rule). No price or activation rule was changed in this cycle.
+
+
+## P0.33 delivery result — PR #88 merged and Pages production deployment succeeded — 2026-11-05
+
+- PR #88 was squash-merged after both required workflows passed on head `c3069f0f011f86f84c432daeb336a815bf53989e`.
+  - Validate Bot-Wow SUCCESS: https://github.com/aveca/bot-wow/actions/runs/41943517766
+  - UI quality, unit/integration, CSS audit, build and real-browser Playwright SUCCESS: https://github.com/aveca/bot-wow/actions/runs/41943517802
+- Merge commit / current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- Cloudflare Pages production deployment: `54aacb90-1cce-4055-b2ab-f2241afc4792`, URL `https://54aacb90.bot-wow.pages.dev`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, build SUCCESS, deploy SUCCESS, aliases assigned to `https://bot-wow.com` and `https://www.bot-wow.com`.
+- Cloudflare's Pages rollback endpoint is available. The previous known-good production deployment was `5711fb21-f674-4bf2-9712-615a76ad4332`.
+- Live HTML verification is **not complete**: the web reader continued to return a pre-merge crawl after the new deployment became active, then cache-buster requests failed to fetch. The container had no DNS/network access. No `CF-Cache-Status`, `Age` or ETag could be captured. Do not claim the new copy is confirmed at the origin until a real HTTP/browser request succeeds.
+- PR #87 remains OPEN / DRAFT, with both CI workflows passing. It is a payment-integration code change and is not merged or deployed. No BOT-WOW-specific Mollie profile is visible.
+- Worker `botwow-api` remains version 50; no Worker deployment, secret or binding change was made.
+- D1 remained read-only; no new order/payment was created. Latest commercial baseline remains 0 verified paid sales and €0.00 confirmed revenue.
+- The public/backend activation allowance mismatch is documented above; no entitlement rule or copy was changed.
+
+### Next action
+
+Verify the exact production HTML on `bot-wow.com` and `www.bot-wow.com` using a real no-cache HTTP/browser request and confirm the EN/FR disclosure is served. Then resolve the one-machine versus two-activation entitlement with the product owner before any checkout reopening. Keep all payment/Worker production changes blocked until a dedicated BOT-WOW Mollie profile/credential and explicit authorization exist.
+
+
+### Commercial consequence of the Blizzard EULA
+
+The current EULA's Section C.2 is broader than a ban on a player using a bot: it lists creating, using, offering, promoting, advertising, making available and/or distributing bots or other unauthorized code/software that changes or facilitates gameplay. This directly affects the proposed sale/marketing path, not only end-user use. No Blizzard authorization is documented in this repository. This remains a serious platform-contract risk; this is not a legal opinion.
+
+Official source: https://www.blizzard.com/en-us/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement
+
+### Pivot-market caution
+
+A generic outdoor fishing spot/route planner is not automatically a better commercial opportunity. Current public competitors already offer waypoint management, route planning and free tiers (for example FISHMARKS), while Lunkerr offers trip planning and saved spots on a low-cost subscription. Any game-independent BOT-WOW pivot must show a distinct wedge (e.g. genuinely local/offline, privacy-first, optimized multi-stop routes) and validate demand before changing the public offer or pricing.
+
+Sources:
+- https://fishmarks.com/
+- https://www.lunkerr.com/
+
+
+## P0.34 — production revalidation and payment readiness — 2026-11-05T01:49Z
+
+### GitHub
+- Current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33` (PR #88 merged).
+- PR #71 is **MERGED** (`2026-11-04T08:57:50Z`, merge commit `084e2bd3785526835e678f70b77699a8f838d16a`); the older P0.5/checkout-gate PR is not an open blocker.
+- Relevant open drafts: PR #87 (Mollie credential-specific `profileId` fix, head `c39157d5180752f03af9900fe7a5517dc576f591`) and PR #89 (this operational snapshot). PR #87 is now **diverged from current main**: 2 commits ahead and 1 behind, merge base `3786bcec`; its green CI is on the old base and it must be rebased/revalidated before any future merge.
+- PR #87 Validate and UI/Playwright both completed SUCCESS on head `c39157d`. PR #89 Validate and UI/Playwright both completed SUCCESS on its prior head `b881f58`; the latest documentation-only commit `d66e357` did not trigger new workflows under the repository's path filters. No production Worker change is implied.
+- PR #19 is CLOSED/MERGED; its versioned-R2-only download behavior is already part of main. Do not create a competing duplicate fix.
+- Branch search returned 79 branches over the completed pagination; many are historical. The repository currently has 17 open PRs in the latest search result.
+
+### Cloudflare production
+- Latest Pages production deployment: `54aacb90-1cce-4055-b2ab-f2241afc4792`, created `2026-11-05T00:47:14Z`, branch `main`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, deploy stage SUCCESS. Aliases: `bot-wow.com` and `www.bot-wow.com`.
+- Worker `botwow-api`: latest deployment still `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% version `c3dcc842-c422-42d3-9828-405f30d70b5f` (v50), created `2026-10-27T07:46:28Z`. No new Worker deployment.
+- Worker settings expose binding names including `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RELEASE_STATUS` and `RESEND_API_KEY` as `secret_text`. Secret values are intentionally unavailable; binding presence does not prove credential validity or the configured profile's ownership.
+- No secret, binding, Worker, Pages configuration, D1, R2, checkout or payment mutation was performed.
+
+### Public site
+- A fresh web extraction of `https://bot-wow.com/buy` (crawled today) shows €20, intended v1.2.0 scope, package/delivery unverified and checkout unavailable/disabled. It still returns an older platform-warning sentence (“play on servers where it is allowed”).
+- Current main sources `buy.html` (blob `94e63a535ae757df8a19e85f8f9e7efe16a1eccc`) and `fr/buy.html` (blob `9202d0a3fe311445721891521f1c204cd8d2a12e`) contain the newer explicit “no Blizzard authorization is claimed or documented / do not use with Blizzard-operated services” notice and disabled checkout.
+- The web reader could not retrieve `/fr/buy` or the deployment-specific `pages.dev` URL in this check. No raw HTTP response headers (CF-Cache-Status, Age, ETag) were obtained. Therefore the difference between current source and the extracted custom-domain copy remains unresolved; do not assert a cache cause or purge anything.
+
+### D1 production — read-only, fresh query
+Every D1 query returned `changed_db=false` and `rows_written=0`.
+- Orders: 25 total — Bitcoin manual `paid=5` (test-domain rows), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Fulfillment: licenses 5; download tokens 5; delivery receipts 0; activations 0.
+- Webhooks: 16 total; 11 matched to orders using `webhook_events.id = 'payment:' || orders.provider_id`; 5 unmatched.
+- No production delivery record exists in `deliveries`. The five Bitcoin `paid` rows are test data and are not sales. No commercial payment is verified; confirmed revenue remains €0.00.
+
+### Analytics production — events, not users/sessions
+Filter `test=0`:
+- `page_view=1,668` (latest `2026-11-05T00:56:00.633Z`).
+- `journey_view=659` (latest `2026-11-05T00:55:57.485Z`).
+- `cta_click=48` (latest `2026-11-04T02:47:00.736Z`).
+- `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`.
+- No grouped `payment_confirmed`, `conversion`, `delivery_sent`, `activation` or `delivery_failed` events were returned.
+- These are event counts, not unique visitors or sessions.
+
+### Worker / delivery code
+- Current main `worker/index.js` contains `resumeFulfillment` and the redacted email/admin logs.
+- Main still appends `MOLLIE_PROFILE_ID` whenever a caller requests it; PR #87 contains the credential-type-aware fix (omit for standard `test_*/live_*` API keys, include for organization/OAuth credentials). PR #87 is still DRAFT; do not merge/deploy until the dedicated BOT-WOW profile/credential and explicit production authorization are in place.
+- Main `generateLicenseKey2` still uses `Math.random()`; this is a security-hardening candidate, not changed in this cycle because it requires a separate security review/authorization.
+- `RESEND_API_KEY` binding name is present, but its value and validity are not observable here. The delivery code records a pending receipt when Resend rejects/fails; production currently has zero delivery rows and no verified real paid order. Do not claim the key is invalid without a permitted, controlled provider check.
+
+### Commercial and compliance decision
+- The public offer remains €20 lifetime, but checkout is disabled because delivery is not certified.
+- Current offer says one-machine activation; Worker default and licence creation use `max_activations=2`. This entitlement mismatch remains unresolved; do not silently change the backend or sales copy.
+- The current product automates WoW gameplay and the public disclosure says no Blizzard authorization is claimed/documented and not to use it with Blizzard-operated services. Do not run paid acquisition or represent the automated bot as authorized. A manual WoW planner is not automatically outside the EULA because software that facilitates gameplay may also be restricted.
+- No payment, customer email, D1/R2 write, Worker deployment, checkout change, price change or campaign was performed.
+
+### Next actions
+1. Keep checkout closed; do not market the automated bot for Blizzard-operated services.
+2. Resolve the commercial/legal product scope before any sale campaign; validate any game-independent alternative's distinct demand before building it.
+3. Obtain a dedicated BOT-WOW Mollie profile and credential through the account operator; never reuse another product's profile. Then review/authorize PR #87 separately.
+4. Certify the Resend sender/key with a controlled test destination only after explicit authorization; do not infer validity from the binding name.
+5. Resolve the one-machine versus two-activation entitlement.
+6. Prepare, but do not deploy, the Worker update/rollback until payment routing and post-payment fulfillment are authorized and verified.
+
+
+---
+
+# P0.35 — live surface and production revalidation — 2026-11-05T01:58Z
+
+## GitHub
+- Current `main`: `218f0ebba5563e386151bc9d8f6e96c506547c33` (PR #88 merged).
+- PR #89 remains OPEN/DRAFT, based directly on this main; head `07913e6a3c149d204db194f307fd7d1840fc6cc2`, five commits ahead, zero behind, one documentation file changed.
+- PR #89 Validate and UI/Playwright runs on the recorded head completed SUCCESS. The combined commit-status endpoint returns no status rows; use the workflow-run results, not an empty status list, as the CI evidence.
+- PR #87 remains OPEN/DRAFT at `c39157d5180752f03af9900fe7a5517dc576f591`, based on old `3786bcec`; comparison with current main is 2 ahead / 1 behind. Its green Validate/UI runs are for the old base. Do not merge it as-is; recreate/rebase and rerun CI before review.
+- PR #66 remains OPEN/DRAFT and is not a release approval.
+
+## Cloudflare Pages — current production deployment
+- Production deployment `54aacb90-1cce-4055-b2ab-f2241afc4792`, created `2026-11-05T00:47:14Z`, branch `main`, commit `218f0eb`.
+- Build and deploy stages both SUCCESS; deploy ended `2026-11-05T00:47:40Z`.
+- Aliases: `https://bot-wow.com` and `https://www.bot-wow.com`; both custom-domain records report active.
+- The deployment manifest includes `/fr/buy.html`. This confirms the file was part of the deployed artifact, not which HTML a particular edge returned.
+- Worker `botwow-api` is still 100% on version 50 (`c3dcc842-c422-42d3-9828-405f30d70b5f`), deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, created `2026-10-27T07:46:28Z`. No Worker deployment or binding/secret change occurred.
+
+## Public live extraction — newly observed EN/FR inconsistency
+- Apex `/buy` now returns the explicit disclosure that no Blizzard authorization is claimed/documented and says not to use BOT-WOW with Blizzard-operated services; it also says the v1.2.0 package/delivery is unverified and checkout is unavailable. Price remains €20 lifetime.
+- Apex homepage returns the same explicit no-authorization warning and keeps delivery unverified.
+- `/fr/buy.html` redirects to `/fr/buy`, but the current web extraction still returns the older wording “Jouez sur des serveurs où c'est autorisé” and does not show the new explicit no-Blizzard-authorization disclosure.
+- `www.bot-wow.com/` still extracts an older homepage copy referring to private servers as the reference environment and using a softer server-terms warning.
+- Current GitHub main `fr/buy.html` and `fr/index.html` contain the explicit no-authorization / do-not-use-with-Blizzard-services wording. Thus the extracted public FR/www content differs from current source despite the successful Pages deployment.
+- No raw HTTP headers (`CF-Cache-Status`, `Age`, `ETag`) were available from the web reader, and the deployment-specific `pages.dev` URL could not be opened by that reader. The cause (edge cache, alias routing, or reader snapshot) is **not established**. Do not claim a cache fault and do not purge Cloudflare or alter DNS/redirect rules without the required authorization.
+- The apex EN surface is the only live surface in this check where the current explicit disclosure was directly observed. Keep the discrepancy open until a real no-cache HTTP/browser request verifies FR and www.
+
+## D1 production — read-only refresh
+Every query returned `changed_db=false` and `rows_written=0`.
+- Orders: `bitcoin_manual/paid=5` (all previously identified test-domain rows), `bitcoin_manual/pending_payment=8`, `bitcoin_manual/rejected=1`, `mollie/failed=11`; 25 total.
+- Fulfillment counts: licenses 5, download tokens 5, deliveries 0, activations 0, webhooks 16, email records 12. No new delivery or activation is demonstrated.
+- Analytics event counts with `test='0'`: `page_view=1674` (latest `2026-11-05T01:55:30.399Z`), `journey_view=662` (latest `01:55:26.997Z`), `cta_click=48`, `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`. No `payment_confirmed`, `conversion`, `delivery_sent`, `delivery_failed` or `activation` event was returned.
+- These are event counts, not unique visitors or sessions. New page/journey events arrived; the purchase-intent and checkout event totals did not change.
+
+## Mollie and revenue
+- `ListProfiles` still returns one verified profile only: `pfl_t8KCk4Cm2C`, website `sargasses-martinique.com`. No BOT-WOW-dedicated profile is visible. Never reuse this profile for BOT-WOW.
+- Do not re-query the 16 previously verified payment IDs unless D1 references change. Their prior result remains 16/16 expired; this cycle did not query the other product's global payment register.
+- The five Bitcoin `paid` rows are test data, not commercial sales. No real paid BOT-WOW order is verified.
+- Confirmed commercial revenue remains **€0.00**; deliveries 0; activations 0.
+
+## Product / entitlement blockers
+- Public EN/FR purchase pages state one-machine activation. Current Worker code uses `DEFAULT_MAX_ACTIVATIONS = 2` and writes `max_activations=2` for newly fulfilled licenses. This is an unresolved entitlement mismatch; do not silently change the rule or sales copy.
+- `generateLicenseKey2()` in the current Worker source still uses `Math.random()`. This is a security-hardening issue, but no security/payment code was changed in this documentation cycle. Prepare it separately with cryptographic RNG and regression tests; do not deploy without authorization.
+- The product remains a gameplay-automating bot. Blizzard's official EULA §1.C.2 prohibits creating, using, offering, promoting, advertising, making available and/or distributing unauthorized bots or software that facilitates gameplay. No authorization is documented for BOT-WOW. Do not market it for Blizzard-operated services. Third-party technical compatibility is not proof of authorization.
+- Official sources: [Blizzard EULA](https://www.blizzard.com/en-us/legal/simple/bfbbb648-bcc6-4b78-a5c7-e2fe20c135df/blizzard-end-user-license-agreement) and [Anti-Cheating Agreement](https://www.blizzard.com/en-us/legal/simple/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement).
+
+## Decision / next action
+1. Keep checkout closed.
+2. Obtain a dedicated BOT-WOW Mollie profile and credential through the account operator; do not use the Sargasses profile.
+3. Rebase/recreate PR #87 on current main and rerun CI; keep it draft until the dedicated profile/credential type and production authorization are confirmed.
+4. Obtain a real no-cache HTTP/browser capture of apex, FR and www with response headers; only then decide whether a cache/alias fix is needed. No purge, DNS or redirect change yet.
+5. Resolve the one-machine/two-activation entitlement before reopening sales.
+6. Keep the automated bot unmarketed for Blizzard-operated services unless authorization is documented.
+
+No price, checkout, payment, secret, binding, Worker, D1, R2, customer email, DNS, Cloudflare rule, or production configuration was changed in this P0.35 documentation refresh.
+
+
+---
+
+# P0.36 — revalidation live, D1, Mollie et état des PR — 2026-11-05T02:10Z
+
+## GitHub — état exact
+- Dépôt : `aveca/bot-wow`, branche par défaut `main`.
+- `main` : `218f0ebba5563e386151bc9d8f6e96c506547c33` (`fix(copy): clarify platform compliance and payment availability`).
+- Inventaire API : 83 branches sur la page retournée (83 au total dans cette réponse) et 17 PR ouvertes.
+- PR #90 : OPEN / DRAFT, base `main`, head `1f61a451d962fd9d8f3a8464acbdfca25e283032`, 2 fichiers. Correctif Mollie API-key vs organisation/OAuth. Checks du HEAD : Validate run `41952467280` SUCCESS ; UI/Playwright run `41952467153` SUCCESS. La PR reste non fusionnée et non déployée.
+- PR #89 : OPEN / DRAFT, branche documentaire courante. Checks du head précédent `109689d268e1d70e65bb77ecb34b568f95507da2` : Validate `41952738455` SUCCESS ; UI/Playwright `41952738486` SUCCESS. Le présent addendum crée un nouveau HEAD et doit recevoir ses propres checks.
+- PR #66 reste OPEN / DRAFT et non mergeable ; sa description confirme que le pivot conformité n'est pas une autorisation ni une release.
+- Les PR historiques ouvertes (#81, #67, #65, #64, #53, #52, #61, #60, #56, #55, #49, #47, #45, #30) n'ont pas été fusionnées ni fermées dans ce cycle.
+
+## Cloudflare Pages — état de production
+- Projet `bot-wow`, branche de production `main`, build `node scripts/build-site.mjs _site`.
+- Déploiement de production confirmé : `54aacb90-1cce-4055-b2ab-f2241afc4792`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, build et deploy SUCCESS, terminé le `2026-11-05T00:47:40Z`.
+- Domaines personnalisés `bot-wow.com` et `www.bot-wow.com` : tous deux `active`.
+- Le déploiement le plus récent listé par l'API est un preview documentaire `9b272742-bbbd-4c7e-b972-6cf9979bee28`, marqué `is_skipped=true`, raison `preview_deployments_disabled`. Il ne remplace pas la production.
+- Vérification web fraîche : `https://bot-wow.com/buy` affiche le prix 20 €, la livraison v1.2.0 non vérifiée, le checkout désactivé et l'avertissement explicite qu'aucune autorisation Blizzard n'est revendiquée/documentée et qu'il ne faut pas utiliser BOT-WOW avec les services exploités par Blizzard.
+- Vérification web fraîche : `https://bot-wow.com/fr/buy.html` redirige vers `/fr/buy` et présente le même avertissement, le même prix et le checkout indisponible.
+- Le lecteur web n'a pas pu ouvrir les variantes `www`; les deux enregistrements de domaines restent actifs dans Pages, mais le contenu www n'est pas certifié par une requête HTTP brute dans ce cycle.
+- Les anciens chemins SEO `/wow-gold-bot` et `www.../undetected-wow-bot` retournent 404 lors de l'ouverture directe. Les résultats de recherche encore visibles sont des indexations historiques, pas une preuve que ces pages sont actuellement servies. Ne pas recréer ces anciennes promesses de gold farming/anti-détection.
+
+## Worker — état et garde
+- Worker `botwow-api` : version 50 à 100 %, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`, créé le `2026-10-27T07:46:28Z`. Aucun nouveau déploiement.
+- Le source main `worker/index.js` (blob `725d98e4595b27aa60e88758ecac20c711a38b6b`) déclare `RELEASE_STATUS = "pending"` et `handleCheckout` retourne HTTP 409 `delivery_unverified` si le statut runtime n'est pas explicitement `confirmed`.
+- Le code main contient `resumeFulfillment`; `generateLicenseKey2()` utilise encore `Math.random()`. Le bundle v50 n'a pas été téléchargé à nouveau pendant ce cycle ; la comparaison directe précédente de P0.31 reste l'évidence antérieure que v50 ne contient pas le chemin de reprise actuel. La valeur runtime du binding `RELEASE_STATUS` n'est pas lisible et n'est pas inférée.
+- Aucun secret, binding, Worker, route, règle Cloudflare ou déploiement n'a été modifié.
+
+## Mollie — profil dédié toujours absent
+- Lecture seule `ListProfiles` : un seul profil vérifié, `pfl_t8KCk4Cm2C`, site `https://sargasses-martinique.com/`.
+- Aucun profil BOT-WOW dédié visible. Ne jamais réutiliser ce profil.
+- PR #90 traite le paramètre `profileId` selon le type de credential, mais ne crée pas le profil ni les credentials BOT-WOW. Ne pas merger/déployer sans profil dédié, type de credential confirmé et autorisation explicite.
+- Les 16 IDs de paiement BOT-WOW avaient été vérifiés individuellement lors de P0.30 : 16/16 expirés. Ils n'ont pas été interrogés de nouveau ici ; aucun registre global de l'autre profil n'a été consulté.
+
+## D1 production — lecture seule
+Toutes les requêtes de ce relevé ont renvoyé `changed_db=false` et `rows_written=0`.
+- Commandes : `bitcoin_manual/paid=5`, `bitcoin_manual/pending_payment=8`, `bitcoin_manual/rejected=1`, `mollie/failed=11` (25 commandes au total).
+- Les cinq lignes Bitcoin `paid` sont des données de test `@example.com` et sont exclues du revenu commercial. Les 11 commandes Mollie sont `failed`; aucune commande BOT-WOW `paid` n'est démontrée.
+- Licences 5 ; jetons de téléchargement 5 ; activations 0 ; livraisons 0 ; webhooks 16 ; enregistrements `botwow_emails` 12.
+- Les comptages de licences/jetons ne prouvent ni téléchargement effectif ni livraison client. Aucun email client ni paiement n'a été créé.
+
+## Analytics production — événements, pas utilisateurs uniques
+Base `botwow-analytics`, filtre `test=0` :
+- `page_view=1684`, dernier événement `2026-11-05T02:06:56Z`.
+- `journey_view=667`.
+- `cta_click=48` (dernier timestamp inchangé depuis le relevé antérieur du 2026-11-04).
+- `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`.
+- Aucun événement groupé `payment_confirmed`, `conversion`, `delivery_sent`, `delivery_failed` ou `activation`.
+- Ce sont des événements bruts, pas des visiteurs ou sessions uniques. Les pages vues et journeys ont augmenté ; les événements d'intention et de checkout n'ont pas progressé.
+
+## Revenu et décision commerciale
+- Revenu commercial BOT-WOW confirmé dans les commandes vérifiées : **0,00 €**. Aucune vente payée ni livraison client démontrée.
+- Prix public inchangé : 20 €.
+- Checkout public : indisponible/désactivé ; la source Worker main conserve une garde fail-closed par défaut. La valeur du binding runtime n'est pas observable.
+- La page décrit toujours un bot qui automatise le gameplay. L'EULA officielle Blizzard §1.C.2 interdit notamment d'offrir, promouvoir, distribuer ou mettre à disposition des bots non autorisés et des logiciels qui facilitent le gameplay : https://www.blizzard.com/en-us/legal/bfbbb648-bcc6-4b78-a5c7-e2fe20c135df/blizzard-end-user-license-agreement
+- Aucune autorisation Blizzard n'est documentée. Ne pas promouvoir ni vendre ce produit pour les services Blizzard. Un planificateur WoW manuel n'est pas automatiquement exempté de la clause « facilitates gameplay ».
+- `AGENTS.md` interdit le déploiement Worker/Pages, les modifications de secrets/bindings, les écritures D1/R2, les paiements et emails réels sans autorisation explicite. Respecter ces limites.
+- Aucun prix, checkout, secret, binding, paiement, email, D1, R2, Worker, DNS, règle Cloudflare ou production n'a été modifié dans P0.36.
+
+## Prochaine action classée
+1. **P0 — décision sur le périmètre commercial autorisé** : ne pas commercialiser le bot automatisant le gameplay sans autorisation documentée ; évaluer seulement une offre réellement indépendante du jeu et valider sa demande avant développement.
+2. **P0 — paiement** : obtenir un profil Mollie BOT-WOW dédié via l'opérateur du compte ; garder PR #90 draft et attendre autorisation avant toute intégration/déploiement.
+3. **P0 — livraison** : après autorisation, certifier Resend, webhook, licence, téléchargement et activation dans un environnement contrôlé ; préparer rollback Worker v50.
+4. **P1 — sécurité** : préparer séparément le remplacement de `Math.random()` pour les clés de licence par un RNG cryptographique avec tests, sans déploiement non autorisé.
+5. **P1 — entitlements** : résoudre l'écart « une machine » vs `max_activations=2` avant toute vente.
+6. **P2 — acquisition** : ne pas acheter de trafic ; les volumes actuels ne démontrent aucune progression d'intention de paiement.
+
+
+---
+
+# P0.36b — contrôle du domaine www et des redirections — 2026-11-05T02:16Z
+
+## Observation publique comparée
+- `https://bot-wow.com/fr/` (ouvert directement) affiche la version actuelle : certains builds tiers sont utilisés pour les tests techniques, cela ne constitue pas une autorisation ; la section de risque précise qu'aucune autorisation Blizzard n'est revendiquée/documentée et qu'il ne faut pas utiliser BOT-WOW avec les services exploités par Blizzard.
+- `https://www.bot-wow.com/fr/` (ouvert directement) retourne encore une ancienne copie : « Les serveurs privés sont notre environnement de référence », formule plus permissive, et un avertissement de risque générique. L'extraction `www` n'est donc pas cohérente avec l'apex lors de cette observation.
+- `https://www.bot-wow.com/` retourne une copie EN avec le nouvel avertissement explicite.
+- `/wow-gold-bot` et `/undetected-wow-bot` ont répondu 404 lors des ouvertures directes. Les résultats de recherche historiques ne sont pas des pages live confirmées.
+
+## Cloudflare — état DNS et règles, lecture seule
+- Zone `bot-wow.com` : DNS `www.bot-wow.com` = CNAME `bot-wow.pages.dev`, `proxied=true`, TTL automatique.
+- Pages : `bot-wow.com` et `www.bot-wow.com` sont deux custom domains actifs du même projet `bot-wow`.
+- Liste des rulesets de zone : aucun ruleset `http_request_dynamic_redirect` présent.
+- GET de l'entrypoint `http_request_dynamic_redirect` retourne 404 `could not find entrypoint ruleset`. Il n'existe donc pas actuellement de règle Single Redirect www→apex dans cette phase.
+- Les commentaires du fichier `_redirects` et la branche historique `fix/www-alias-redirect-20261104` documentent déjà que Cloudflare Pages `_redirects` ne sait pas cibler un hostname. Cette branche est divergée de main (1 commit ahead / 39 behind) et ne doit pas être réutilisée telle quelle.
+
+## Diagnostic et action requise
+- Fait vérifié : le contenu extrait de `www/fr/` diffère de `bot-wow.com/fr/` ; la configuration DNS maintient `www` comme alias Pages distinct ; aucune règle de redirection de zone n'est configurée.
+- Cause exacte non prouvée : sans GET HTTP brut depuis un navigateur/terminal avec headers `CF-Cache-Status`, `Age`, `ETag`, `Last-Modified`, il est impossible de distinguer une copie edge périmée d'une autre réponse d'origine/alias. Ne pas affirmer « cache » comme cause.
+- Remédiation à préparer, mais non appliquée : créer une Cloudflare Single Redirect au niveau de la zone, source `https://www.bot-wow.com/*`, destination `https://bot-wow.com/:splat`, statut 301, conservation de la query string ; vérifier la non-boucle et les chemins FR/EN ; seulement après validation, envisager le retrait de `www.bot-wow.com` des custom domains Pages.
+- Cette modification de production (Redirect Rules / domaine Pages) nécessite une autorisation explicite. Aucun DNS, ruleset, domaine Pages, cache ou déploiement n'a été modifié.
+
+## Priorité
+Traiter la consolidation www→apex comme P0 de cohérence et de conformité avant acquisition : une version www/fr plus ancienne peut exposer des avertissements insuffisants même si l'apex est à jour.
+
+
+---
+
+# P0.36c — consentement des contacts BOT-WOW — 2026-11-05T02:18Z
+
+Lecture seule de `botwow-production.botwow_emails`, agrégation uniquement, aucune adresse lue :
+- 12 lignes au total, toutes avec `status='subscribed'` mais `confirmed_at IS NULL` et `unsubscribed_at IS NULL`.
+- Source `newsletter` : 6 lignes avec `consent_marketing=1` et `consent_transactional=1` ; 3 lignes avec les deux consentements à 0.
+- Sources `diag` et `diag2` : 2 lignes marquées marketing=1 mais non confirmées ; ne pas les traiter comme prospects.
+- Source `test` : 1 ligne marquée avec consentements, à exclure.
+- Aucun enregistrement ne dispose d'un `confirmed_at` renseigné. Le simple flag de consentement ne prouve pas l'opt-in confirmé.
+
+Toutes les requêtes ont renvoyé `changed_db=false`, `rows_written=0`.
+Décision : **aucun email marketing ou transactionnel ne doit être envoyé à partir de cette table tant que le flux de confirmation et les destinataires confirmés ne sont pas démontrés**. Aucun envoi effectué.
+
+
+---
+
+# P0.37 — revalidation live, D1 et décision commerciale — 2026-11-05T03:13Z
+
+## GitHub — état confirmé
+- Branche par défaut : `main`, dernier commit observé `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- PR #89 (ce rapport) : OPEN / DRAFT / mergeable ; HEAD `96dffc1cba22fd04f50f6d1758bb2a419c3df1c9`. Les workflows Validate (`41953975395`) et UI quality / Playwright (`41953975557`) sont maintenant tous deux SUCCESS sur ce HEAD.
+- PR #90 : OPEN / DRAFT / mergeable ; HEAD `1f61a451d962fd9d8f3a8464acbdfca25e283032`, 2 fichiers (`worker/index.js`, `tests/payment-flow.test.mjs`). Validate (`41952467280`) et UI quality / Playwright (`41952467153`) sont SUCCESS. Ne pas merger/déployer : le profil Mollie BOT-WOW dédié est absent et le changement touche au chemin de paiement.
+- PR #66 demeure OPEN / DRAFT ; son contenu porte un garde-fou et une proposition de pivot, pas une autorisation commerciale.
+- La recherche de branches a retourné les branches connues du dépôt, dont plusieurs anciennes branches divergées. Ne pas réutiliser telles quelles `fix/www-alias-redirect-20261104` (1 commit ahead / 39 behind), `p0/prepare-checkout-reopen-20261104` (1 ahead / 20 behind) ni les branches de refonte du checkout/revenue fortement divergées.
+
+## Cloudflare Pages et site public — revalidation qui remplace P0.36b
+- Projet Pages `bot-wow`, branche de production `main`, build `node scripts/build-site.mjs _site`.
+- Déploiement canonique de production : `54aacb90-1cce-4055-b2ab-f2241afc4792`, commit `218f0ebba5563e386151bc9d8f6e96c506547c33`, statut deploy SUCCESS. Le dernier objet listé comme déploiement est un preview documentaire `5debcc4e`, marqué `is_skipped=true` avec `preview_deployments_disabled` ; il ne remplace pas la production.
+- Domaines Pages : `bot-wow.com` et `www.bot-wow.com` actifs. DNS `www.bot-wow.com` = CNAME `bot-wow.pages.dev`, proxied=true.
+- **Nouvelle vérification web du 2026-11-05 : la discordance de contenu www/fr décrite en P0.36b n'est plus reproductible dans les pages consultées.** `https://bot-wow.com/`, `https://www.bot-wow.com/`, `https://bot-wow.com/fr`, `https://bot-wow.com/buy`, `https://bot-wow.com/fr/buy.html`, `https://www.bot-wow.com/buy.html` et `https://www.bot-wow.com/fr` présentent désormais les mêmes avertissements de conformité et la même indisponibilité du checkout. Les pages d'achat EN/FR indiquent le prix 20 €, livraison v1.2.0 non confirmée, formulaire désactivé et absence d'autorisation Blizzard documentée.
+- Limite : l'outil web ne fournit pas les en-têtes HTTP bruts (CF-Cache-Status, Age, ETag, Last-Modified). La cohérence du contenu visible est vérifiée, mais la réponse edge/origine n'est pas certifiée par curl/Playwright dans ce cycle.
+- La zone n'a toujours aucun entrypoint `http_request_dynamic_redirect` (GET renvoie 404 `could not find entrypoint ruleset`). Il n'y a donc pas de 301 www→apex. **Ce n'est plus un P0 de conformité puisque le contenu public consulté est cohérent ; cela reste une amélioration SEO/canonicalisation P1.** Ne pas créer la règle ni retirer le domaine Pages sans autorisation explicite prévue par `AGENTS.md`.
+- Références publiques : `https://bot-wow.com/`, `https://bot-wow.com/fr`, `https://bot-wow.com/buy`, `https://bot-wow.com/fr/buy.html`, `https://www.bot-wow.com/`, `https://www.bot-wow.com/fr`, `https://www.bot-wow.com/buy.html`.
+
+## Worker et code source
+- Production `botwow-api` : version 50 à 100 %, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`. Aucun nouveau déploiement.
+- Source main `worker/index.js`, blob `725d98e4595b27aa60e88758ecac20c711a38b6b` : `RELEASE_STATUS = "pending"` par défaut ; `handleCheckout` retourne 409 `delivery_unverified` si le statut runtime n'est pas explicitement `confirmed`. La valeur runtime du binding n'est pas visible et n'est pas inférée.
+- Source main contient `resumeFulfillment`. La comparaison directe précédente de P0.31 reste la preuve que le bundle v50 ne l'inclut pas ; le bundle n'a pas été re-téléchargé pendant P0.37.
+- Défaut de sécurité confirmé dans la source main : les deux fonctions `generateLicenseKey()` et `generateLicenseKey2()` utilisent encore `Math.random()`. Le remplacement par `crypto.getRandomValues()` doit être préparé dans une PR sécurité séparée avec tests, mais n'a pas été modifié ici.
+- Écart d'entitlement confirmé : `DEFAULT_MAX_ACTIVATIONS = 2` et les insertions de licences fixent `max_activations=2`, alors que `PRODUCT.md` et les pages EN/FR annoncent une activation sur une machine. Ne pas changer silencieusement cette règle ; clarifier la politique avant toute vente.
+
+## Mollie — lecture seule
+- `ListProfiles` retourne un seul profil : `pfl_t8KCk4Cm2C`, site `https://sargasses-martinique.com/`. Aucun profil BOT-WOW dédié visible.
+- Ne jamais utiliser le profil Sargasses pour BOT-WOW. Aucun paiement n'a été créé.
+- Les 16 paiements Mollie BOT-WOW avaient été vérifiés individuellement dans P0.30 (16/16 expirés) ; pas de nouvel appel sur ces mêmes IDs dans P0.37.
+
+## D1 production et analytics — lecture seule
+Toutes les requêtes D1 de ce cycle ont renvoyé `changed_db=false` et `rows_written=0`.
+- Commandes inchangées : `bitcoin_manual/paid=5`, `bitcoin_manual/pending_payment=8`, `bitcoin_manual/rejected=1`, `mollie/failed=11` (25 au total). Les cinq lignes Bitcoin `paid` sont les données de test `@example.com`, pas des ventes.
+- Licences 5 ; jetons de téléchargement 5 ; livraisons 0 ; activations 0 ; webhooks 16 ; contacts `botwow_emails` 12.
+- Contacts : 0/12 avec `confirmed_at` renseigné. Aucun envoi marketing/transactionnel depuis cette table.
+- Analytics `test=0`, comptages d'événements (pas utilisateurs/sessions uniques) : `page_view=1694`, `journey_view=672`, `cta_click=48`, `checkout_requested=29`, `checkout_start=4`, `checkout_created=6`, `checkout_failed=6`, `planner_mode=1`. Aucun `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Dernier `page_view` : `2026-11-05 02:18:43 UTC`; dernier `journey_view` : `02:18:40 UTC`. Dernier `cta_click` et `checkout_requested` : `2026-11-04 02:47:00 UTC`. Dernier `checkout_created` : `2026-10-27 23:07:01 UTC`; dernier `checkout_failed` : `2026-10-27 23:23:17 UTC`.
+- Sources observées : `direct` représente 1 075 page views et 568 journeys ; `reddit` 8 page views / 8 journeys ; `yt` 8/8 ; `discord` 6/6 ; `forum` 3/3 ; `google` 1/1 ; les autres événements ont des sources nulles ou `other`. Ce sont des événements bruts, pas des personnes uniques. L'attribution qualifiée reste faible et/ou incomplète ; ne pas acheter de trafic.
+
+## Revenu, conformité et décision
+- Revenu commercial BOT-WOW vérifié : **0,00 €** ; aucune vente payée et aucune livraison client démontrée. Prix public observé : 20 € ; checkout toujours fermé.
+- Le site dit désormais clairement qu'aucune autorisation Blizzard n'est revendiquée/documentée et déconseille l'utilisation sur les services Blizzard. L'EULA officielle §1.C.2 interdit notamment d'offrir, promouvoir, mettre à disposition ou distribuer des bots non autorisés et des logiciels qui facilitent le gameplay : https://www.blizzard.com/en-us/legal/bfbbb648-bcc6-4b78-a5c7-e2fe20c135df/blizzard-end-user-license-agreement (dernière révision indiquée : 2024-03-21).
+- Ne pas commercialiser ni promouvoir l'automatisation du gameplay pour les services Blizzard sans autorisation documentée. La compatibilité technique avec un serveur tiers n'est pas une autorisation générale.
+- Aucune modification de prix, checkout, credential, secret, binding, paiement, email, D1/R2, Worker, DNS, ruleset, domaine Pages, cache ou production.
+
+## Prochaine action classée
+1. **P0 — périmètre commercial autorisé** : obtenir une autorisation écrite applicable ou définir une offre réellement indépendante du gameplay ; valider la demande avant de développer ou promouvoir.
+2. **P0 — paiement/livraison** : profil Mollie BOT-WOW dédié + credential dédié, puis test contrôlé et certification du webhook, de la licence, du mail, du téléchargement et de l'activation ; garder #90 draft et le checkout fermé jusque-là.
+3. **P1 — sécurité** : préparer une PR isolée pour le RNG cryptographique des clés de licence ; ne pas déployer sans validation.
+4. **P1 — entitlements** : résoudre la contradiction une machine / deux activations.
+5. **P1 — SEO** : la consolidation 301 www→apex est optionnelle désormais que le contenu consulté est cohérent ; la préparer séparément avec rollback, sans modifier Cloudflare sans autorisation.
+6. **P2 — acquisition** : aucun achat média ; améliorer l'attribution organique seulement après validation d'une offre commercialisable.
+
+
+
+---
+
+# P0.41 — Revalidation production, sécurité et cohérence de l'offre — 2026-11-05T06:13Z
+
+## GitHub
+
+- Dépôt : `aveca/bot-wow`.
+- `main` : `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- Branches : 83 ; PR ouvertes : 17.
+- PR #89 : OPEN / DRAFT / mergeable ; HEAD documentaire `793a8ee6d4204fe994d8acadf0d457577899b96a`. Validate et UI quality/Playwright SUCCESS sur ce SHA.
+- PR #90 : OPEN / DRAFT ; HEAD `1f61a451d962fd9d8f3a8464acbdfca25e283032`. Validate et UI quality/Playwright SUCCESS. Le correctif distingue API Keys Mollie et tokens organisationnels ; aucun profil BOT-WOW dédié n'est disponible.
+- PR #60 : OPEN / DRAFT, diverged, 8 commits ahead / 76 behind main.
+- PR #61 : OPEN / DRAFT, diverged, 13 ahead / 71 behind main.
+- Ne pas réutiliser les branches #60/#61 sans reprise minimale sur main actuel et nouvelle CI : elles sont trop anciennes.
+- Issues #91, #92, #59 et #13 restent ouvertes. Commentaires de revalidation publiés :
+  - #92 : `6651223056` — contradictions exactes Modules/PRODUCT et lacunes de tests.
+  - #91 : `6651223572` — le lecteur web retourne maintenant 404 pour quatre routes ; le GET no-cache Factory reste nécessaire pour arbitrer le conflit avec les anciens 200.
+  - #59 : `6651240028` — preuve fraîche des logs sensibles dans le Worker actif et état divergé des PR de redaction.
+  - #13 : `6651240811` — état actuel du retry et des webhooks orphelins.
+
+## Pages publiques et Pages
+
+- Production Pages : déploiement `54aacb90-1cce-4055-b2ab-f2241afc4792`, commit `218f0eb`, stage deploy SUCCESS, créé le 2026-11-05T00:47:14Z.
+- Domaines apex et www associés au même projet.
+- `https://bot-wow.com/`, `/buy`, `/fr/buy.html` et `/compatibility.html` consultés : prix affiché 20 €, achat indisponible, paquet v1.2.0 non vérifié, aucun délai de livraison promis, avertissement explicite d'absence d'autorisation Blizzard et de ne pas utiliser les services Blizzard.
+- La matrice live indique Classic 1.13 testé ; serveur tiers = test technique uniquement, sans autorisation implicite ; TBC/WotLK/Live non testés/non pris en charge ; combat/BG/quêtes hors périmètre.
+- La lecture web des pages `/modules.html` et `/fr/modules.html` échoue dans cet outil. Le défaut source est toutefois confirmé sur main et les deux fichiers sont inclus dans l'artefact Pages.
+
+## Contradictions source confirmées sur main
+
+- `modules.html` (blob `505b07e19770e31fe3edfa7b1b24d65950db6c24`) : `v1.2.0 current release`, `Payment handled by Mollie`, et pêche présentée comme disponible/payée par licence.
+- `fr/modules.html` (blob `eca26d528ee61f122ac77b63d40518fb8e91a9bf`) : `v1.2.0 version actuelle`, `Paiement pris en charge par Mollie`, et pêche présentée comme disponible/couverte par la licence.
+- `PRODUCT.md` (blob `541766ab8e2a37db59acca98862a6f63a3b2f485`) : annonce Mollie et Bitcoin comme rails de l'offre, e-mail comme livraison, et compatibilité Retail / Classic Era / SoD / majorité des serveurs privés.
+- `compatibility.html` (blob `00bd0d178b09e041a1dddbccf94aa4d029ffc8ed`) est plus restrictif : Classic 1.13 testé ; serveur tiers en test technique seulement ; TBC/WotLK/Live non pris en charge.
+- `tests/release-availability.test.mjs` couvre homepage, buy, variantes, FAQ et conformité, mais pas Modules ni PRODUCT.md. `tests/modules-parity.test.mjs` valide surtout le JSON du registre et peut être SKIP si le dépôt Python externe est absent.
+- Issue #92 contient maintenant les preuves et critères de régression.
+
+## Worker de production — lecture seule
+
+- Worker `botwow-api`, déploiement `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100 % du trafic.
+- Le script actif téléchargé via l'API Cloudflare ne contient pas `resumeFulfillment`.
+- Le bundle actif contient deux appels `Math.random()` pour la génération de clés.
+- Le bundle actif journalise encore des e-mails, clés de licence et URL de téléchargement tokenisées dans les helpers legacy, ainsi que des données sensibles dans les notifications et logs de fulfillment.
+- Le `main` actuel contient `resumeFulfillment` et des helpers de logs expurgés, mais le chemin de rejet checkout journalise encore la valeur brute `body.amount`.
+- PR #60/#61 contiennent des travaux historiques utiles mais sont fortement en retard ; ne pas merger telles quelles.
+- Aucun déploiement Worker ni modification de secret/binding. Les changements sécurité et le déploiement attendent l'autorisation explicite requise.
+
+## D1 production — lecture seule
+
+- `bitcoin_manual/paid` : 5, toutes `@example.com` (tests, pas des ventes).
+- `bitcoin_manual/pending_payment` : 8.
+- `bitcoin_manual/rejected` : 1.
+- `mollie/failed` : 11.
+- Licences : 5 ; jetons de téléchargement : 5 ; livraisons : 0 ; activations : 0.
+- Webhooks : 16 ; marqueurs sans commande correspondante : 5.
+- Contacts : 12 ; `confirmed_at IS NOT NULL` : 0.
+- Toutes les requêtes ont `changed_db=false`, `rows_written=0`.
+
+## Analytics — événements test=0, pas des utilisateurs uniques
+
+- `page_view` : 1 708 ; dernier événement 2026-11-05T05:52:03Z.
+- `journey_view` : 674 ; dernier événement 2026-11-05T03:18:31Z.
+- `cta_click` : 48 ; dernier événement 2026-11-04T02:47:00Z.
+- `checkout_requested` : 29 ; dernier événement 2026-11-04T02:47:00Z.
+- `checkout_start` : 4 ; `checkout_created` : 6 ; `checkout_failed` : 6 (derniers événements le 2026-10-27).
+- Aucun événement enregistré `payment_confirmed`, `conversion`, `delivery_sent` ou `activation`.
+- Les pages vues continuent d'augmenter, mais aucun nouveau CTA n'est enregistré depuis le 2026-11-04T02:47Z.
+
+## Mollie et revenus
+
+- `ListProfiles` retourne un seul profil vérifié, associé à `sargasses-martinique.com`. Aucun profil BOT-WOW dédié ; ne jamais réutiliser celui d'une autre activité.
+- Ventes commerciales payées vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Les cinq lignes `paid` sont des commandes de test `@example.com`; aucun paiement commercial n'est démontré.
+- Checkout public toujours fermé ; aucune livraison client ni activation démontrée.
+
+## Décision et prochaine action
+
+1. P0 : corriger #92 sur une branche dédiée — Modules EN/FR, PRODUCT.md, tests de disponibilité — puis CI et vérification live après merge autorisé.
+2. P0 sécurité : préparer sur main actuel une correction CSPRNG des clés et une redaction du log `body.amount`, avec tests synthétiques ; ne pas merger/déployer sans autorisation.
+3. P0 livraison : préparer le déploiement Worker actuel avec preuve de bundle et rollback vers v50 ; ne pas déployer tant que l'autorisation de production n'est pas donnée.
+4. P0 conformité : ne pas promouvoir le bot automatisant le gameplay pour les services Blizzard sans autorisation documentée.
+5. Ne pas ajouter de redirections anciennes sur la seule base de snapshots ou d'erreurs du lecteur web ; refaire un GET HTTP brut no-cache depuis Factory.
+
+Aucun prix, checkout, paiement, email, secret, binding, D1, R2, DNS, cache, Worker ou production n'a été modifié dans cette revalidation.
+
+
+---
+
+# P0.42 — R2 list/get discrepancy after documentation merge — 2026-11-05T06:25Z
+
+## Main / production baseline
+
+- Main after PR #89 documentation merge: `25aa9b2033b152a09385c070f405c0e433810017`.
+- PR #89 merged by squash; only `reports/operations/BOT-WOW-CURRENT-STATE.md` changed.
+- PR #89 Validate and UI quality/Playwright both succeeded on documentation HEAD `e9bedc3bd6ea7e3033fcb9d3d1322aa38c986e8c`.
+- Cloudflare Pages production deployment for the merge: `37878628-ded4-4e7d-a80f-1fcaa5571d33`, commit `25aa9b2`, build and deploy SUCCESS. Apex and www aliases active.
+- Post-deploy checks of homepage, EN buy, FR buy and compatibility confirm the existing content remains unchanged: price 20 €, checkout unavailable, package delivery unverified, no delivery time promised, and explicit Blizzard platform warning.
+
+## R2 artifact recheck — read-only
+
+Bucket `botwow-binaries`, List Objects returns:
+- `casinababe-fishing-1.2.0.zip` — 1,387,543 bytes; ETag `d9d7ab22ec076873b8fed656a53460bc`; last modified `2026-10-27T06:31:06.784Z`.
+- `Casinababe-v1.0.38.zip` — 1,229,709 bytes; ETag `b3f54aed8a36547f454c65420684ddc0`; last modified `2026-10-04T01:27:26.941Z`.
+
+Direct R2 API Get Object attempts with `cf-r2-jurisdiction: default` returned HTTP 404 / Cloudflare code 10007, “The specified key does not exist”, for both listed keys. The list/get discrepancy means the object listing alone does not prove the object is readable by the Worker. This integration could not retrieve current object bytes or recompute the SHA-256 in this pass.
+
+Historical verification on 2026-10-28 recorded the v1.2.0 ZIP SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, 30 ZIP entries, 26 manifest files, and zero size/hash/CRC mismatches. That is historical evidence, not a fresh byte-level retrieval on 2026-11-05.
+
+The current source provenance and self-contained installation onboarding remain unresolved: issue #18 records that the package cannot be reproducibly rebuilt from the current main source paths and the archive lacks a self-contained dependency/install guide.
+
+## Decision
+
+- Keep the purchase form closed and the release-delivery notice in place.
+- Do not describe the fishing module as “available and paid for by licence” until the current R2 object is readable, its bytes/hash/manifest are revalidated, source provenance is reproducible, and post-payment fulfillment is certified.
+- Factory must test an independent, already-authorized R2 read path (existing Worker binding or existing S3 credentials only); do not create credentials, deploy a temporary Worker, upload/replace/delete an object, or expose secrets.
+- Issue #18 and #92 now contain this evidence and acceptance criteria.
+- No R2 write, D1 write, payment, email, secret/binding change, Worker deployment, or price/checkout change occurred.
+
+
+---
+
+# P0.43 — public module truth and commercial record — 2026-11-05T09:20Z
+
+## Baseline and delivery
+
+- BOT-WOW main at the start of this cycle: `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- Branch: `fix/p0.40-modules-product-truth-20261105`.
+- Code/content commit: `cd6b972441c1925839654762935636ebc02155c7`.
+- Product-context and status-label commit: `d931572b0b3c4672fe54ed3f627887721ea68475`.
+- PR #94: https://github.com/aveca/bot-wow/pull/94 — open, not merged; base `main`, head `d931572b0b3c4672fe54ed3f627887721ea68475`.
+- The initial PR revision changed six files; the current expanded PR revision changes ten files: `modules.html`, `fr/modules.html`, `PRODUCT.md`, `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html`, `tests/release-availability.test.mjs`, `tests/e2e/demo-quality.spec.mjs`, and this operational report.
+
+## Directly verified source findings
+
+- `assets/modules.json` contains 8 entries: `fish` is marked `available`, three modules are `development` and four are `planned`.
+- The fish registry references `scripts/fishing_bot.py` and `scripts/fishing_memory.py`; GitHub Contents API returned 404 for both on current main. The referenced `tests/fishing_bot_test.py`, `tests/run-fishing-harness.mjs`, and optional external `Casinababe/scripts/botwow_modules.py` path are also absent from this repository. The parity test can SKIP when that external source is not configured.
+- R2 List Objects returns the v1.2.0 object, but the tested Get Object path returns HTTP 404 / Cloudflare code 10007. Current bytes and SHA-256 are not revalidated. Historical hash data remains historical only.
+- Modules EN/FR source previously presented Mollie as active, v1.2.0 as current, and Fishing as shipped/available under licence. The buy pages continue to state checkout closed and delivery unverified. The PR now distinguishes internal registry status from commercial release and removes purchase CTAs from Modules.
+- The public module pages now explicitly state that no Blizzard authorization is claimed/documented and advise against use on Blizzard-operated services. This is a disclosure correction, not a legal opinion or permission to market the automation.
+
+## Production and commercial baseline
+
+- Latest Pages production deployment known in this cycle: deployment `845e3e10-e05a-4a68-805a-65971a61add5`, source commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, SUCCESS. PR #94 is not deployed; live pages remain the main version until an authorized merge/deploy.
+- Worker `botwow-api` remains version 50; no Worker deployment was performed.
+- Mollie ListProfiles returned no BOT-WOW profile; an unrelated profile was not reused. PR #90 remains open/draft and does not open checkout.
+- D1 production, read-only: 5 Bitcoin `paid` test rows with `example.com` addresses, 8 pending, 1 rejected, 11 Mollie failed; 5 licences, 5 download tokens, 0 deliveries, 0 activations, 16 webhook events, 12 email records and 0 confirmed contacts. These rows do not prove a commercial sale.
+- Analytics D1, `test=0`: 1,726 page views, 680 journey views, 48 CTA clicks, 29 checkout requests, 4 checkout starts, 6 checkout created, 6 checkout failed; no payment-confirmed, conversion, delivery or activation events.
+- D1 requests were read-only; `changed_db=false`, `rows_written=0`.
+- Commercial sales verified: 0. Revenue confirmed: €0.00. Checkout remains closed.
+
+## Validation and limits
+
+- No local Factory environment is connected to this automation runtime, so local npm commands were not run. The new regression assertions are in the PR; GitHub Actions results must be checked on the PR head before any merge decision.
+- No price, checkout, payment, secret, binding, D1, R2, Worker, DNS, email, cache or production change was made.
+- Repository AGENTS.md explicitly prohibits merging to the default branch or deploying production without explicit authorization. Keep PR #94 open until CI is green and the required authorization is present.
+
+## Next action
+
+- Verify all PR #94 checks on its latest head. Fix any failing regression assertion in the same branch. Do not merge or deploy. After CI is green, retain the PR for review and prioritize recovery of a reproducible, readable release artifact and independent payment/fulfillment readiness.
+
+
+---
+
+# P0.44 — live purchase-copy reconciliation and CI repair — 2026-11-05T09:45Z
+
+## New public evidence
+
+- The live /buy page was re-opened through the web reader on 2026-11-05. It still described the fishing add-on as shipped with a SHA-256 manifest per file and promised activation on one machine, while separately saying checkout is unavailable and package delivery is unverified. The homepage still repeated the one-machine / licence-resend promise. These are public copy defects, not evidence of a delivered archive or an operational entitlement policy.
+- Main source confirms the same claims in buy.html, fr/buy.html, index.html and fr/index.html.
+- Backend licenses.max_activations defaults to 2. The meaning and policy are not reconciled with the public one-machine wording. No entitlement rule was changed.
+
+## PR #94 — expanded correction
+
+- Branch: fix/p0.40-modules-product-truth-20261105.
+- Current head at this report: 1b3a030759a7e814ce09e511c8898eb17dc74c61.
+- PR: https://github.com/aveca/bot-wow/pull/94 — OPEN, not merged, base main at 3bb17af9ddfe1cc149e8e55245c05717308d68c7.
+- Ten changed files: Modules EN/FR, Buy EN/FR, homepage EN/FR, PRODUCT.md, release-availability tests, responsive E2E test, and this report.
+- Buy EN/FR now describes add-on presence and per-file manifest as unverified, removes the public Casinobabe addon component label, and states that machine limits/licence re-sending are not confirmed.
+- Homepage EN/FR removes the one-machine and re-send promises while entitlement configuration is unresolved.
+- Modules EN/FR distinguish internal registry labels from commercial availability, remove Mollie as an active payment claim, and link to purchase status rather than presenting an active purchase CTA.
+- PRODUCT.md distinguishes intended terms, code integration, operational payment, registry status and verified delivery.
+
+## CI and fixes
+
+- Initial PR head 113194e021392765181515a2115981101b8d307e: Validate SUCCESS; UI quality failed on mobile because the test selected a hidden desktop navigation duplicate. Fixed by selecting a visible purchase-status link in tests/e2e/demo-quality.spec.mjs.
+- Head 8d0ebc0a31bd98b16d48430deef02d28eb3ee815: Validate failed on one stale Licence re-sent on request if you reinstall claim in the homepage; the other new availability assertions passed. That final claim was corrected in index.html.
+- Current head 1b3a030759a7e814ce09e511c8898eb17dc74c61: Validate Bot-Wow SUCCESS; UI quality / Playwright was still IN PROGRESS when this addendum was written. Do not merge until both required workflows are SUCCESS on the exact latest head.
+- No local Factory runtime is connected to this automation session; no local npm test result is claimed.
+
+## Production and commercial recheck
+
+- Cloudflare Pages production remains deployment 845e3e10-e05a-4a68-805a-65971a61add5, source main commit 3bb17af9ddfe1cc149e8e55245c05717308d68c7, deploy SUCCESS. The PR branch preview is skipped because preview deployments are disabled. PR #94 has not been deployed.
+- Worker botwow-api remains version 50, version ID c3dcc842-c422-42d3-9828-405f30d70b5f, deployment 36227a4d-00e7-4c9f-94e0-0913b29049bc, 100% traffic. No Worker deployment.
+- Mollie ListProfiles returned one profile not belonging to BOT-WOW. No BOT-WOW profile exists in the returned list; do not reuse another activity's profile.
+- D1 production, read-only: orders bitcoin_manual/paid=5, bitcoin_manual/pending_payment=8, bitcoin_manual/rejected=1, mollie/failed=11; all five paid rows are @example.com test rows; commercial paid rows with non-example addresses = 0. Licences 5; downloads 5; deliveries 0; activations 0; webhook events 16, of which 5 have no matching Mollie order; email records 12, confirmed 0.
+- Analytics D1, events with test=0: page views 1,750; journeys 692; CTA clicks 48; checkout requests 29; checkout starts 4; checkout created 6; checkout failed 6; no payment-confirmed, conversion, delivery-sent or activation events. Last page view: 2026-11-05T09:40:31Z; last journey: 09:40:27Z; last CTA and checkout request: 2026-11-04T02:47:00Z. These are event counts, not unique users.
+- All D1 queries returned changed_db=false and rows_written=0.
+- Commercial paid sales verified: 0. Revenue confirmed: €0.00. Checkout remains closed.
+
+## Next action
+
+1. Wait for UI quality / Playwright to finish on the exact current PR #94 head. If it fails, fix only the demonstrated regression and rerun CI.
+2. Once all required checks are SUCCESS and the head is unchanged, merge PR #94 by squash under the user's standing authorization for reversible, non-sensitive static changes; the prior production deployment 845e3e10-e05a-4a68-805a-65971a61add5 is the rollback reference.
+3. Verify Cloudflare Pages production and EN/FR homepage, Modules and Buy pages after merge. Do not change checkout, price, Worker, payment credentials, D1/R2, email or platform-compliance scope.
+4. Keep the checkout closed until package provenance/readability, authorization scope, dedicated payment profile and end-to-end fulfillment are independently verified.
+
+
+## P0.44 follow-up — homepage naming consistency — 2026-11-05T09:44Z
+
+- The homepage EN/FR still named the fishing add-on after a separate product brand, even though the offer is BOT-WOW. The intended component remains unverified, so the public copy now calls it a fishing add-on and explicitly says its presence in the current archive is unverified.
+- The homepage EN/FR changes are in commits 391c454d6d70907dabef6b41bea9b9ca6948c7ca and b52c76684559b77ad9aa60ce1c5142d9148cf149. Regression coverage was added in b90792236f67acc82954b81ecea24360c2e5e774.
+- The branch head immediately before this report append was b90792236f67acc82954b81ecea24360c2e5e774. Validate and UI quality workflows were queued/in progress; no result is claimed here.
+- No product, price, checkout, payment, Worker, D1, R2, DNS, cache or email configuration was changed.
+
+
+## P0.44 follow-up — remove residual machine-bound wording — 2026-11-05T09:44Z
+
+- The homepage EN/FR still said the licence was tied to the user's machine, which could imply a confirmed machine entitlement. It now says activation limits remain under verification. No entitlement or backend rule was changed.
+- Page commits: index.html bdfe8a9886ed9763ad2ad617eb0ae8d50a96cb6f; fr/index.html 74b7e9e25c970b1adf69443fc0127964cda048a7. Regression-test commit: 2afc9e4bd1d97c0be7e47a057243071f6564775d.
+- Branch head immediately before this report append: 2afc9e4bd1d97c0be7e47a057243071f6564775d. CI for this exact head had not yet appeared when this note was written.
+
+
+## P0.44 final copy check — package contents on homepage — 2026-11-05T09:45Z
+
+- Final review found one remaining unqualified homepage bullet claiming the add-on and packaged build included a SHA-256 manifest. It now states that these are intended components and the current archive/manifest are not verified.
+- Page commit: 4c354a566c67ee2f48dfcbc4af8bb1a534974909. Regression-test commit: 408f6595ec626c2e1a797269767f503b26ebddbb.
+- Branch head immediately before this report append: 408f6595ec626c2e1a797269767f503b26ebddbb. CI for this exact head had not yet appeared when this note was written.
+
+
+---
+
+# P0.48 — fresh PR, live funnel and payment revalidation — 2026-11-05T14:08Z
+
+## GitHub state
+
+- Repository: `aveca/bot-wow`; default branch `main`.
+- Main HEAD: `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- PRs open at this check: 17.
+- PR #71 is already merged (merge SHA `084e2bd3785526835e678f70b77699a8f838d16a`); no further unblock action is needed there.
+- PR #94 remains OPEN, not merged, base `main`, head `3a2c7a408ca174b6266b92f2e1624343e758a600`, 24 commits ahead / 0 behind, 10 changed files.
+- PR #94 Validate run `42004943834`: SUCCESS.
+- PR #94 UI Quality run `42004943771`: FAILURE; job `127169532730`, 156 passed / 2 failed.
+- Playwright failures: Modules EN at 391px viewport has document scrollWidth 481px; Modules FR at 391px has scrollWidth 534px. The PR changed-file list does not include `assets/components.css`; no CSS correction is present in this HEAD.
+- PR #90 remains OPEN / DRAFT and diverged from main: 2 ahead / 2 behind, merge base `218f0ebba5563e386151bc9d8f6e96c506547c33`.
+- PR #66 remains OPEN / DRAFT and diverged: 3 ahead / 42 behind. Do not merge this stale branch.
+
+## PR #94 branch copy gaps
+
+The branch still contains:
+- `fr/index.html`: “Licence réexpédiée sur demande si vous réinstallez”.
+- `docs/license.html`: one-machine entitlement claims.
+- `faq.html`: “one machine per licence”.
+- `fr/faq.html`: lost-key resend promise.
+
+`tests/release-availability.test.mjs` does not cover the licence documentation or the two FAQ files; its French homepage resend pattern does not match “Licence réexpédiée”. These are confirmed regression-test gaps. A comment with exact evidence was updated on PR #94 (comment `6660138552`).
+
+## Public production — live pages inspected 2026-11-05
+
+- Pages production deployment: `845e3e10-e05a-4a68-805a-65971a61add5`, commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, deploy SUCCESS at `2026-11-05T06:30:21Z`.
+- EN home `https://bot-wow.com/` still shows machine-bound licence / resend copy and purchase CTAs while stating delivery is unverified.
+- FR home `https://bot-wow.com/fr/` still shows “Licence réexpédiée sur demande” and machine-bound wording while stating delivery is unverified.
+- EN Buy `https://bot-wow.com/buy` still claims the Casinobabe add-on is shipped with a per-file SHA-256 manifest and one-machine activation; the same page says delivery is unverified and checkout unavailable.
+- FR Buy `https://bot-wow.com/fr/buy` contains the same contradictions.
+- EN Modules `https://bot-wow.com/modules` still says “v1.2.0 current release”, “Payment handled by Mollie”, and fishing is available/paid by licence; its footer uses “within the rules of the server you play on”.
+- FR Modules `https://bot-wow.com/fr/modules` still says “v1.2.0 version actuelle”, “Paiement pris en charge par Mollie”, and fishing is available/couvert par la licence; its footer uses equivalent server-rules wording.
+- These are live-production facts. PR #94 changes are not deployed.
+
+## Cloudflare Worker and source
+
+- Active Worker `botwow-api`: version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% traffic, created `2026-10-27T07:46:28Z`.
+- Current `main/worker/index.js` still contains two `Math.random()` uses in licence-key generation, logs raw `body.amount` on the rejected-client-amount path, and defaults `RELEASE_STATUS` to `pending`.
+- Current main source includes `resumeFulfillment`; that does not prove the active v50 bundle contains it. No Worker deployment occurred.
+
+## D1 production — read-only, 2026-11-05 14:08Z
+
+All queries returned `changed_db=false`, `rows_written=0`.
+
+- Orders: Bitcoin manual / paid 5; Bitcoin manual / pending_payment 8; Bitcoin manual / rejected 1; Mollie / failed 11.
+- All 5 paid Bitcoin rows have email domain `example.com`; they are test data, not commercial sales.
+- The 8 pending rows comprise 7 Gmail and 1 example.com domain; pending is not revenue.
+- The 11 failed Mollie rows comprise 10 `bot-wow.fr` and 1 `test.fr` domain.
+- Licences: 5 active, each configured with `max_activations=2`; this does not establish a two-device contractual entitlement.
+- Deliveries: 0 rows. Activations: 0. Webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent.
+
+## Analytics D1 — read-only, test=0
+
+- `page_view`: 1,780; latest `2026-11-05T13:37:50.348Z`.
+- `journey_view`: 706; latest `2026-11-05T13:32:19.951Z`.
+- `cta_click`: 48; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested`: 29; latest `2026-11-04T02:47:00.719Z`.
+- `checkout_start`: 4; `checkout_created`: 6; `checkout_failed`: 6.
+- No `payment_confirmed`, `conversion`, `delivery_sent`, or `activation` events were returned.
+- These are event counts, not unique visitors or sessions.
+
+## Mollie — read-only
+
+- `ListProfiles` returns one verified profile on a different domain; no BOT-WOW-specific profile is present.
+- Do not reuse another activity's profile. No payment was created.
+
+## Platform scope
+
+- Official Blizzard EULA search result (current page, last revised 2024-03-21) §1.C.2 explicitly includes creating, using, offering, promoting, advertising, making available and distributing unauthorized bots and software that changes/facilitates gameplay.
+- Official Anti-Cheating Agreement describes unauthorized third-party software that enables/facilitates botting or gameplay.
+- No applicable authorization is documented for BOT-WOW. This is a platform-contract risk assessment, not legal advice.
+- The manual WoW-specific planner proposed in PR #66 is not automatically a compliant safe harbour; a genuinely game-agnostic, non-client-interacting product would need separate scope and demand validation. A comment was added to PR #66 (comment `6660159108`).
+
+## Commercial decision
+
+- Commercial paid sales verified: **0**.
+- Commercial revenue confirmed: **€0.00**.
+- Checkout remains unavailable publicly; do not open it.
+- Do not promote the current gameplay-automation offer for Blizzard-operated services without applicable authorization.
+- No price, checkout rule, payment, email, secret, binding, D1/R2, Worker, DNS, cache, or production mutation occurred in this run.
+- R2 bytes were not re-requested because the last documented authorized Get path returned 404 / code 10007 and no new read credential/path became available; historical SHA remains historical, not a fresh verification.
+
+## Next action
+
+1. Finish PR #94: instrument the two mobile overflow failures, correct the real overflowing element, and extend copy tests to licence docs + FAQs + all public Modules claims.
+2. Keep PR #94 unmerged until Validate and UI Quality both pass on the same SHA.
+3. After the static PR is safe to ship, decide whether to pause the legacy bot offer or pursue a genuinely game-agnostic fishing-planner pivot; do not label the existing WoW-specific manual planner compliant.
+4. Only revisit R2/Mollie/payment once there is a commercially authorized, deliverable product scope.
+
+No local Factory/npm/Playwright execution is claimed in this connector-only run.
+
+
+---
+
+# P0.49 — targeted copy, licence and responsive corrections — 2026-11-05T15:55Z
+
+## GitHub / PR
+- Main remains `3bb17af9ddfe1cc149e8e55245c05717308d68c7`.
+- PR #94 remains OPEN, base main, branch `fix/p0.40-modules-product-truth-20261105`; latest known head after this report update: `0b8370cfe861ada7d95cdb2b2b5357b6f488a270`.
+- PR #94 contains 15 changed files; no merge occurred.
+- PR #71 remains merged (merge SHA `084e2bd3785526835e678f70b77699a8f838d16a`).
+
+## Changes made on PR #94 branch through GitHub contents API
+- `fr/index.html`: removed the unverified French licence re-send promise and replaced it with an explicit non-confirmation.
+- `docs/license.html` and `docs/fr/license.html`: removed one-machine, fingerprint, machine-change, reactivation and key-re-send guarantees; now state that activation/recovery terms are unverified and checkout is closed.
+- `faq.html` and `fr/faq.html`: removed one-machine entitlement and guaranteed key resend; the €20 amount is described only as the intended price, not as an available offer.
+- `tests/release-availability.test.mjs`: added regression assertions for both licence documents, both FAQs and the French homepage.
+- `assets/components.css`: added a narrow-screen layout for the Modules status bands: wrap the badge/descriptor, hide only the decorative divider, and allow the descriptor to wrap.
+- `tests/e2e/demo-quality.spec.mjs`: the overflow assertion now includes the top overflowing DOM elements in its failure message; the viewport threshold remains unchanged.
+
+## CI findings and correction
+- Previous run on head `491132fb06fc1bfdd780ce437acc08e7b3590413`: Validate and UI Quality both failed.
+- Exact Validate/UI failure: `SyntaxError: Identifier 'licenceTruthCases' has already been declared` in `tests/release-availability.test.mjs`.
+- Cause: the same regression block was appended twice. The duplicate block was removed in commit `0b8370cfe861ada7d95cdb2b2b5357b6f488a270`.
+- The latest CI run for the corrected head had not appeared at the time of this report. The earlier Playwright overflow evidence remains 156 passed / 2 failed at 391px (EN scrollWidth 481px; FR 534px). The new CSS fix is not yet certified until the new UI workflow passes.
+- No local Factory/npm execution is claimed; CI is the actual test runner used in this connector-only cycle.
+
+## Production / Pages
+- Latest Cloudflare Pages production deployment remains `845e3e10-e05a-4a68-805a-65971a61add5`, source main commit `3bb17af9ddfe1cc149e8e55245c05717308d68c7`, deploy SUCCESS at `2026-11-05T06:30:21Z`.
+- PR #94 is not deployed.
+- A fresh web crawl of `https://bot-wow.com/buy` still shows the old add-on/manifest and one-machine/key-resend claims while the checkout notice says delivery is unverified and checkout is unavailable. The crawler output is not a raw HTTP/header capture; source and Pages deployment evidence remain authoritative for deployment identity.
+- The public buy page explicitly says not to purchase until delivery is confirmed; no checkout was attempted.
+
+## Worker / integrations
+- Active Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment.
+- Mollie `ListProfiles`: one verified profile exists on a non-BOT-WOW domain; no BOT-WOW-specific profile. No payment created.
+
+## D1 production — fresh read-only query
+- Every query returned `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual paid 5 (all test-domain); pending 8 (7 other-domain, 1 test-domain); rejected 1 (test-domain); Mollie failed 11 (10 other-domain, 1 test-domain).
+- Licences: 5 active, each `max_activations=2`; this does not establish a two-device entitlement.
+- Deliveries: 0 rows. Activations: 0. Webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent.
+
+## Analytics — fresh read-only query, test=0
+- `page_view`: 1,789; latest timestamp `1793892111648` ms.
+- `journey_view`: 711; latest timestamp `1793892111653` ms.
+- `cta_click`: 48; last recorded `2026-11-04T02:47:00.736Z`.
+- `checkout_requested`: 29; `checkout_start`: 4; `checkout_created`: 6; `checkout_failed`: 6.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique visitors or sessions.
+
+## Commercial status
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Checkout remains closed. No price, checkout rule, payment, email, secret, binding, Worker, DNS, D1/R2 or production mutation occurred.
+- No applicable authorization for distributing/promoting the current gameplay-automation product is documented. This is a platform-contract risk, not a legal opinion.
+- Next: inspect CI for head `0b8370c`; fix any test failures; confirm whether the mobile band CSS resolves the two overflow cases; only then consider static merge/deployment under the existing policy and rollback. Keep checkout and Worker untouched.
+
+
+---
+
+# P0.49 — merge and Pages deployment closure — 2026-11-05T16:00Z
+
+## Merge and CI
+- PR #94 was squash-merged at `2026-11-05T15:58:10Z`.
+- PR head: `63b4e707935e0e6589745154d140aa3daac892eb`.
+- Merge commit / new main: `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- PR #94: CLOSED / MERGED; 15 files changed.
+- GitHub Actions on the exact PR head: Validate Bot-Wow run `42059527469` SUCCESS; UI Quality run `42059527342` SUCCESS.
+- Playwright: **158 passed**; both `modules-en` and `modules-fr` passed. Release-availability regression output: `RELEASE AVAILABILITY : OK`.
+- An intermediate CI failure on `491132f` was a duplicate `licenceTruthCases` declaration; the duplicate was removed in `0b8370c` before the successful final run.
+
+## Merged changes
+- EN/FR homepage, Buy, Modules, FAQ and licence documentation now distinguish intended scope from verified package/payment/delivery availability.
+- Removed unverified one-machine, activation, reactivation and key-resend promises from the affected pages and documentation.
+- The €20 amount remains the intended price only; no price was changed and no purchase is available.
+- Modules status bands wrap on narrow screens; Playwright now reports overflowing DOM elements on any future failure.
+- Regression tests cover the EN/FR licence documents, FAQs and French homepage.
+- No Worker, payment logic, checkout rule, secret, binding, D1/R2 object, email, DNS or price mutation.
+
+## Cloudflare Pages deployment
+- Production deployment: `376230c1-b8e2-4d7b-8ada-f368b0f6e6d3` (`376230c1`).
+- Source commit: `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- Build and deploy stages: SUCCESS; completed `2026-11-05T15:58:35.140784Z`.
+- Previous successful deployment retained for rollback: `845e3e10-e05a-4a68-805a-65971a61add5`.
+- Content verification limitation: a fresh web crawl of `https://bot-wow.com/buy.html` still returned the older add-on / one-machine / licence-resend copy while also showing checkout unavailable. Direct no-cache fetch attempts from the connector runtime returned HTTP 403, and the Pages preview host was inaccessible to the web reader. Therefore deployment identity and build success are verified, but exact edge-served HTML after propagation is **not yet independently verified**. Do not claim every public page's text is confirmed live until a browser/HTTP check succeeds.
+
+## Fresh commercial snapshot (read-only)
+- Orders: 5 Bitcoin `paid`, all test-domain; 8 Bitcoin `pending_payment`; 1 Bitcoin `rejected`; 11 Mollie `failed`.
+- Licences: 5 active, `max_activations=2`; this is not proof of a two-device entitlement.
+- Deliveries: 0; activations: 0; webhook records: 16; contacts: 12, confirmed: 0.
+- D1 reads: all `changed_db=false`, `rows_written=0`.
+- Analytics `test=0`: 1,789 page views; 711 journey views; 48 CTA clicks; 29 checkout requests; 4 starts; 6 created; 6 failed; no payment-confirmed, conversion, delivery-sent or activation events. Latest page/journey events: `2026-11-05T15:21:51Z`.
+- Mollie `ListProfiles`: one verified profile on a non-BOT-WOW domain; no dedicated BOT-WOW profile.
+
+## Final commercial state
+- Commercial paid sales verified: **0**.
+- Confirmed revenue: **€0.00**.
+- Checkout remains closed. Worker `botwow-api` remains v50; no Worker deployment.
+- No documented authorization for commercial distribution of the current gameplay-automation scope. This is a platform-contract risk, not a legal opinion.
+- Next action: verify exact edge-served EN/FR pages through a real browser/HTTP path; then resolve the commercial scope and package provenance before any payment work. Keep checkout closed.
+
+
+---
+
+# P0.50 — truthful availability across the public EN/FR funnel (2026-11-05)
+
+## GitHub snapshot
+- Default branch: `main` at `b7d9cc77508b1a5d7a131ac664b240739a3be66d`.
+- PR #94 is merged; merge SHA `6bae1bbf200bff8fbcab7637162b6dc2f587bb08`.
+- PR #95: `https://github.com/aveca/bot-wow/pull/95`, branch `fix/p0.50-homepage-purchase-status-20261105`.
+- Code head before this report-only commit: `7ce88d66529c16fe0f9734afdef3025499fde235`.
+- PR #95 is OPEN and mergeable; no merge performed in this snapshot.
+- Validate run `42066782919`: SUCCESS on code head `7ce88d66529c16fe0f9734afdef3025499fde235`.
+- UI Quality run `42066776057`: pending/in progress at snapshot time on the same code head. Do not merge until UI Quality succeeds on the final PR head.
+
+## Changes in PR #95
+- Home, Buy and Comparison pages EN/FR now use availability/status CTAs rather than immediate buy-now labels while checkout is closed.
+- The €20 amount remains unchanged and is labelled as a documented target price, not a currently purchasable offer.
+- Comparison pages no longer claim an active Mollie profile, a one-machine activation promise, a licence resend, or a shipped module; the comparison calculator is explicitly illustrative.
+- Comparison copy states that third-party technical compatibility is not authorization and that no Blizzard authorization is claimed or documented.
+- Modules status links use secondary styling rather than the purchase-gold treatment.
+- All six Home/Buy/Comparison forms clarify that no email is submitted while checkout is closed.
+- The form's existing disabled-button guard remains unchanged; Playwright coverage now checks that pressing Enter cannot submit while closed.
+- Status CTA IDs are distinct from purchase-intent IDs so availability checks remain `cta_click`, not `checkout_requested`.
+- Static regression tests cover Home, Buy, Comparison and Modules EN/FR; Playwright covers status navigation and closed-form submission.
+
+## Verification and production
+- GitHub Validate passed on the code head above. UI Quality had not completed at snapshot time.
+- No local Factory runner was available in this execution; no local npm/Playwright run is claimed.
+- Production Pages remains deployment `33468888-aee7-40d5-9ba6-c92a42204e68`, source commit `b7d9cc77508b1a5d7a131ac664b240739a3be66d`, SUCCESS.
+- Branch preview deployment is skipped because preview deployments are disabled. PR #95 is not live.
+- Previous production deployment `33468888-aee7-40d5-9ba6-c92a42204e68` is the rollback target until a new production deployment is confirmed.
+- Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment or configuration mutation.
+
+## Fresh read-only commercial snapshot
+- Orders: 5 Bitcoin `paid`, all `@example.com`; 8 Bitcoin `pending_payment`; 1 Bitcoin `rejected`; 11 Mollie `failed`.
+- Paid orders outside the test domain: 0. These five paid rows are test data, not sales.
+- Licences: 5 active; configured activation slots total 10. This does not establish a two-device entitlement.
+- Downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
+- Contacts: 12; confirmed: 0.
+- All production D1 reads: `changed_db=false`, `rows_written=0`.
+- Analytics `test=0`: 1,804 page views; 719 journey views; 48 CTA clicks; 29 checkout requests; 4 checkout starts; 6 checkout created; 6 checkout failed; 0 payment-confirmed, conversion, delivery-sent or activation events.
+- Latest page-view event: `2026-11-05T16:33:46Z`. Latest CTA click remains `2026-11-04T02:47:00Z`.
+- Mollie ListProfiles returned no dedicated BOT-WOW profile. No payment was created.
+
+## Remaining blockers and next action
+- Confirm UI Quality on the final PR #95 head. If green, inspect the final diff, squash-merge the static reversible changes under the existing deployment authorization, then verify the new Cloudflare Pages production deployment and every affected EN/FR URL. If red, fix only the failing assertion or page defect.
+- Do not open checkout or change payment rules. Package R2 Get last returned HTTP 404 / 10007; no new authorized retrieval path was established in this cycle. Package provenance remains unverified.
+- No applicable authorization for the current gameplay-automation scope is documented. Keep checkout closed pending a defensible commercial scope or applicable authorization.
+- Confirmed commercial paid sales: **0**. Confirmed revenue: **€0.00**.
+
+
+---
+
+# P0.51 — mobile status-navigation regression corrected; CI green — 2026-11-05
+
+## GitHub / PR #95
+- Repository: `aveca/bot-wow`; default branch remains `main` at `b7d9cc77508b1a5d7a131ac664b240739a3be66d`.
+- PR #95: `https://github.com/aveca/bot-wow/pull/95`; branch `fix/p0.50-homepage-purchase-status-20261105`; base `main`; latest tested head before this report-only update: `b5b4f18d5682ad89ceefcfcbbd4d2146c072c001`.
+- PR #95 remains OPEN, non-draft, mergeable; no merge or production deployment occurred in this snapshot.
+- Current PR diff: 13 files; Home/Buy/Comparison EN/FR purchase-status copy, Modules status styling, regression tests and this report. No Worker/payment/backend file changed.
+- 86 branch names were returned by the current branch search (cursor indicates branch search pagination); 17 open PRs were returned. Relevant open PRs: #95, #90 (draft Mollie credential routing), #66 (draft compliance/pivot). PR #71 is already merged and is not an outstanding task.
+
+## CI — exact tested SHA
+- Earlier UI run `42067255815` failed with 162 passed / 2 failed. Both failures were the same assertion on mobile EN/FR Buy pages: the test expected `nav-status` to be visible at 391px.
+- Root cause confirmed in existing `assets/site.css`: `@media(max-width:520px){.nav-right .btn{display:none}}`. The header CTA is intentionally hidden in the compact mobile header; the hero status CTA remains visible.
+- Targeted test-only correction in `tests/e2e/demo-quality.spec.mjs`, commit `b5b4f18d5682ad89ceefcfcbbd4d2146c072c001`: assert the nav link is attached; expect it hidden at viewport widths <=520px and visible above that breakpoint; continue requiring the hero status CTA visible at every viewport.
+- Validate run `42079166109`: SUCCESS on the exact tested SHA.
+- UI Quality run `42079166107`: SUCCESS on the exact tested SHA.
+- Real-browser Playwright: **164 passed, 0 failed**. Both EN and FR blocked-purchase tests pass in desktop and mobile projects.
+- CI logs also report the optional Python planner check skipped because `ModuleNotFoundError: No module named 'fishing_spots'`. This does not fail the static/UI workflow, but Python runtime parity was not independently validated by this CI run.
+- No local Factory/npm/Playwright execution is claimed; the evidence above is from GitHub Actions.
+
+## Public production / Pages
+- Cloudflare Pages project `bot-wow`: production branch `main`; preview deployment setting `none`; build command `node scripts/build-site.mjs _site`, output `_site`.
+- Latest production deployment remains `33468888-aee7-40d5-9ba6-c92a42204e68`, source commit `b7d9cc77508b1a5d7a131ac664b240739a3be66d`, build/deploy SUCCESS. The latest PR branch preview is skipped because preview deployments are disabled.
+- Public crawl still sees the old main content, as expected while PR #95 is unmerged: homepage still contains buy/lifetime claims; Buy EN still shows the old add-on/manifest, one-machine, key-resend and email-for-key copy; comparison EN still displays Mollie/lifetime/server-rules claims. References: `https://bot-wow.com/`, `https://bot-wow.com/buy.html`, `https://bot-wow.com/compare.html`. This is a production/source-version gap, not evidence that PR #95 failed to build.
+- No Pages deployment, cache purge or DNS mutation occurred in this snapshot. Rollback reference remains deployment `33468888-aee7-40d5-9ba6-c92a42204e68` until a newer production deployment is confirmed.
+
+## Worker / payment integrations
+- Active Worker `botwow-api`: deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic; unchanged.
+- Mollie `ListProfiles` returned one verified profile on `https://sargasses-martinique.com/`; no BOT-WOW-specific profile is visible. Never reuse the other activity's profile. No payment was created.
+
+## D1 production — read-only, 2026-11-05
+- All queries: `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5`, `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- All five `paid` rows use `example.com`; they are test records, not customer sales. Their stored amount sum is 10,000 minor units, also not revenue.
+- Licences: 5; all five have `max_activations=2` (not proof of a two-device entitlement). Downloads: 5. Deliveries: 0. Activations: 0. Webhook records: 16. Email contacts: 12; confirmed: 0.
+- No email sent, no payment created, no production data written.
+
+## Analytics D1 — read-only, `test=0`
+- `page_view=1,818` (latest `2026-11-05T16:45:19.687Z`).
+- `journey_view=726` (latest `2026-11-05T16:45:16.779Z`).
+- `cta_click=48`; latest remains `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique visitors or sessions. Page/journey events increased; purchase intent did not.
+
+## Commercial / compliance decision
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Public checkout remains closed. No dedicated BOT-WOW payment profile; no delivery or activation records.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell that scope on Blizzard-operated services; a manual WoW-specific planner is not automatically a safe harbour.
+- No price, checkout rule, payment, email, secret, binding, D1/R2 object, Worker, DNS, cache or production mutation occurred.
+
+## Next action
+1. Re-check CI after this report commit on the new final PR head; require Validate and UI Quality green on that same SHA.
+2. Review the complete PR #95 diff, then merge/deploy only under the user's standing authorization for reversible static changes with a verified rollback. Do not open checkout.
+3. After any Pages deployment, verify the exact source commit and all EN/FR Home, Buy, Comparison and Modules pages through a live HTTP/browser path. Preview deployments are disabled.
+4. Resolve the commercial/platform scope and authentic package delivery before any payment work. Keep Worker v50 untouched until a separate authorized security/deployment task.
+
+
+---
+
+# P0.52 — PR #95 merged, Pages deployment and live funnel revalidation — 2026-11-05T18:57Z
+
+## GitHub
+- Repository: `aveca/bot-wow`; default branch `main`.
+- PR #95 was squash-merged at `2026-11-05T18:55:44Z`.
+- Merge SHA / new main: `573cc1298223980eade0be67f5aba45af6716787`.
+- PR head: `f7c9ce5e32c60dc564f9ccf4ea9fdb4bd6c30696`.
+- Validate run `42079682256`: SUCCESS on the exact final PR head.
+- UI Quality run `42079682316`: SUCCESS on the exact final PR head; Playwright log confirms **164 passed, 0 failed**.
+- PR #95 changed 13 files. No Worker, payment logic, price, checkout rule, secret, binding, D1/R2 object or email behavior was changed.
+- Open PR count after merge: 16. Relevant remaining PRs: #90 (draft Mollie credential routing), #66 (draft compliance/pivot); #71 and #94 are already merged.
+
+## Cloudflare Pages
+- Canonical production deployment: `9f9e0e84-60dc-4d64-9b70-e01ab1ec40fc`.
+- Source branch: `main`; source commit: `573cc1298223980eade0be67f5aba45af6716787`.
+- Build SUCCESS; deploy SUCCESS at `2026-11-05T18:56:26Z`.
+- Production URL: `https://9f9e0e84.bot-wow.pages.dev`.
+- Previous deployment retained for rollback: `33468888-aee7-40d5-9ba6-c92a42204e68`.
+- Worker remains separate and unchanged.
+
+## Public crawl after deployment
+- Fresh web-reader output shows the new purchase-status copy on EN homepage, FR homepage, EN Buy, EN Modules and FR Modules.
+- The reader still returns old copy on FR Buy and EN/FR Comparison, including old buy/lifetime/Mollie labels. GitHub `main` source for all three files contains the new status copy and the successful Pages deployment identifies the exact merge SHA. The web reader does not expose raw response headers or a reliable cache-bypass path here; therefore the cause may be crawler cache or route/edge propagation and is **not yet determined**. Do not claim all public routes are independently verified live.
+- The deployment-specific `pages.dev` host was not readable by the web reader. No cache purge or DNS change was attempted.
+
+## New residual homepage defect found in the merged source
+- `index.html` and `fr/index.html` still contained the journey tab labels “Automate my fishing” / “Automatiser ma pêche”, plus a comparison row claiming “€20 lifetime — no renewal” / “20 € à vie — pas de renouvellement”.
+- These strings conflict with the current unavailable status and unnecessarily present the gameplay-automation action as an active CTA.
+- A targeted follow-up branch `fix/p0.52-homepage-residual-offer-claims-20261105` replaces them with neutral scope-discovery labels and a target-price/unavailable statement, and adds static regression assertions. No product behavior or checkout logic is changed.
+
+## D1 production — read-only
+- All queries returned `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5`, `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test rows: **0**; all five `paid` rows use `@example.com`.
+- Licences: 5; downloads: 5; deliveries: 0; activations: 0; webhook records: 16.
+- Email contacts: 12; confirmed: 0. No email was sent and no database row was written.
+
+## Analytics D1 — read-only, test=0
+- `page_view=1,826`; `journey_view=730`; `cta_click=48`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No payment-confirmed, conversion, delivery-sent or activation events.
+- These are event counts, not unique visitors or sessions.
+
+## Payment and Worker integrations
+- Mollie `ListProfiles`: one verified profile on a different domain; no BOT-WOW-specific profile. Do not reuse another activity's profile. No payment was created.
+- Active `botwow-api` remains Worker version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic. No Worker deployment.
+
+## Commercial and platform scope
+- Commercial paid sales verified: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Checkout remains closed; no package delivery or activation is recorded.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell it for Blizzard-operated services; third-party technical compatibility is not authorization.
+- No payment, email, price, checkout, secret, binding, Worker, D1/R2, DNS or cache mutation occurred in this run.
+
+## Next action
+1. Finish the targeted homepage residual-copy PR and validate it on GitHub Actions.
+2. Use Factory's real browser/HTTP tooling to verify all eight EN/FR routes against the new Pages deployment, including response status, final URL, ETag, Age, Cache-Control and CF-Cache-Status. Resolve the FR Buy and Comparison crawler discrepancy only after identifying cache vs route behavior.
+3. Keep checkout closed until commercial scope, package provenance, dedicated payment profile and end-to-end fulfillment are independently verified.
+
+
+## P0.52 PR publication — 2026-11-05T19:01Z
+
+- Follow-up PR: [#96 — remove residual unavailable-offer claims from homepage](https://github.com/aveca/bot-wow/pull/96).
+- Branch: `fix/p0.52-homepage-residual-offer-claims-20261105`; code/report head before this publication note: `ddb963a9fd314dc4671403dc11fc919a0694ba35`.
+- PR #96 currently contains 8 commits and 4 changed files: EN/FR homepage, release-availability regression tests, and this operational report.
+- No local Factory/npm result is claimed. Require Validate and UI Quality/Playwright SUCCESS on the exact final head before merge.
+- Static merge/deploy remains permitted only with the standing reversible-change authorization, verified rollback and no checkout/payment/Worker mutation.
+
+
+---
+
+# P0.54 — residual purchase CTAs and unsupported delivery claims found on secondary routes — 2026-11-05T20:27Z
+
+## GitHub / Pages baseline
+- Repository: `aveca/bot-wow`; exact `main`: `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- PR #96 is merged into this main. The latest Pages production deployment is `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, created `2026-11-05T19:36:35Z`; build and deploy stages both SUCCESS. Its source branch is `main` and source commit exactly matches `0bba14dffbfb239f7368ff632d084a5a6449bc12`.
+- Pages project `bot-wow`: production branch `main`; build `node scripts/build-site.mjs _site`; output `_site`; build cache disabled; preview deployments disabled. Both custom domains `bot-wow.com` and `www.bot-wow.com` are ACTIVE and aliases of the same deployment.
+- Previous production deployment retained as rollback: `9f9e0e84-60dc-4d64-9b70-e01ab1ec40fc`.
+- Public live checks on 2026-11-05 show the current status copy on Home EN/FR, Buy EN/FR, Compare EN/FR and Modules EN/FR. The reader resolves `buy.html` to `/buy` and `fr/buy.html` to `/fr/buy`; both forms state checkout unavailable and are disabled. Compare pages label €20 as a target price and purchase unavailable. Modules pages state that the internal registry is not proof of a downloadable product. Public references: https://www.bot-wow.com/ ; https://bot-wow.com/buy.html ; https://bot-wow.com/fr/buy.html ; https://bot-wow.com/compare.html ; https://bot-wow.com/fr/compare.html ; https://bot-wow.com/modules.html ; https://bot-wow.com/fr/modules.html .
+- Direct public homepage crawl on www and apex is now consistent with the merged status copy. Earlier stale search-index excerpts are not proof of a current live route mismatch; no cache purge or DNS change was attempted.
+
+## Newly verified residual copy defects in current main
+These are source-level facts on the exact main SHA, not assumptions about crawler cache:
+
+- `demo.html` and `fr/demo.html`: header CTA still says Buy/Acheter; demo-close CTA says “Get the lifetime licence — €20” / “Prendre la licence à vie — 20 €”; mobile bar still says “One-time · lifetime licence” / “Paiement unique · licence à vie”; intro says to inspect the planner “before you buy”.
+- `features.html` and `fr/features.html`: header Buy/Acheter CTA remains. The licence/delivery feature still states machine-locked keys, a manual Bitcoin rail and Mollie card checkout, despite the current closed checkout and absence of a dedicated BOT-WOW Mollie profile.
+- `getting-started.html` and `fr/getting-started.html`: header Buy/Acheter CTA remains; the page promises a post-payment ZIP and licence key, one-machine activation and key re-sending. Those entitlements and delivery are not verified.
+- `fishing.html`, `fr/fishing.html`, `faq.html`, `fr/faq.html`, `compatibility.html`, `fr/compatibility.html`, `roadmap.html`, `fr/roadmap.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor rather than the purchase-status route.
+- `success.html` and `fr/success.html`: header Buy/Acheter CTA remains; FR page title says “Commande confirmée”; both pages describe licence-key and download-link email delivery even though no verified delivery exists. The English body correctly warns that the page alone does not confirm payment, but the title/next-step copy still overstates the state.
+- `docs/install.html`, `docs/fr/install.html`, `docs/license.html`, `docs/fr/license.html`, `docs/index.html`, `docs/fr/index.html`: header Buy/Acheter CTA remains and points to the obsolete `#offre` anchor.
+
+## Persistent tracker
+- Created GitHub issue [#97 — align all secondary EN/FR routes with closed checkout and unverified delivery](https://github.com/aveca/bot-wow/issues/97).
+- Required scope: neutral purchase-status links across all affected pages; remove unsupported Mollie/Bitcoin/machine-lock/lifetime/email-delivery promises; make getting-started and success pages explicitly conditional; extend `tests/release-availability.test.mjs` to scan the complete affected EN/FR route set.
+- The issue is static copy + regression tests only. No checkout, payment, price, Worker, secrets, bindings, D1/R2, email, DNS, cache or production payment changes.
+
+## D1 production — read-only, 2026-11-05T20:20Z
+- All SQL statements were SELECT-only; every result reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (stored sum 10,000 minor units), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test orders: **0**; all five paid rows use `@example.com`. Do not count their stored amounts as revenue.
+- Licences: 5 (all active); total configured activation slots 10, but this does not prove a customer entitlement. Activations: 0.
+- Deliveries: 0 rows. Webhook event records: 16. Email contacts: 12; confirmed: 0; marketing-consent flag count: 9. No email was sent and no production row was written.
+- No customer payment or commercial sale is confirmed.
+
+## Analytics D1 — read-only, `test=0`, 2026-11-05T20:20Z
+- `page_view=1,840`; latest page event `2026-11-05T19:38:27.389Z`.
+- `journey_view=737`; latest `2026-11-05T19:38:24.483Z`.
+- `cta_click=48`; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- These are event counts, not unique users or sessions. Page/journey views increased; no new CTA click is recorded after the previous snapshot.
+
+## Worker / Mollie
+- Active Worker `botwow-api`: latest deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic; no new deployment.
+- Mollie profile listing still shows no BOT-WOW-specific profile. Do not reuse a profile from another activity. No payment was created.
+- PR #90 remains DRAFT and is based on stale main `218f0eb`; PR #66 remains DRAFT and non-mergeable against an older base. Neither is ready to merge or deploy.
+
+## Commercial decision
+- Verified commercial paid sales: **0**.
+- Confirmed commercial revenue: **€0.00**.
+- Public checkout remains closed. No verified customer package delivery or activation.
+- No applicable authorization for the current WoW gameplay-automation scope is documented. Do not promote or sell that scope for Blizzard-operated services. Third-party technical compatibility is not authorization.
+- No payment, email, price, checkout, Worker, secret, binding, D1/R2, DNS, cache or production mutation occurred in this cycle.
+
+## Next action
+1. Execute issue #97 on a dedicated branch in the local Factory/OpenCode environment: correct the residual EN/FR buy CTAs and unsupported payment/delivery/activation copy on all listed routes, and extend the existing release-availability test.
+2. Run `npm run validate`, `npm test`, `npm run test:e2e`, `node scripts/build-site.mjs _site` and `git diff --check` for real; require Validate and UI Quality green on the exact final SHA.
+3. Merge/deploy only the reversible static copy/test change after full diff inspection and green CI; verify the Pages source commit and all affected live routes. No checkout, payment or Worker change.
+4. Keep the commercial decision at NO-GO until the product scope is authorized, package provenance is reproducible, a dedicated payment profile exists, and post-payment delivery is independently verified.
+
+
+---
+
+# P0.55 — deployed Worker v50 diverges from main; email delivery remains a stub — 2026-11-05T20:34Z
+
+## Active Worker / custom domain — directly verified
+- Worker: `botwow-api`; active deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`; version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`; 100% traffic.
+- Custom domain `api.bot-wow.com` is enabled in production and mapped to service `botwow-api`.
+- Downloaded deployed Worker script read-only. It contains a legacy `handleLanding` handler for GET requests outside `/api/`, including generated SEO routes `/bot-wow-gold`, `/bot-wow-classic`, `/best-wow-bot`, `/bot-wow-gratuit`. Embedded EN/FR strings still promote automated gold/XP/items/battlegrounds, a lifetime €20 Bitcoin licence, private-server compatibility and “humanized” behavior.
+- The browser/web reader could not retrieve the API hostname, so the exact response body of those paths was not independently browser-verified. The enabled custom-domain mapping plus the deployed fetch-handler code prove that non-API GET requests are routed to this Worker handler.
+- Current `main/worker/index.js` (blob `725d98e4595b27aa60e88758ecac20c711a38b6b`) no longer contains `handleLanding`; active Worker v50 is materially stale relative to main.
+
+## Download artifact discrepancy
+- Deployed v50 tries the configured `R2_OBJECT_KEY`, then `casinobabe-fishing-1.2.0.zip`, then falls back to `Casinobabe-v1.0.38.zip`.
+- Its response `Content-Disposition` is always `Casinobabe-v1.0.38.zip`, even when another candidate is selected.
+- Current main source has already removed fallback behavior: it validates a single configured versioned key and returns `artifact_unavailable` when that object is missing. That safer code is not deployed to v50.
+- No R2 object read or mutation occurred in this cycle; actual archive existence and SHA-256 remain unverified.
+
+## Delivery email — implementation exists; live send remains unverified
+- The legacy helper named `sendDeliveryEmail` is a log-only stub, but it is not the active delivery path.
+- Both current `main/worker/index.js` and the deployed v50 bundle contain `sendDeliveryEmail2` and `sendEmail2`; the latter issues a POST to `https://api.resend.com/emails` when `RESEND_API_KEY` is configured.
+- Active Worker settings expose the `RESEND_API_KEY` secret binding name and `MAIL_FROM` sender setting. Secret values remain masked and were not read, printed or changed.
+- Webhook and resend paths call `sendDeliveryEmail2`. The presence of code and a binding does not prove a successful provider send.
+- D1 SELECT-only shows 0 delivery rows; there are also 0 verified non-test paid orders. This proves no recorded delivery, not that email sending is unimplemented. No test email was sent.
+- Correct status: delivery-email implementation is present; effective credential validity and a successful production send remain unverified.
+
+## Effective checkout gate — unknown, not assumed closed server-side
+- Worker settings contain a `RELEASE_STATUS` `secret_text` binding. The value is masked and was not read or exposed.
+- Deployed code defaults to `pending`, but `env.RELEASE_STATUS` overrides the default; `confirmed` permits checkout creation.
+- The effective value cannot be verified through the read-only settings endpoint. No valid checkout request was sent because it could create a real payment.
+- Public Pages checkout UI is closed, but that alone does not prove the Worker-side gate's effective value.
+
+## Mollie
+- `ListProfiles`: one profile only; no BOT-WOW-specific profile.
+- `ListWebhooks`: one live webhook only, targeting a different domain; no BOT-WOW webhook was returned.
+- Worker secret binding names exist, but masked values do not prove correct profile/webhook configuration. Do not reuse another activity's profile.
+
+## Persistent tracker / safety
+- Created issue [#99 — reconcile stale Worker, remove legacy landing route and verify fail-closed delivery](https://github.com/aveca/bot-wow/issues/99).
+- Required work: prepare a focused Worker PR to remove the legacy landing handler, preserve current-main single-artifact behavior, remove old-version fallback, fix download-quota ordering, and add regression tests. Document the missing email provider without enabling sends.
+- No Worker deployment, secret change, payment, valid checkout probe, email, D1 write, R2 read/write, DNS or cache mutation occurred.
+- Worker deployment, secret changes, payment rules and email sending remain blocked pending explicit authorization. Keep the public checkout closed.
+
+## Updated next priorities
+1. P0 — issue #99: prepare/test Worker source reconciliation; do not deploy or change secrets.
+2. P0 — issue #97: remove residual purchase CTAs and unsupported payment/delivery claims across secondary EN/FR pages.
+3. P1 — verify the exact package bytes/version/SHA through an authorized R2 read path.
+4. P1 — obtain a dedicated BOT-WOW Mollie profile and webhook only after the product scope is authorized and fulfillment is ready.
+5. P1 — implement delivery email only after a separately authorized, controlled test-send procedure.
+
+
+
+---
+
+# P0.56 — fresh verification corrects the email finding and reconfirms production state — 2026-11-05T21:53Z
+
+## GitHub / PR state
+- Exact `main` remains `0bba14dffbfb239f7368ff632d084a5a6449bc12`; no newer main commit was returned.
+- PR #98 changes only this operational report. Its head `c2b58ca7ad1fa1ef1e618d058d6ddd1fc3477059` has Validate run `42104599878` SUCCESS and UI Quality run `42104599841` SUCCESS on the same SHA.
+- Issues #97 and #99 remain open. PR #90 and #66 remain drafts; neither was merged.
+
+## Cloudflare production
+- Pages production deployment remains `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c`, source commit `0bba14dffbfb239f7368ff632d084a5a6449bc12`, deploy stage SUCCESS. No new Pages deployment occurred.
+- Worker `botwow-api` remains version 50, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, 100% traffic. Its custom domain `api.bot-wow.com` is enabled.
+- Read-only Worker settings show binding names `RELEASE_STATUS` and `RESEND_API_KEY` as secret_text, plus `MAIL_FROM` and `R2_OBJECT_KEY=casinobabe-fishing-1.2.0.zip`. No secret value was read or exposed.
+- Downloaded active Worker script read-only. It still contains `handleLanding` and legacy SEO routes. Its download candidate list contains the configured object, `casinababe-fishing-1.2.0.zip`, and `Casinababe-v1.0.38.zip`; the response filename is hard-coded to the v1.0.38 name. This confirms the stale fallback/filename defect in v50. Current main has the single configured-object path and uses the actual object key as the response filename.
+
+## Important correction — email implementation
+- The previous P0.55 report incorrectly concluded that delivery email was not implemented by inspecting only the legacy `sendDeliveryEmail` stub.
+- Current main and deployed v50 also contain the active `sendDeliveryEmail2` → `sendEmail2` path. `sendEmail2` POSTs to Resend's `/emails` endpoint when `RESEND_API_KEY` is configured.
+- Worker settings expose the secret binding name `RESEND_API_KEY`; its value is masked and was not read or changed. The source contains a real provider integration, but credential validity and successful production sending are not verified.
+- The active webhook/resend paths call `sendDeliveryEmail2`, not the legacy stub. D1 currently records 0 delivery rows and 0 verified non-test paid orders. No test email was sent.
+- Correct conclusion: email delivery code exists; a real successful delivery is not evidenced. Do not describe the provider integration as absent.
+
+## Read-only production data — 2026-11-05T21:53Z
+- D1 production queries were SELECT-only; every query reported `changed_db=false` and `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (all five emails are `@example.com`, amount sum 10,000 minor units is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`. Paid non-test orders: 0; paid non-test amount: 0.
+- Licences: 5 active; downloads: 5; deliveries: 0; activations: 0; webhook events: 16.
+- Email table `botwow_emails`: 12 rows, 0 confirmed, 9 marketing-consent flags, 7 transactional-consent flags. No email was sent during this check.
+- Analytics events with `test=0`: page_view 1,856; journey_view 739; cta_click 48; checkout_requested 29; checkout_start 4; checkout_created 6; checkout_failed 6. No payment_confirmed, conversion, delivery_sent or activation events. These are event counts, not unique visitors.
+
+## Mollie
+- Live `ListProfiles`: one verified profile for `https://sargasses-martinique.com/`; no BOT-WOW-specific profile.
+- Live `ListWebhooks`: one enabled webhook targeting `https://sargasses-martinique.com/api/mollie-webhook.php`; no BOT-WOW webhook.
+- No payment was created and no other activity's profile was reused.
+
+## Live site limitation
+- Direct web-reader opens for the eight secondary routes failed in this run. Source-level copy defects remain confirmed by the current main files; live HTTP body and headers for those routes were not independently retrieved. Do not claim live correction.
+
+## Safety / commercial state
+- `RELEASE_STATUS` is a masked secret binding. Code defaults to `pending` and allows checkout only when the effective value is exactly `confirmed`; the effective value remains unknown. No valid checkout probe was sent.
+- Public checkout remains closed. Verified commercial sales: 0. Confirmed commercial revenue: €0.00.
+- No Worker deploy, secret change, payment, email send, D1/R2 mutation, DNS change or cache purge occurred.
+
+## Next action
+1. Correct this report and issue #99 so the email integration is accurately described.
+2. Execute issue #97 as a static EN/FR copy/test PR; keep checkout and Worker unchanged.
+3. Prepare, but do not deploy, a Worker reconciliation for the confirmed legacy landing and old-archive fallback. Worker deployment requires separate explicit authorization.
+4. Verify package bytes/provenance and the effective release gate through authorized non-disclosing paths before any sales enablement.
+
+
+---
+
+# P0.58 — 320px documentation overflow fixed; PR #100 revalidated; primary-route claims still open — 2026-11-05T23:33Z
+
+## GitHub / PR #100
+- Current `main`: `a4bb4572079ba939df05e87a221ccaddea1e08b2`.
+- PR #100 remains OPEN, base SHA matches main, mergeable=true. Branch: `fix/p0.54-secondary-route-status-copy-20261105`.
+- Latest code head before this report update: `9656c544a53b898665f5a7530827959bfa69bb5b`; 12 commits, 40 changed files. Static copy/tests only.
+- Validate run `42129873947`: SUCCESS on that head.
+- UI Quality run `42129873965`: IN PROGRESS at the latest check; do not merge until it completes green on the exact final head.
+- Previous UI Quality run `42127563795` completed with 422 PASS and 6 FAIL. All six failures were the 320px overflow assertion for `/docs/index.html`, `/docs/fr/index.html`, and `/docs/fr/install.html` in desktop and mobile projects. Recorded document widths were 335px, 335px and 342px against 321px allowed.
+- Root cause: long 40px documentation heading words exceed the 320px content width. This is a real responsive defect, not a stale assertion.
+- Corrective commits added `.docs-archive` to the four archived documentation index/install pages and a scoped `@media(max-width:360px)` rule in `assets/components.css` reducing the archived-page heading to 30–34px with safe wrapping. The overflow assertion was not weakened.
+- PR comment with exact failure and fix: https://github.com/aveca/bot-wow/pull/100#issuecomment-6672278374
+
+## Cloudflare Pages — read-only verification
+- Project `bot-wow`, production branch `main`, build `node scripts/build-site.mjs _site`, output `_site`; Git source is `aveca/bot-wow`; preview setting reports `none`.
+- Latest production deployment remains `321aeb92-5a58-4e83-a80a-293038c1d610`, source `a4bb4572079ba939df05e87a221ccaddea1e08b2`; queued, initialize, clone, build and deploy stages all SUCCESS.
+- `bot-wow.com` and `www.bot-wow.com` domains are ACTIVE.
+- PR branch preview deployment records exist but show stage `idle`; they are not production deployments. PR #100 has not been merged and its changes are not live.
+- Rollback remains `321aeb92-5a58-4e83-a80a-293038c1d610`.
+- No Pages production mutation occurred during this run.
+
+## Public routes — fresh web-reader check
+- Home `https://bot-wow.com/` and Buy `https://bot-wow.com/buy.html` were readable.
+- Both state that purchase/delivery are unavailable. However, the live primary pages still describe the intended gameplay-automation product, measured bot behavior, an operational unzip/key/F9 installation step, a 14-day refund promise tied to activation, and an installation guide. The Buy page continues to describe intended package entitlements and delivery as unverified.
+- These claims are still in current main source; PR #100 covers secondary routes, not Home/Buy. This is not a cache discrepancy: the Pages production source is exactly current main.
+- Created issue #102: https://github.com/aveca/bot-wow/issues/102 to align Home/Buy EN/FR with closed checkout and unverified commercial scope. Legal document bodies remain excluded; issue #101 still requires owner/legal approval.
+- Features and docs/install direct web-reader opens returned internal errors in this run; no live claim is made for those routes. Source changes in PR #100 remain pending.
+
+## Production D1 — read-only
+- Queries used SELECT-only statements/batch. Every returned query reports `changed_db=false`, `rows_written=0`.
+- Orders: Bitcoin manual `paid=5` (all test-domain records; amount sum is test data), `pending_payment=8`, `rejected=1`; Mollie `failed=11`.
+- Paid non-test orders: `0`; paid non-test amount: `0`.
+- Licences: 5; deliveries: 0; activations: 0; webhook events: 16; email contacts: 12; confirmed contacts: 0.
+- These test orders/licence rows do not prove a commercial sale or delivery.
+
+## Analytics D1 — read-only, test=0
+- `page_view=1,897`; latest recorded page event `2026-11-05T23:31:49.716Z`.
+- `journey_view=760`; latest `2026-11-05T23:31:49.737Z`.
+- `cta_click=48`; latest `2026-11-04T02:47:00.736Z`.
+- `checkout_requested=29`; `checkout_start=4`; `checkout_created=6`; `checkout_failed=6`.
+- No `payment_confirmed`, `conversion`, `delivery_sent` or `activation` events.
+- Counts are events, not unique visitors or sessions.
+
+## Mollie / Worker
+- Live `ListProfiles`: one verified profile for `https://sargasses-martinique.com/`; no BOT-WOW-specific profile.
+- Live `ListWebhooks`: one enabled live webhook to `https://sargasses-martinique.com/api/mollie-webhook.php`; no BOT-WOW webhook.
+- No Mollie payment was created; no profile from another activity was reused.
+- Worker `botwow-api` remains deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100% traffic.
+- Binding names include `RELEASE_STATUS`, `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`, `RESEND_API_KEY`; secret values were not read. `MAIL_FROM` is `BOT-WOW <licences@bot-wow.com>`; `R2_OBJECT_KEY` is `casinobabe-fishing-1.2.0.zip`.
+- The effective `RELEASE_STATUS` value remains unknown. Do not probe it with a valid checkout request.
+- Resend integration code exists (`sendDeliveryEmail2` → `sendEmail2`), but successful delivery and credential validity are unverified. No email was sent.
+- Issue #99 title/body were corrected to reflect that the Resend integration exists; only successful production delivery remains unverified.
+
+## Commercial state / safety
+- Verified commercial sales: **0**. Confirmed commercial revenue: **€0.00**.
+- Public checkout UI is closed. Effective Worker-side gate remains unknown; do not assume the UI proves the secret value.
+- No applicable authorization for the current gameplay-automation scope is documented. Do not promote or sell this scope for Blizzard-operated services.
+- No price, checkout, payment, secret, binding, Worker, D1/R2, email, DNS, cache or production setting was changed. No campaign or paid traffic.
+
+## Next action
+1. Wait for UI Quality run `42129873965` and require SUCCESS on the exact final PR #100 head; inspect any new failures rather than weakening tests.
+2. If green, inspect the complete diff and merge the reversible static PR #100; verify the automatic Pages production deployment source SHA and the changed routes.
+3. Execute issue #102 as a separate static EN/FR PR for Home/Buy copy; do not change legal bodies from issue #101.
+4. Keep checkout closed until the product scope is authorized, the exact package bytes/provenance are verified, a dedicated BOT-WOW payment profile/webhook exists, and end-to-end fulfillment is proven.
+5. Keep Worker v50 reconciliation separate and do not deploy Worker or change secrets without specific authorization.
+
+---
+
+# P0.56 — Secondary EN/FR routes merged and live; Worker fulfillment reconciled (PR #100 merged, PR #103 open) — 2026-11-06T00:25Z
+
+## Mission
+P0.56 — secondary routes (closed checkout / unverified release) + Worker fulfillment reconciliation. Scope: BOT-WOW only. Static pages only for the deployable part; Worker prepared but **not deployed**.
+
+## GitHub / merge
+- `main` before: `a4bb4572079ba939df05e87a221ccaddea1e08b2`. `main` after: `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`.
+- **PR #100 MERGED** 2026-11-06T00:22:08Z (squash), branch `fix/p0.54-secondary-route-status-copy-20261105`, head `0ba3395e7c51cec3e2a1d5577b51c2f79306441c`. 41 files changed (+418 / -431). Closes issue #97.
+- PR #100 final CI on the exact head `0ba3395`: **Validate SUCCESS** (run `42132869946`) and **UI Quality SUCCESS** (run `42132870177`), GitGuardian pass. Both green on the same SHA before merge.
+- **PR #103 OPEN** (not merged, not deployed): `fix/p0.56-worker-fulfillment-reconciliation-20261105`, head `462e13609454521a8525962321b1f8f336146db2`, base `main` @ `a4bb457`. Validate SUCCESS (run `42136060489`), UI Quality SUCCESS (run `42136060542`), GitGuardian pass. Closes issue #99 when merged.
+
+## Static changes merged (PR #100)
+- 22 mission routes EN/FR (`demo`, `features`, `fishing`, `faq`, `getting-started`, `compatibility`, `roadmap`, `success`, `docs/install`, `docs/license`, `docs/index`) + `cancel`, `404`, `docs/changelog`, `docs/known-issues` and the legal **navigation** CTAs: no active Buy/Acheter header, all CTAs point to the purchase-status page, no `href="#offre"`, no lifetime-licence claim, no active Mollie/Bitcoin/machine-lock claim, no guaranteed delivery / activation / delivery-email, no payment confirmation on visit, platform warnings preserved.
+- Two real defects found and fixed by the new coverage: `.callout` is a flex container, so the status link added inside the installation-unavailable callouts became a non-wrapping flex item and pushed the document past the viewport at 320px (361px on `fr/getting-started.html`); `success.html` / `fr/success.html` had no `<h1>` at all.
+- One CI-only defect: the 40px heading word “Documentation” measures 332px against the 286px usable at 320px under the CI runner's fallback font metrics. Fixed with a scoped `@media(max-width:360px)` rule on the archived documentation pages (`body.docs-archive`) — the assertion was not weakened.
+- Regression coverage: `tests/e2e/responsive.spec.mjs` now covers the 22 secondary routes at 320 / 375 / 391 / 430 / 768 / 1280 (264 assertions) plus a **deterministic no-webfont guard** (44 assertions) that blocks `fonts.googleapis.com` / `fonts.gstatic.com` before load, so the CI-only failure can no longer pass locally. `tests/release-availability.test.mjs` extended to 36 EN/FR routes.
+- Legal document **bodies** deliberately unchanged pending owner/legal approval (issue #101). `ab/` variants are not published (`build-site.mjs` excludes them).
+
+## Local verification (real runs)
+- `npm run validate` → exit 0 · `node scripts/versionne-assets.mjs` → 51 files stamped · `npm test` → exit 0 · `npm run audit:css` → exit 0 · `node scripts/build-site.mjs _site` → exit 0 · `git diff --check` → exit 0.
+- Playwright (`node node_modules/@playwright/test/cli.js test`): **472 passed / 0 failed** (342 in `tests/e2e/responsive.spec.mjs` alone). Note: `npm run test:e2e` is not usable as-is under npm/PowerShell on this machine; the Playwright CLI is the equivalent command used by CI.
+- The mechanical `versionne-assets` stamp resync is **not** committed (same convention as PR #95, #96, #100): CI regenerates it before the test and build steps.
+
+## Cloudflare Pages — production
+- Automatic deploy after the merge: deployment **`af45d9ec-729a-45e3-9562-ab34ebc7fc71`**, branch `main`, **source `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`** (matches the merge commit).
+- Rollback targets still reachable: `321aeb92-5a58-4e83-a80a-293038c1d610` (source `a4bb457`) and the mission target `ea59f77e-4fbe-42ea-b9e5-e5d22f94569c` (source `0bba14d`).
+- No Pages production mutation other than the automatic post-merge deploy.
+
+## Live verification (read-only GET on https://bot-wow.com, 2026-11-06T00:24Z)
+- **34 of the 36 affected routes are compliant**: HTTP 200 after the Pages `.html` → extensionless 308 (canonical URLs `/demo`, `/docs/install`, `/fr/success`, …), a valid purchase-status link present, and none of the eight commercial assertions (no immediate-purchase CTA, no lifetime licence, no active Mollie, no guaranteed delivery / activation / delivery-email, no payment confirmation on visit, no `#offre`).
+- The **2 remaining exceptions are `legal/terms.html` and `legal/fr/terms.html`**: their bodies still describe the licence key + download link sent by email and one-machine activation. This is the known and intentional freeze (issue #101, owner/legal approval required); PR #100 changed only their navigation. **Not a regression.**
+- Home / Buy EN/FR were out of scope for PR #100 and are tracked in issue #102.
+
+## Worker / fulfillment (PR #103, prepared only — NOT deployed)
+- Deployed Worker `botwow-api` is **still version 50** (`c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`), created 2026-10-27T07:46:28Z. No new deployment, no secret change, no binding change.
+- Read-only GET probes (2026-11-06T00:10Z) confirm the deployed Worker is **stale**: `/bot-wow-gold` and `/best-wow-bot` still return HTTP 200 legacy marketing HTML (16 765 bytes), as do `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/`. `main` already answers 308 to the canonical site on all of them.
+- `main` also already removed the `Casinobabe-v1.0.38.zip` fallback (PR #19), reserves the download quota **only after** the configured artifact is found, and serves `Content-Disposition` = the exact served object key. PR #103 makes these guarantees executable with `tests/worker-fulfillment-reconciliation.test.mjs` (legacy routes, no older-archive fallback, quota ordering, filename, `429 limit_reached`, fail-closed email) and removes the dead `sendDeliveryEmail` log-only stub.
+- The v50 bundle body is **not retrievable** with the available Cloudflare OAuth token (the version content endpoint returns metadata JSON only): the gap is established by observed HTTP behavior, not by reading the bundle.
+
+## RELEASE_STATUS / payment / email state
+- `RELEASE_STATUS` (`secret_text`) exists; its value is **masked, unknown and never revealed**. The Worker is treated as **fail-closed**; no valid checkout request was attempted.
+- `/api/config` exposes **no availability state** — live body: `{"contactEmail":"support@bot-wow.com","product":"bot-wow-lifetime","priceEur":20,"currency":"eur","bitcoin":{"enabled":true,"address":null}}`. There is no `releaseStatus` / `available` field, so the effective release gate cannot be read from the public API.
+- Residual reported, **not changed**: `/api/config` still publishes `bitcoin.enabled: true` with a null address, which contradicts the closed-checkout message on the site. Nothing in the front-end consumes `config.bitcoin`. It is a payment-rail decision outside issue #99 and left for an explicit owner decision.
+- Email: the Resend integration (`sendDeliveryEmail2` → `sendEmail2`) exists in both `main` and v50; `RESEND_API_KEY` is present as a masked `secret_text`; **credential validity and any successful production delivery remain unverified**. Without the key the path is fail-closed (delivery recorded `pending` for replay). No email was sent, tested or enabled.
+- Mollie / D1 / analytics were **not re-audited** in this cycle (no demonstrated change); see the P0.58 addendum above for the read-only snapshot of 2026-11-05T23:33Z (no BOT-WOW profile, one live webhook on another domain, 0 paid non-test orders, 0 deliveries, 0 activations, no `payment_confirmed` / `delivery_sent` / `activation` events).
+
+## Commercial state / safety
+- Verified commercial sales: **0**. Confirmed commercial revenue: **0,00 €**.
+- No price, checkout, payment, secret, binding, Worker, D1/R2, email, DNS, cache or production setting was changed. No campaign or paid traffic. No archive was fabricated.
+
+## Blockers
+1. Deployed Worker v50 still serves legacy marketing pages — reconciling production requires a **Worker deployment with explicit authorization** (checklist in `reports/operations/BOT-WOW-WORKER-RECONCILIATION-P0.56.md`).
+2. `RELEASE_STATUS` effective value unknown → fail-closed; `/api/config` exposes no availability state.
+3. Delivery artifact unverified: no provenance, no SHA-256, no content inspection, no confirmed compatibility → delivery stays `503 artifact_unavailable`.
+4. No dedicated BOT-WOW Mollie profile and no BOT-WOW webhook.
+5. Legal bodies EN/FR still describe a delivered licence key and one-machine activation (issue #101).
+6. Home / Buy EN/FR still describe the intended gameplay-automation product (issue #102).
+
+## Next action
+1. Review and merge PR #103 (Worker reconciliation) — green, no deployment; a Worker deploy itself needs a separate explicit authorization after the checklist is executed.
+2. Execute issue #102 (Home/Buy EN/FR) as a separate static PR; leave the legal bodies of issue #101 untouched.
+3. Verify the exact R2 artifact bytes / provenance / SHA-256 and the effective release gate through authorized non-disclosing paths before any sales enablement.
+4. Decide explicitly on the `/api/config` `bitcoin.enabled` residual before the checkout is ever reopened.
+
+### Prompt complet du cycle suivant
+
+```
+MISSION BOT-WOW P0.59
+LIVRAISON REELLE + PORTE DE RELEASE VERIFIEE
+
+REPOSITORY:
+https://github.com/aveca/bot-wow
+
+SCOPE:
+BOT-WOW uniquement.
+
+MAIN:
+f95868421e994db46c5cd2fdfbb0f3d8d74f2516
+
+PRs:
+#100 (statique, mergée 2026-11-06T00:22:08Z, merge f958684)
+#103 (Worker, ouverte, verte, NON déployée, head 462e136)
+
+TRACKERS:
+Issue #97 — routes secondaires (clos)
+Issue #99 — Worker et fulfillment
+Issue #101 — corps des pages légales (approbation propriétaire/juridique)
+Issue #102 — Home/Buy EN/FR
+
+================================================
+PHASE 1 — REPRISE
+================================================
+Lire :
+AGENTS.md
+PRODUCT.md
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Vérifier :
+- main SHA ;
+- PR #103 (état, CI, diff complet) ;
+- dernières Pages (production af45d9ec, rollback 321aeb92 et ea59f77e) ;
+- état Worker botwow-api (toujours v50 ?).
+
+Préserver tout changement local.
+Ne pas recommencer les audits D1/Mollie sans évolution démontrable.
+
+================================================
+PHASE 2 — PR #103 : REVUE ET FUSION (SANS DEPLOIEMENT)
+================================================
+- Inspecter le diff complet de PR #103 (4 fichiers).
+- Vérifier que la suite tests/worker-fulfillment-reconciliation.test.mjs
+  couvre : aucune route marketing legacy, aucun repli archive ancienne,
+  quota réservé après artefact trouvé, Content-Disposition = clé exacte,
+  fournisseur d'e-mail fail-closed.
+- Fusionner PR #103 si et seulement si la CI est verte sur le SHA final.
+- NE PAS deployer le Worker. NE PAS toucher aux secrets ni aux bindings.
+- NE PAS ouvrir le checkout. Aucun paiement, aucun e-mail, aucune écriture
+  D1/R2.
+
+================================================
+PHASE 3 — PHASE 3 STATIQUE : ISSUE #102 (HOME / BUY EN+FR)
+================================================
+Créer une branche dédiée depuis main, sur le modèle de PR #100.
+
+Objectifs :
+- plus aucun header Buy/Acheter actif ;
+- plus de CTA d'achat immédiat ; tout pointe vers la page de statut ;
+- aucune description du produit comme « produit d'automatisation de jeu »
+  disponible ou autorisé ;
+- aucune promesse de licence à vie, de clé, de téléchargement, de
+  livraison ou d'activation ;
+- le guide d'installation ne doit plus présenter l'installation comme
+  disponible ;
+- conserver l'avertissement de plateforme et l'avertissement Blizzard ;
+- corps des pages légales : NE PAS TOUCHER (issue #101).
+
+Tests :
+- étendre tests/release-availability.test.mjs à Home/Buy EN+FR ;
+- étendre la couverture responsive aux viewports 320/375/391/430/768/1280.
+
+Exécuter réellement :
+npm run validate
+node scripts/versionne-assets.mjs
+npm test
+npm run audit:css
+node scripts/build-site.mjs _site
+node node_modules/@playwright/test/cli.js test
+git diff --check
+
+================================================
+PHASE 4 — PR STATIQUE #102
+================================================
+- commit ciblé, push, PR inspectable ;
+- exiger Validate SUCCESS ET UI Quality SUCCESS sur le MÊME SHA ;
+- inspecter le diff complet ;
+- fusionner selon la politique de livraison statique réversible ;
+- rollback Pages de référence : ea59f77e-4fbe-42ea-b9e5-e5d22f94569c ;
+- vérifier le déploiement automatique (source = SHA de fusion) ;
+- re-vérifier en live toutes les pages concernées.
+
+================================================
+PHASE 5 — PORTE DE RELEASE (LECTURE SEULE, SANS CHECKOUT)
+================================================
+- vérifier le RELEASE_STATUS effectif via un chemin Cloudflare autorisé
+  SANS jamais afficher la valeur ; sinon fail-closed ;
+- décider explicitement du résidu /api/config bitcoin.enabled:true ;
+- ne jamais tenter de checkout valide ; aucun paiement de test.
+
+================================================
+PHASE 6 — PREUVE DE L'ARTEFACT
+================================================
+- obtenir un chemin de lecture R2 AUTORISÉ ;
+- consigner : provenance, version exacte, SHA-256, contenu inspecté,
+  compatibilité confirmée ;
+- NE PAS fabriquer d'archive ; NE PAS écrire dans R2 ;
+- si la preuve est impossible, documenter le blocage et laisser
+  artifact_unavailable en place.
+
+================================================
+PHASE 7 — EMAIL
+================================================
+- ne PAS activer l'envoi ;
+- documenter l'absence de procédure de test-send autorisée ;
+- exiger : procédure de test-send, destinataire de test, preuve de
+  réception, rejouabilité — avant tout envoi réel.
+
+================================================
+GARDE-FOUS
+================================================
+NE PAS :
+- modifier prix ;
+- ouvrir checkout ;
+- créer paiement ;
+- modifier secrets ou bindings ;
+- déployer le Worker sans autorisation spécifique ;
+- écrire D1 ou R2 ;
+- envoyer email ;
+- modifier DNS ;
+- purger cache ;
+- acheter du trafic ;
+- promouvoir un bot non autorisé ;
+- fusionner PR #66 ou #90 sans audit spécifique ;
+- modifier les corps des pages légales sans approbation (issue #101) ;
+- travailler sur un autre produit.
+
+================================================
+RAPPORT FINAL
+================================================
+1. MAIN SHA
+2. BRANCH
+3. COMMITS
+4. PR STATIQUE
+5. PR WORKER
+6. VALIDATE
+7. PLAYWRIGHT
+8. TEST COUNT
+9. HOME EN/FR
+10. DEMO EN/FR
+11. FEATURES EN/FR
+12. GETTING STARTED EN/FR
+13. SUCCESS EN/FR
+14. DOCS EN/FR
+15. PAGES DEPLOYMENT
+16. LIVE VERIFICATION
+17. WORKER VERSION
+18. WORKER SOURCE DIFF
+19. RELEASE_STATUS STATE
+20. MOLLIE
+21. WEBHOOK
+22. D1
+23. ANALYTICS
+24. PACKAGE SHA256
+25. EMAIL DELIVERY
+26. SALES
+27. REVENUE
+28. BLOCKERS
+29. NEXT PRIORITY
+
+Actualiser :
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Terminer par le prompt complet du cycle suivant.
+```
+
+---
+
+# P0.56 bis — CORRECTION : un commit documentaire declenche quand meme un rebuild Cloudflare Pages — 2026-11-06T00:38Z
+
+## Ce qui etait ecrit (et qui etait faux)
+La PR #104 (documentation seule, `reports/operations/BOT-WOW-CURRENT-STATE.md`) affirmait : « Documentation only: `reports/**` is in the Pages `paths-ignore`, so no Pages deployment is triggered. »
+
+## Etat reel verifie
+- Le workflow **GitHub Actions** `pages.yml` a bien ete **ignore** pour `2b0dd14` : aucun run Actions n'existe pour ce SHA (dernier run Pages = `42136308539`, SHA `f958684`). Le `paths-ignore: reports/**` fonctionne pour Actions.
+- Mais le projet Cloudflare Pages `bot-wow` a **sa propre integration Git** : `wrangler pages project list` -> `bot-wow ... Git Provider: Yes`. Un push sur `main` y declenche un build automatiquement, **sans consulter le `paths-ignore` d'Actions**.
+- Consequence observee : production **`e1892843-d91c-4b11-b853-57a1cbf68a12`**, branche `main`, **source `2b0dd14`**, statut Active. Le site a donc ete reconstruit et republie alors que la PR ne touchait que de la documentation.
+- **Contenu publie inchange** : `reports/**` est exclu de l'artefact par `build-site.mjs` (liste DENY), le fingerprint des assets reste `b4232c44` (`?v=b4232c44` en ligne), donc l'artefact servi est equivalent.
+- **Revérification live après ce rebuild** : les 10 preuves de la section precedente sont toujours vertes (`<h1>` success EN/FR, callout encapsulé EN/FR, `body.docs-archive` sur docs index EN/FR + install, regle `.docs-archive .panel h1` <=360px dans `assets/components.css` servi, stamp unique `b4232c44`) et la compliance reste de **34/36 routes**, les 2 memes exceptions `legal/terms` EN/FR (issue #101).
+
+## Consequence operationnelle
+- L'hypothese du depot « un commit documentaire ne declenche pas de deploiement applicatif » est **fausse du cote Cloudflare** : elle ne vaut que pour le workflow Actions. Deux chemins de deploiement coexistent (Actions + integration Git Cloudflare), donc un merge sur `main` peut produire un ou deux deploiements.
+- Pour la suite : ne pas deduire « doc-only = pas de deploiement » ; **verifier systematiquement** avec `wrangler pages deployment list --project-name bot-wow` et controler le `source` du deploiement avant d'annoncer un etat de production.
+- Rollbacks toujours disponibles : `af45d9ec` (source `f958684`), `321aeb92` (source `a4bb457`), `ea59f77e` (source `0bba14d`).
+- Aucun autre changement : pas de prix, checkout, paiement, Worker, secret, binding, D1/R2, e-mail, DNS ni cache. Le site n'a pas ete modifie, seul son artefact a ete reconstruite a l'identique.
+
+
+---
+
+# P0.60 — état vérifié depuis ChatGPT, 2026-11-06T01:04Z
+
+## GitHub
+- Base de la branche de travail : `main` à `21c2e3ef9d164e45e42323a39a9a3cbf983d370e`.
+- PR #100 est fusionnée.
+- PR #107 : `fix/p0.60-primary-routes-status-only-20261106`, correction Home/Buy EN/FR, lien `#offre` conservé, tests de disponibilité, artefact et funnel mis à jour.
+- Code de pages et de tests avant ce rapport : `dc0b173310978fa8463a9979d6ea215e60f33565`.
+- Validate a passé sur le commit précédent `d2e15194908774c91b406a61cf16c45b00d0d048`; UI Quality doit être verte sur le SHA final avant toute fusion. Les premiers échecs ont révélé et conduit à corriger les assertions de comparaison, les ancres historiques, les CTA du parcours et deux regex de test.
+- PR #103 reste ouverte, CI verte sur son SHA `462e13609454521a8525962321b1f8f336146db2`, mais sa base documentée est ancienne (`a4bb457)); aucun déploiement Worker.
+
+## Changements Home/Buy en attente de fusion
+- Remplacement des pages principales EN/FR par un statut de projet : aucun produit, paquet, licence, activation, livraison ou support commercial actuellement proposé.
+- La démo est explicitement une simulation navigateur, sans connexion au jeu ni contrôle du gameplay.
+- Le montant de 20 € est conservé uniquement comme prix cible historique, pas comme prix de vente.
+- Instructions historiques d'installation et promesses de remboursement/livraison supprimées du marketing.
+- Avertissement Blizzard et lien vers l'accord anti-triche officiel conservés ; aucune autorisation n'est revendiquée.
+- Corps des documents juridiques non modifiés ; issue #101 reste ouverte.
+- Checkout toujours désactivé ; aucun événement de paiement ou d'envoi déclenché.
+
+## Pages Cloudflare
+- Dernier déploiement de production observé : `ff13930a-4c97-441a-a828-2b1818e9e6b3`, source `21c2e3ef9d164e45e42323a39a9a3cbf983d370e`, statut success.
+- Déploiement précédent/rollback : `e1892843-d91c-4b11-b853-57a1cbf68a12`, source `2b0dd1491dded9035116eebc85f005295fc3ba65`.
+- PR #107 n'est pas déployée. La production ne doit être considérée corrigée qu'après merge, déploiement Cloudflare confirmé et vérification HTTP du domaine.
+
+## D1 — lecture seule, 2026-11-06
+- `botwow-production` : 5 commandes `bitcoin_manual/paid`, toutes de test (`@example.com)); 0 commande payée hors domaine de test; 8 pending; 1 rejected; 11 Mollie failed.
+- 5 licences actives, 5 téléchargements, 0 livraison, 0 activation, 16 webhooks (dernier traité le 2026-10-27).
+- `botwow-analytics`, `test=0) : 1 957 page_view; 787 journey_view; 48 cta_click; 29 checkout_requested; 6 checkout_failed; 6 checkout_created; 4 checkout_start; aucun payment_confirmed, delivery_sent ou activation.
+- Toutes les requêtes D1 étaient SELECT/PRAGMA : `changed_db=false`, `rows_written=0`.
+
+## État commercial
+- Ventes commerciales payées vérifiées : **0**.
+- Revenu commercial confirmé : **0,00 €**.
+- Profil Mollie BOT-WOW dédié et webhook BOT-WOW : non vérifiés/absents au dernier relevé.
+- Livraison email réelle : non démontrée. Resend existe dans le code, mais aucun envoi n'a été effectué.
+- Worker `botwow-api` v50 : inchangé et non déployé. `RELEASE_STATUS` reste masqué/inconnu, traité fail-closed.
+- Aucun prix, checkout, paiement, secret, binding, Worker, D1/R2, email, DNS, cache ou dépense modifié.
+
+## Prochaine action réelle
+1. Attendre Validate et UI Quality SUCCESS sur le même SHA final de PR #107.
+2. Revoir le diff final, fusionner la PR statique si les deux contrôles sont verts et le rollback Pages disponible.
+3. Vérifier le déploiement Cloudflare (source SHA = merge SHA), puis contrôler le contenu HTTP réel sur Home/Buy EN/FR.
+4. Ensuite seulement, reprendre la réconciliation Worker #103 et la preuve de l'artefact ; aucun checkout ni promotion avant résolution du périmètre autorisé et de la livraison.
+
+
+---
+
+# P0.59 — Revalidation live complète (apex + www), PR #100 déjà fusionnée, Worker préparé sans déploiement — 2026-11-06T01:35Z
+
+## Correction de la base de référence (le prompt P0.59 était périmé)
+- `main` au **démarrage** de la mission : `21c2e3ef9d164e45e42323a39a9a3cbf983d370e` (PR #105, documentaire) — **pas** `a4bb457`. `main` à la **fin** de la mission : `6fd1f5e45c4c0f6b66912d3b987bc84074d2a21a` (PR #108, documentation), après PR #109 `0f86536` (correctif `<h1>` cancel) et PR #107 `b2de2a6` (P0.60, statut-only des pages primaires).
+- **Fusions réalisées pendant ce cycle** (3, dans cet ordre) : PR #109 `0f86536` (2026-11-06T01:53:00Z, correctif `<h1>` cancel EN/FR, 3 fichiers +4) → PR #107 `b2de2a6` (P0.60, fusionnée par la mission concurrente pendant ce cycle) → PR #108 `6fd1f5e` (2026-11-06T02:41:17Z, documentation, 1 fichier +493). PR #100 : **MERGED** le `2026-11-06T00:22:08Z`, merge SHA `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`, 41 fichiers (+418/−431). Aucune fusion n'a été refaite : il n'existe pas de « merge SHA P0.59 » distinct pour PR #100.
+- Run UI Quality `42120739142` : le prompt le donnait « IN PROGRESS ». Le run réel est **`completed/success`** sur le SHA exact `938b9723f5956ecd9822e863f6dc98a38a1ba5ef`, terminé le `2026-11-05T22:23:11Z`, **164 tests passés**. Validate `42120739193` : `completed/success`, même SHA. Aucun défaut à corriger, aucun test désactivé.
+- Production au démarrage : `ff13930a-4c97-441a-a828-2b1818e9e6b3`, source `21c2e3e`. Rollbacks disponibles : `321aeb92` (`a4bb457`), `ea59f77e` (`0bba14d`), `af45d9ec` (`f958684`), `e1892843` (`2b0dd14`).
+
+## Phase 2 — Playwright, CI et tests locaux réels
+- CI `42120739142` (sha `938b972`) : **success**, 164 tests passés.
+- CI `42132870177` (sha `0ba3395`, tête finale de la branche) : **success**, 472 tests passés.
+- Validate sur `main` : `42136308793` (`f958684`), `42137687790` (`2b0dd14`), `42138548404` (`21c2e3e`) — tous **success**.
+- Chaîne locale rejouée sur `main` = `21c2e3e` (worktree `botwow-p059`) :
+  - `npm run validate` → **PASS** (exit 0).
+  - `node scripts/versionne-assets.mjs` → 51 fichiers, stamp `b4232c44`.
+  - `npm test` → **exit 0** (26 suites, migrations D1 incluses).
+  - `npm run audit:css` → **exit 0** (12 feuilles, 50 tokens, 0 token non défini).
+  - `node scripts/build-site.mjs _site` → **exit 0**, artefact 24 entrées, stamp `b4232c44`, aucun fichier interdit.
+  - `node node_modules/@playwright/test/cli.js test` → **472 passed / 0 failed** (1.5 m), exit 0.
+  - `git diff --check` → **exit 0**.
+- Le resync `versionne-assets` est **mécanique et non committé** (convention du dépôt) : le diff se limite à `?v=cb3925b6` → `?v=b4232c44`, 0 ligne hors stamp.
+
+## Phase 3 — Inspection des 38 fichiers de PR #100
+- `git show --name-only f958684` confirme les 38 fichiers : 22 pages EN/FR secondaires, `assets/components.css`, 6 pages juridiques (navigation seule), `reports/operations/BOT-WOW-CURRENT-STATE.md`, et 3 tests.
+- `legal/*.html` et `legal/fr/*.html` : **corps inchangés**, seules 2 lignes de navigation par fichier ont changé (`../#offre` → `../buy.html` + `data-track="cta_click" data-cta-id="purchase-status"`). Diff = 4 lignes par fichier, 6 fichiers, +12/−12.
+- `index.html`, `fr/index.html`, `buy.html`, `fr/buy.html` sont **hors périmètre de PR #100** (ils viennent de PR #90 / PR #52). Home/Buy ont donc été vérifiés séparément en Phase 7.
+
+## Phase 7 — HTTP live, 40 routes × 2 domaines = 80 chargements
+Script : `botwow-p059-live-final.mjs` (GET seul ; ni paiement, ni checkout, ni POST, ni purge de cache).
+- **HTTP 200 : 80/80.**
+- **Apex vs `www` : octets identiques sur les 40 routes** (comparaison `Content-Length`/corps après redirections).
+- **Stamp servi unique et identique sur les deux domaines : `?v=b4232c44`** — exactement le fingerprint calculé par `versionne-assets` sur `main`. La homepage lue par l'outil web précédent était un ancien snapshot : **ce n'est pas un problème de cache**, le contenu servi correspond au `main` fusionné.
+- Redirections : Pages (Automatic HTML Extensions) renvoie **308** de `/x.html` vers `/x`. `www.bot-wow.com` est servi directement (pas de redirection de zone) : les deux hôtes portent le même contenu.
+- Conformité commerciale : aucune route ne présente de CTA Buy/Acheter immédiat, de licence à vie disponible, de Mollie actif, de livraison garantie, d’activation garantie, d’e-mail de livraison garanti, ni de page success comme preuve de paiement.
+- **Suivi du statut d’achat** : `assets/analytics.js` n’émet `checkout_requested` que pour les identifiants `hero-offer`, `mbar-buy`, `final-buy`, `compare-buy`, `nav-buy`, `journey-fish-buy`, `journey-licence-buy`, `steps-buy`. **Aucune** occurrence de ces identifiants sur les 40 routes live ; les CTA de statut (`hero-status`, `nav-status`, `buy-status-primary`, `mbar-status`, `purchase-status`, `formula-ours-status`) sont tous tracés en `cta_click`. **Consulter le statut ne génère jamais `checkout_requested`.**
+- Exceptions connues (4) : `legal/terms` EN/FR × 2 domaines. Les corps juridiques promettent encore l’envoi de la licence et du lien par e-mail et l’activation sur une machine. **Hors périmètre de PR #100**, corps gelés par l’issue #101, approbation propriétaire/juridique requise. Non corrigé.
+- **Rejeu après le déploiement du correctif P0.59** (déploiement `c8c05ca3`, source `0f86536`) : les 80 chargements ont été rejoués et donnent **les mêmes résultats** — 80/80 HTTP 200, stamp `b4232c44` sur les deux domaines, apex et `www` octets identiques, mêmes 4 exceptions `legal/terms` et les 4 écarts `#offre` de Buy EN/FR (P0.60). Le correctif `<h1>` n'introduit **aucune** régression commerciale et **aucun** changement de stamp.
+- **Rejeu final après le déploiement P0.60** (déploiement `155a9b9e`, source `b2de2a6`) : **80/80 HTTP 200**, **0 échec dur**, **4 exceptions connues** (`legal/terms` EN/FR × 2 domaines, issue #101), stamp `b4232c44` sur les deux domaines, apex et `www` **octets identiques** sur les 40 routes. Les 4 écarts `#offre` de Buy EN/FR ont disparu ; l'ancre `#offre` restante sur Home est un alias **valide** (`id="offre"` présent) et **instrumenté** (`data-track="cta_click" data-cta-id="offer-status"`, libellé « Offer status — unavailable » / « Statut de l'offre — indisponible »), donc **pas** un résidu.
+- **Rejeu final après le déploiement post-PR #108** (déploiement `64cfe9f8`, source `6fd1f5e`) : **80/80 HTTP 200**, **0 échec dur**, **4 exceptions connues** (`legal/terms` EN/FR × 2 domaines), stamp `b4232c44` sur les deux domaines, apex et `www` **octets identiques** sur les 40 routes. Audit `<h1>` refait : **0 route sans `<h1>`** sur les 40 routes. Le merge documentaire n'a changé **rien** au contenu servi (stamp identique, octets identiques), ce qui confirme une nouvelle fois le comportement « P0.56 bis ».
+
+## Phase 7 — Défauts nouveaux trouvés
+1. **Buy EN/FR conserve un lien de navigation vers l’ancre legacy `#offre`** (`href="./#offre"` / `href="../#offre"`, libellé « Pricing » / « Tarifs »), non instrumenté. Le lien **fonctionne** (la Home porte un alias `id="offre"` explicite, commentaire dans le source), mais il conserve le motif d'ancre précédent la PR #100 et ne produit aucun événement `cta_click`. **RÉSOLU par P0.60** (PR #107, `b2de2a6`) : Buy ne contient plus que des liens `#buy` tracés (`nav-status`, `buy-status-primary`, `mbar-status`) et plus aucun `id="offre"`. **Vérifié en direct** sur `bot-wow.com` et `www.bot-wow.com`.
+2. **Liens de statut d’achat non instrumentés** en lien de prose et en navigation de pied de page : Home EN/FR (2 liens de pied de page vers `#buy`), getting-started, roadmap, success, docs/index, docs/install, cancel EN/FR. Ce sont des liens textuels secondaires, pas les CTA : les boutons de statut sont bien tracés. Impact limité à la **couverture de mesure** (`cta_click` sous-compté), pas à l'exactitude commerciale. **RÉSOLU pour Home et Buy par P0.60** (0 lien non tracé). Restent des liens de prose non instrumentés sur les routes secondaires de PR #100 (getting-started, roadmap, success, docs/index, docs/install, cancel) : **observation de couverture de mesure**, pas un défaut commercial — à trancher au prochain cycle.
+3. **`cancel.html` et `fr/cancel.html` n'avaient aucun `<h1>`** — **défaut prouvé et corrigé dans ce cycle**, voir la section « Correctif P0.59 » ci-dessous. Audit `<h1>` sur les 40 routes EN/FR : **2 routes sans `<h1>` avant, 0 après**.
+
+## Correctif P0.59 — `<h1>` manquant sur cancel EN/FR (PR #109, fusionnée)
+- **Défaut prouvé** : un audit de présence de `<h1>` sur les 40 routes EN/FR publiques a montré que **seules** `cancel.html` et `fr/cancel.html` n'en avaient pas. PR #100 avait déjà corrigé le même manque sur la page jumelle `success.html` / `fr/success.html` (« missing `<h1>` added on success EN/FR ») mais a oublié `cancel`. Le manque n'avait jamais été détecté parce que `tests/e2e/responsive.spec.mjs` asserte `expect(page.locator('h1')).toBeVisible()` pour chaque route de sa liste `p056Routes` — et **`cancel.html` / `fr/cancel.html` n'y étaient pas**.
+- **Correctif** : `cancel.html` → `<h1>Payment outcome <span class="grad">— not confirmed here</span></h1>` ; `fr/cancel.html` → `<h1>Résultat du paiement <span class="grad">— non confirmé ici</span></h1>`, placés comme sur `success.html` (juste après le lien de retour, avant le callout de statut). Le libellé reste **fidèle** : la page indique déjà que la visite « ne vérifie pas si un débit a eu lieu » et « ne prouve ni une annulation, ni un paiement, ni une livraison » ; le titre affirme un **résultat non confirmé** et n'affirme jamais une annulation, un remboursement ou un paiement. Il diffère volontairement de `success.html` : les deux URL peuvent être ouvertes après une tentative de paiement et ne doivent pas partager un `<h1>` identique.
+- **Couverture de non-régression** : `/cancel.html` et `/fr/cancel.html` ajoutés à `p056Routes` (22 → 24 routes).
+- **CI** : Validate `42146232112` **success**, UI Quality `42146232054` **success**, GitGuardian **pass** — même SHA `17800019f90b0da242bb7ed54ec84ea3458721d5`. PR **#109** fusionnée en squash le `2026-11-06T01:53:00Z`, merge SHA **`0f86536e65cb14116b63ae1ae2678c3b6bc8230c`**, 3 fichiers, **+4 lignes**.
+- **Chaîne locale sur la branche du correctif** : `npm run validate` PASS ; `versionne-assets` 51 fichiers stamp `b4232c44` ; `npm test` exit 0 ; `npm run audit:css` exit 0 ; `build-site` exit 0 ; **Playwright 500 passed / 0 failed** (472 avant, +28 = 2 routes × (6 viewports + 1 garde sans webfont) × 2 projets) ; `git diff --check` exit 0.
+- **Vérification live après déploiement** : `https://bot-wow.com/cancel` → `<h1>` « Payment outcome — not confirmed here » ; `https://bot-wow.com/fr/cancel` → « Résultat du paiement — non confirmé ici » ; idem sur `www.bot-wow.com`. Audit `<h1>` refait sur les 40 routes : **0 route sans `<h1>`**. Stamp servi **inchangé** (`?v=b4232c44`) : la modification porte sur du balisage de page, pas sur un asset.
+
+## Phase 8 — Worker `botwow-api` : préparation seulement, **AUCUN DÉPLOIEMENT**
+- État live (lecture seule) : version **50**, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc` créé le `2026-10-27T07:46:28Z`, annotation `workers/triggered_by: secret` (ré-upload déclenché par un changement de secret, **pas** par un déploiement du correctif du 2026-11-04).
+- **Confirmation de fin de cycle** (sonde GET lecture seule du `2026-11-06T02:43Z`, après les trois fusions) : le Worker live est **inchangé** — `/` 200 (39 298 o, marqueur legacy), `/bot-wow-gold` 200 (16 705 o, legacy), `/best-wow-bot` 200 (16 705 o, legacy), `/bot-wow-classic` et `/bot-wow-gratuit` 200 (16 732 o), `/de/` 200 (16 573 o), `/en/` 200 (16 569 o), `/ru/` 200 (16 574 o) ; `/health` 200 `{"status":"ok",...,"version":"1.0.0"}` ; `/api/config` 200 (140 o) ; `/api/mollie-webhook` 404 (endpoint POST uniquement). **Aucun déploiement Worker n'a été effectué pendant ce cycle.**
+- Écarts v50 vs `main`, établis par comportement HTTP observé :
+  - v50 sert encore du **HTML marketing legacy** en HTTP 200 sur `/bot-wow-gold` (16 705 o), `/best-wow-bot` (16 705 o), `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/` (≈16 570 o), et `/` (39 298 o).
+  - `main` ne contient plus `handleLanding` (commentaire « legacy landing generator REMOVED 2026-11-04 ») et impose une **redirection 308 vers `https://bot-wow.com`** via `redirectToCanonicalSite()`, sans jamais rendre de HTML marketing.
+- Invariants vérifiés **sur le source de `main`** :
+  - *Suppression landing legacy* : `handleLanding` absent, aucune route SEO legacy dans le code.
+  - *Suppression des fallbacks archives* : « Serve only the configured release » ; aucune archive `Casinobabe-v1.0.38` ni `v1.0.38.zip` en repli.
+  - *Content-Disposition* : `attachment; filename="<clé R2 exacte>"`.
+  - *Cohérence R2_OBJECT_KEY* : binding `plain_text` = `casinobabe-fishing-1.2.0.zip`, conforme au garde `^casinobabe-fishing-\d+\.\d+\.\d+\.zip$` ; **une seule** lecture `R2_BINARIES.get(objectKey)` ; la réservation de quota (`count < max_count`) n'a lieu **qu'après** avoir trouvé l'artefact ; clé absente ou format invalide → HTTP 503 `artifact_unavailable`, R2 jamais interrogé, **aucun quota réservé**.
+  - *Chemin e-mail* : le chemin actif est `sendDeliveryEmail2` → `sendEmail2` → `https://api.resend.com/emails`. Le helper historique `sendDeliveryEmail` (console.log seul) **n'a aucun appelant** sur `main` — il est du code mort, distinct du chemin actif. Sans `RESEND_API_KEY`, l'envoi échoue explicitement et la livraison est **consignée en base pour rejeu** (`deliveries`, statut `pending`, type `delivery`).
+  - *Idempotence et reprise webhook* : verrouillés par `tests/delivery-replay.test.mjs` (inclus dans `npm test`, exit 0) — rejeu → 200, **une seule** licence, **un seul** jeton de téléchargement, **un seul** e-mail, une seule commande ; e-mail en échec puis rejeu → licence unique, reçu passé à `sent` ; activation → aucun doublon.
+- **PR #103** (`fix/p0.56-worker-fulfillment-reconciliation-20261105`) : **OPEN**, non fusionnée, **non déployée**. État **mis à jour par le propriétaire pendant ce cycle** : nouveau HEAD **`d16b54a`** (« test(worker): clean up temporary module outside repository »), qui corrige le défaut de fichier temporaire résiduel — `tests/worker-fulfillment-reconciliation.test.mjs` utilise désormais `mkdtempSync(join(tmpdir(), 'botwow-worker-'))` + `rmSync(tmpDir, { recursive: true, force: true })` au lieu d'écrire `tests/.worker-under-test.mjs` **dans le dépôt**. CI verte sur ce HEAD exact : Validate `42152809939` **success**, UI Quality `42152809854` **success** (auparavant `42136060489` / `42136060542` sur `462e136`). GitHub affiche désormais un diff de fusion propre de **4 fichiers, +470/−5** (`package.json` +2/−1, `reports/operations/BOT-WOW-WORKER-RECONCILIATION-P0.56.md` +106, `tests/worker-fulfillment-reconciliation.test.mjs` +355, `worker/index.js` +7/−4). `main` n'a modifié **ni** `package.json` **ni** `worker/index.js` depuis le merge-base `a4bb457` → **aucun conflit avec PR #100 / #107 / #109**, aucun de leurs changements ne serait révoqué par une fusion. PR #103 est `MERGEABLE` / `CLEAN`.
+- **PR #103 reste volontairement NON fusionnée et NON déployée** : l'issue #99 impose une préparation seule, et la fusion comme le déploiement du Worker exigent une **autorisation explicite du propriétaire**. Seule la mise à jour de la branche (HEAD `d16b54a`) a été faite par le propriétaire pendant ce cycle.
+- Diff `worker/index.js` de PR #103 : **11 lignes**, suppression du seul stub `sendDeliveryEmail` (+8/−3). Le chemin actif n'est pas touché. `package.json` : `test:worker-reconciliation` ajouté et la suite branchée sur `npm test`.
+- **Défaut constaté sur PR #103 puis CORRIGÉ** : la version `462e136` écrivait `tests/.worker-under-test.mjs` (126 925 o) **dans le dépôt** et ne le supprimait pas — fichier résiduel confirmé après exécution. **Corrigé par le propriétaire dans `d16b54a`** (module temporaire écrit dans `os.tmpdir()` puis supprimé en `finally` via `rmSync`). Plus aucun fichier résiduel attendu.
+- Rejeu local de `tests/worker-fulfillment-reconciliation.test.mjs` sur `462e136` → **OK, exit 0** (4 sections : aucune route marketing legacy, invariants de source, runtime du téléchargement, fournisseur e-mail fail-closed). La suite est branchée sur `npm test` via `package.json` (`test:worker-reconciliation`).
+- Synchronisation demandée dans la revue : au moment de l'inspection initiale, `main...PR103` était **diverged, ahead_by=1, behind_by=3** (merge-base `a4bb457`). L'état est aujourd'hui : `main` = `f707c7b`, PR #103 = `d16b54a`, **merge-base toujours `a4bb457`**, PR #103 en avance de 2 commits et en retard de 7. Un **rebase sur `main` reste recommandé** (hygiène, CI sur la base courante) mais n'est **plus bloquant** : GitHub calcule un diff de fusion propre de 4 fichiers et `main` n'a touché ni `package.json` ni `worker/index.js` depuis le merge-base. **La fusion et le déploiement restent soumis à autorisation explicite.**
+
+## Phase 9 — Revenus : réutilisation du snapshot, pas de nouvelle requête
+- Aucune évolution de production ni nouvelle écriture D1/R2 depuis la revalidation P0.59 bis du `2026-11-06T00:42Z` (`docs/p0.59-live-revalidation-20261106`, commit `e4ff57d`, requêtes **SELECT uniquement**, `changed_db=false`, `rows_written=0`). Conformément à la consigne, les requêtes **n'ont pas été répétées**.
+- État repris (2026-11-06T00:42Z) : payées 5 (domaines `example.com`), pending 8, rejected 1, Mollie failed 11, **payées hors test 0**, licences 5, téléchargements 5, livraisons 0, activations 0, `webhook_events` 16, contacts e-mail 12, confirmées 0.
+- Analytics `test=0` : 1 944 `page_view`, 781 `journey_view`, 48 `cta_click`, 29 `checkout_requested`, 4 `checkout_start`, 6 `checkout_created`, 6 `checkout_failed`, **0** `payment_confirmed`, **0** conversion, **0** delivery, **0** activation. (Les compteurs `page_view`/`journey_view` du prompt — 1 872 / 747 — sont un état antérieur ; les compteurs métier sont identiques.)
+- Mollie : un profil vérifié existant mais **domaine différent de BOT-WOW**, **aucun profil BOT-WOW** ; un webhook actif mais **URL sur un autre domaine**, **aucun webhook BOT-WOW**. Aucun paiement créé, aucun profil externe réutilisé.
+
+## Other bindings / dépendances
+- Bindings Worker lus **par nom et par type uniquement**, aucune valeur de secret lue : `RELEASE_STATUS` (`secret_text`, valeur masquée → statut effectif inconnu, **fail-closed**), `RESEND_API_KEY` (`secret_text`, présence ≠ validité), `MOLLIE_API_KEY` / `MOLLIE_PROFILE_ID` / `MOLLIE_WEBHOOK_SECRET` (`secret_text`), `R2_BINARIES` (r2), `DB` + `TELEMETRY_DB` (d1), `RATE_LIMIT` (kv), `ASSETS`. Valeurs `plain_text` : `ENVIRONMENT=production`, `MAIL_FROM=BOT-WOW <licences@bot-wow.com>`, `R2_OBJECT_KEY=casinobabe-fishing-1.2.0.zip`.
+- `GET /api/config` (live, v50) : `{"contactEmail":"support@bot-wow.com","product":"bot-wow-lifetime","priceEur":20,"currency":"eur","bitcoin":{"enabled":true,"address":null}}` — **aucun champ de disponibilité**. `bitcoin.enabled=true` avec `address=null` reste un signal résiduel ; c'est une décision de rail de paiement hors périmètre de l'issue #99 et **aucun front-end ne consomme `config.bitcoin`** → signalé, **inchangé**.
+- `GET /health` : 200 `{"status":"ok",...,"version":"1.0.0"}` (version de contrat API, pas la version du Worker). `GET /api/mollie-webhook` : 404 (endpoint POST uniquement) — aucune requête de paiement n'a été émise.
+- SHA-256 de l'archive : **conforme** (`1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, 1 387 543 o, 30 entrées ZIP, `VERSION` et `MANIFEST.json` présents) — preuve P0.7 du 2026-10-28, `reports/operations/2026-10-28-p0.7-r2-sha256-verification.md`. Le **contenu** de `VERSION`/`MANIFEST.json` et la **compatibilité** ne sont pas validés.
+
+## Cloudflare Pages — état vérifié
+- Projet `bot-wow` : `production_branch=main`, `build_command=node scripts/build-site.mjs _site`, `destination_dir=_site`, source Git `github` (`aveca/bot-wow`).
+- Déploiement canonique au moment de la rédaction : `5a4556ce-3578-4f15-84d8-7e60979a5290`, environnement `production`, branche `main`, `deployment_trigger=github:push`, commit source **`f707c7b`** (PR #110), statut **Active**. Ce déploiement est celui **produit par la fusion de PR #110 lui-même** (cf. « Règle permanente » ci-dessous). Déploiements antérieurs toujours disponibles en rollback : `64cfe9f8` (source `6fd1f5e`, PR #108), `155a9b9e` (source `b2de2a6`, PR #107), `c8c05ca3` (source `0f86536`, PR #109), `ff13930a` (source `21c2e3e`), `e1892843` (`2b0dd14`), `af45d9ec` (`f958684`), `321aeb92` (`a4bb457`).
+- **Règle permanente (à appliquer à chaque cycle)** : l'intégration Git Cloudflare Pages déclenche un rebuild **sur tout push sur `main`, y compris un merge documentaire** (P0.56 bis ; observé 4 fois sur ce cycle : `e1892843`, `64cfe9f8`, `5a4556ce`, et le précédent `e1892843`). Le deployment ID consigné ci-dessus est donc **par construction le rebuild produit par le merge du présent document** ; le merge suivant produira un nouveau deployment ID. **Ne jamais déduire le deployment canonique de ce document** — le lire systématiquement en direct :
+  `wrangler pages deployment list --project-name bot-wow --environment production`
+  puis contrôler que le `source` du deployment canonique **égale** le SHA de `main`. Les assertions **stables** (celles qui doivent rester vraies quel que soit l'ID du rebuild) sont : `source du deployment == SHA de main`, `stamp servi == b4232c44`, `contenu identique entre apex et www`, `80/80 HTTP 200`.
+- **Correctif recommandé (NON appliqué — autorisation propriétaire requise)** : le projet Pages `bot-wow` a `source.config.path_includes = ["*"]` et `source.config.path_excludes = []`. Régler **`path_excludes = ["reports/**"]`** supprimerait les rebuilds inutiles des merges documentaires, **sans aucun effet sur le contenu servi** : `reports/` ne figure ni dans la liste blanche `FILES`/`DIRS` ni dans la liste `DENY` de `scripts/build-site.mjs`, donc `reports/**` n'est **jamais publié** dans l'artefact. Vérifié empiriquement : chaque merge documentaire de ce cycle a produit un artefact **identique** (stamp `b4232c44`, apex == www octets identiques, 80/80 HTTP 200). Le `paths-ignore: reports/**` déjà présent dans le workflow Actions `pages.yml` ne couvre pas l'intégration Git Cloudflare (les deux chemins de déploiement coexistent) — `path_excludes` est l'équivalent côté projet. Réglage réversible (remettre `[]`). **Non appliqué : c'est un changement de configuration de production, hors périmètre d'autorisation de ce cycle.**
+- `preview_deployment_setting = "none"` : les previews sont **désactivés** au niveau du projet. Vingt déploiements `preview` existent néanmoins sur la branche `fix/p0.60-primary-routes-status-only-20261106` (créés entre `00:57:13Z` et `01:04:51Z` le 2026-11-06, `deployment_trigger=github:push`), antérieurement à la fusion de PR #107 ; ils appartiennent à la mission P0.60, pas à ce cycle. Aucun preview n'a été créé par ce cycle.
+- Correspondance main ↔ deployment ↔ contenu servi : `main` `f707c7b` → deployment `5a4556ce` (source `f707c7b`) → contenu servi avec stamp `b4232c44`, identique à `versionne-assets` calculé sur ce même `main`, et identique entre apex et `www`. Les trois niveaux concordent.
+- **Mécanique du stamp** : `scripts/build-site.mjs` importe `computeStamp`/`applyStamp` de `scripts/versionne-assets.mjs` et applique le stamp **à l'artefact construit**, pas à la source. La source commitée conserve `?v=cb3925b6` ; l'artefact publié porte `?v=b4232c44`, dérivé du **contenu des assets**. Conséquence : une modification de balisage HTML **sans** changement d'asset laisse le stamp inchangé, et le resync mécanique n'a pas à être committé (convention du dépôt respectée).
+
+## Phase 7 bis — Vérification live après la fusion de P0.60 (PR #107, `b2de2a6`)
+- PR #107 (`fix/p0.60-primary-routes-status-only-20261106`) a été fusionnée en squash pendant ce cycle : `main` = **`b2de2a6`**. Déploiement Pages automatique : **`155a9b9e-202c-4bad-a78e-92d3cb7164b1`**, source `b2de2a6`.
+- Contenu servi après déploiement (relevé direct sur le HTML live) :
+  - Home EN H1 = **« BOT-WOW project status »** / Home FR H1 = **« BOT-WOW statut du projet »**.
+  - Buy EN H1 = **« Purchase unavailable »** / Buy FR H1 = **« Achat indisponible »**.
+  - Buy EN/FR : plus aucun `id="offre"`, plus aucun `href` vers `#offre` ; uniquement 3 liens `#buy` tracés (`nav-status`, `buy-status-primary`, `mbar-status`).
+  - Home EN/FR : l'ancre `#offre` restante est un **alias valide et instrumenté** (`id="offre"` présent, `data-track="cta_click" data-cta-id="offer-status"`, libellé « Offer status — unavailable » / « Statut de l'offre — indisponible ») → **pas** un résidu de lien mort.
+- Balayage live complet rejoué sur ce déploiement : **80/80 HTTP 200, 0 échec dur, 4 exceptions connues** (`legal/terms` EN/FR × 2 domaines, issue #101), stamp `?v=b4232c44` sur les deux domaines, apex et `www` **octets identiques** sur les 40 routes.
+- Aucun `checkout_requested` n'est déclenché par une consultation de statut : aucun des identifiants whitelistés (`hero-offer`, `mbar-buy`, `final-buy`, `compare-buy`, `nav-buy`, `journey-fish-buy`, `journey-licence-buy`, `steps-buy`) n'apparaît dans le HTML servi des 40 routes.
+- Le stamp est resté **`b4232c44`** : P0.60 n'a modifié **aucun** asset (diff = 4 pages HTML + 6 fichiers de test + 1 rapport, 12 fichiers, +467/−1576) ; le stamp étant dérivé du **contenu des assets**, il reste donc identique — aucune dérive de cache-busting.
+
+## Conformité et garde-fous
+- Aucune autorisation applicable documentée pour l'automatisation de gameplay sur des services Blizzard. **NO-GO commercial** pour le bot actuel : ni promotion, ni distribution, ni mise en avant.
+- Les corps des documents juridiques (issue #101) restent inchangés.
+- Garde-fous respectés sur ce cycle : pas de modification de prix, pas d'ouverture de checkout, aucun paiement, aucun profil Mollie créé ou réutilisé, aucun secret ni binding modifié, `RELEASE_STATUS` inchangé, **aucun déploiement Worker**, aucune écriture D1/R2, aucun e-mail envoyé, aucun changement DNS, **aucune purge de cache**, aucun achat de trafic, aucune modification des conditions juridiques, aucun travail sur un autre dépôt.
+- Seules modifications applicatives du dépôt imputables à ce cycle : PR #109 (`cancel.html`, `fr/cancel.html`, `tests/e2e/responsive.spec.mjs`, +4 lignes). PR #107 (P0.60) a été fusionnée en parallèle par la mission concurrente. PR #108 et ce document de clôture sont **de la documentation** (`reports/operations/BOT-WOW-CURRENT-STATE.md`). Rappel P0.56 bis : un merge documentaire déclenche **quand même** un rebuild Cloudflare Pages via l'intégration Git ; l'artefact est reconstruit **à l'identique** (stamp `b4232c44`, octets apex == www), rollback `155a9b9e` disponible.
+
+## Blocages (état à la fin du cycle)
+1. **Issue #102 — RÉSOLU** par PR #107 (P0.60, `b2de2a6`) : Home EN/FR et Buy EN/FR sont désormais « status-only ». Vérifié en direct : Home H1 = « BOT-WOW project status » / « BOT-WOW statut du projet » ; Buy H1 = « Purchase unavailable » / « Achat indisponible » ; plus aucune instruction d'installation/lancement, plus aucune promesse paquet/licence/activation/mise à jour/remboursement/livraison ; plus aucun lien legacy `#offre` sur Buy ; avertissement Blizzard conservé ; corps juridiques intacts.
+2. **Issue #101 — OUVERT** : corps de `legal/terms` EN/FR non conformes aux assertions commerciales (promesse d'envoi de la licence et du lien par e-mail, activation sur une machine) ; **gelés**, approbation propriétaire/juridique requise. Seul écart résiduel du balayage live (4 chargements sur 80).
+3. **Issue #99 — OUVERT** : Worker v50 non déployé : écart landing legacy / fallbacks archives / stub e-mail mort ; PR #103 ouverte, non fusionnée, non déployée ; **autorisation de déploiement explicite requise**.
+4. **Provenance de l'artefact** : SHA-256 conforme et archive ZIP cohérente, mais **contenu de `VERSION`/`MANIFEST.json` et compatibilité non validés** ; aucun chemin de lecture R2 autorisé pour re-vérifier.
+5. **`RELEASE_STATUS`** : secret masqué, valeur effective inconnue → comportement fail-closed ; validité de `RESEND_API_KEY` et des identifiants Mollie non vérifiable sans les exposer.
+6. **PR #103** : le défaut de fichier temporaire résiduel est **corrigé** (HEAD `d16b54a`, CI verte, diff de fusion propre de 4 fichiers, `MERGEABLE`/`CLEAN`). Restent à faire **sur autorisation explicite** : le rebase (hygiène), la fusion squash, puis le déploiement du Worker et sa re-vérification live.
+7. **Rebuilds Pages inutiles** : chaque merge documentaire sur `main` déclenche un rebuild Cloudflare Pages (4 fois observé sur ce cycle). Correctif prêt mais **non appliqué** : `path_excludes = ["reports/**"]` sur le projet Pages (sans effet sur le contenu servi, car `reports/**` n'est jamais publié). **C'est un changement de configuration de production : autorisation propriétaire requise.**
+8. **Couverture de mesure (non bloquant)** : les liens de statut en prose des routes secondaires de PR #100 (`getting-started`, `roadmap`, `success`, `docs/index`, `docs/install`, `cancel` EN/FR) ne sont pas instrumentés en `cta_click`. Les CTA boutons le sont. Impact : `cta_click` sous-compté, **aucune** inexactitude commerciale.
+9. **`/api/config` (live v50)** : `bitcoin: { enabled: true, address: null }` — rail de paiement résiduel annoncé sans adresse. Hors périmètre de l'issue #99 ; **aucun front-end ne consomme `config.bitcoin`** ; signalé, inchangé.
+
+## Action suivante (une seule)
+**P0 : trancher la réconciliation du Worker `botwow-api` (issue #99) sur PR #103, HEAD `d16b54a`** — état réel : diff de fusion propre de 4 fichiers (+470/−5), `MERGEABLE`/`CLEAN`, Validate `42152809939` **success** et UI Quality `42152809854` **success** sur le **même** SHA `d16b54a`, défaut du fichier temporaire résiduel **corrigé**. Étapes : (1) rebase optionnel sur `main` + rerun CI ; (2) **fusion squash de PR #103** ; (3) **déployer le Worker — uniquement si le propriétaire donne l'autorisation explicite de déploiement** (le déploiement est aujourd'hui interdit par défaut, l'issue #99 n'autorisant que la préparation) ; (4) après déploiement, re-vérifier en direct que `/bot-wow-gold`, `/best-wow-bot`, `/bot-wow-classic`, `/bot-wow-gratuit`, `/de/`, `/en/`, `/ru/` répondent **308 vers `https://bot-wow.com`** et ne rendent plus de HTML marketing, que `/health` et `/api/config` restent stables, sans déclencher de checkout, de paiement ni d'e-mail ; (5) en parallèle, décider explicitement du réglage `path_excludes = ["reports/**"]` du projet Pages. Aucun checkout, aucun paiement, aucun profil Mollie, aucun secret modifié, aucune écriture D1/R2, aucun e-mail.
+### Prompt complet du cycle suivant (P0.61)
+
+```text
+MISSION BOT-WOW P0.61
+LIVE REVALIDATION AFTER P0.60 + WORKER DEPLOYMENT DECISION
+
+REPOSITORY:
+https://github.com/aveca/bot-wow
+
+PRODUCT:
+BOT-WOW uniquement.
+
+MAIN:
+verifier le SHA reel de main au demarrage
+(attendu apres P0.59 : fusion de la PR #109 "fix(a11y): restore the
+missing h1 on the EN/FR cancel pages" puis de la PR #108
+"docs(operations): record P0.59 live revalidation on apex and www" ;
+si la PR #107 (P0.60) a ete fusionnee entre-temps, partir de ce SHA ;
+la PR #110 "docs(operations): record the P0.59 post-merge Pages
+deployment" peut aussi etre deja fusionnee -> dans ce cas main est
+f707c7b ou un descendant).
+
+PR #107:
+fix/p0.60-primary-routes-status-only-20261106
+PR #108:
+docs/p0.59-live-verification-20261106
+PR #109:
+fix/p0.59-cancel-h1-20261106
+PR #110:
+docs/p0.59-post-merge-deployment-20261106
+PR #103 (Worker, preparation seule):
+fix/p0.56-worker-fulfillment-reconciliation-20261105
+
+ISSUES:
+#99  Worker v50 / fulfillment (PR #103)
+#101 corps des documents juridiques figes
+#102 Home/Buy : pages primaires a rendre "status-only"
+
+LATEST VALIDATE:
+a verifier sur le SHA de main courant
+
+LATEST UI QUALITY:
+a verifier sur le SHA de main courant
+
+LATEST PRODUCTION:
+a verifier avec
+wrangler pages deployment list --project-name bot-wow --environment production
+
+ROLLBACK:
+a verifier ; dernier rollback connu : 321aeb92-5a58-4e83-a80a-293038c1d610
+(source a4bb457). Conserver au moins un rollback anterieur a chaque merge.
+
+==================================================
+PHASE 1 — REPRISE
+==================================================
+
+Lire :
+AGENTS.md
+PRODUCT.md
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Verifier et consigner :
+- main SHA reel ;
+- branche et HEAD ;
+- etat de chaque PR (#107, #108, #109, #103) : ouverte / fusionnee, merge SHA ;
+- commentaires et revues ;
+- derniers commits ;
+- derniers workflows (Validate + UI Quality) ;
+- Cloudflare production : deployment ID, source commit, statut Build et Deploy ;
+- regle de preview : preview_deployment_setting du projet Pages (attendu "none").
+
+Preserver les modifications existantes.
+Ne pas refaire les audits deja termines.
+Correction de reference : le prompt P0.59 etait perime (main etait
+21c2e3e, PR #100 deja fusionnee en f958684, run UI Quality 42120739142
+en realite "success" sur 938b972 et non "in progress"). Verifier
+toujours l'etat reel avant d'agir.
+
+==================================================
+PHASE 2 — VERIFIER LES CORRECTIFS P0.59 ET P0.60
+==================================================
+
+Correctifs P0.59 deja fusionnes, a confirmer en production :
+- PR #109 : <h1> "Payment outcome — not confirmed here" (EN) et
+  "Resultat du paiement — non confirme ici" (FR) sur /cancel et /fr/cancel ;
+- couverture de non-regression : /cancel.html et /fr/cancel.html dans
+  p056Routes de tests/e2e/responsive.spec.mjs (24 routes, +28 tests).
+
+Verifier sur le site live :
+- presence du h1 sur /cancel et /fr/cancel ;
+- absence de debordement horizontal a 320/375/391/430/768/1280 ;
+- aucune assertion commerciale nouvelle.
+
+Correctifs P0.60 (PR #107) a confirmer s'ils sont merges :
+- Home EN/FR et Buy EN/FR en "status-only" : hero operationnel
+  remplace, instructions d'installation/lancement supprimees, promesses
+  paquet/licence/activation/mise a jour/remboursement/livraison retirees,
+  prix cible 20 EUR conserve comme reference historique non payable,
+  avertissement Blizzard conserve ;
+- Buy EN/FR : plus aucun lien de navigation vers l'ancre legacy #offre ;
+- Home EN/FR : plus aucun lien de statut en prose ou en pied de page
+  non trace (data-track="cta_click" + data-cta-id).
+
+Si un element n'est pas corrige, le corriger sur la branche dediee,
+ajouter la couverture de test correspondante, ne jamais desactiver un
+test.
+
+==================================================
+PHASE 3 — INSPECTION DU DIFF
+==================================================
+
+Inspecter le diff reel de chaque PR concernee avant toute decision de
+fusion :
+- nombre de fichiers, lignes ajoutees/supprimees ;
+- presence de toute modification hors perimetre (prix, checkout,
+  Worker, secrets, bindings, D1/R2, e-mail, DNS, corps juridiques) ;
+- texte des pages secondaires et primaires EN/FR.
+
+Criteres de conformite a revérifier sur toutes les routes :
+- aucun CTA Buy/Acheter immediat ;
+- aucun achat a vie presente comme disponible ;
+- aucun Mollie actif annonce ;
+- aucune livraison garantie ;
+- aucune activation garantie ;
+- aucune procedure d'installation presentee comme disponible ;
+- aucune page success consideree comme preuve de paiement ;
+- CTA purchase-status correctement trace (data-track + data-cta-id) ;
+- aucun checkout_requested genere par consultation du statut ;
+- corps des documents juridiques inchanges (issue #101).
+
+==================================================
+PHASE 4 — TESTS LOCAUX
+==================================================
+
+Si Factory dispose de l'environnement :
+
+npm run validate
+node scripts/versionne-assets.mjs
+npm test
+npm run audit:css
+node scripts/build-site.mjs _site
+node node_modules/@playwright/test/cli.js test
+git diff --check
+
+Executer reellement.
+Ne pas inventer de resultats locaux.
+Note : npm run test:e2e est casse sous npm/PowerShell en local ; utiliser
+node node_modules/@playwright/test/cli.js test.
+Reference attendue au demarrage : 500 tests passes / 0 echecs.
+Ne jamais committer le resync mecanique de versionne-assets (convention
+du depot) : seul le contenu du artefact compte.
+
+==================================================
+PHASE 5 — MERGE
+==================================================
+
+Si, pour chaque PR :
+- Validate SUCCESS ;
+- UI Quality SUCCESS ;
+- meme SHA pour les deux checks ;
+- PR mergeable ;
+- diff inspecte ;
+- rollback disponible ;
+
+Fusionner en squash. Un seul merge par PR, dans l'ordre :
+1. PR #109 (correctif a11y) si elle ne l'est pas deja ;
+2. PR #107 (P0.60) si elle est verte et son diff a ete inspecte ;
+3. PR #108 (documentation) en dernier.
+
+Enregistrer chaque merge SHA.
+Ne jamais contourner branch protection, checks GitHub ou AGENTS.md.
+Rappel : un merge documentaire declenche quand meme un rebuild Cloudflare
+Pages via l'integration Git (P0.56 bis). Verifier le deploiement
+resultant, ne pas le supposer.
+
+==================================================
+PHASE 6 — CLOUDFLARE PAGES
+==================================================
+
+Projet :
+bot-wow
+
+Apres chaque fusion :
+attendre le deploiement automatique ;
+verifier deployment ID, source commit, Build SUCCESS, Deploy SUCCESS ;
+verifier que le source commit du deploiement correspond au main fusionne ;
+verifier le stamp servi (?v=...) : il doit rester stable si aucun asset
+n'a change (le stamp est derive du contenu des assets et applique par
+build-site.mjs sur l'artefact, pas sur la source).
+
+Rollback :
+conserver au moins un deploiement de production anterieur.
+
+Preview deployments :
+desactives (preview_deployment_setting = "none").
+Ne pas creer de preview manuellement.
+Si des previews apparaissent, documenter leur origine (branche
+concurrente) sans les utiliser comme source de verite.
+
+==================================================
+PHASE 7 — LIVE HTTP
+==================================================
+
+Tester les 40 routes EN/FR (36 de
+tests/release-availability.test.mjs + Home, Buy EN/FR).
+
+Priorite :
+Home
+Buy
+Demo
+Features
+Getting Started
+Success
+Cancel
+Documentation
+Compatibility
+FAQ
+Roadmap
+
+Pour chaque route :
+- HTTP status ;
+- URL finale ;
+- contenu reel ;
+- CTA ;
+- lien purchase-status ;
+- presence d'au moins un <h1> ;
+- absence de promesse d'achat ;
+- absence de livraison garantie ;
+- conformite du texte.
+
+Tester :
+bot-wow.com
+www.bot-wow.com
+
+Comparer :
+main SHA fusionne
+Pages deployment source SHA
+contenu reellement servi
+stamp servi
+
+Ne pas attribuer une anomalie au cache sans preuve HTTP.
+Ne pas purger Cloudflare.
+Verifier explicitement que consulter le statut d'achat n'emmet pas
+checkout_requested (comparer la liste des identifiants de CTA de
+analytics.js avec ceux presents dans le HTML servi).
+
+==================================================
+PHASE 8 — WORKER
+==================================================
+
+Worker :
+botwow-api
+
+Version :
+50
+
+Version ID :
+c3dcc842-c422-42d3-9828-405f30d70b5f
+
+Deployment :
+36227a4d-00e7-4c9f-94e0-0913b29049bc
+
+Etat PR #103 a la fin de P0.59 :
+HEAD d16b54a (le fichier temporaire residuel est corrige :
+mkdtempSync dans os.tmpdir() + rmSync en finally).
+Diff de fusion : 4 fichiers, +470/-5 (package.json,
+BOT-WOW-WORKER-RECONCILIATION-P0.56.md,
+tests/worker-fulfillment-reconciliation.test.mjs, worker/index.js).
+MERGEABLE / CLEAN. Validate 42152809939 success et UI Quality
+42152809854 success sur le MEME SHA d16b54a.
+PR #103 est restee OUVERTE et NON DEPLOYEE pendant P0.59.
+
+Constat P0.59 : la v50 sert encore du HTML marketing legacy sur
+/bot-wow-gold, /best-wow-bot, /bot-wow-classic, /bot-wow-gratuit,
+/de/, /en/, /ru/ et /, alors que main ne rend plus de HTML marketing et
+redirige en 308 vers https://bot-wow.com.
+
+Travail de preparation a faire :
+- PR #103 : rebase optionnel sur le main courant et rerun Validate +
+  UI Quality sur le HEAD exact ;
+- verifier sur le source : suppression landing legacy, suppression des
+  fallbacks archives (Casinobabe-v1.0.38, v1.0.38.zip), Content-Disposition
+  = cle R2 exacte, coherence R2_OBJECT_KEY, reservation de quota
+  seulement apres finding de l'artefact, idempotence, livraison email,
+  reprise webhook ;
+- fusionner PR #103 (squash) si l'owner le demande ;
+- deployer le Worker UNIQUEMENT si le proprietaire donne l'autorisation
+  explicite de deploiement ; l'issue #99 n'autorise que la preparation.
+
+Si l'autorisation de deploiement est donnee dans ce cycle, deployer la
+version resultante, puis re-verifier en direct :
+- /bot-wow-gold, /best-wow-bot, /bot-wow-classic, /bot-wow-gratuit,
+  /de/, /en/, /ru/ doivent repondre 308 vers https://bot-wow.com et ne
+  plus rendre de HTML marketing ;
+- /health et /api/config doivent rester stables ;
+- aucune requete de checkout, aucun paiement, aucune e-mail.
+
+==================================================
+PHASE 8 bis — PAGES : REBUILDS INUTILES
+==================================================
+
+Un merge documentaire sur main declenche un rebuild Cloudflare Pages
+via l'integration Git (observe 4 fois sur P0.59). Le
+paths-ignore: reports/** du workflow Actions pages.yml ne couvre PAS
+ce chemin.
+
+Correctif pret, NON applique (autorisation proprietaire requise car
+c'est une configuration de production) :
+- projet Pages bot-wow : path_excludes = ["reports/**"]
+- sans effet sur le contenu servi : reports/ n'est ni dans la liste
+  blanche FILES/DIRS ni dans la liste DENY de scripts/build-site.mjs,
+  donc reports/** n'est jamais publie ;
+- reversible : remettre [].
+
+Verifier systematiquement :
+wrangler pages deployment list --project-name bot-wow --environment production
+et controler que le source du deployment canonique egale le SHA de main.
+Ne jamais deduire le deployment canonique du present document.
+
+==================================================
+PHASE 9 — REVENUS
+==================================================
+
+Dernier D1 (SELECT uniquement, 2026-11-06T00:42Z) :
+Paid 5 (example.com) / Pending 8 / Rejected 1 / Mollie failed 11
+Paid non-test 0 / Licences 5 / Downloads 5 / Deliveries 0 / Activations 0
+Webhooks 16 / Contacts 12 / Confirmed 0
+Analytics : 1944 page views, 781 journey views, 48 CTA clicks,
+29 checkout requested, 4 checkout starts, 6 checkout created,
+6 checkout failed, 0 payment confirmed, 0 conversion, 0 delivery,
+0 activation.
+
+Ne repeter les requetes que si une nouvelle evolution ou un changement
+de production le justifie (par exemple un deploiement Worker, une
+creation de profil Mollie ou un e-mail reelement envoye).
+Toute requete doit etre en lecture seule : changed_db=false,
+rows_written=0. Ne jamais creer de paiement, de licence, de contact ni
+de webhook.
+
+==================================================
+GARDE-FOUS
+==================================================
+
+NE PAS :
+- modifier prix;
+- ouvrir checkout;
+- creer paiement;
+- creer profil Mollie;
+- reutiliser un profil d'une autre activite;
+- modifier secrets;
+- modifier RELEASE_STATUS;
+- deployer le Worker sans autorisation explicite;
+- ecrire D1;
+- ecrire R2;
+- envoyer emails;
+- modifier DNS;
+- purger cache;
+- acheter trafic;
+- modifier conditions juridiques;
+- promouvoir le bot sans autorisation applicable;
+- travailler sur un autre depot;
+- committer le resync mecanique de versionne-assets;
+- committer artifacts/ ni test-results/.
+
+==================================================
+RAPPORT FINAL
+==================================================
+
+1. MAIN SHA
+2. PR107
+3. PR108
+4. PR109
+5. PR103
+6. MERGE SHA(s)
+7. VALIDATE
+8. UI QUALITY
+9. PLAYWRIGHT COUNT
+10. TESTS LOCAUX
+11. FILES MODIFIED
+12. HOME EN/FR
+13. DEMO EN/FR
+14. FEATURES EN/FR
+15. GETTING STARTED EN/FR
+16. SUCCESS EN/FR
+17. CANCEL EN/FR
+18. DOCS EN/FR
+19. LIVE HTTP
+20. CLOUDFLARE DEPLOYMENT
+21. ROLLBACK
+22. WORKER
+23. RELEASE_STATUS
+24. RESEND
+25. MOLLIE
+26. D1
+27. ANALYTICS
+28. PACKAGE SHA256
+29. SALES
+30. REVENUE
+31. DELIVERY / ACTIVATIONS
+32. COMPLIANCE / BLOCKERS / NEXT PRIORITY
+
+Actualiser :
+reports/operations/BOT-WOW-CURRENT-STATE.md
+
+Terminer par le prompt complet du cycle suivant.
+```
+
+## P0.64 — FAQ EN/FR public-claims correction (2026-11-06T05:11:24.750Z)
+
+### GitHub / delivery
+- Verified default branch `main` = `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`.
+- PR #103 remains OPEN, not merged: head `939c042d5070e06f42fad4f8cc6cbbf471ae4b63`; Validate and UI Quality workflow runs both completed SUCCESS on that exact head. No Worker deployment.
+- New PR #112: `fix/p0.64-faq-current-status-20261106`, head `7529352afbb4be272a34e5be26b528edb61738ad`; changes `faq.html`, `fr/faq.html`, and `tests/release-availability.test.mjs`. Compare against main: 4 commits ahead / 0 behind, 3 files, +58/-84. Validate run `42166875664` was QUEUED at snapshot time; no CI result or local test result is claimed yet.
+- PR #112 is static copy + regression tests only. No payment, checkout, price, legal-document, Worker, secret, D1/R2, email, DNS, cache or production mutation.
+
+### Public site — directly observed this cycle
+- Cloudflare Pages project `bot-wow`: latest canonical production deployment `0737706b-4f65-4d5f-a044-0ad93a2097d9`, source SHA `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`, deploy stage SUCCESS at `2026-11-06T03:11:13Z`; apex and www aliases attached.
+- Web-reader GET: `/`, `/fr/`, `/buy`, and `/buy.html` show no product offered, no verified package, no activation or delivery; demo links describe simulated data only.
+- `/demo` is a simulated browser planner with no game integration or character control.
+- `/modules` and `/features` label the registry/feature material as unverified or historical, but retain detailed legacy runtime descriptions.
+- `/faq` was a newly confirmed inconsistency: it still said “It fishes...”, called the bot a paid product, described third-party build tests as compatibility, and promised a 14-day refund despite no current offer. PR #112 replaces both EN/FR FAQs with status-only answers and adds regression assertions. No live deployment of PR #112 has occurred.
+- Web reader could not fetch `api.bot-wow.com`; no raw HTTP probe from the local agent environment is claimed in this cycle.
+
+### Worker / payment provider
+- Cloudflare read-only API: `botwow-api` still routes 100% traffic to v50 `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment `36227a4d-00e7-4c9f-94e0-0913b29049bc`, created 2026-10-27. Binding names were inspected only; secret values were not read.
+- Mollie live read-only: one profile, `pfl_t8KCk4Cm2C`, website `https://sargasses-martinique.com/`, verified; one enabled live webhook targets `https://sargasses-martinique.com/api/mollie-webhook.php`. No BOT-WOW profile or webhook was found. Do not reuse this profile. No Mollie payment listing was called because its connector requires explicit confirmation of the selected profile.
+
+### D1 / commercial evidence — SELECT only
+- Correct production D1 database `botwow-production`: 5 `bitcoin_manual/paid` rows, all test-domain; 8 pending; 1 rejected; 11 Mollie failed. Five active licences are all test-domain. 0 delivery rows, 0 activations; 5 download tokens / 8 cumulative downloads; 16 webhook event rows.
+- Correct analytics D1: last 24h has 314 `page_view` and 125 `journey_view`; no CTA or checkout event in that window. Lifetime non-test event counts in the queried table: 2,018 page views, 799 journey views, 48 CTA clicks, 29 checkout_requested, 6 checkout_created, 6 checkout_failed, 4 checkout_start, 1 planner_mode.
+- Every D1 query returned `changed_db=false`, `rows_written=0`. Email counts only were read; no addresses or secrets were exposed.
+- Verified non-test paid orders: 0. Verified commercial revenue: €0. Pending/failed/test rows are not revenue.
+
+### Blockers / next action
+1. No documented Blizzard authorization for the historical gameplay-automation concept; no current BOT-WOW offer is being sold.
+2. Dedicated BOT-WOW Mollie profile/webhook absent.
+3. Effective masked `RELEASE_STATUS` value, Resend credential validity, and R2 release-object bytes/provenance remain unverified.
+4. PR #103 is a separate Worker preparation PR; issue #99 requires explicit authorization for Worker merge/deploy. No merge or Worker deployment was performed.
+5. Next: wait for PR #112 Validate + UI Quality on the exact head; inspect all checks and the final diff. If green, merge only the reversible static FAQ correction under the standing authorization and verify the resulting Pages deployment/live EN/FR FAQ. Keep checkout and Worker untouched.
+
+
+## P0.65 — revalidation publique FAQ, artefact et PRs (2026-11-06T06:52Z)
+
+### GitHub / PR #112
+- Main confirmé : `22406cc990bc461f574f0c2c0bac3ca36a68bd2f`.
+- Inventaire complet du tree Git : 443 entrées, 401 fichiers, tree non tronqué. 99 branches distantes et 19 PR ouvertes au relevé.
+- PR #112 (`fix/p0.64-faq-current-status-20261106`) : head avant cette note `1e7f62d2531b612c0a8a725a5e446ba08190746f`, base main `22406cc`, 12 commits ahead / 0 behind, 4 fichiers. Modifications : FAQ EN/FR, assertions de statut et de pied de page, présentations des notes d'installation comme archives, rapport opérationnel.
+- Sur ce head exact, Validate SUCCESS (`42177030735`) et GitGuardian SUCCESS ; UI Quality `42177030697` était encore PENDING à 06:52Z. Aucun résultat local n'est revendiqué. Ne pas merger avant UI Quality SUCCESS sur le head final.
+- Le contrôle Codex intégré n'a pas produit de revue de code : quota de revues atteint. Il ne s'agit pas d'un finding technique.
+
+### Site public
+- GET via le lecteur Web sur `/faq` (EN) et `/fr/faq` a encore renvoyé l'ancienne FAQ : CTA Buy/Acheter à 20 €, bot présenté comme produit payant, capacités runtime, compatibilité tierce et remboursement sous 14 jours. Cause (cache, indexation ou routage) non établie ; aucun purge/cache/DNS n'a été effectué.
+- `/` et `/buy` renvoient le statut actuel : aucun produit proposé, démo simulée, pas de téléchargement/installation/activation/livraison, avertissement Blizzard. Le lecteur Web n'a pas fourni de réponse exploitable pour `/fr/buy`.
+- PR #112 corrige les FAQ EN/FR et ajoute les assertions correspondantes. Correction additionnelle : pied de page sans ancienne description de bot comme produit actuel ; liens d'installation explicitement étiquetés comme notes archivées.
+- Cloudflare Pages production : déploiement `0737706b-4f65-4d5f-a044-0ad93a2097d9`, source main `22406cc`, build/deploy SUCCESS. Le push PR a créé un preview `84004fbe-0594-40e2-8dff-1c8fc7ad4a51`, ignoré avec `preview_deployments_disabled`. Un déploiement production antérieur `5a4556ce-3578-4f15-84d8-7e60979a5290` reste disponible comme rollback.
+- Cloudflare Pages possède sa propre intégration Git : le merge sur main déclenchera un déploiement de production. Vérifier le source SHA et les stages après merge ; ne pas supposer le déploiement.
+
+### Worker / paiement
+- Worker `botwow-api` toujours v50, version `c3dcc842-c422-42d3-9828-405f30d70b5f`, 100 % trafic ; aucun déploiement effectué.
+- PR #103 : head `939c042d5070e06f42fad4f8cc6cbbf471ae4b63`, 4 commits ahead / 0 behind, 5 fichiers ; Validate et UI Quality SUCCESS sur ce head exact. PR ouverte, préparation seulement. Description mise à jour pour refléter la vérification R2 ci-dessous.
+- Mollie live, lecture seule : un seul profil vérifié pour Sargasses-Martinique et un seul webhook live vers ce domaine ; aucun profil ni webhook BOT-WOW. Ne pas réutiliser ce profil.
+- R2 `botwow-binaries/casinobabe-fishing-1.2.0.zip` : 1 387 543 octets ; SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f` ; ZIP 30 entrées ; 26/26 fichiers déclarés dans le manifeste ont la taille et le SHA conformes. Deux exécutables hors manifeste : `Lancer-Casinababe-Fishing-Assistant.bat` et `restaurer_previous.ps1`. Provenance Git, rebuild reproductible et revue de sécurité de ces deux exécutables non établis. Aucun exécutable n'a été lancé ; aucune écriture R2.
+- Issue #99 conserve les preuves de cette lecture R2 et les limites associées.
+
+### Ventes / données financières
+- Pas de nouvelle requête D1 dans ce cycle ; le dernier relevé SELECT-only disponible reste : 5 commandes paid toutes de test, 8 pending, 1 rejected, 11 échecs Mollie, 0 livraison, 0 activation. Aucun paiement commercial non-test confirmé ; revenu commercial vérifié : 0 € au dernier relevé.
+- Aucun paiement, e-mail, checkout POST, changement de secret ou modification D1 n'a été effectué.
+
+### Prochaine action
+1. Attendre UI Quality SUCCESS sur le head final de PR #112.
+2. Si Validate + UI Quality + GitGuardian sont verts sur le même head, merger uniquement cette correction statique FAQ (rollback Pages disponible), sans toucher au Worker ou au checkout.
+3. Vérifier le déploiement Pages qui suit, puis relire `/faq` et `/fr/faq`. Garder le checkout fermé.
+4. Continuer la récupération de provenance des sources de l'archive et l'analyse non-exécutable des deux fichiers hors manifeste.
+
+## P0.66 — pseudo-checkout public supprimé et branches réconciliées (2026-11-06T07:37Z)
+
+### GitHub / PR #113 — correction statique en cours
+- Main au début du cycle : 147774592763e63110838ef904b46c5105cb0f0b.
+- PR #113 fix/p0.66-remove-disabled-purchase-ui-20261106 : head courant bef c66032c72d0425b1ea507fa7280d312ee0fa1, 3 commits, 10 fichiers. Les six pages EN/FR d'accueil, d'achat et de comparaison ne présentent plus de formulaire de paiement désactivé ni de champ e-mail ; le message précise qu'aucune donnée n'est collectée et aucun paiement ne peut démarrer.
+- Le premier Validate avait révélé des invariants de tests encore attachés à l'ancien formulaire (site-artifact et conversion-path). Ces tests ont été adaptés ; Validate sur le head final befc660 est SUCCESS (42183249984), GitGuardian SUCCESS (127777489331). UI Quality / Playwright réel est encore IN_PROGRESS au relevé. Les deux runs antérieurs en échec sont des commits intermédiaires, pas le head final.
+- Aucun prix n'a été modifié : le montant de 20 € reste uniquement un prix cible historique dans la barre de statut. Aucun endpoint, règle serveur de checkout, Worker, secret, Mollie, D1, R2, e-mail, DNS ou cache n'a été modifié.
+
+### Pages publiques / limites HTTP
+- Cloudflare Pages production avant ce PR : deployment b8e1adc7-813e-4ab0-9f7c-06d53d079d19, source main 1477745, build/deploy SUCCESS. Aucun déploiement du PR #113 à ce stade.
+- Lecture Web du 2026-11-06 : /buy montre le statut indisponible mais aussi le champ e-mail et le bouton désactivé « Pay €20.00 » ; /fr/buy a renvoyé une ancienne présentation commerciale et le même pseudo-formulaire. L'extraction est incohérente avec le HTML courant de main et ne prouve pas à elle seule les octets HTTP servis.
+- Tentative HTTP brute via l'environnement d'exécution : échec DNS « Could not resolve host: bot-wow.com ». Cache/routage/origine restent NOT VERIFIED. Aucune purge de cache, modification DNS ou mutation Pages n'a été faite.
+
+### Worker / paiement
+- Worker botwow-api : version 50, ID c3dcc842-c422-42d3-9828-405f30d70b5f, 100 % du trafic ; aucun déploiement.
+- Mollie live en lecture seule : un seul profil et un webhook actif vers le domaine Sargasses ; aucun profil ou webhook BOT-WOW. Aucun appel de liste des paiements n'a été effectué.
+- Les bindings secrets sont masqués ; aucune valeur n'a été lue ou changée.
+
+### D1 / ventes / funnel — SELECT only
+- Commandes : 5 bitcoin_manual/paid (toutes example.com), 8 pending_payment, 1 rejected, 11 mollie/failed. Les 5 licences actives correspondent à des données de test. Livraisons = 0 ; activations = 0 ; événements webhook = 16.
+- Analytics non-test sur les dernières 24 h : 312 page_view, 119 journey_view, aucun cta_click ni événement checkout dans le résultat. Ces nombres sont des événements, pas des visiteurs uniques.
+- Toutes les requêtes D1 ont retourné changed_db=false, rows_written=0. Ventes commerciales vérifiées = 0 ; revenu commercial vérifié = 0 €.
+
+### Éligibilité commerciale
+- PRODUCT.md confirme que le concept historique automatise le gameplay et qu'aucune autorisation Blizzard n'est documentée. Le planificateur navigateur reste une démo simulée, pas une offre autonome validée. Ne pas commercialiser ni optimiser le bot de gameplay sans autorisation applicable.
+
+### Prochaine action
+1. Attendre UI Quality / Playwright SUCCESS sur le head final de PR #113 ; si tous les checks sont verts, fusionner uniquement cette correction statique réversible et vérifier le déploiement Pages.
+2. Garder le checkout et le Worker fermés/protégés ; aucun paiement, envoi ou profil Mollie à créer.
+3. Continuer la récupération de provenance de l'archive et l'étude d'une offre indépendante du gameplay, sans prétendre qu'elle est validée commercialement.
+
+
+## P0.67 — suppression du pseudo-checkout et revalidation post-merge (2026-11-06T08:12Z)
+
+### GitHub / changement livré
+- Main actuel : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- PR #113 `fix(checkout-ui): remove disabled payment forms while sales are closed` fusionnée en squash : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Head CI de PR #113 : `562a45d539d4b5ac628b0961b63e2f7aa036ba7b`. Validate SUCCESS, UI Quality/Playwright SUCCESS, GitGuardian SUCCESS sur ce même SHA.
+- Diff inspecté : 15 fichiers, six pages publiques EN/FR (Home, Buy, Compare) et tests. Les formulaires désactivés, boutons de paiement et champs e-mail ont été retirés. Les pages indiquent qu'aucun formulaire, aucune collecte d'e-mail et aucun paiement ne sont disponibles.
+- Aucun prix, endpoint, règle serveur de checkout, Worker, secret, profil/webhook Mollie, D1/R2, e-mail, DNS ou cache n'a été modifié.
+
+### Vérification GitHub / arbre
+- Arbre Git de main : 443 entrées, 401 blobs, non tronqué.
+- 100 branches retournées par la recherche GitHub (dont main ; aucune page suivante).
+- Validate sur le merge SHA : SUCCESS ; workflow Deploy GitHub Pages : SUCCESS.
+- PR #103 reste OPEN, head `f91e80a509bc05ddc17b4c475b85b74cd00cc89e`. Checks Validate, UI Quality/Playwright et GitGuardian SUCCESS sur ce head exact. Après PR #113, comparaison avec main : 5 commits ahead / 1 behind ; mergeable=true. Aucun merge ni déploiement Worker.
+
+### Cloudflare Pages / contenu public
+- Déploiement production courant : `abdf07ce-facd-4601-bfcb-7a26f3060e49`.
+- Source SHA : `7ad7d4d4baa117fa98aed799a7a294e79093b377`.
+- Build et Deploy SUCCESS ; aliases apex et www attachés ; déploiement précédent `b8e1adc7-813e-4ab0-9f7c-06d53d079d19` conservé.
+- Lecture du site par l'outil Web après le déploiement renvoie encore l'ancien pseudo-checkout sur / et /buy. Les pages FAQ et pages.dev ne sont pas lisibles via cet outil. Les six fichiers sur main ont bien été vérifiés sans buyForm/buyBtn/input email. Le contenu réellement servi en HTTP brut n'a pas pu être vérifié depuis l'environnement disponible ; cause non établie (outil d'extraction vs réponse live). Aucune purge cache/DNS.
+
+### D1 / ventes — SELECT uniquement
+- `botwow-production` : 5 commandes bitcoin_manual/paid, toutes test `example.com`; 8 pending, 1 rejected ; 11 Mollie failed.
+- Licences actives=5 (tests), deliveries=0, activations=0, webhook_events=16 (dernier événement le 2026-10-27), download tokens=5, téléchargements cumulés=8.
+- `botwow-analytics`, dernières 24 h non-test : 326 page_view, 119 journey_view ; aucun CTA ou checkout. Total non-test : 2 052 page_view, 799 journey_view, 48 CTA, 29 checkout_requested, 6 checkout_created, 6 checkout_failed, 4 checkout_start, 1 planner_mode.
+- Toutes les requêtes : `changed_db=false`, `rows_written=0`.
+- Ventes non-test vérifiées : 0 ; revenu commercial vérifié : 0 €.
+
+### Mollie / conformité
+- Liste live filtrée sur les éléments BOT-WOW : aucun profil BOT-WOW, aucun webhook BOT-WOW.
+- Aucune transaction Mollie consultée, créée ou modifiée.
+- Aucun accord Blizzard autorisant le bot historique n'est documenté. L'EULA interdit d'offrir/promouvoir/distribuer des bots non autorisés permettant le contrôle automatisé du jeu. Le checkout reste fermé ; la démo est simulée et n'est pas une offre commerciale autonome validée.
+
+### Prochaine action
+1. Obtenir une vérification HTTP brute des six routes après déploiement depuis l'environnement Factory ; ne pas purger le cache sans preuve.
+2. Rafraîchir PR #103 par un merge normal de main, jamais force-push, puis relancer CI. La garder en préparation : issue #99 requiert l'autorisation explicite avant fusion/déploiement Worker.
+3. Continuer la provenance de l'archive R2 et la faisabilité d'un planificateur autonome, sans exécuter les deux fichiers hors manifeste.
+4. Aucun achat de trafic et aucune réouverture du checkout avant produit autorisé, paquet source vérifié et livraison reproductible.
+﻿
+## P0.68 — resynchronisation du stamp d'assets + revalidation complete (2026-11-06T09:45Z)
+
+> Cette section est un **relevé d'état daté**, pas une nouvelle implémentation.
+> Les prémisses du cycle P0.60 (PR #100 à fusionner, issue #102 à créer, branche
+> `fix/p0.59-primary-routes-truthfulness-20261105` à ouvrir) étaient **périmées** :
+> PR #100 et l'issue #102 avaient déjà été livrées par les cycles P0.59–P0.61.
+> Le travail réel de ce cycle a donc été une **vérification complète** (état live,
+> chaîne de tests locale, Worker, D1, R2) **plus un défaut neuf trouvé et corrigé** :
+> le stamp d'assets committé ne correspondait plus au contenu des assets.
+
+### GitHub / état réel au début du cycle
+- `main` réel : **`8744a3e2bbaec449e16548f89117a05f0d7f20dc`** (le prompt annonçait `a4bb4572`).
+- **PR #100 : DÉJÀ FUSIONNÉE** en squash — merge SHA `f95868421e994db46c5cd2fdfbb0f3d8d74f2516`,
+  `merged_at` `2026-11-06T00:22:08Z`, base `a4bb4572079ba939df05e87a221ccaddea1e08b2`,
+  head `0ba3395e7c51cec3e2a1d5577b51c2f79306441c`, 14 commits / 41 fichiers.
+- **CI de PR #100 (relevés réels)** : Validate `42130243894` **SUCCESS**, UI Quality `42130243993`
+  **SUCCESS**, **sur le même SHA `9e0d9db3243c5938a5ceea8f319b4a130bd04821`**. L'état « UI Quality
+  IN PROGRESS » du prompt était obsolète.
+- **Issue #102 : CLOSED** par **PR #107** `fix(p0.60-primary-routes-status-only-20261106`
+  (squash `b2de2a6a00f561bf5f1820e398bd4faf888cb5eb`, `merged_at` `2026-11-06T01:57:13Z`,
+  head `3824ad8a32e683901aed5e74a352623fddbe3887`). La branche
+  `fix/p0.59-primary-routes-truthfulness-20261105` n'a jamais existé et n'a pas été créée
+  (une correction concurrente déjà mergée aurait été du travail dupliqué).
+- Issues : **#97 CLOSED**, **#99 OPEN** (Worker + fulfillment), **#101 OPEN** (corps juridiques),
+  **#102 CLOSED**.
+- Fusions suivantes sur `main` avant ce cycle : PR #109 `0f86536e6` (`<h1>` cancel EN/FR),
+  PR #112 `147774592` (FAQ EN/FR), PR #113 `7ad7d4d4b` (pseudo-checkout supprimé),
+  PR #103 `8744a3e2b` (réconciliation Worker — **fusionnée mais NON déployée**).
+- CI sur `main` : Validate SUCCESS et Deploy GitHub Pages SUCCESS sur `8744a3e2b`.
+
+### Pages production
+- **Règle de lecture (stable dans le temps)** : Cloudflare Pages publie un déploiement
+  production **à chaque push sur `main`**. L'identifiant du déploiement courant est donc
+  **toujours** celui dont la colonne `Source` vaut le SHA de `main`
+  (`git ls-remote origin refs/heads/main`). Les identifiants ci-dessous sont un
+  **historique daté**, pas un pointeur à maintenir manuellement — un pointeur « courant »
+  s'annule mécaniquement à chaque merge documentaire.
+- Historique de ce cycle :
+  | Déploiement | Source | Origine |
+  |---|---|---|
+  | `56717f6d-3c85-40f0-8f9e-454d469f4888` | `6a55cdd` | merge PR #119 — dernier observé |
+  | `2ee2384a-9356-4275-a963-e986039fffa6` | `5125dcf` | merge PR #116 |
+  | `fa034b8f-5b9e-48d4-a939-6d3a1593a59d` | `f7186ed` | merge PR #115 (stamp resync) |
+  | `98ad7ea5-7210-42ad-a870-a8bf1635cb0c` | `8744a3e` | `main` au début du cycle |
+  | `abdf07ce-facd-4601-bfcb-7a26f3060e49` | `7ad7d4d` | rollback antérieur (PR #113) |
+  - Rollback : redéployer l'un de ces identifiants — `fa034b8f-…` (source `f7186ed`) puis
+    `98ad7ea5-…` (source `8744a3e`). La cible `321aeb92-5a58-4e83-a80a-293038c1d610` du prompt
+    P0.60 est antérieure à P0.60.
+  - Tous ces déploiements servent un **artefact identique** : `reports/**` n'est pas publié
+    par `scripts/build-site.mjs` (`DIRS = assets, docs, legal, fr`).
+- Cloudflare Pages possède sa **propre intégration Git** : **tout** push sur `main` (y compris
+  un merge documentaire) déclenche un rebuild. `paths-ignore: reports/**` ne s'applique qu'aux
+  workflows GitHub Actions — c'est pourquoi le run **« Deploy Bot-Wow to GitHub Pages » a été
+  correctement SAUTÉ** pour les merges documentaires `5125dcf` et `6a55cdd`, tandis que
+  Cloudflare Pages a quand même reconstruit `2ee2384a` puis `56717f6d`. La configuration
+  `path_excludes = ["reports/**"]` est préparée mais **non appliquée** (changement de
+  configuration de production : autorisation propriétaire requise).
+
+### Balayage HTTP live (GET seul, 40 routes EN/FR × 2 domaines = 80 chargements)
+- **80/80 HTTP 200**, **0 échec dur**, **4 exceptions connues** (`legal/terms` EN + FR × apex + www,
+  issue #101), **0 route sans `<h1>`**.
+- Stamp servi unique et identique sur les deux domaines : **`?v=b4232c44`** — exactement
+  l'empreinte recalculée par `scripts/versionne-assets.mjs` sur `main`.
+- **apex et `www` octets identiques sur les 40 routes**.
+- **Aucun CTA porteur d'un identifiant `checkout_requested`** parmi `hero-offer`, `mbar-buy`,
+  `final-buy`, `compare-buy`, `nav-buy`, `journey-fish-buy`, `journey-licence-buy`, `steps-buy`.
+  Tous les CTA de statut (`hero-status`, `nav-status`, `buy-status-primary`, `mbar-status`,
+  `offer-status`, `purchase-status`, `formula-ours-status`) sont tracés en **`cta_click`**.
+  **Consulter le statut ne peut pas démarrer un checkout.**
+- Couverture de mesure (observation, pas un défaut commercial) : liens de prose « Purchase status »
+  non instrumentés sur `cancel` EN/FR, `docs/index` EN/FR, `docs/install` EN/FR,
+  `getting-started` EN/FR, `roadmap` EN/FR, `success` EN/FR (12 liens) + basculeurs de langue
+  sur `buy` EN/FR (4 liens). Les **boutons** de statut sont, eux, tous instrumentés.
+- Balayage rejoué après la fusion de PR #115 : **résultats identiques** (80/80, 0 échec dur,
+  4 exceptions, 0 `<h1>` manquant, stamp `b4232c44`, apex = www).
+
+### Chaîne de tests locale (sur `main` = `8744a3e2b`, worktree détaché propre)
+| Commande | Résultat |
+|---|---|
+| `npm run validate` | **PASS** (exit 0) |
+| `npm test` | **ÉCHEC** avant correctif — **exit 0** après correctif (26 suites) |
+| `node scripts/build-site.mjs _site` | exit 0 — 24 entrées de premier niveau, stamp `b4232c44`, aucun fichier interdit |
+| `npm run test:e2e` | **496 passed / 0 failed** (6 fichiers de spec, projets `desktop` + `mobile`) |
+| `git diff --check` | exit 0 |
+
+- **Playwright : 496 tests** (contre 500 au relevé P0.59 : la PR #113 a supprimé le
+  pseudo-formulaire de paiement et donc 4 assertions de formulaire — **aucun test en échec**).
+- **Responsive** : `tests/e2e/responsive.spec.mjs` asserte `expectNoHorizontalOverflow` sur
+  **24 routes × 6 viewports (320 / 375 / 391 / 430 / 768 / 1280) × 2 projets**, plus un garde
+  « 320px sans webfont » sur 22 routes. **0 débordement horizontal.** La règle CSS de PR #100
+  est intacte : `assets/components.css` → `@media (max-width: 360px) { .docs-archive .panel h1
+  { font-size: clamp(30px, 9.5vw, 34px); … } }`.
+
+### Défaut neuf trouvé et corrigé — PR #115 `chore/p0.68-asset-stamp-resync-20261106`
+- **Symptôme** : sur un checkout propre de `main`, `npm test` est **rouge** —
+  `FAIL le stamp correspond au contenu actuel des assets (attendu b4232c44, trouve cb3925b6)`.
+- **Cause** : le HTML/JS/CSS committé porte la clé de cache `?v=cb3925b6`, alors que
+  l'empreinte du contenu de `assets/` est `b4232c44`. La divergence est tracée par commit :
+  `e2a9338` → `cb3925b6`/`cb3925b6` (OK) ; **`6bae1bb` → `a3444dc0`/`cb3925b6` (divergence)** ;
+  `f958684` (PR #100, `assets/components.css`) → `b4232c44`/`cb3925b6` ; `8744a3e` → idem.
+- **Pourquoi la CI ne l'a jamais vu** : les deux workflows exécutent
+  `node scripts/versionne-assets.mjs` **avant** `npm test`. Cet outil **réécrit** le stamp dans
+  l'arbre de travail : l'assertion voit donc toujours un arbre auto-réparé. Le garde-fou ne
+  protège que l'artefact, pas l'état committé.
+- **Correctif** : application de l'outil du dépôt lui-même — `node scripts/versionne-assets.mjs`,
+  **51 fichiers**, commit `5c8694742e7721d30559efe707d69025f28a7379`, squash
+  **`f7186edd95835159f39b072fc58d501e35c68ef1`**, PR **#115** (`merged_at` `2026-11-06T09:42:52Z`).
+  Validate SUCCESS (run `42196277366`), UI Quality SUCCESS (run `42196277091`), GitGuardian
+  SUCCESS **sur le même head** `5c86947` ; diff 51 fichiers, +159/−159.
+- **Preuve que rien d'autre n'a changé** : pour les 51 fichiers, le blob `HEAD` dont `?v=` est
+  normalisé en `b4232c44` (et les fins de ligne normalisées, `core.autocrlf=true` sur cette
+  machine) est **octet pour octet identique** au fichier de l'arbre de travail —
+  `identical after stamp norm: 51`, `differing beyond stamp: 0`. Aucun texte, prix, checkout,
+  mention juridique, analytique, règle CSS ou code Worker touché.
+- **Impact production : nul.** `scripts/build-site.mjs` recalcule `computeStamp(ROOT)` et
+  l'applique à l'artefact : les pages serviesendaient déjà `?v=b4232c44` avant ce commit.
+  L'artefact reconstruit est identique.
+- **Critère d'acceptation vérifié sur un clone NEUF** : `git clone --branch main` de
+  `aveca/bot-wow` → HEAD `f7186ed`, stamp committé `b4232c44` **sans aucune étape
+  préalable**, puis `npm ci` (3 paquets, 0 vulnérabilité) et `npm test` → **exit 0**
+  (26 suites). Le défaut est donc bien **corrigé dans l'état committé**, et pas seulement
+  masqué par l'auto-réparation de la CI.
+
+### Worker `botwow-api` — v50 vs `main`, AUCUN DÉPLOIEMENT
+- **État live : version 50**, version ID `c3dcc842-c422-42d3-9828-405f30d70b5f`, deployment
+  `36227a4d-00e7-4c9f-94e0-0913b29049bc`, créé `2026-10-27T07:46:28Z`, 100 % du trafic,
+  annotation `workers/triggered_by: secret`, `script.etag` `635c77e92bbb59bb2afb0229800a3fa420947bd03bc2aef4bda2fb5f51dfa29f`.
+  **Aucun déploiement Worker n'a été effectué** — la PR #103 est mergée dans `main` mais
+  **n'est pas en ligne**.
+- **Preuve indépendante du non-déploiement** : la sonde HTTP live montre que `api.bot-wow.com`
+  sert **encore le HTML marketing legacy** : `/` → 200, 39 298 o, `<title>BOT-WOW — the WoW Classic
+  fishing bot…` ; `/bot-wow-gold` et `/best-wow-bot` → 200, 16 705 o ; `/bot-wow-classic` et
+  `/bot-wow-gratuit` → 200, 16 732 o ; `/de/` 16 573 o ; `/en/` 16 569 o ; `/es/` 16 586 o ;
+  `/pt/` 16 575 o ; `/ru/` 16 574 o ; `/download` → 200, 16 669 o (page marketing, pas le
+  téléchargement). `main`, lui, **n'a plus** `handleLanding` et impose une **redirection 308**
+  vers `https://bot-wow.com` via `redirectToCanonicalSite()`. Si une v51 avait été déployée,
+  ces URLs répondraient 308 : **elles répondent 200**.
+- **Source candidate de v50** : `7207374db` (« fix: reserve download quota atomically »,
+  `2026-10-24T02:34:51-04:00`) est le dernier commit touchant `worker/index.js` avant
+  l'upload du `2026-10-27T07:46:28Z`. Le commit suivant `1e13b980e`
+  (`2026-10-27T14:26:10-04:00`, ~10,6 h plus tard) **n'a jamais été déployé**.
+  Diff `7207374db` → `main` sur `worker/index.js` : **+249 / −2490 lignes**.
+- **Invariants de `main` revérifiés verts** par `tests/worker-fulfillment-reconciliation.test.mjs`
+  (inclus dans `npm test`) : aucune route marketing legacy ; aucune archive en repli
+  (`Casinobabe-v1.0.38`, `v1.0.38.zip` absents) ; **une seule** lecture `R2_BINARIES.get(objectKey)` ;
+  clé contrainte à `^casinobabe-fishing-\d+\.\d+\.\d+\.zip$` ; clé absente ou invalide → **503
+  `artifact_unavailable` sans interroger R2 et sans réserver de quota** ; l'artefact est trouvé
+  **avant** la réservation atomique (`count < max_count`) ; `Content-Disposition:
+  attachment; filename="<clé R2 exacte>"` ; chemin e-mail actif **`sendDeliveryEmail2` →
+  `sendEmail2` → `https://api.resend.com/emails`** ; **plus aucun** chemin e-mail « console.log
+  only » ; idempotence et reprise webhook verrouillées par `tests/delivery-replay.test.mjs`
+  (rejeu → 200, une seule licence, un seul jeton, un seul e-mail, une seule commande).
+- `GET /health` → 200 `{"status":"ok",…,"version":"1.0.0"}` ; `GET /api/config` → 200, 140 o
+  (`priceEur: 20`, `bitcoin.enabled=true` avec `address=null` — signal résiduel inchangé, aucun
+  front-end ne consomme `config.bitcoin`) ; `GET /api/mollie-webhook` → 404 (POST uniquement).
+- **Limite de ce cycle** : à partir de `2026-11-06T09:29Z`, les endpoints Cloudflare
+  `workers/scripts/botwow-api/{settings/bindings,secrets,versions,deployments}` ont tous répondu
+  **HTTP 503 « no healthy upstream »** (Ray MIA). Les noms/types des bindings et des secrets
+  (`RELEASE_STATUS`, `RESEND_API_KEY`, `MOLLIE_API_KEY`, `MOLLIE_PROFILE_ID`,
+  `MOLLIE_WEBHOOK_SECRET`, `R2_OBJECT_KEY`, `DB`, `TELEMETRY_DB`, `R2_BINARIES`, `RATE_LIMIT`,
+  `ASSETS`) **n'ont donc pas été re-relus** ; l'état relevé au cycle P0.67 reste la référence.
+  Aucune valeur de secret n'a été lue, demandée ou modifiée.
+
+### Paquet R2 / provenance
+- `botwow-binaries/casinobabe-fishing-1.2.0.zip` relu en **lecture seule**
+  (`wrangler r2 object get`) : **1 387 543 octets**, SHA-256
+  **`1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`** — **identique** au relevé
+  P0.67 (l'objet R2 est stable octet pour octet).
+- Limites inchangées : `VERSION` / `MANIFEST.json` et la **provenance** du paquet ne sont pas
+  vérifiés ; 26/26 fichiers du manifeste sont conformes ; **2 exécutables restent hors manifeste**
+  (`Lancer-Casinababe-Fishing-Assistant.bat`, `restaurer_previous.ps1`) — ni exécutés, ni
+  reconstructibles de façon reproductible à ce jour. Aucune écriture R2.
+
+### D1 / ventes / livrable / activations — SELECT only
+Toutes les requêtes : `changed_db=false`, `rows_written=0`, `size_after` inchangé (249 856 o).
+| Mesure | Valeur |
+|---|---|
+| commandes `paid` | **5** (toutes `bitcoin_manual`, toutes `@example.com` → test) |
+| commandes `paid` **hors test** | **0** |
+| `pending_payment` | 8 (dont 1 `@example.com`) |
+| `rejected` | 1 |
+| `mollie` / `failed` | 11 |
+| **revenu `paid` hors test** | **0 centime (0,00 €)** |
+| licences | 5, dont **5 actives** |
+| **activations** | **0** |
+| jetons de téléchargement / téléchargements cumulés | 5 / 8 |
+| **livraisons (`deliveries`)** | **0** |
+| `webhook_events` | 16 |
+| contacts e-mail (`botwow_emails`) | 12 |
+| clients Mollie (`mollie_customers`) | 17 |
+
+### Analytique (`botwow-analytics`, `test=0`)
+`page_view` **2068** · `journey_view` **799** · `cta_click` **48** · `checkout_requested` **29** ·
+`checkout_start` **4** · `checkout_created` **6** · `checkout_failed` **6** · `planner_mode` **1** ·
+**conversion 0** · **SUM(value_eur) = 0**.
+Les 29 `checkout_requested` sont **historiques** (antérieurs à la fermeture du checkout) : aucune
+route live ne contient plus d'identifiant capable d'en émettre un nouveau.
+
+### Mollie
+- **Non re-interrogé** : aucune évolution du chemin de paiement depuis le relevé P0.67 (le Worker
+  n'a pas été redéployé, le checkout est fermé, aucun profil ni webhook n'a été créé).
+- État de référence P0.67 : un seul profil `pfl_t8KCk4Cm2C` (site `https://sargasses-martinique.com/`,
+  vérifié) et un seul webhook actif vers ce domaine ; **aucun profil BOT-WOW, aucun webhook BOT-WOW**.
+  **Ne jamais réutiliser ce profil externe.** Aucun paiement créé, aucun appel de liste de
+  paiements, aucune modification.
+
+### PRs ouvertes et fusionnées par ce cycle
+| PR | Branche | Contenu | head | Merge (squash) | CI sur le head |
+|---|---|---|---|---|---|
+| **#115** | `chore/p0.68-asset-stamp-resync-20261106` | resynchronisation du stamp d'assets (51 fichiers, +159/−159) | `5c86947` | `f7186edd95835159f39b072fc58d501e35c68ef1` | Validate `42196277366` SUCCESS · UI Quality `42196277091` SUCCESS · GitGuardian SUCCESS |
+| **#116** | `docs/p0.68-stamp-resync-and-revalidation-20261106` | cette section d'état (1 fichier, +224/−0) | `e475c58` | `5125dcf993a2818cc60a51c82589ea557b7554e7` | Validate `42198612553` SUCCESS · UI Quality `42198612647` SUCCESS · GitGuardian SUCCESS |
+| **#119** | `docs/p0.68-final-deployment-pointer-20261106` | pointeur de déploiement Pages + tableau des PRs du cycle (1 fichier, +37/−10) | `ebe2900` | `6a55cddb9c4af5de3bb451ad7f8c90440b9a11de` | Validate + UI Quality + GitGuardian SUCCESS |
+
+- Les trois PR ont été **inspectées** avant fusion (`mergeable=MERGEABLE`,
+  `mergeStateStatus=CLEAN`, diff complet relu) et fusionnées en **squash** sur `main`.
+- `main` au moment de la rédaction : **`6a55cddb9c4af5de3bb451ad7f8c90440b9a11de`**.
+- **Aucun checkout, prix, règle de paiement, secret, `RELEASE_STATUS`, fichier Worker,
+  fichier juridique, DNS, cache, D1 ou R2 n'a été modifié** par ces trois PR.
+- Cette PR documentaire (correction du pointeur de déploiement) est la **quatrième** de la
+  série : son propre merge ajoutera une ligne à ce tableau et un déploiement Pages au
+  tableau « Historique de ce cycle » — conséquence mécanique de la règle Cloudflare Pages
+  énoncée plus haut. Le tableau reste donc un **historique daté**, jamais un état figé.
+
+### Conformité et garde-fous
+- **4 exceptions** sur les 80 chargements, toutes sur `legal/terms` EN/FR : les corps juridiques
+  promettent encore l'envoi de la licence et du lien de téléchargement par e-mail et
+  l'activation sur une machine. **Corps gelés par l'issue #101** — approbation
+  propriétaire/juridique requise. Non modifiés.
+- Aucune autorisation Blizzard n'est documentée. Le checkout reste **fermé**, la démo reste une
+  **simulation**, et l'automatisation n'est ni vendue ni promue.
+- Aucun paiement, e-mail, checkout POST, changement de secret, modification de `RELEASE_STATUS`,
+  déploiement Worker, écriture D1/R2, modification DNS, purge de cache, achat de trafic,
+  modification juridique ou travail sur un autre dépôt n'a été effectué dans ce cycle.
+
+### Blocages
+1. **Issue #99 — Worker v50 toujours en ligne.** `api.bot-wow.com` sert encore le HTML marketing
+   legacy (promesses « gratuit », « indétectable », « farm de l'or », JSON-LD `price: 0`) sur 10 URLs.
+   `main` le supprime, mais **le déploiement exige l'autorisation explicite du propriétaire**.
+   Rollback disponible : redéployer la version 50 (`36227a4d-00e7-4c9f-94e0-0913b29049bc`).
+2. **Issue #101 — corps juridiques** `legal/terms.html` et `legal/fr/terms.html` : approbation
+   propriétaire/juridique requise.
+3. **Aucune autorisation Blizzard** → **NO-GO commercial**. Le bot historique automatise le
+   gameplay ; l'EULA interdit d'offrir/promouvoir/distribuer des bots non autorisés.
+4. **Secrets non re-vérifiés** (`RELEASE_STATUS`, `RESEND_API_KEY`, `MOLLIE_API_KEY`,
+   `MOLLIE_PROFILE_ID`, `MOLLIE_WEBHOOK_SECRET`) : valeurs masquées, API Workers en 503 sur la
+   fin du cycle. Le statut effectif de `RELEASE_STATUS` et la validité réelle de Resend/Mollie
+   restent **non prouvés**. Le chemin Resend est fail-closed : sans clé, l'envoi échoue
+   explicitement et la livraison est consignée en base pour rejeu.
+5. **Provenance du paquet** : 2 exécutables hors manifeste, pas de rebuild reproductible établi.
+6. **Cloudflare Pages reconstruit à chaque push sur `main`** : tout merge documentaire déclenche
+   un rebuild. `path_excludes = ["reports/**"]` préparé, non appliqué (autorisation requise).
+
+### Prochaine action (une seule)
+1. **Obtenir et consigner l'autorisation explicite du propriétaire pour déployer le Worker**
+   `main` (`8744a3e2b`) en version 51 à 100 % du trafic. Effet attendu, strictement non
+   commercial : `api.bot-wow.com` cesse de servir les 10 pages marketing legacy et répond 308
+   vers `https://bot-wow.com`. Rollback : redéployer la version 50 (`36227a4d-…`). Aucun paiement,
+   aucun checkout, aucun secret, aucune écriture D1/R2 dans ce périmètre.
+   Tant que ce point n'est pas autorisé, le cycle reste **préparation seulement** (état de
+   `main` prêt, CI verte, tests de réconciliation verts).
+
+## Relevé 2026-11-06T14:17Z — vérité live, état partagé, sandbox
+
+Ce relevé remplace, pour les points qu'il mesure, les affirmations « Worker v50 toujours en ligne » et « www répond 200 ». Le détail et les tableaux sont dans `PROJECT_STATE.md`. Aucun prix, checkout, secret, déploiement, écriture D1/R2 ou e-mail réel n'a été fait par ce cycle.
+
+- `main` au départ : `ba720c0fce69f4121d5c5b0aa4a168ceac931b70`. Pages production `e1fe25a3-9032-48c5-a5ba-b2433cfc41eb`, même SHA, deploy SUCCESS 11:31:08Z.
+- Worker en service : déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884` du 2026-11-06T09:16:54Z, version `1513595c-6a53-4575-b013-9979b696dce3`, 100 %. Le v50 reste le rollback, plus le trafic.
+- HTTP 14:15Z : apex 200, achat explicitement fermé. `GET api/health` 404 parce que la route n'existe pas. `GET /health` 200. `GET /api/config` 200. `POST /api/checkout` `{}` → 400 `invalid_email`. `GET /` sur l'API → 308.
+- HTTP 14:15:35Z : `www` encore 200. Redirect Rule de zone `last_updated` 14:16:56Z (non créée par ce cycle). HTTP 14:17:33Z : `www` → 301 apex. Ne pas doubler cette règle dans `_redirects`.
+- D1 SELECT : 0 payé hors `@example.com`, 0 livraison, 0 activation, `rows_written=0`.
+- Preuve de livraison : sandbox uniquement (`tests/delivery-replay.test.mjs`), pas un paiement de production.
+
+Prochaine action : une décision propriétaire sur ce qui peut être vendu. Ne pas rouvrir le checkout tant que cette décision, un profil Mollie dédié, la provenance du paquet et `RELEASE_STATUS` ne sont pas explicitement acceptés.
+
+Ajout 14:22Z : `HEAD https://api.bot-wow.com/` répond 404 alors que `GET` répond 308 (`HEAD /health` aussi 404 contre 200). Correctif de routeur dans la PR #129, non déployé à cette heure. `www` répond 301 à 14:22:37Z. `/api/v1/*` et `/checkout` restent des absences voulues, pas des routes à inventer.
+
+## Déploiement Worker 2026-11-06T14:48Z
+
+Autorisation : déploiement technique réversible du Worker `botwow-api` depuis `main` `017882a2ba29239801b4e0e6641a54872c4285a3` (squash PR #129). Pages, secrets, Mollie, prix, checkout, D1 et R2 ne sont pas modifiés.
+
+- Version uploadée `054cd158-4be2-42f8-92a6-ff9c4f059079` (numéro 52), `created_on` 2026-11-06T14:48:06Z. `compatibility_date` `2026-01-01`, `nodejs_compat`, `usage_model` `standard`. Annotation `workers/commit_sha` `017882a2ba29239801b4e0e6641a54872c4285a3`.
+- Les 18 bindings de production sont hérités (`version_id` littéral `latest`, qui était alors la version déployée `1513595c-6a53-4575-b013-9979b696dce3`) avec `bindings_inherit=strict`. Noms et types seulement : aucun secret envoyé ni affiché. Aucun binding `assets`.
+- Déploiement `6ca34fa3-198a-44b8-a6ed-300e7db37f99`, `created_on` 2026-11-06T14:48:17Z, source `api`, stratégie `percentage`, 100 % sur `054cd158-4be2-42f8-92a6-ff9c4f059079`. Message : « Production rollout HEAD suit les lectures GET, main 017882a ».
+- SHA-256 du module déployé : `10891fbd347418fbeeb7fa0697345736e239ff28f27de96e43707bec8aebace7`, 123 472 octets, identique à `worker/index.js` de ce `main`.
+- Sondes directes 2026-11-06T14:48:30Z : `GET` et `HEAD https://api.bot-wow.com/` → **308** vers `https://bot-wow.com/` ; `GET` et `HEAD /health` → **200** (HEAD sans corps) ; `GET` et `HEAD /api/config` → **200** (HEAD sans corps, `priceEur` 20).
+- Namespace KV temporaire `botwow-deploy-tmp-20261106` (`192f3501579a46138d1718a269865353`) supprimé après le déploiement.
+- Retour arrière immédiat : redéployer la version `1513595c-6a53-4575-b013-9979b696dce3` (déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884`).
+
+Prochaine action : décision du propriétaire sur le produit qui peut être vendu. Le checkout reste fermé.

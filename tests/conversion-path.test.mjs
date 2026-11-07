@@ -7,7 +7,7 @@
  *  2. le radar interactif a une sortie vers la demonstration ;
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
- *  4. le formulaire d'achat est present, avec email + validation ;
+ *  4. aucun faux formulaire de paiement n'est expose tant que les ventes sont fermees ;
  *  5. la liste d'attente reste proposee en repli ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
@@ -50,29 +50,49 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check(`${label} : aucun CTA vers un domaine tiers`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
-// 4. Parcours hero -> demonstration -> comparaison -> achat (accueil EN)
+// 4. Parcours hero -> demonstration -> comparaison -> statut d'achat (accueil EN)
 {
   const t = read('index.html');
   check('accueil : CTA hero vers la demonstration', /href="\.\/demo\.html"[^>]*data-cta-id="hero-demo"/.test(t));
-  check('accueil : CTA hero vers l\'offre', /href="#buy"[^>]*data-cta-id="hero-offer"/.test(t));
+  check('accueil : CTA hero vers le statut de disponibilité', /href="#buy"[^>]*data-cta-id="hero-status"/.test(t));
   check('accueil : sortie du radar vers la demonstration', /class="radar-next-link" href="\.\/demo\.html"/.test(t));
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
-  check('accueil : CTA final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-buy"/.test(t));
-  check('accueil : formulaire d\'achat present', /<form id="buyForm"/.test(t));
-  check('accueil : champ email du formulaire', /id="email"[^>]*type="email"/.test(t));
-  check('accueil : bouton de paiement present', /id="buyBtn"/.test(t));
+  check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
+  check("accueil : formulaire de paiement absent", !/<form id="buyForm"/.test(t));
+  check("accueil : champ e-mail de paiement absent", !/id="email"[^>]*type="email"/.test(t));
+  check("accueil : bouton de paiement absent", !/id="buyBtn"/.test(t));
+  check("accueil : statut sans collecte de données", /No payment form is available|Aucun formulaire de paiement n'est disponible/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
-// 5. Comparaison : la formule BOT-WOW mene au checkout, le calculateur est instrumente
+// 5. Comparaison publique : statut honnete, sources datees et CTA vers des pages reelles
 {
-  const t = read('compare.html');
-  check('compare : CTA de la formule BOT-WOW', /data-cta-id="formula-ours-buy"/.test(t));
-  check('compare : CTA de paiement present dans la formule', /data-cta-id="formula-ours-buy"/.test(t));
-  check('compare : calculateur de cout present', /id="ownership"/.test(t));
-  check('compare : source et date des prix citees', /pixelwowbot\.com/.test(t) && /2026-10-22/.test(t));
-  check('compare : aucun prix de concurrent invente (30 / 90 jours absent)', !/30 \/ 90/.test(t));
+  const en = read('compare.html');
+  const fr = read('fr/compare.html');
+  check('compare EN : BOT-WOW indique clairement que rien n’est en vente',
+    /BOT-WOW is not currently offered for purchase/i.test(en) && /Not for sale/i.test(en));
+  check('compare FR : BOT-WOW indique clairement que rien n’est commercialise',
+    /n'est actuellement pas proposé à l'achat/i.test(fr) && /Non commercialisé/i.test(fr));
+  check('compare EN : CTA demo vers la demo simulee',
+    /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
+  check('compare EN : CTA statut vers la page achat',
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(en));
+  check('compare FR : CTA demo vers la demo simulee',
+    /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(fr));
+  check('compare FR : CTA statut vers la page achat',
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(fr));
+  check('compare : aucun lien interne mort vers #buy', !/href="#buy"/.test(en + fr));
+  check('compare : sources concurrentes et dates de consultation visibles',
+    /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
+      && /https:\/\/pixelwowbot\.com\//.test(fr) && /06\/11\/2026/.test(fr));
+  check('compare EN : prix concurrent conformes à la page publique',
+    /€1\.99 for 48 hours; €19\.99 per 30 days; individual roles from €6\.99/.test(en));
+  check('compare FR : prix concurrent conformes à la page publique',
+    /1,99 € pour 48 h ; 19,99 € par 30 jours ; rôles individuels à partir de 6,99 €/.test(fr));
+  check('compare : compatibilité WoW Forever attribuée au vendeur, pas à BOT-WOW',
+    /WoW Forever/.test(en) && /WoW Forever/.test(fr));
+  check('compare : ancien calculateur de cout retire', !/id="ownership"/.test(en + fr));
 }
 
 // 6. Instrumentation : module present, charge, et evenements documentes
@@ -166,9 +186,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const f of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.html']) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-status'], ['fr/compare.html', 'mbar-status']]) {
     const t = read(f);
-    check(`${f} : la barre d'action mobile est instrumentee`, /data-cta-id="mbar-buy"/.test(t));
+    check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
 }
 
@@ -197,19 +217,19 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('l empreinte des assets est stable (8 caracteres)', /^[0-9a-f]{8}$/.test(assetFingerprint(REPO)));
 }
 
-// 8. La promesse de remboursement doit rester conforme aux conditions publiees.
-// Le hero doit annoncer la verite (14 jours, sauf licence activee) et jamais
-// une garantie inconditionnelle.
+// 8. No activation or refund entitlement is advertised while no product is offered.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
   const heroGuarantee = (html.match(/hero__guarantee-text">([\s\S]*?)<\/span>/) || ['', ''])[1]
     .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-  check(`${file} : le hero lie la politique de remboursement`,
+  check(file + ' : le hero renvoie vers la politique publiée',
     /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
-  check(`${file} : aucune garantie de remboursement inconditionnelle`,
-    !/No catch|Sans piège/i.test(heroGuarantee), `("${heroGuarantee}")`);
-  check(`${file} : la condition d'activation est mentionnee`,
-    /activée|activated/i.test(heroGuarantee), `("${heroGuarantee}")`);
+  check(file + ' : aucune garantie de remboursement inconditionnelle',
+    !/No catch|Sans piège/i.test(heroGuarantee), '("' + heroGuarantee + '")');
+  check(file + ' : le hero précise qu’aucune licence ne peut être activée',
+    /No licence can be activated|Aucune licence ne peut être activée/i.test(heroGuarantee), '("' + heroGuarantee + '")');
+  check(file + ' : aucune promesse de remboursement n’est faite',
+    /No refund promise is made|Aucune promesse de remboursement n’est faite/i.test(heroGuarantee), '("' + heroGuarantee + '")');
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
@@ -223,10 +243,10 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
 
-// 11. Hierarchie visuelle : l OR est reserve aux CTA d achat. Si tout est
-// doré, plus rien ne ressort et l action d achat devient invisible.
+// 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
+// le traitement visuel réservé à un achat immédiat.
 {
-  const PURCHASE = ['nav-buy', 'journey-fish-buy', 'final-buy', 'mbar-buy', 'hero-offer'];
+  const PURCHASE = [];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
@@ -265,12 +285,12 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
-// 13. Accessibilite du champ email : un outline:none global rend le champ
-// invisible a la navigation clavier. Le clavier doit retrouver un anneau.
+// 13. Le checkout fermé ne doit pas exposer un champ e-mail inutilisable.
+// Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : champ email avec type="email"`, /id="email"[^>]*type="email"/.test(html));
-  check(`${file} : label associe au champ email`, /<label[^>]*for="email"/.test(html));
+  check(`${file} : aucun champ e-mail de paiement n'est exposé`,
+    !/id="email"[^>]*type="email"|id="buyForm"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));

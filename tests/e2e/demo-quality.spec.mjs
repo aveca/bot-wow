@@ -45,19 +45,75 @@ async function captureScreenshot(page, testInfo, name) {
 }
 
 async function expectNoHorizontalOverflow(page) {
-  const dimensions = await page.evaluate(() => ({
-    documentWidth: document.documentElement.scrollWidth,
-    viewportWidth: document.documentElement.clientWidth
-  }));
-  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+  const dimensions = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    const offenders = [...document.querySelectorAll('body *')]
+      .map((el) => {
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return {
+          tag: el.tagName,
+          id: el.id,
+          className: typeof el.className === 'string' ? el.className : el.getAttribute('class'),
+          text: (el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 120),
+          left: Math.round(rect.left * 100) / 100,
+          right: Math.round(rect.right * 100) / 100,
+          width: Math.round(rect.width * 100) / 100,
+          minWidth: style.minWidth,
+          whiteSpace: style.whiteSpace,
+          flexWrap: style.flexWrap,
+          display: style.display
+        };
+      })
+      .filter((item) => item.width > 0 && (item.left < -1 || item.right > viewportWidth + 1))
+      .sort((a, b) => b.right - a.right)
+      .slice(0, 12);
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth,
+      offenders
+    };
+  });
+  expect(
+    dimensions.documentWidth,
+    `Horizontal overflow: ${JSON.stringify(dimensions.offenders)}`
+  ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
 }
 
 async function verifyPurchaseBlocked(page, testInfo, lang) {
-  const buyBtn = page.locator('#buyBtn');
-  const buyForm = page.locator('#buyForm');
 
-  // Le bouton de paiement est desactive
-  await expect(buyBtn).toBeDisabled();
+  // Les liens de navigation et le CTA principal annoncent le statut,
+  // jamais un achat disponible.
+  const navStatus = page.locator('a[data-cta-id="nav-status"]');
+  const heroStatus = page.locator('a[data-cta-id="buy-status-primary"]');
+  await expect(navStatus).toBeAttached();
+  // The compact header intentionally hides its nav-right button at <=520px;
+  // the visible hero status CTA remains the mobile purchase-status entry point.
+  const viewportWidth = page.viewportSize()?.width ?? 1280;
+  if (viewportWidth <= 520) {
+    await expect(navStatus).toBeHidden();
+  } else {
+    await expect(navStatus).toBeVisible();
+  }
+  await expect(heroStatus).toBeVisible();
+  await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
+  if (lang === 'fr') {
+    await expect(navStatus).toContainText('Vérifier la disponibilité');
+    await expect(heroStatus).toContainText('Vérifier la disponibilité');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
+  } else {
+    await expect(navStatus).toContainText('Check purchase status');
+    await expect(heroStatus).toContainText('Check purchase status');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
+  }
+
+  // Checkout is status-only: no email field or payment form is rendered.
+  await expect(page.locator('#buyBtn')).toHaveCount(0);
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
+  await expect(page.locator('.pay-note')).toContainText(
+    lang === 'fr' ? 'Aucun formulaire de paiement' : 'No payment form is available'
+  );
 
   // Le message de blocage est visible
   await expect(page.locator('.checkout-blocked')).toBeVisible();
@@ -66,32 +122,118 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   if (lang === 'fr') {
     await expect(page.locator('#release-availability-notice')).toContainText('n\'achetez pas tant que la livraison n\'est pas confirmée');
   } else {
-    await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+    await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   }
 
-  // Le formulaire existe bien
-  await expect(buyForm).toBeAttached();
-
-  // Soumission du formulaire bloquee (meme via Enter) - pas de redirection
-  await page.fill('#email', 'test@example.com');
-  await page.press('#email', 'Enter');
-  await expect(page.locator('#buyErr')).not.toContainText('redirect');
-  await expect(page.locator('#buyOk')).not.toContainText('redirect');
+  // No fake form can be submitted with Enter because no form or email field exists.
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('#email')).toHaveCount(0);
 }
 
-test('homepage: primary demo and purchase paths remain visible and responsive', async ({ page }, testInfo) => {
+test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
-  await expect(page.locator('a[data-cta-id="hero-offer"]')).toBeVisible();
+  await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage');
   expect(errors).toEqual([]);
+});
+
+
+
+test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const route of [
+    { path: '/', label: 'Check purchase status', bar: 'Purchase status' },
+    { path: '/fr/', label: 'Vérifier la disponibilité', bar: 'Statut de disponibilité' },
+  ]) {
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    const statusCta = page.locator('a[data-cta-id="hero-status"]');
+    await expect(statusCta).toBeVisible();
+    await expect(statusCta).toContainText(route.label);
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await expect(page.locator('[data-cta-id="hero-offer"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="final-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
+    await statusCta.click();
+    await expect(page.locator('#buy')).toBeInViewport();
+    await expectNoHorizontalOverflow(page);
+  }
+
+  expect(checkoutRequests).toEqual([]);
+});
+
+
+
+test('comparison EN/FR: status CTAs navigate to the status page and never start checkout', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const route of [
+    { path: '/compare.html', label: 'Purchase status', bar: 'Purchase status', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: "Statut d'achat", bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
+  ]) {
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    const statusCta = page.locator('a[data-cta-id="compare-status"]');
+    await expect(statusCta).toBeVisible();
+    await expect(statusCta).toContainText(route.label);
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await expect(page.locator('[data-cta-id="formula-ours-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(/Mollie/i);
+    await statusCta.click();
+    await expect(page).toHaveURL(route.target);
+    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  }
+
+  expect(checkoutRequests).toEqual([]);
+});
+
+
+
+test('closed checkout: pressing Enter cannot submit the email form EN/FR', async ({ page }) => {
+  const checkoutRequests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
+  });
+
+  for (const path of ['/', '/fr/', '/buy.html', '/fr/buy.html', '/compare.html', '/fr/compare.html']) {
+    const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
+    expect(response && response.ok()).toBeTruthy();
+    const before = page.url();
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await expect(page).toHaveURL(before);
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+  }
+
+  expect(checkoutRequests).toEqual([]);
 });
 
 test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
@@ -123,7 +265,7 @@ test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
   await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
-  await expect(page.locator('#release-availability-notice')).toContainText('do not purchase until delivery is confirmed');
+  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);
@@ -144,13 +286,14 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   await expect(page.locator('#demo-title')).toHaveText('Explore the route planner.');
   await expect(page.locator('.sim-banner')).toContainText('SIMULATED DATA');
   await expect(page.locator('.sim-banner')).toContainText('does not control the game client');
-  await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
+  await expect(page.locator('nav a[data-cta-id="purchase-status"]')).toHaveAttribute('href', './buy.html');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './fr/demo.html');
   const mobileOffer = page.locator('.demo-mobile-offer');
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
-    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
-    await expect(mobileOffer).toContainText('€20.00');
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
+    await expect(mobileOffer).toContainText('Purchase unavailable');
+    await expect(mobileOffer).toContainText('No verified downloadable release');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -189,12 +332,13 @@ test('French demo: locale stays French and all key navigation targets are locali
   await expect(page.locator('.sim-banner')).toContainText('ne démontre pas le déplacement automatique');
   await expect(page.locator('nav .langs a[lang="en"]')).toHaveAttribute('href', '../demo.html');
   await expect(page.locator('nav .langs a[lang="fr"]')).toHaveAttribute('href', './demo.html');
-  await expect(page.locator('nav a[data-cta-id="nav-buy"]')).toHaveAttribute('href', './#buy');
+  await expect(page.locator('nav a[data-cta-id="purchase-status"]')).toHaveAttribute('href', './buy.html');
   const mobileOffer = page.locator('.demo-mobile-offer');
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
-    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './#buy');
-    await expect(mobileOffer).toContainText('20,00 €');
+    await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
+    await expect(mobileOffer).toContainText('Achat indisponible');
+    await expect(mobileOffer).toContainText('Aucun paquet téléchargeable vérifié');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -232,8 +376,11 @@ for (const route of commercialPages) {
     await expect(page.locator('footer .logo-mark')).toHaveCount(1);
     await expect(page.locator('nav .nav-links a').first()).toBeAttached();
     await expect(page.locator('a[href*="demo.html"]:visible').first()).toBeVisible();
-    const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"]').count();
+    const purchasePaths = await page.locator('a[href*="#offre"], a[href*="#buy"], a[href*="buy.html"]').count();
     expect(purchasePaths).toBeGreaterThan(0);
+    if (route.name.startsWith('modules-')) {
+      await expect(page.locator('a[href*="buy.html"]:visible').first()).toBeVisible();
+    }
     await expectNoHorizontalOverflow(page);
     await captureScreenshot(page, testInfo, route.name);
     expect(errors, `JavaScript errors on ${route.path}`).toEqual([]);

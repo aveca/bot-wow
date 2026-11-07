@@ -18,11 +18,25 @@ jobs:
 
       - name: Validate static project
         run: npm run validate
-      - name: Recompute deterministic asset fingerprint and URLs
-        run: node scripts/versionne-assets.mjs
+
+      - name: Reject duplicate active agent locks on other open pull requests
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECK_OPEN_PR_LOCKS: "1"
+        run: node scripts/check-agent-state.mjs
 
       # Tests de la demonstration (parite JS/Python des regles de ronde) et
       # de la distribution (integrite du paquet, absence de donnees client).
       # La parite est IGNOREE si Python n'est pas disponible sur le runner.
       - name: Run demo and distribution tests
         run: npm test
+
+      # Le stamp des assets est VERIFIE par ces tests : il doit donc deja etre
+      # juste dans l'arbre committe. Recalculer le stamp AVANT les tests masquait
+      # un stamp perime (PR #118 : HTML en b4232c44, empreinte 560cff9a, CI verte
+      # alors qu'un checkout propre echouait). Le recalcul reste utile pour le
+      # build lorsqu'un asset vient de changer, mais il ne doit plus cacher
+      # l'ecart entre le depot et son empreinte.
+      - name: Recompute deterministic asset fingerprint and URLs
+        run: node scripts/versionne-assets.mjs

@@ -104,8 +104,8 @@ test('visual: homepage EN — layout, overflow, key elements', async ({ page }, 
   console.log('HOMEPAGE EN CTA offer:', JSON.stringify(heroOffer, null, 2));
 
   // Buy button state
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('HOMEPAGE EN BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const checkoutStatus = await inspectElementStyles(page, '.checkout-blocked');
+  console.log('HOMEPAGE EN CHECKOUT STATUS:', JSON.stringify(checkoutStatus, null, 2));
 
   // Skip link
   const skipLink = await inspectElementStyles(page, '.skip-link');
@@ -118,28 +118,28 @@ test('visual: homepage EN — layout, overflow, key elements', async ({ page }, 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
 
-test('visual: homepage EN — comparison section uses the full desktop width', async ({ page }) => {
+test('visual: homepage EN — project-scope section uses the full desktop width', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok(), 'HTTP / comparison section').toBeTruthy();
 
-  const metrics = await page.locator('#compare').evaluate((section) => {
+  const metrics = await page.locator('#project-scope').evaluate((section) => {
     const container = section.querySelector(':scope > .w');
-    const cards = section.querySelector('.vs-quick');
+    const cards = section.querySelector('.grid');
     return {
       sectionDisplay: getComputedStyle(section).display,
       sectionWidth: section.getBoundingClientRect().width,
       containerWidth: container?.getBoundingClientRect().width ?? 0,
       cardsWidth: cards?.getBoundingClientRect().width ?? 0,
-      firstCardWidth: section.querySelector('.vs-card')?.getBoundingClientRect().width ?? 0
+      firstCardWidth: section.querySelector('.card')?.getBoundingClientRect().width ?? 0
     };
   });
 
-  expect(metrics.sectionDisplay, 'comparison section must remain a normal full-width block').toBe('block');
+  expect(metrics.sectionDisplay, 'project-scope section must remain a normal full-width block').toBe('block');
   expect(metrics.sectionWidth, 'section width at 1440px viewport').toBeGreaterThan(1300);
   expect(metrics.containerWidth, 'inner content width').toBeGreaterThan(1100);
-  expect(metrics.cardsWidth, 'three-card comparison grid width').toBeGreaterThan(1000);
-  expect(metrics.firstCardWidth, 'each desktop comparison card width').toBeGreaterThan(300);
+  expect(metrics.cardsWidth, 'three-card project-scope grid width').toBeGreaterThan(1000);
+  expect(metrics.firstCardWidth, 'each desktop scope card width').toBeGreaterThan(300);
 });
 
 test('visual: homepage EN — mobile layout', async ({ page }, testInfo) => {
@@ -151,8 +151,8 @@ test('visual: homepage EN — mobile layout', async ({ page }, testInfo) => {
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-homepage-en-mobile');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('HOMEPAGE EN MOBILE BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const checkoutStatus = await inspectElementStyles(page, '.checkout-blocked');
+  console.log('HOMEPAGE EN MOBILE CHECKOUT STATUS:', JSON.stringify(checkoutStatus, null, 2));
 
   const navLinks = await page.locator('.nav-links').isVisible();
   console.log('HOMEPAGE EN MOBILE nav-links visible:', navLinks);
@@ -179,8 +179,8 @@ test('visual: homepage FR — layout, overflow, key elements', async ({ page }, 
   const hero = await inspectElementStyles(page, '.hero');
   console.log('HOMEPAGE FR HERO:', JSON.stringify(hero, null, 2));
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('HOMEPAGE FR BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const checkoutStatus = await inspectElementStyles(page, '.checkout-blocked');
+  console.log('HOMEPAGE FR CHECKOUT STATUS:', JSON.stringify(checkoutStatus, null, 2));
 
   const langAttr = await page.locator('html').getAttribute('lang');
   console.log('HOMEPAGE FR html lang:', langAttr);
@@ -197,8 +197,8 @@ test('visual: homepage FR — mobile layout', async ({ page }, testInfo) => {
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-homepage-fr-mobile');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('HOMEPAGE FR MOBILE BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const checkoutStatus = await inspectElementStyles(page, '.checkout-blocked');
+  console.log('HOMEPAGE FR MOBILE CHECKOUT STATUS:', JSON.stringify(checkoutStatus, null, 2));
 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
@@ -207,7 +207,7 @@ test('visual: homepage FR — mobile layout', async ({ page }, testInfo) => {
    VISUAL INSPECTION — Buy page EN
    ───────────────────────────── */
 
-test('visual: buy page EN — layout, blocked state, form', async ({ page }, testInfo) => {
+test('visual: buy page EN — layout, status-only checkout', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
@@ -216,14 +216,11 @@ test('visual: buy page EN — layout, blocked state, form', async ({ page }, tes
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-buy-en-desktop');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY EN BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const payNote = await inspectElementStyles(page, '.pay-note');
+  console.log('BUY EN STATUS NOTE:', JSON.stringify(payNote, null, 2));
 
   const checkoutBlocked = await inspectElementStyles(page, '.checkout-blocked');
   console.log('BUY EN CHECKOUT BLOCKED:', JSON.stringify(checkoutBlocked, null, 2));
-
-  const emailInput = await inspectElementStyles(page, '#email');
-  console.log('BUY EN EMAIL INPUT:', JSON.stringify(emailInput, null, 2));
 
   const availabilityNotice = await inspectElementStyles(page, '#release-availability-notice');
   console.log('BUY EN AVAILABILITY NOTICE:', JSON.stringify(availabilityNotice, null, 2));
@@ -243,8 +240,8 @@ test('visual: buy page EN — mobile layout', async ({ page }, testInfo) => {
   const mbar = await inspectElementStyles(page, '.mbar');
   console.log('BUY EN MOBILE mbar:', JSON.stringify(mbar, null, 2));
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY EN MOBILE BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const payNote = await inspectElementStyles(page, '.pay-note');
+  console.log('BUY EN MOBILE STATUS NOTE:', JSON.stringify(payNote, null, 2));
 
   await assertNoConsoleErrors(errors, testInfo.title);
 });
@@ -262,8 +259,8 @@ test('visual: buy page FR — layout, blocked state, form', async ({ page }, tes
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-buy-fr-desktop');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('BUY FR BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const payNote = await inspectElementStyles(page, '.pay-note');
+  console.log('BUY FR STATUS NOTE:', JSON.stringify(payNote, null, 2));
 
   const checkoutBlocked = await inspectElementStyles(page, '.checkout-blocked');
   console.log('BUY FR CHECKOUT BLOCKED:', JSON.stringify(checkoutBlocked, null, 2));
@@ -287,8 +284,8 @@ test('visual: compare page EN — layout, overflow', async ({ page }, testInfo) 
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'visual-compare-en-desktop');
 
-  const buyBtn = await inspectElementStyles(page, '#buyBtn');
-  console.log('COMPARE EN BUY BTN:', JSON.stringify(buyBtn, null, 2));
+  const payNote = await inspectElementStyles(page, '.pay-note');
+  console.log('COMPARE EN STATUS NOTE:', JSON.stringify(payNote, null, 2));
 
   await assertNoConsoleErrors(errors, testInfo.title);
 });

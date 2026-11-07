@@ -58,19 +58,21 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : la section comparative de l’accueil utilise une classe de section, pas la grille legacy',
-  /<section class="pad compare-section" id="compare">/.test(enHome) &&
-  !/<section class="pad compare" id="compare">/.test(enHome));
-check('FR : la section comparative de l’accueil utilise une classe de section, pas la grille legacy',
-  /<section class="pad compare-section" id="compare">/.test(frHome) &&
-  !/<section class="pad compare" id="compare">/.test(frHome));
+check('EN : la homepage expose le statut du projet et retire les comparaisons commerciales non vérifiées',
+  /<section class="pad" id="project-scope">/.test(enHome) &&
+  !/<section class="pad compare(?:-section)?" id="compare">/.test(enHome));
+check('FR : la homepage expose le statut du projet et retire les comparaisons commerciales non vérifiées',
+  /<section class="pad" id="project-scope">/.test(frHome) &&
+  !/<section class="pad compare(?:-section)?" id="compare">/.test(frHome));
 const enNoticeAt = enHome.indexOf('id="release-availability-notice"');
 const frNoticeAt = frHome.indexOf('id="release-availability-notice"');
-check('EN : avertissement de disponibilité avant le formulaire d\'achat',
-  enNoticeAt >= 0 && enNoticeAt < enHome.indexOf('<form id="buyForm"') &&
+check('EN : avertissement de disponibilité présent et formulaire d\'achat absent',
+  enNoticeAt >= 0 &&
+  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(enHome) &&
   /do not purchase until delivery is confirmed/i.test(enHome));
-check('FR : avertissement de disponibilité avant le formulaire d\'achat',
-  frNoticeAt >= 0 && frNoticeAt < frHome.indexOf('<form id="buyForm"') &&
+check('FR : avertissement de disponibilité présent et formulaire d\'achat absent',
+  frNoticeAt >= 0 &&
+  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(frHome) &&
   /n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));

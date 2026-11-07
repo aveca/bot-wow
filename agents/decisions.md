@@ -1,0 +1,10 @@
+# Décisions
+
+| date | décision | statut |
+|---|---|---|
+| 2026-11-06 | L'hôte canonique est `https://bot-wow.com`. | tenue, canonical + Redirect Rule observée |
+| 2026-11-06 | Ne pas rouvrir le CTA ni le checkout dans le cycle d'état partagé. La page « purchase unavailable » est la posture publiée. | tenue par ce cycle |
+| 2026-11-06 | Ne pas ajouter une redirection `www` dans `_redirects` ni une Pages Function tant que la Redirect Rule de zone répond 301. | tenue |
+| 2026-11-06 | La preuve de livraison de ce cycle est un sandbox (Mollie, Resend, D1, R2 simulés). Elle ne déclare pas un paiement de production. | tenue |
+| 2026-11-04 | ONE CORE OFFER : un seul prix historique 20 EUR, pas d'abonnement. | toujours dans `PRICE_TABLE` et `/api/config` ; ce n'est pas une offre ouverte |
+| antérieur | Ne pas réutiliser le profil Mollie d'un autre produit. | toujours en vigueur |
