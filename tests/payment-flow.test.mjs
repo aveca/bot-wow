@@ -314,6 +314,20 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     `(status=${res.status} url=${payment && payment.url})`);
 }
 
+/* 3d. un token organisation sans profileId n'appelle pas Mollie */
+{
+  const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
+  const env = makeEnv(state, 'access_org_token');
+  env.MOLLIE_PROFILE_ID = '';
+  mollieCalls = [];
+  const res = await callWorker('/api/checkout', {
+    method: 'POST', body: { email: 'org-missing@test.fr', lang: 'fr' }, env,
+  });
+  check('un token organisation sans profileId n appelle pas Mollie',
+    res.status === 500 && mollieCalls.length === 0,
+    `(status=${res.status} appels=${mollieCalls.length})`);
+}
+
 /* 3b. un webhook paye enregistre UNE conversion (mesure serveur) */
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
