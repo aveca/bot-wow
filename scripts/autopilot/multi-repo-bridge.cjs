@@ -15,7 +15,10 @@
  *      qui ne sont pas les nôtres ;
  *   2. le repli est JOURNALISÉ (le dépôt local retenu est visible) ;
  *   3. les dépendances `./lib/common.cjs` et `./lib/memory.cjs` sont portées
- *      en local, en sous-ensemble strict de ce que le pont utilise.
+ *      en local, en sous-ensemble strict de ce que le pont utilise ;
+ *   4. la création des dossiers de mémoire est injectable (`ensureDirs`) pour
+ *      que les tests n'écrivent aucun dossier dans le dépôt : le comportement
+ *      en production est inchangé (les dossiers sont créés en mode réel).
  *
  * Dans `aveca/sargagame`, ce module étend `scripts/autopilot/bridge.cjs` du
  * runner Factory V3. BOT-WOW n'a pas de `bridge.cjs` local : ce module EST le
@@ -405,6 +408,7 @@ function publishStatus(repoFullName, issueNumber, status, details = '', options 
  * @param {function} options.saveQueue
  * @param {function} options.writeOpportunityFile
  * @param {function} options.publishStatus
+ * @param {function} options.ensureDirs         (tests) : création des dossiers
  */
 function ingestMultiRepo(options = {}) {
   const dry = options.dry === true;
@@ -416,8 +420,9 @@ function ingestMultiRepo(options = {}) {
   const loadQueue = options.loadQueue || mem.loadQueue;
   const saveQueue = options.saveQueue || mem.saveQueue;
   const writeOppFile = options.writeOpportunityFile || mem.writeOpportunityFile;
+  const ensureDirs = options.ensureDirs || C.ensureDirs;
 
-  if (!dry) C.ensureDirs();
+  if (!dry) ensureDirs();
 
   const queue = options.queue || loadQueue();
   queue.opportunities = queue.opportunities || [];

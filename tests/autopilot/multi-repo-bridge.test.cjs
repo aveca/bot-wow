@@ -13,7 +13,9 @@
  * une mission Sargagame n'est JAMAIS enfilée dans la queue BOT-WOW.
  *
  * Aucun appel `gh` réel : l'exécutable est injecté. Aucune écriture disque :
- * la queue, la sauvegarde et les fiches d'opportunité sont injectées.
+ * la queue, la sauvegarde, les fiches d'opportunité ET la création des dossiers
+ * de mémoire sont injectées — les tests ne laissent aucun dossier `.ai/` dans
+ * le dépôt.
  *
  * Couvre :
  *   1. requiredContract : contrat complet / incomplet / mission historique
@@ -28,11 +30,13 @@
  *   7. detectLocalRepo : override d'environnement, allowlist, détection par
  *      remote origin, repli JAMAIS vers aveca/sargagame
  *   8. parseArgs
+ *   9. aucune écriture sur le disque pendant toute la suite
  */
 
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('path');
 const os = require('os');
 
@@ -40,6 +44,11 @@ const bridge = require('../../scripts/autopilot/multi-repo-bridge.cjs');
 
 /** Racine du dépôt BOT-WOW (ce fichier : tests/autopilot/… → ../../..). */
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
+/** État du dossier de mémoire AVANT la suite (peut déjà exister après un import réel). */
+const AI_DIR = path.join(REPO_ROOT, '.ai');
+const aiBefore = fs.existsSync(AI_DIR);
+const aiEntriesBefore = aiBefore ? fs.readdirSync(AI_DIR).sort().join(',') : '';
 
 let failures = 0;
 function check(name, ok, detail = '') {
@@ -238,6 +247,7 @@ console.log('=== 6. ingestMultiRepo ===');
     const saved = [];
     const written = [];
     const statuses = [];
+    let ensureDirsCalls = 0;
 
     const localTask = taskBlock({ id: 'T-LOCAL', task_id: 'T-LOCAL', issue_number: 2000, repository_full_name: LOCAL });
     const remoteTask = taskBlock({ id: 'T-REMOTE', task_id: 'T-REMOTE', issue_number: 125, repository_full_name: OTHER });
@@ -249,6 +259,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: (q) => saved.push(q),
       writeOpportunityFile: (o) => written.push(o.id),
+      ensureDirs: () => { ensureDirsCalls += 1; },
       publishStatus: (repo, issueNumber, status, details, opts) => {
         statuses.push({ repo, issueNumber, status, taskId: opts && opts.taskId });
         return true;
@@ -258,6 +269,7 @@ console.log('=== 6. ingestMultiRepo ===');
     });
 
     check('dépôt local détecté', result.localRepo === LOCAL);
+    check('dossiers de mémoire créés une seule fois (mode réel)', ensureDirsCalls === 1, String(ensureDirsCalls));
     check('mission locale importée', result.imported === 1, JSON.stringify(result.perRepo));
     check('mission distante RELAYÉE', result.relayed === 1, JSON.stringify(result.perRepo));
     check('mission distante absente de la queue locale', queue.opportunities.length === 1);
@@ -302,6 +314,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: () => {},
       writeOpportunityFile: () => {},
+      ensureDirs: () => {},
       publishStatus: () => true,
       loadIssues: (repo) => issues[repo] || [],
     };
@@ -326,6 +339,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: () => {},
       writeOpportunityFile: () => {},
+      ensureDirs: () => {},
       publishStatus: () => true,
       loadIssues: (repo) => (repo === LOCAL ? [issue(4000, t)] : []),
     });
@@ -346,6 +360,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: () => {},
       writeOpportunityFile: () => {},
+      ensureDirs: () => {},
       publishStatus: (repo, issueNumber, status) => {
         statuses.push(status);
         return true;
@@ -364,6 +379,7 @@ console.log('=== 6. ingestMultiRepo ===');
     let saveCalled = 0;
     let writeCalled = 0;
     let statusCalled = 0;
+    let ensureDirsCalls = 0;
     const t = taskBlock({ id: 'T-DRY', task_id: 'T-DRY', issue_number: 6000 });
     const result = bridge.ingestMultiRepo({
       dry: true,
@@ -372,6 +388,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: () => { saveCalled += 1; },
       writeOpportunityFile: () => { writeCalled += 1; },
+      ensureDirs: () => { ensureDirsCalls += 1; },
       publishStatus: () => { statusCalled += 1; return true; },
       loadIssues: (repo) => (repo === LOCAL ? [issue(6000, t)] : []),
     });
@@ -382,6 +399,7 @@ console.log('=== 6. ingestMultiRepo ===');
     check('dry-run : queue non sauvegardée', saveCalled === 0);
     check('dry-run : aucune fiche écrite', writeCalled === 0);
     check('dry-run : aucun statut publié', statusCalled === 0);
+    check('dry-run : aucun dossier créé', ensureDirsCalls === 0, String(ensureDirsCalls));
     check('dry-run : queue inchangée', queue.opportunities.length === 0);
   }
 
@@ -396,6 +414,7 @@ console.log('=== 6. ingestMultiRepo ===');
       queue,
       saveQueue: () => {},
       writeOpportunityFile: () => {},
+      ensureDirs: () => {},
       publishStatus: () => false,
       loadIssues: (repo) => (repo === LOCAL ? [issue(7000, t)] : []),
     });
@@ -476,6 +495,19 @@ console.log('=== 8. parseArgs ===');
   const a = bridge.parseArgs(['--status', 'started', '--repo', LOCAL, '--issue', '1337', '--task', 'T-1']);
   check('option avec valeur', a.status === 'started' && a.repo === LOCAL && a.issue === '1337');
   check('option sans valeur', bridge.parseArgs(['--dry']).dry === true);
+}
+
+// ── 9. Aucune écriture sur le disque pendant la suite ───────────────────────
+
+console.log('=== 9. aucune écriture sur le disque ===');
+{
+  const aiNow = fs.existsSync(AI_DIR);
+  const aiEntriesNow = aiNow ? fs.readdirSync(AI_DIR).sort().join(',') : '';
+  check(
+    'état du dossier de mémoire inchangé',
+    aiNow === aiBefore && aiEntriesNow === aiEntriesBefore,
+    `avant=${aiBefore ? aiEntriesBefore : '(absent)'} après=${aiNow ? aiEntriesNow : '(absent)'}`,
+  );
 }
 
 console.log('');
