@@ -494,17 +494,17 @@ console.log('=== 7. detectLocalRepo ===');
     }
     check('override hors allowlist rejeté explicitement', invalidEnvRejected);
 
-    process.env.AUTOPILOT_LOCAL_REPO = OTHER;
+    process.env.AUTOPILOT_LOCAL_REPO = LOCAL;
     let mismatchRejected = false;
     try {
       bridge.detectLocalRepo(REPO_ROOT, {
         isGitWorktree: () => true,
-        getOrigin: () => 'https://github.com/aveca/bot-wow.git',
+        getOrigin: () => 'https://github.com/aveca/sargagame.git',
       });
     } catch (e) {
-      mismatchRejected = /ne correspond pas au remote origin/.test(e.message);
+      mismatchRejected = /ne correspond pas au checkout BOT-WOW/.test(e.message);
     }
-    check('override autorisé mais incohérent avec origin rejeté', mismatchRejected);
+    check('override BOT-WOW ne peut pas masquer un origin Sargagame', mismatchRejected);
 
     delete process.env.AUTOPILOT_LOCAL_REPO;
 
