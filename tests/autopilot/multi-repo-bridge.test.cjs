@@ -475,8 +475,15 @@ console.log('=== 7. detectLocalRepo ===');
 {
   const previous = process.env.AUTOPILOT_LOCAL_REPO;
   try {
+    process.env.AUTOPILOT_LOCAL_REPO = LOCAL;
+    check('override BOT-WOW respecté hors checkout Git', bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }) === LOCAL);
+
     process.env.AUTOPILOT_LOCAL_REPO = OTHER;
-    check('override autorisé respecté hors checkout Git', bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }) === OTHER);
+    let sargagameOverrideRejected = false;
+    try { bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }); } catch (e) {
+      sargagameOverrideRejected = /doit désigner BOT-WOW/.test(e.message);
+    }
+    check('override Sargagame rejeté dans le bridge BOT-WOW', sargagameOverrideRejected);
 
     process.env.AUTOPILOT_LOCAL_REPO = 'aveca/pas-autorise';
     let invalidEnvRejected = false;
@@ -508,11 +515,16 @@ console.log('=== 7. detectLocalRepo ===');
     });
     check('remote HTTPS BOT-WOW reconnu', allowedHttps === LOCAL, allowedHttps);
 
-    const allowedSsh = bridge.detectLocalRepo(REPO_ROOT, {
-      isGitWorktree: () => true,
-      getOrigin: () => 'git@github.com:aveca/sargagame.git',
-    });
-    check('remote SSH Sargagame reconnu', allowedSsh === OTHER, allowedSsh);
+    let sargagameOriginRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'git@github.com:aveca/sargagame.git',
+      });
+    } catch (e) {
+      sargagameOriginRejected = /ne correspond pas au checkout BOT-WOW/.test(e.message);
+    }
+    check('remote Sargagame ne peut pas être le checkout local BOT-WOW', sargagameOriginRejected);
 
     let thirdPartyRejected = false;
     try {
@@ -546,6 +558,19 @@ console.log('=== 7. detectLocalRepo ===');
       nonGithubRejected = /hôte remote origin non autorisé/.test(e.message);
     }
     check('hôte distant hors GitHub rejeté', nonGithubRejected);
+
+    let wrongLocalRepoRejected = false;
+    try {
+      bridge.ingestMultiRepo({
+        localRepo: OTHER,
+        dry: true,
+        loadIssues: () => [],
+        queue: { opportunities: [] },
+      });
+    } catch (e) {
+      wrongLocalRepoRejected = /ne peut tourner que dans/.test(e.message);
+    }
+    check('ingestMultiRepo refuse un checkout local Sargagame', wrongLocalRepoRejected);
   } finally {
     if (previous === undefined) delete process.env.AUTOPILOT_LOCAL_REPO;
     else process.env.AUTOPILOT_LOCAL_REPO = previous;
