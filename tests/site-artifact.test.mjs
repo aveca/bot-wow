@@ -80,8 +80,8 @@ check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
-check('FR : le badge indique que la livraison reste à confirmer',
-  /<b>v1\.2\.0<\/b>\s*livraison à confirmer/i.test(frHome));
+check('FR : le badge distingue l’archive historique et la livraison non vérifiée',
+  /<b>v1\.2\.0<\/b>\s*archive historique · livraison non vérifiée/i.test(frHome));
 
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {
