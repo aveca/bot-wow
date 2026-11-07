@@ -1,2 +1,3 @@
 4FB2D1C1C954C286305DFCF1C70A688C7E3E77FBA15E352A24A88916708F9FBA  Casinobabe-Fishing-Assistant-1.2.0.zip (reproduit depuis aveca/Casinobabe@257418c)
 1C132F367607EA186FEFFDE8BBDA0A1A9F94CDEC4B7850B93C57C271270BBA4F  Casinobabe-Fishing-Assistant-1.2.0.zip (dist existant, mods locaux non commités)
+ef294998a1ac5ce703739f7541ac63d0e61191f55fa8a7129b420b38adf79132  casinobabe-fishing-1.2.1.zip (257418c + toc 1.2.1, depose dans R2, non servi)
