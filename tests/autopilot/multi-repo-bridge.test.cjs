@@ -276,9 +276,9 @@ console.log('=== 6. ingestMultiRepo ===');
     check('fiche d\'opportunité écrite pour la mission locale', written.join(',') === 'T-LOCAL');
     check('queue sauvegardée une fois', saved.length === 1);
     check(
-      'statut publié sur l\'issue du dépôt qui porte la mission',
-      statuses.some((s) => s.repo === OTHER && s.issueNumber === 125 && s.status === 'imported')
-      && statuses.some((s) => s.repo === LOCAL && s.issueNumber === 2000 && s.status === 'imported'),
+      'statut publié uniquement sur l\'issue locale BOT-WOW',
+      statuses.some((s) => s.repo === LOCAL && s.issueNumber === 2000 && s.status === 'imported')
+      && !statuses.some((s) => s.repo === OTHER),
       JSON.stringify(statuses),
     );
     check(
