@@ -77,6 +77,7 @@ node scripts/autopilot/multi-repo-bridge.cjs --status started --repo aveca/bot-w
   sans écriture, échec de publication compté, détection fail-closed du remote
   et fallback uniquement hors checkout Git.
 - Aucun appel réseau dans les tests : `gh` est injecté.
+- La fonction publique de statut refuse elle-même toute publication hors BOT-WOW.
 
 ## Ce que ce pont ne fait PAS
 
