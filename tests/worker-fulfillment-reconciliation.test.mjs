@@ -126,6 +126,7 @@ function makeEnv(state) {
       },
     },
     RELEASE_STATUS: 'confirmed',
+    CHECKOUT_PUBLIC: 'enabled',
     state,
   };
 }
