@@ -421,8 +421,8 @@ function publishStatus(repoFullName, issueNumber, status, details = '', options 
   if (!STATUSES.includes(status)) {
     throw new Error(`statut inconnu: ${status} (attendu: ${STATUSES.join(', ')})`);
   }
-  if (!isAllowedRepo(repoFullName)) {
-    throw new Error(`dépôt non autorisé pour la publication d'un statut: ${repoFullName}`);
+  if (repoFullName !== 'aveca/bot-wow') {
+    throw new Error(`publication distante interdite par la politique BOT-WOW : ${repoFullName}`);
   }
   const ghFn = options.gh || gh;
   const body = [
