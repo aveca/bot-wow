@@ -28,16 +28,17 @@ console.log('=== BROUILLON JURIDIQUE ===');
 for (const rel of pages) {
   const html = fs.readFileSync(path.join(root, rel), 'utf8');
   check(rel + ' existe', html.length > 500);
-  check(rel + ' marque les trous', html.includes('A COMPLETER'));
+  check(rel + ' nomme Coco LLC', html.includes('Coco LLC'));
   check(rel + ' nomme le produit', html.includes('bot-wow-lifetime'));
   check(rel + ' garde le prix de reference', /20\.00 EUR|20,00 EUR/.test(html));
   check(rel + ' n invente pas un SIRET', !/\b\d{3}\s?\d{3}\s?\d{3}\s?\d{5}\b/.test(html));
+  check(rel + ' ne laisse pas un champ A COMPLETER', !html.includes('A COMPLETER'));
   check(rel + ' ne pretend pas que l offre est en vente', !/currently on sale|offre actuellement en vente/i.test(html));
 }
 const terms = fs.readFileSync(path.join(root, 'legal/terms.html'), 'utf8');
 const termsFr = fs.readFileSync(path.join(root, 'legal/fr/terms.html'), 'utf8');
 check('les CGV parlent du contenu numerique', /digital content/i.test(terms));
-check('les CGV disent que le checkout est ferme', /checkout stays closed/i.test(terms));
+check('les CGV nomment le Delaware', /State of Delaware/i.test(terms));
 check('CGV EN : pas d affiliation Blizzard', /neither affiliated with nor endorsed by Blizzard Entertainment/i.test(terms));
 check('CGV EN : risque de sanction de compte', /Account sanctions, including suspension or closure, are possible/i.test(terms));
 check('CGV EN : pas de promesse de non-detection', /do not promise that the software will not be detected/i.test(terms));
