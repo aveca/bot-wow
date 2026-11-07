@@ -142,13 +142,10 @@ function gh(args, cwd = C.ROOT) {
  * d'un AUTRE dépôt autorisé est relayée, pas exécutée ici.
  */
 function detectLocalRepo(cwd = C.ROOT, deps = {}) {
-  const fromEnv = process.env.AUTOPILOT_LOCAL_REPO;
-  if (fromEnv !== undefined && String(fromEnv).trim() !== '') {
-    const repo = String(fromEnv).trim().toLowerCase();
-    if (!isAllowedRepo(repo)) {
-      throw new Error(`AUTOPILOT_LOCAL_REPO hors allowlist : ${repo}`);
-    }
-    return repo;
+  const overrideRaw = process.env.AUTOPILOT_LOCAL_REPO;
+  const override = overrideRaw === undefined ? '' : String(overrideRaw).trim().toLowerCase();
+  if (override && !isAllowedRepo(override)) {
+    throw new Error(`AUTOPILOT_LOCAL_REPO hors allowlist : ${override}`);
   }
 
   const isGitWorktree = deps.isGitWorktree || ((dir) =>
@@ -161,8 +158,19 @@ function detectLocalRepo(cwd = C.ROOT, deps = {}) {
     }).trim() === 'true');
 
   let inWorktree = false;
-  try { inWorktree = isGitWorktree(cwd) === true; } catch (_) { inWorktree = false; }
+  try {
+    inWorktree = isGitWorktree(cwd) === true;
+  } catch (e) {
+    const detail = String(e && (e.stderr || e.message) || e);
+    if (/not a git repository|must be run in a work tree/i.test(detail)) {
+      inWorktree = false;
+    } else {
+      throw new Error(`détection du checkout Git impossible : ${detail}`);
+    }
+  }
+
   if (!inWorktree) {
+    if (override) return override;
     console.log(`[bridge] aucun checkout Git détecté : dépôt local par défaut ${DEFAULT_LOCAL_REPO}`);
     return DEFAULT_LOCAL_REPO;
   }
@@ -203,6 +211,9 @@ function detectLocalRepo(cwd = C.ROOT, deps = {}) {
 
   full = full.toLowerCase();
   if (!isAllowedRepo(full)) throw new Error(`remote origin hors allowlist : ${full}`);
+  if (override && override !== full) {
+    throw new Error(`AUTOPILOT_LOCAL_REPO ne correspond pas au remote origin : ${override} != ${full}`);
+  }
   return full;
 }
 
