@@ -1256,7 +1256,7 @@ async function handleBitcoinCheckout(request, env2) {
     const mailtoBody = encodeURIComponent(generatePaymentEmailBody({
       orderReference,
       email,
-      product: "Casinobae Addon World of Warcraft",
+      product: "Casinobabe Addon World of Warcraft",
       priceEur: PRICE_EUR_STR,
       orderId,
       lang
@@ -1268,7 +1268,7 @@ async function handleBitcoinCheckout(request, env2) {
       ok: true,
       orderId,
       orderReference,
-      product: "Casinobae Addon World of Warcraft",
+      product: "Casinobabe Addon World of Warcraft",
       priceEur: PRICE_EUR_STR,
       priceBtc: "Calculated at payment time (check current BTC/EUR rate)",
       instructions: "Payment instructions including the Bitcoin address will be sent to your email by our support team.",
@@ -1546,10 +1546,10 @@ function generateDeliveryEmailBody(params) {
 Votre paiement a \xE9t\xE9 v\xE9rifi\xE9 et votre licence est maintenant active.
 
 Licence : ${licenseKey}
-Produit : Casinobae Addon World of Warcraft
+Produit : Casinobabe Addon World of Warcraft
 T\xE9l\xE9chargement : ${downloadUrl}
 
-Cette licence vous donne acc\xE8s \xE0 vie au bot Casinobae pour World of Warcraft.
+Cette licence vous donne acc\xE8s \xE0 vie au bot Casinobabe pour World of Warcraft.
 
 Pour installer :
 1. T\xE9l\xE9chargez le fichier via le lien ci-dessus
@@ -1571,10 +1571,10 @@ support@bot-wow.com`
 Your payment has been verified and your license is now active.
 
 License: ${licenseKey}
-Product: Casinobae Addon World of Warcraft
+Product: Casinobabe Addon World of Warcraft
 Download: ${downloadUrl}
 
-This license gives you lifetime access to the Casinobae bot for World of Warcraft.
+This license gives you lifetime access to the Casinobabe bot for World of Warcraft.
 
 To install:
 1. Download the file via the link above
