@@ -84,5 +84,5 @@ node scripts/autopilot/multi-repo-bridge.cjs --status started --repo aveca/bot-w
 - Il n'exécute aucune mission tout seul : il prépare la queue locale et publie
   les statuts. L'exécution reste le fait du runner Factory V3.
 - Il ne lit aucun dépôt hors de l'allowlist.
-- Il ne publie aucun statut sur un dépôt non autorisé (une tentative lève une
-  erreur explicite).
+- Il ne publie aucun statut sur Sargagame ; la fonction publique de statut
+  rejette toute tentative d'écriture distante avant l'appel à GitHub.
