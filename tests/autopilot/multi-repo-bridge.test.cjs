@@ -462,14 +462,26 @@ console.log('=== 7. detectLocalRepo ===');
   const previous = process.env.AUTOPILOT_LOCAL_REPO;
   try {
     process.env.AUTOPILOT_LOCAL_REPO = OTHER;
-    check('override autorisé respecté', bridge.detectLocalRepo() === OTHER);
+    check('override autorisé respecté hors checkout Git', bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }) === OTHER);
 
     process.env.AUTOPILOT_LOCAL_REPO = 'aveca/pas-autorise';
     let invalidEnvRejected = false;
-    try { bridge.detectLocalRepo(); } catch (e) {
+    try { bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }); } catch (e) {
       invalidEnvRejected = /hors allowlist/.test(e.message);
     }
     check('override hors allowlist rejeté explicitement', invalidEnvRejected);
+
+    process.env.AUTOPILOT_LOCAL_REPO = OTHER;
+    let mismatchRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'https://github.com/aveca/bot-wow.git',
+      });
+    } catch (e) {
+      mismatchRejected = /ne correspond pas au remote origin/.test(e.message);
+    }
+    check('override autorisé mais incohérent avec origin rejeté', mismatchRejected);
 
     delete process.env.AUTOPILOT_LOCAL_REPO;
 
