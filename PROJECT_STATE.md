@@ -1,6 +1,14 @@
 # BOT-WOW — état partagé
 
-**Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
+**Relevé : 2026-11-07T16:40Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
+
+## Decision du proprietaire
+
+Yacov, 2026-11-07 18:14 UTC+2 : on vend le BOT-WOW complet, bot de pêche inclus. Il n'y a pas de pivot vers un compagnon sans automatisation. Le checkout public reste fermé tant que les conditions déjà écrites ne sont pas remplies. Cette décision est commentée sur la PR #135, qui reste ouverte.
+
+Source du module pêche : `GET /repos/aveca/Casinababe` répond 404 avec le jeton actuel. Les dépôts visibles de `aveca` ne montrent pas ce nom. Le dépôt lisible est `aveca/Casinobabe` (la casse `CasinoBabe` désigne le même dépôt). Il a été lu, pas modifié. Le paquet 1.2.1 déposé part de `feat/fishing-route-intelligence-v2` @ `257418c9a0c2c489a01226e8065ac9c8eaded954`, fichier `runtime-addon/Casinobabe/CasinobabeFishing.lua` et scripts `scripts/fishing_*.py`.
+
+L'objet servi `casinobabe-fishing-1.2.0.zip` existe : 1 387 543 octets, SHA-256 `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f`, lu le 2026-11-07. Son `.toc` est en `1.0.38`. Ce n'est pas le build propre.
 
 Dépôt : https://github.com/aveca/bot-wow
 PR de ce relevé : https://github.com/aveca/bot-wow/pull/129 (branche `cursor/commercial-truth-agent-state-0086`)

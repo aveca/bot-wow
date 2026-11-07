@@ -2,6 +2,10 @@
 
 Date : 2026-11-07. L'objet actuellement téléchargé n'est pas modifié. `R2_OBJECT_KEY` de production reste `casinobabe-fishing-1.2.0.zip`.
 
+## Dépôt nommé Casinababe
+
+`GET /repos/aveca/Casinababe` répond 404. Aucun dépôt distinct de ce nom n'est visible. Le dépôt lisible, non modifié, est `aveca/Casinobabe`. La construction ci-dessous vient de ce dépôt.
+
 ## Source retenue
 
 `aveca/Casinobabe` `main` (`e76de1ee3a026a857bb2fa510877295f8ee2b3d5`, 2026-10-30) n'est pas le produit pêche : son `Casinobabe.toc` est en version `1.0.38`, décrit un panneau casino, et ne charge pas `CasinobabeFishing.lua`.
