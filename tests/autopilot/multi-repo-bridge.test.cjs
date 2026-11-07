@@ -455,6 +455,20 @@ console.log('=== 6. ingestMultiRepo ===');
     check('lecture seule : aucun échec de publication compté', first.statusFailures === 0 && second.statusFailures === 0);
 }
 
+  // La fonction publique de statut refuse elle-même tout dépôt distant.
+  {
+    let ghCalls = 0;
+    let remoteWriteRejected = false;
+    try {
+      bridge.publishStatus(OTHER, 8100, 'started', 'test', {
+        gh: () => { ghCalls += 1; return ''; },
+      });
+    } catch (e) {
+      remoteWriteRejected = /publication distante interdite/.test(e.message);
+    }
+    check('publishStatus bloque un dépôt distant avant tout appel gh', remoteWriteRejected && ghCalls === 0);
+  }
+
 // ── 7. detectLocalRepo (variable d'environnement, remote, repli) ────────────
 
 console.log('=== 7. detectLocalRepo ===');
