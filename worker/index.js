@@ -962,7 +962,12 @@ async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
 __name(fetchMolliePayment, "fetchMolliePayment");
 async function mollieFetch(env2, method, path, body, includeProfileId = false) {
   let url = `${MOLLIE_API_BASE}${path}`;
-  if (includeProfileId && env2.MOLLIE_PROFILE_ID) {
+  // Standard Mollie API keys are already bound to one profile. Mollie rejects
+  // profileId when these keys are used; organization/OAuth tokens require it.
+  const key = String(env2.MOLLIE_API_KEY || "");
+  const isApiKey = /^(test_|live_)/.test(key);
+  const sendProfileId = includeProfileId && !isApiKey && env2.MOLLIE_PROFILE_ID;
+  if (sendProfileId) {
     const separator = url.includes("?") ? "&" : "?";
     url += `${separator}profileId=${encodeURIComponent(env2.MOLLIE_PROFILE_ID)}`;
   }
