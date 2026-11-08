@@ -24,11 +24,10 @@
  *   4. isAlreadyKnown : idempotence sur clé canonique, clé historique et id
  *   5. toOpportunity : dépôt hors allowlist, dépôt déclaré incohérent, mission
  *      historique (champ `id` seul) acceptée, humanGate => human
- *   6. ingestMultiRepo : routage strict (sargagame relayé, pas enfilé chez
- *      BOT-WOW), idempotence, human non enfilé, dry-run sans écriture, statuts
- *      corrélés, échec de publication compté
- *   7. detectLocalRepo : override d'environnement, allowlist, détection par
- *      remote origin, repli JAMAIS vers aveca/sargagame
+ *   6. ingestMultiRepo : routage strict, aucun statut distant, human non
+ *      enfilé, dry-run sans écriture, statuts locaux corrélés
+ *   7. detectLocalRepo : override d'environnement, remote hors allowlist et
+ *      origin absent rejetés, fallback uniquement hors checkout Git
  *   8. parseArgs
  *   9. aucune écriture sur le disque pendant toute la suite
  */
@@ -277,9 +276,9 @@ console.log('=== 6. ingestMultiRepo ===');
     check('fiche d\'opportunité écrite pour la mission locale', written.join(',') === 'T-LOCAL');
     check('queue sauvegardée une fois', saved.length === 1);
     check(
-      'statut publié sur l\'issue du dépôt qui porte la mission',
-      statuses.some((s) => s.repo === OTHER && s.issueNumber === 125 && s.status === 'imported')
-      && statuses.some((s) => s.repo === LOCAL && s.issueNumber === 2000 && s.status === 'imported'),
+      'statut publié uniquement sur l\'issue locale BOT-WOW',
+      statuses.some((s) => s.repo === LOCAL && s.issueNumber === 2000 && s.status === 'imported')
+      && !statuses.some((s) => s.repo === OTHER),
       JSON.stringify(statuses),
     );
     check(
@@ -422,14 +421,15 @@ console.log('=== 6. ingestMultiRepo ===');
     check('la tâche reste importée', result.imported === 1);
   }
 
-  // 6h. Dépôt distant en lecture seule : le relais reste strict, mais AUCUN
-  //     statut n'est publié sur le dépôt distant.
+  // 6h. Dépôt distant TOUJOURS en lecture seule, même si un appelant tente
+  //     explicitement de réactiver la publication historique. Deux passages
+  //     successifs ne produisent aucun commentaire/statut distant.
   {
     const queue = { opportunities: [] };
     const statuses = [];
     const localTask = taskBlock({ id: 'T-LOCAL-RO', task_id: 'T-LOCAL-RO', issue_number: 8000, repository_full_name: LOCAL });
     const remoteTask = taskBlock({ id: 'T-REMOTE-RO', task_id: 'T-REMOTE-RO', issue_number: 8001, repository_full_name: OTHER });
-    const result = bridge.ingestMultiRepo({
+    const options = {
       dry: false,
       log: () => {},
       localRepo: LOCAL,
@@ -437,47 +437,38 @@ console.log('=== 6. ingestMultiRepo ===');
       saveQueue: () => {},
       writeOpportunityFile: () => {},
       ensureDirs: () => {},
-      relayStatus: false,
+      relayStatus: true,
       publishStatus: (repo, issueNumber, status) => {
         statuses.push({ repo, issueNumber, status });
         return true;
       },
       loadIssues: (repo) =>
         repo === LOCAL ? [issue(8000, localTask)] : [issue(8001, remoteTask, OTHER)],
-    });
-    check('lecture seule : la mission distante reste relayée', result.relayed === 1, JSON.stringify(result.perRepo));
-    check('lecture seule : la mission distante n\'est pas enfilée', queue.opportunities.length === 1);
-    check(
-      'lecture seule : aucun statut publié sur le dépôt distant',
-      !statuses.some((s) => s.repo === OTHER),
-      JSON.stringify(statuses),
-    );
-    check(
-      'lecture seule : le statut local est publié',
-      statuses.some((s) => s.repo === LOCAL && s.issueNumber === 8000),
-      JSON.stringify(statuses),
-    );
-    check('lecture seule : aucun échec de publication compté', result.statusFailures === 0);
+    };
+    const first = bridge.ingestMultiRepo(options);
+    const second = bridge.ingestMultiRepo(options);
+    check('lecture seule : mission distante relayée au 1er passage', first.relayed === 1, JSON.stringify(first.perRepo));
+    check('lecture seule : mission distante relayée au 2e passage', second.relayed === 1, JSON.stringify(second.perRepo));
+    check('lecture seule : mission distante jamais enfilée', queue.opportunities.length === 1);
+    check('lecture seule : aucun statut publié sur le dépôt distant', !statuses.some((s) => s.repo === OTHER), JSON.stringify(statuses));
+    check('lecture seule : statut local publié une seule fois', statuses.filter((s) => s.repo === LOCAL && s.issueNumber === 8000).length === 1, JSON.stringify(statuses));
+    check('lecture seule : aucun échec de publication compté', first.statusFailures === 0 && second.statusFailures === 0);
+}
+
+  // La fonction publique de statut refuse elle-même tout dépôt distant.
+  {
+    let ghCalls = 0;
+    let remoteWriteRejected = false;
+    try {
+      bridge.publishStatus(OTHER, 8100, 'started', 'test', {
+        gh: () => { ghCalls += 1; return ''; },
+      });
+    } catch (e) {
+      remoteWriteRejected = /publication distante interdite/.test(e.message);
+    }
+    check('publishStatus bloque un dépôt distant avant tout appel gh', remoteWriteRejected && ghCalls === 0);
   }
 
-  // 6g. Dépôt hors allowlist : jamais lu.
-  {
-    const seen = [];
-    const result = bridge.ingestMultiRepo({
-      dry: true,
-      log: () => {},
-      localRepo: LOCAL,
-      queue: { opportunities: [] },
-      loadIssues: (repo) => { seen.push(repo); return []; },
-    });
-    check(
-      'seuls les dépôts de l\'allowlist sont lus',
-      seen.length === 2 && seen.includes(LOCAL) && seen.includes(OTHER),
-      JSON.stringify(seen),
-    );
-    check('aucun dépôt hors allowlist', !seen.some((r) => !bridge.isAllowedRepo(r)));
-    check('résultat par dépôt présent', Object.keys(result.perRepo).length === 2);
-  }
 }
 
 // ── 7. detectLocalRepo (variable d'environnement, remote, repli) ────────────
@@ -485,47 +476,108 @@ console.log('=== 6. ingestMultiRepo ===');
 console.log('=== 7. detectLocalRepo ===');
 {
   const previous = process.env.AUTOPILOT_LOCAL_REPO;
-  process.env.AUTOPILOT_LOCAL_REPO = OTHER;
-  check('variable d\'environnement respectée', bridge.detectLocalRepo() === OTHER);
-  process.env.AUTOPILOT_LOCAL_REPO = 'aveca/pas-autorise';
-  check('variable hors allowlist ignorée', bridge.detectLocalRepo() !== 'aveca/pas-autorise');
-  if (previous === undefined) delete process.env.AUTOPILOT_LOCAL_REPO;
-  else process.env.AUTOPILOT_LOCAL_REPO = previous;
-
-  // Repli : hors de tout dépôt git, le dépôt local retenu est BOT-WOW.
-  // C'est la garantie centrale de ce port : jamais `aveca/sargagame`, donc
-  // jamais de mission Sargagame considérée comme locale.
-  const fallbackRepo = bridge.detectLocalRepo(os.tmpdir());
-  check(
-    'repli hors dépôt git = aveca/bot-wow (jamais aveca/sargagame)',
-    fallbackRepo === 'aveca/bot-wow',
-    String(fallbackRepo),
-  );
-
-  // Détection par remote origin : le dépôt réel de ce checkout.
-  let origin = '';
   try {
-    origin = require('node:child_process')
-      .execFileSync('git', ['remote', 'get-url', 'origin'], {
-        cwd: REPO_ROOT, encoding: 'utf8', timeout: 15000, windowsHide: true,
-      })
-      .trim();
-  } catch (_) {
-    origin = '';
-  }
-  const detected = bridge.detectLocalRepo(REPO_ROOT);
-  check('détection locale dans l\'allowlist', bridge.isAllowedRepo(detected) === true, detected);
-  if (/aveca[/:]bot-wow/.test(origin)) {
-    check(
-      'remote origin BOT-WOW détecté comme dépôt local',
-      detected === 'aveca/bot-wow',
-      `${detected} (origin=${origin})`,
-    );
-  } else {
-    console.log(`  note  remote origin inattendu (${origin || 'illisible'}) : détection = ${detected}`);
+    process.env.AUTOPILOT_LOCAL_REPO = LOCAL;
+    check('override BOT-WOW respecté hors checkout Git', bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }) === LOCAL);
+
+    process.env.AUTOPILOT_LOCAL_REPO = OTHER;
+    let sargagameOverrideRejected = false;
+    try { bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }); } catch (e) {
+      sargagameOverrideRejected = /doit désigner BOT-WOW/.test(e.message);
+    }
+    check('override Sargagame rejeté dans le bridge BOT-WOW', sargagameOverrideRejected);
+
+    process.env.AUTOPILOT_LOCAL_REPO = 'aveca/pas-autorise';
+    let invalidEnvRejected = false;
+    try { bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false }); } catch (e) {
+      invalidEnvRejected = /hors allowlist/.test(e.message);
+    }
+    check('override hors allowlist rejeté explicitement', invalidEnvRejected);
+
+    process.env.AUTOPILOT_LOCAL_REPO = LOCAL;
+    let mismatchRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'https://github.com/aveca/sargagame.git',
+      });
+    } catch (e) {
+      mismatchRejected = /ne correspond pas au checkout BOT-WOW/.test(e.message);
+    }
+    check('override BOT-WOW ne peut pas masquer un origin Sargagame', mismatchRejected);
+
+    delete process.env.AUTOPILOT_LOCAL_REPO;
+
+    const fallbackRepo = bridge.detectLocalRepo(os.tmpdir(), { isGitWorktree: () => false });
+    check('fallback BOT-WOW uniquement hors checkout Git', fallbackRepo === LOCAL, String(fallbackRepo));
+
+    const allowedHttps = bridge.detectLocalRepo(REPO_ROOT, {
+      isGitWorktree: () => true,
+      getOrigin: () => 'https://github.com/aveca/bot-wow.git',
+    });
+    check('remote HTTPS BOT-WOW reconnu', allowedHttps === LOCAL, allowedHttps);
+
+    let sargagameOriginRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'git@github.com:aveca/sargagame.git',
+      });
+    } catch (e) {
+      sargagameOriginRejected = /ne correspond pas au checkout BOT-WOW/.test(e.message);
+    }
+    check('remote Sargagame ne peut pas être le checkout local BOT-WOW', sargagameOriginRejected);
+
+    let thirdPartyRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'https://github.com/third-party/other-repo.git',
+      });
+    } catch (e) {
+      thirdPartyRejected = /hors allowlist/.test(e.message);
+    }
+    check('remote GitHub tiers rejeté sans fallback', thirdPartyRejected);
+
+    let missingOriginRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => { throw new Error('origin missing'); },
+      });
+    } catch (e) {
+      missingOriginRejected = /remote origin illisible/.test(e.message);
+    }
+    check('origin illisible dans un checkout Git rejeté', missingOriginRejected);
+
+    let nonGithubRejected = false;
+    try {
+      bridge.detectLocalRepo(REPO_ROOT, {
+        isGitWorktree: () => true,
+        getOrigin: () => 'https://gitlab.com/aveca/bot-wow.git',
+      });
+    } catch (e) {
+      nonGithubRejected = /hôte remote origin non autorisé/.test(e.message);
+    }
+    check('hôte distant hors GitHub rejeté', nonGithubRejected);
+
+    let wrongLocalRepoRejected = false;
+    try {
+      bridge.ingestMultiRepo({
+        localRepo: OTHER,
+        dry: true,
+        loadIssues: () => [],
+        queue: { opportunities: [] },
+      });
+    } catch (e) {
+      wrongLocalRepoRejected = /ne peut tourner que dans/.test(e.message);
+    }
+    check('ingestMultiRepo refuse un checkout local Sargagame', wrongLocalRepoRejected);
+  } finally {
+    if (previous === undefined) delete process.env.AUTOPILOT_LOCAL_REPO;
+    else process.env.AUTOPILOT_LOCAL_REPO = previous;
   }
 }
-
 // ── 8. parseArgs ─────────────────────────────────────────────────────────────
 
 console.log('=== 8. parseArgs ===');
@@ -534,10 +586,10 @@ console.log('=== 8. parseArgs ===');
   check('option avec valeur', a.status === 'started' && a.repo === LOCAL && a.issue === '1337');
   check('option sans valeur', bridge.parseArgs(['--dry']).dry === true);
   check('forme --clé=valeur', bridge.parseArgs(['--relay-status=false'])['relay-status'] === 'false');
-  check('relayStatus activé par défaut', bridge.resolveRelayStatus({}) === true);
-  check('relayStatus désactivé par --relay-status=false', bridge.resolveRelayStatus({ 'relay-status': 'false' }) === false);
-  check('relayStatus désactivé par --relay-status 0', bridge.resolveRelayStatus({ 'relay-status': '0' }) === false);
-  check('relayStatus activé par --relay-status true', bridge.resolveRelayStatus({ 'relay-status': 'true' }) === true);
+  check('relayStatus distant désactivé par défaut', bridge.resolveRelayStatus({}) === false);
+  check('relayStatus reste désactivé par --relay-status=false', bridge.resolveRelayStatus({ 'relay-status': 'false' }) === false);
+  check('relayStatus reste désactivé par --relay-status 0', bridge.resolveRelayStatus({ 'relay-status': '0' }) === false);
+  check('relayStatus ne peut pas être réactivé par CLI', bridge.resolveRelayStatus({ 'relay-status': 'true' }) === false);
 }
 
 // ── 9. Aucune écriture sur le disque pendant la suite ───────────────────────
