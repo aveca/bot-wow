@@ -3982,3 +3982,46 @@ VÃ©rifiÃ© **dans le code** (`worker/index.js`) :
 ## Prochaine action concrÃ¨te pour obtenir le premier client payant
 
 DÃ©cision propriÃ©taire, dans cet ordre : (a) Ã©crire et committer la licence / les droits de redistribution du runtime Casinobabe â€” seul point qui dÃ©bloque lÃ©galement la vente ; (b) confirmer `RELEASE_STATUS=confirmed` aprÃ¨s certification de la livraison de bout en bout ; (c) activer une mÃ©thode LIVE dans le profil Mollie BOT-WOW, puis aligner la liste de mÃ©thodes du Worker sur ce qui est rÃ©ellement actif ; (d) en dernier, un test rÃ©el de maximum 1 â‚¬ avec validation explicite. Le checkout reste **fermÃ©** jusque-lÃ .
+
+
+---
+
+# 2026-11-08 — Mission P0.37 : synchronisation, distribution legale, premiere vente
+
+task_id : `BOTWOW-P037-SALE-READINESS-20261108`
+**[verifie]** = observe dans cette session ; **[rapporte]** = repris d'un rapport anterieur.
+
+## Synchronisation
+
+- `origin/main` = `c1cbb0ad22e483823e101e45ddc97e7204cd14bb`. **PR #154 FUSIONNEE** (2026-11-08T10:51:25Z) ; son merge commit `c1cbb0a` est le main courant.
+- PR #150 : `94ce259` -> **`ba94700`**, **4 ahead / 1 behind -> 5 ahead / 0 behind**. CI sur le HEAD exact : Validate `42487735130`, UI quality `42487735132`, GitGuardian.
+- PR #139 : `b2437db` -> **`786e853`**, **1 ahead / 12 behind -> 2 ahead / 0 behind**. CI : Validate `42487736741`, UI quality `42487736649`, GitGuardian.
+- Methode **merge, jamais rebase ni force-push**. Conflits resolus par **union** : les deux branches modifiaient la chaine `npm test` ; les ajouts sont conserves ensemble (31 etapes, aucun doublon : `canonical-package-digest.test.mjs` position 3, `verify-mollie-profile.test.mjs` position 9, `storefront-product-sheet.test.mjs` position 19) et les scripts ajoutes par #154 (`test:storefront`, `autopilot:bridge`...) sont preserves cote #139.
+- Aucun commit local non pousse au depart ; perimetres inchanges (#139 : 5 fichiers, +364/-8).
+- Apres integration : `npm run validate` exit 0, `npm test` exit 0, `git diff --check` exit 0, `check-agent-state` -> `AGENT STATE : OK` sur les deux branches.
+
+## Licence — B-licence : droits NON etablis
+
+- `LICENSE` / `COPYING` / `NOTICE` **absents**, et absents de **tout l'historique Git** (jamais existes) **[verifie]**.
+- Seule identite humaine parmi les auteurs : `Coco <yacovassaraf@gmail.com>` ; les autres sont des machines.
+- **Tiers embarques dans l'addon livre** : `LibStub` (en-tete « public domain »), `LibDBIcon-1.0` (**adaptation** d'une bibliotheque tierce, sans licence ni permission de redistribution), `media/casino_uni.ttf` (757 076 o, aucune attribution), `media/background.tga` (1 572 908 o, aucune attribution), `wasmoon-lua5.1` (dependance npm declaree, non embarquee).
+- Aucune licence creee. Decision proprietaire requise (5 points precises dans le rapport GitHub).
+
+## R2 — lecture impossible
+
+- `r2_objects_list` et `r2_objects_get` sur `botwow-binaries` -> **HTTP 403, code 10000 « Authentication error »** ; `r2_buckets_list` fonctionne.
+- L'artefact live n'a donc **pas** pu etre compare au build reproductible. Faits anterieurs `1C132F36…` **[rapportes]** seulement. Aucune mutation R2.
+
+## Mollie — non verifiable ici
+
+- Aucun acces Mollie dans cet environnement. Etat historique **non re-verifie** : methodes LIVE vides, `creditcard`/`applepay`/`googlepay` = `pending-review`, creation LIVE -> HTTP 422.
+- Verifie dans le code : `method:` code en dur sans Apple Pay / Google Pay ; `RELEASE_STATUS` refuse le checkout en HTTP 409 `delivery_unverified`.
+
+## Deploiement reel
+
+- Merge #154 -> `Deploy Bot-Wow to GitHub Pages` run `42473185137` **success**.
+- Production verifiee : `https://bot-wow.com/product.html` -> 308 -> `/product` -> **200**, titre « Fishing Assistant 1.2.0 — product sheet · BOT-WOW ». `robots.txt`, `sitemap.xml` (EN/FR + hreflang croises), `canonical`/`og:url` par langue : corrects.
+
+## Prochaine action
+
+Ecrire et committer la licence du runtime et de l'addon (attributions incluses) — seul verrou qui debloque legalement la vente ; les autres etapes (RELEASE_STATUS, methode LIVE, comparaison R2, test 1 EUR) en dependent. Checkout reste ferme.
