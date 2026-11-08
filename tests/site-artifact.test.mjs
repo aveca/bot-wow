@@ -86,7 +86,7 @@ check('FR : l’avertissement ne suggère pas une livraison future',
   /N’achetez pas : aucune livraison n’est actuellement proposée\./i.test(frHome));
 check('FR : ancien avertissement ambigu supprimé',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
- 
+
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
