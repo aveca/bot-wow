@@ -11,3 +11,4 @@
 | 20261107-mollie-prep | mollie-profile-prep | active | PR #90, profileId encore absent |
 | 20261107-checkout-flag | checkout-flag-draft | active | brouillon seulement |
 | 20261107-package-reproducibility | runtime-package-reproducibility | active | Paquet de distribution reproductible au bit (`F8138F3C…`, 1 344 366 o) + empreinte canonique du contenu ; écart R2 live chiffré (6 fichiers non commités, 2 exécutables hors manifeste) ; aucune écriture R2 |
+| BOTWOW-P0-PACKAGE-INTEGRITY-PR150-20261108 | package-integrity | done | PR #150 durcie et rebasee sur main 158222e ; CI verte sur e28626d ; preuve sur #151 |
