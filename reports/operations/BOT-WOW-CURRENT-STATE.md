@@ -3819,6 +3819,51 @@ checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
 `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
 attaquer la preuve de provenance du runtime Gold/PvP/XP.
 
+
+---
+
+# Paquet runtime reproductible + provenance chiffrée — 2026-11-07T23:05Z
+
+**Rapport complet :** `reports/operations/2026-11-07-runtime-provenance-reproducible-package.md`
+**Branche :** `p0/reproducible-runtime-package-20261107` (base `origin/main` @ `9a01a5098b8025cf6b1ca338f426033224459c99`)
+**Verrou posé :** `20261107-package-reproducibility` / scope `runtime-package-reproducibility` — scope **distinct** de `r2-provenance` (PR #124 fusionnée le 2026-11-07T15:59Z), ligne `r2-provenance` laissée intacte.
+
+| Élément | Valeur | Statut |
+|---|---|---|
+| Paquet **reproductible au bit** | SHA-256 `F8138F3C52EB2498114AD5BCD3988DB39A105BD4B757646BF1C2B7548DA79781`, 1 344 366 o, 17 entrées ZIP, 16 entrées de manifeste | **[vérifié]** |
+| Reproductibilité | **4 builds** (LF, LF, CRLF, LF restauré) → SHA-256 **identique** à chaque fois | **[vérifié]** |
+| Empreinte canonique du contenu | `f69be8b34f74b2df68a177e0210b9bd73f6c99452c9279c291f2961173c90a53` (17 fichiers, 3 004 035 o) | **[vérifié]** |
+| Provenance inscrite au manifeste | `aveca/Casinobabe` @ `257418c9a0c2…`, `feat/fishing-route-intelligence-v2`, `builtAt = 2026-10-22T02:18:01.000Z` | **[vérifié]** |
+| Build python d'origine | **non reproductible** : `D225E63F…` puis `9FC19FEE…` (champ `builtAt`) | **[vérifié]** |
+| Objet R2 live (`1C132F36…`, 1 387 543 o, 30 entrées) | **non reproductible** : 20 fichiers identiques à `257418c`, **6 différents**, **3 hors manifeste** (2 exécutables + `VERSION`) | **[vérifié sur copie locale déjà téléchargée]** |
+| Licence de la source | **aucune** (`LICENSE`/`COPYING`/`NOTICE` absents, `license: null`) | **[vérifié]** |
+| Périmètre runtime | pêche uniquement — aucun runtime Gold/PvP/XP | **[vérifié]** (`docs/historical-runtime-absence-20261106.md`) |
+| Nouveau contrôle d'intégrité | `scripts/canonical-package-digest.mjs` (empreinte canonique + contrôle `MANIFEST.json` ↔ contenu) | **[vérifié]** |
+| Tests | `node tests/canonical-package-digest.test.mjs` → `CANONICAL DIGEST : OK` (20 contrôles) ; `node tests/distribution-package.test.mjs` → `DISTRIBUTION : OK` (28 contrôles) ; `npm run validate` exit 0 ; `npm test` exit 0 ; gate des verrous `AGENT STATE : OK` | **[vérifié]** |
+
+## Nouveaux bloqueurs (registre `agents/blockers.md`)
+
+- **B-licence** — les droits de redistribution du runtime `aveca/Casinobabe` ne sont
+  documentés nulle part. Levable par le propriétaire seul.
+- **B-r2-live** — l'artefact en production n'est pas reproductible ; son remplacement
+  par `F8138F3C…` exige une **autorisation explicite d'écriture R2** (et fait
+  disparaître les 2 exécutables hors manifeste).
+
+## Ce qui n'a pas été fait
+
+Aucune écriture R2, aucun upload/delete, aucun changement Worker/Pages/secret/
+binding/D1/webhook, aucun prix, aucun checkout rouvert, aucun paiement, aucun
+e-mail. `aveca/Casinobabe` en **lecture seule** : le clone local déjà présent a
+été basculé CRLF/LF pour la mesure puis **restauré** (HEAD `257418c`, `core.autocrlf=false`,
+`git status` vide) ; aucun push, aucun commit, aucun commentaire dans ce dépôt.
+Aucun exécutable de l'artefact live n'a été lancé. Aucun merge, aucun déploiement.
+
+## Prochaine action (une seule)
+
+**Décision du propriétaire** : expliciter les droits de redistribution du runtime
+(ou les refuser), puis autoriser — ou refuser — le remplacement de l'objet R2 live
+par le paquet reproductible `F8138F3C…`. Tant que la licence n'est pas écrite,
+le checkout reste fermé et aucune vente du runtime ne peut être justifiée.
 ---
 
 # 2026-11-08 — Fiche produit PixelBuddy-style (#142) et preuve de provenance
@@ -3937,3 +3982,46 @@ VÃ©rifiÃ© **dans le code** (`worker/index.js`) :
 ## Prochaine action concrÃ¨te pour obtenir le premier client payant
 
 DÃ©cision propriÃ©taire, dans cet ordre : (a) Ã©crire et committer la licence / les droits de redistribution du runtime Casinobabe â€” seul point qui dÃ©bloque lÃ©galement la vente ; (b) confirmer `RELEASE_STATUS=confirmed` aprÃ¨s certification de la livraison de bout en bout ; (c) activer une mÃ©thode LIVE dans le profil Mollie BOT-WOW, puis aligner la liste de mÃ©thodes du Worker sur ce qui est rÃ©ellement actif ; (d) en dernier, un test rÃ©el de maximum 1 â‚¬ avec validation explicite. Le checkout reste **fermÃ©** jusque-lÃ .
+
+
+---
+
+# 2026-11-08 — Mission P0.37 : synchronisation, distribution legale, premiere vente
+
+task_id : `BOTWOW-P037-SALE-READINESS-20261108`
+**[verifie]** = observe dans cette session ; **[rapporte]** = repris d'un rapport anterieur.
+
+## Synchronisation
+
+- `origin/main` = `c1cbb0ad22e483823e101e45ddc97e7204cd14bb`. **PR #154 FUSIONNEE** (2026-11-08T10:51:25Z) ; son merge commit `c1cbb0a` est le main courant.
+- PR #150 : `94ce259` -> **`ba94700`**, **4 ahead / 1 behind -> 5 ahead / 0 behind**. CI sur le HEAD exact : Validate `42487735130`, UI quality `42487735132`, GitGuardian.
+- PR #139 : `b2437db` -> **`786e853`**, **1 ahead / 12 behind -> 2 ahead / 0 behind**. CI : Validate `42487736741`, UI quality `42487736649`, GitGuardian.
+- Methode **merge, jamais rebase ni force-push**. Conflits resolus par **union** : les deux branches modifiaient la chaine `npm test` ; les ajouts sont conserves ensemble (31 etapes, aucun doublon : `canonical-package-digest.test.mjs` position 3, `verify-mollie-profile.test.mjs` position 9, `storefront-product-sheet.test.mjs` position 19) et les scripts ajoutes par #154 (`test:storefront`, `autopilot:bridge`...) sont preserves cote #139.
+- Aucun commit local non pousse au depart ; perimetres inchanges (#139 : 5 fichiers, +364/-8).
+- Apres integration : `npm run validate` exit 0, `npm test` exit 0, `git diff --check` exit 0, `check-agent-state` -> `AGENT STATE : OK` sur les deux branches.
+
+## Licence — B-licence : droits NON etablis
+
+- `LICENSE` / `COPYING` / `NOTICE` **absents**, et absents de **tout l'historique Git** (jamais existes) **[verifie]**.
+- Seule identite humaine parmi les auteurs : `Coco <yacovassaraf@gmail.com>` ; les autres sont des machines.
+- **Tiers embarques dans l'addon livre** : `LibStub` (en-tete « public domain »), `LibDBIcon-1.0` (**adaptation** d'une bibliotheque tierce, sans licence ni permission de redistribution), `media/casino_uni.ttf` (757 076 o, aucune attribution), `media/background.tga` (1 572 908 o, aucune attribution), `wasmoon-lua5.1` (dependance npm declaree, non embarquee).
+- Aucune licence creee. Decision proprietaire requise (5 points precises dans le rapport GitHub).
+
+## R2 — lecture impossible
+
+- `r2_objects_list` et `r2_objects_get` sur `botwow-binaries` -> **HTTP 403, code 10000 « Authentication error »** ; `r2_buckets_list` fonctionne.
+- L'artefact live n'a donc **pas** pu etre compare au build reproductible. Faits anterieurs `1C132F36…` **[rapportes]** seulement. Aucune mutation R2.
+
+## Mollie — non verifiable ici
+
+- Aucun acces Mollie dans cet environnement. Etat historique **non re-verifie** : methodes LIVE vides, `creditcard`/`applepay`/`googlepay` = `pending-review`, creation LIVE -> HTTP 422.
+- Verifie dans le code : `method:` code en dur sans Apple Pay / Google Pay ; `RELEASE_STATUS` refuse le checkout en HTTP 409 `delivery_unverified`.
+
+## Deploiement reel
+
+- Merge #154 -> `Deploy Bot-Wow to GitHub Pages` run `42473185137` **success**.
+- Production verifiee : `https://bot-wow.com/product.html` -> 308 -> `/product` -> **200**, titre « Fishing Assistant 1.2.0 — product sheet · BOT-WOW ». `robots.txt`, `sitemap.xml` (EN/FR + hreflang croises), `canonical`/`og:url` par langue : corrects.
+
+## Prochaine action
+
+Ecrire et committer la licence du runtime et de l'addon (attributions incluses) — seul verrou qui debloque legalement la vente ; les autres etapes (RELEASE_STATUS, methode LIVE, comparaison R2, test 1 EUR) en dependent. Checkout reste ferme.
