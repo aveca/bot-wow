@@ -86,6 +86,20 @@ check('FR : l’avertissement ne suggère pas une livraison future',
   /N’achetez pas : aucune livraison n’est actuellement proposée\./i.test(frHome));
 check('FR : ancien avertissement ambigu supprimé',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
+ 
+// 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
+const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
+const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
+check('EN buy : statut du paquet client grammatical et indisponible',
+  /<b>No current client package<\/b> is verified or available/.test(enBuy) &&
+  !/No release<\/b> client package not verified/i.test(enBuy));
+check('FR buy : statut du paquet client grammatical et indisponible',
+  /<b>Aucun paquet client actuel<\/b> n’est disponible ni vérifié/.test(frBuy) &&
+  !/Aucune release<\/b> paquet client non vérifié/i.test(frBuy));
+check('FR buy : avertissement de non-livraison explicite et cohérent',
+  /N’achetez pas : aucune livraison n’est actuellement proposée\./.test(frBuy) &&
+  !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
+
 
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {
