@@ -132,7 +132,7 @@ Deux conséquences directes pour la posture publique :
 
 ## Qui travaille sur quoi
 
-Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `aveca` (Coco). Ne pas ouvrir un second chantier sur le même scope.
+Relevé GitHub du 2026-11-08. Auteur des PR ouvertes récentes : `aveca` (Coco). Ne pas ouvrir un second chantier sur le même scope.
 
 | Sujet | Où | Décision |
 |---|---|---|
@@ -147,8 +147,20 @@ Relevé GitHub du 2026-11-07 vers 16:00Z. Auteur des PR ouvertes récentes : `av
 | Overlay Worker v50 | #114, brouillon, en conflit | v50 n'a plus le trafic ; production = version `054cd158` |
 | Pivot checkout d'octobre | #66, brouillon, en conflit | remplacé par une PR brouillon à flag, non fusionnée |
 | `profileId` Mollie | #90, brouillon, mergeable | reste brouillon ; il ne manque que l'identifiant fourni par le propriétaire |
+| Fiche produit PixelBuddy-style (#142) | branche `p0/storefront-product-sheet-20261107`, PR #154 ouverte (non mergée), CI verte sur SHA `8fcf6c5` | `product.html` + `fr/product.html` écrites ; `npm test` + `npm run validate` vertes ; QA navigateur faite ; preuve de provenance publiée ; preuve commentée sur issue #142 ; en attente de fusion (décision propriétaire) |
 
-## Prochaine action
+## Fiche produit — cycle #142 (2026-11-08)
+
+Branche : `p0/storefront-product-sheet-20261107` (base `origin/main` @ `9a01a50`).
+- Pages écrites : `product.html` (EN), `fr/product.html` (FR) — réutilisent les classes CSS existantes uniquement, aucun changement d'asset, l'estampille `?v=560cff9a` reste valide.
+- Câblage : `sitemap.xml` (variantes EN/FR), `scripts/build-site.mjs` (FILES), `scripts/validate.mjs` (PUBLIC_PAGES) ; liens depuis `buy.html`, `fr/buy.html`, `features.html`, `fr/features.html` (corps + liste footer), CTA uniquement vers `./buy.html`, pas d'ancres `#offre`/`#buy`, pas de Mollie/Bitcoin sur les pages features.
+- Garde-fou : `tests/storefront-product-sheet.test.mjs` (parité EN/FR, parité registre `assets/modules.json` titres/statuts/summaries, pilier "non distribué", compat `historical_unverified`, interdits `undetectable`/`anti-ban`/Retail, pas de formulaire/POST/email, licence + non-reproductibilité, provenance `F8138F3C…` / `1C132F36…`, liens + ancres, sitemap/build/validate, a11y de base) — câblé dans `npm test`.
+- QA navigateur : serveurs locaux before/after, captures 1440×900 + 390×844, pas de débordement, pas de cible < 44 px introduite, contraste WCAG OK sur les éléments introduits, `prefers-reduced-motion` respecté, seule erreur console = `POST /api/track` 501 pré-existante au server Python.
+- Résultats : `npm test` exit 0 (`FICHE PRODUIT : OK`), `npm run validate` exit 0, `git diff --check` exit 0, `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK`.
+
+Prochaine action (de ce cycle) : TERMINEE — branche commitee (`8fcf6c5`), poussee, PR #154 ouverte, CI verte sur le SHA exact, commentaire de preuve publie sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` (<https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423>). Le checkout reste fermé : pas de paiement, pas de Mollie, pas d'e-mail.
+
+## Prochaine action (globale)
 
 Le checkout public reste fermé. La vente n'attend plus une décision unique : les textes juridiques, la provenance R2 et le profil Mollie dédié avancent en parallèle, et la réouverture ne se fusionne qu'après ces trois-là. La PR #90 reste le seul correctif de credential Mollie.
 
