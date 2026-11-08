@@ -120,7 +120,7 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
 
   // L'avertissement de disponibilite est present (texte selon la langue)
   if (lang === 'fr') {
-    await expect(page.locator('#release-availability-notice')).toContainText('n\'achetez pas tant que la livraison n\'est pas confirmée');
+    await expect(page.locator('#release-availability-notice')).toContainText('N’achetez pas : aucune livraison n’est actuellement proposée.');
   } else {
     await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
   }
