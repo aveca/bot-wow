@@ -10,3 +10,4 @@
 | 20261107-r2-provenance | r2-provenance | active | PR #124, hash live revérifié |
 | 20261107-mollie-prep | mollie-profile-prep | active | PR #90, profileId encore absent |
 | 20261107-checkout-flag | checkout-flag-draft | active | brouillon seulement |
+| BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107 | storefront-product-sheet | open | Fiche produit PixelBuddy-style EN+FR, registre de modules parite, provenance publiee, pas de checkout ; https://github.com/aveca/bot-wow/pull/142 (en attente de creation) |

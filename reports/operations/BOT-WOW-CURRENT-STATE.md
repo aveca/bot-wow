@@ -3818,3 +3818,51 @@ checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
 `BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` et
 `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
 attaquer la preuve de provenance du runtime Gold/PvP/XP.
+
+---
+
+# 2026-11-08 — Fiche produit PixelBuddy-style (#142) et preuve de provenance
+
+État daté de ce cycle. Faits marqués **[vérifié]** = observés dans cette
+session (lien ou sortie d'outil) ; **[rapporté]** = reprise d'un rapport
+antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
+
+## Issue traitée
+
+| Issue | task_id | Dépôt | Résultat |
+|---|---|---|---|
+| #142 | `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` | `aveca/bot-wow` | fiche produit écrite, cablée, testee, QA navigateur faite ; PR ouverte (non mergée) |
+
+## #142 — fiche produit PixelBuddy-style (EN + FR)
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/storefront-product-sheet-20261107` (base `origin/main` @ `9a01a5098b8025cf6b1ca338f426033224459c99`) |
+| Pages écrites | `product.html` (EN), `fr/product.html` (FR) — classes CSS existantes uniquement, aucun changement d'asset, l'estampille `?v=560cff9a` reste valide |
+| Câblage | `sitemap.xml` (variantes EN/FR), `scripts/build-site.mjs` (FILES += `product.html`), `scripts/validate.mjs` (PUBLIC_PAGES += `product.html`, `fr/product.html`) |
+| Liens d'entrée | `buy.html`, `fr/buy.html`, `features.html`, `fr/features.html` (corps + liste footer) pointent vers `./product.html` ; CTA uniquement `./buy.html` ; pas d'ancres `#offre`/`#buy` ; pas de Mollie/Bitcoin sur les pages features |
+| Garde-fou | `tests/storefront-product-sheet.test.mjs` : parité EN/FR, parité registre `assets/modules.json` (titres, statuts, summaries, ordre), pilier rouge "non distribué" sur chaque module, compat `historical_unverified` (pas de serveur/date), interdits `undetectable`/`anti-ban`/Retail, pas de formulaire/POST/champ e-mail, licence + non-reproductibilité déclarées, provenance `F8138F3C…` / `1C132F36…`, liens et ancres résolus, sitemap/build/validate, a11y de base |
+| Câblage test | `package.json` : `test` chain += `tests/storefront-product-sheet.test.mjs` ; script `test:storefront` ajouté |
+| Résultats tests | `npm test` exit 0, `FICHE PRODUIT : OK` ; `npm run validate` exit 0 ; `git diff --check` exit 0 ; `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK` **[vérifié]** |
+| QA navigateur | Serveurs locaux before/after, captures 1440×900 + 390×844 dans `artifacts/ui/` ; pas de débordement, pas de cible < 44 px introduite, contraste WCAG OK sur les éléments introduits, `prefers-reduced-motion` respecté ; seule erreur console = `POST /api/track` 501 pré-existante (server Python) **[vérifié]** |
+| Verrou | `agents/locks.md` : `20261107-storefront` / scope `storefront-product-sheet`, actif, expirant 2026-11-10 |
+| Rapport | `reports/operations/2026-11-07-storefront-product-sheet.md` |
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement, aucun `workflow_dispatch`.
+- Aucun checkout, paiement, Mollie, prix, Worker, Pages, secret, binding, D1, R2, webhook, e-mail ni mutation de production.
+- Le checkout public reste fermé : pas de formulaire, pas de paiement, pas d'e-mail.
+- `aveca/sargagame` lu en lecture seule, non modifié.
+- PR #148 (docs restart) et PR #150 (runtime) restent ouvertes, non mergées, CI verte sur leur SHA exact.
+
+## Bloqueurs (inchangés)
+
+- **[non vérifié]** Profil marchand Mollie BOT-WOW et raccordement au Worker : non établis ; aucun secret lu ni affiché.
+- **[non vérifié]** Provenance, licence et artefact reproductible du runtime WoW Gold/PvP/XP : non établis ; l'addon de pêche n'est pas le bot complet.
+- **[rapporté]** Le checkout reste fermé ; aucune vente réelle n'est prouvée. Voir <https://github.com/aveca/bot-wow/pull/139> et le runbook Mollie.
+- **[non vérifié]** Droits de redistribution du runtime non documentés dans `aveca/Casinobabe` (`B-licence`) → la fiche produit le déclare explicitement ; décision propriétaire requise avant toute vente.
+
+## Prochaine action (une seule)
+
+**Committer, pousser `p0/storefront-product-sheet-20261107`, ouvrir la PR (sans merger), vérifier le CI vert sur le SHA exact, publier le commentaire de preuve sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`. Puis finaliser le runbook Mollie (#139) ; le checkout reste fermé jusqu'aux preuves de licence + livraison.**

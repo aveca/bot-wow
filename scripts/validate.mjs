@@ -65,7 +65,7 @@ for (const file of ["assets/demo.js", "assets/route-planner.js", "scripts/build-
 // --- Site public : pages liees, aucune page morte -------------------------
 const PUBLIC_PAGES = [
   "index.html", "demo.html", "success.html", "cancel.html", "404.html",
-  "features.html", "fishing.html", "getting-started.html",
+  "features.html", "product.html", "fishing.html", "getting-started.html",
   "compatibility.html", "roadmap.html", "faq.html",
   "modules.html", "compare.html",
   "docs/index.html", "docs/install.html", "docs/changelog.html",
@@ -75,7 +75,7 @@ const PUBLIC_PAGES = [
   "legal/terms.html", "legal/privacy.html", "legal/refund.html",
   "legal/fr/terms.html", "legal/fr/privacy.html", "legal/fr/refund.html",
   "fr/index.html", "fr/demo.html", "fr/success.html", "fr/cancel.html",
-  "fr/404.html", "fr/features.html", "fr/fishing.html",
+  "fr/404.html", "fr/features.html", "fr/product.html", "fr/fishing.html",
   "fr/getting-started.html", "fr/compatibility.html", "fr/roadmap.html",
   "fr/faq.html", "fr/modules.html",
   "fr/compare.html",
