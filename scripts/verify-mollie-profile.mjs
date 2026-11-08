@@ -82,7 +82,8 @@ export async function verify({ apiKey, profileId, expectProfileId, fetchImpl = g
       headers: { "Authorization": `Bearer ${apiKey}`, "Accept": "application/json" }
     });
   } catch (e) {
-    result.error = `network: unable to reach Mollie (${e && e.message || "unknown"})`;
+    // Fetch errors may echo request headers in their message; never surface them.
+    result.error = "network: unable to reach Mollie (request failed)";
     return result;
   }
   if (!response.ok) {
