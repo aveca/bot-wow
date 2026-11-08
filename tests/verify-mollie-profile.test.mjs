@@ -89,5 +89,18 @@ check('valeur vide -> missing', classifyCredential('') === 'missing');
   check('cle test_ + profil live : OK mais signale', result.ok === true && result.messages.length === 1);
 }
 
+
+/* 9. network exceptions may echo Authorization headers: return a fixed safe error */
+{
+  const KEY = 'test_SECRET_RESEAU_NE_PAS_ECHOUPER';
+  const fetchImpl = async (_url, opts) => {
+    throw new Error(`fetch failed with Authorization: ${opts.headers.Authorization}`);
+  };
+  const result = await verify({ apiKey: KEY, profileId: '', expectProfileId: 'pfl_network', fetchImpl });
+  const printed = JSON.stringify(result);
+  check('erreur réseau : échec générique sans credential', result.error === 'network: unable to reach Mollie (request failed)');
+  check('erreur réseau : aucun header Authorization ni secret dans le résultat', !printed.includes(KEY) && !printed.includes('Authorization') && !printed.includes('Bearer '));
+}
+
 console.log(`VERIFY-MOLLIE-PROFILE: ${passes} verifications passees, ${failures} echec(s)`);
 if (failures > 0) process.exitCode = 1;
