@@ -1,23 +1,13 @@
 #!/usr/bin/env node
 /**
- * third-party-notices.test.mjs — garde-fou de licence.
+ * third-party-notices.test.mjs — garde-fou d'instantané juridique.
  *
- * PROBLEME DEMONTRE : le paquet livre embarque des composants tiers (LibStub,
- * LibDBIcon-1.0, une police, une texture) qui n'apparaissent dans AUCUN
- * inventaire. Un composant tiers ajoute demain passerait donc silencieusement
- * dans l'archive, sans que personne ne sache sous quelle licence il est
- * redistribue. C'est exactement le blocage B-licence.
+ * PORTÉE : les quatre composants tiers identifiés dans les archives R2 1.2.0
+ * et 1.2.1 relues le 2026-11-08. La source runtime n'étant pas versionnée dans
+ * ce dépôt, ce test ne prétend PAS parcourir dynamiquement un nouveau ZIP.
+ * Toute nouvelle archive doit être inspectée et ses empreintes ajoutées ici.
  *
- * CE QUE CE TEST VERIFIE (aucun reseau, aucune ecriture) :
- *   1. le document distribution/THIRD_PARTY_NOTICES.md existe ;
- *   2. tout fichier livre sous runtime-addon/Casinobabe/Libs ou /media
- *      apparait dans le document (aucun composant tiers oublie) ;
- *   3. les lignes NON ETABLI sont conservees : on ne peut pas faire disparaitre
- *      un blocage en supprimant sa ligne ;
- *   4. les dependances declarees du paquet source (wasmoon-lua5.1, lodash)
- *      sont inventoriees avec une licence etablie ;
- *   5. le document ne declare JAMAIS un composant comme etabli si aucune
- *      licence n'est citee.
+ * Aucun réseau, aucune écriture, aucun secret.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,59 +23,65 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-console.log('=== TIERS EMBARQUES (inventaire de licence) ===');
-
+console.log('=== THIRD-PARTY NOTICE SNAPSHOT GUARD ===');
 check('le document third-party-notices existe', fs.existsSync(DOC));
 if (!fs.existsSync(DOC)) process.exit(1);
 const doc = fs.readFileSync(DOC, 'utf8');
 
-/* Chemins des composants tiers reellement livres par le builder.
-   Le builder copie TOUT runtime-addon/Casinobabe (walk recursif). */
-const TIER_PATHS = [
-  'package/addon/Casinobabe/Libs/LibStub/LibStub.lua',
-  'package/addon/Casinobabe/Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua',
-  'package/addon/Casinobabe/media/casino_uni.ttf',
-  'package/addon/Casinobabe/media/background.tga',
+const SNAPSHOTS = [
+  ['casinababe-fishing-1.2.0.zip', '1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f'],
+  ['casinababe-fishing-1.2.1.zip', 'ef294998a1ac5ce703739f7541ac63d0e61191f55fa8a7129b420b38adf79132'],
 ];
-
-for (const rel of TIER_PATHS) {
-  const file = rel.split('/').pop();
-  check(`composant tiers inventorie : ${file}`, doc.includes(file));
+for (const [name, sha] of SNAPSHOTS) {
+  check(`instantané R2 documenté : ${name}`, doc.includes(name) && doc.includes(sha));
 }
 
-/* Les dependances declarees doivent etre inventoriees avec licence. */
-for (const dep of ['wasmoon-lua5.1', 'lodash']) {
-  check(`dependance inventoriee : ${dep}`, doc.includes(dep));
-  check(`dependance avec licence etablie : ${dep}`,
-    new RegExp(`${dep}[\\s\\S]{0,400}?\\*\\*(?:MIT|[^*]+)\\*\\*`).test(doc)
-    || /MIT/.test(doc));
+const COMPONENTS = [
+  ['LibDBIcon-1.0.lua', '423a81279f10542cfca09441c4ec21f5433e3203e349162d677acf0519705ac9'],
+  ['LibStub.lua', '6f704d6c93c6c156379d9b6789082ae6d96e4ea939e393bbf87f8791661f7c37'],
+  ['background.tga', '89e8ecd08fac85003a302ae52093acd7e41c862be4517c87611074ce213e798b'],
+  ['casino_uni.ttf', '7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954'],
+];
+for (const [name, sha] of COMPONENTS) {
+  check(`composant et empreinte documentés : ${name}`, doc.includes(name) && doc.includes(sha));
 }
 
-/* Les blocages ne peuvent pas etre effaces. */
-const BLOCKERS = ['LibDBIcon-1.0', 'background.tga'];
-for (const b of BLOCKERS) {
-  check(`blocage conserve : ${b} est marque NON ETABLI`,
-    doc.includes(b) && /NON ÉTABLI/.test(doc),
-    'la ligne de blocage a disparu du document');
-}
-check('le document compte au moins 3 composants NON ÉTABLI',
-  (doc.match(/NON ÉTABLI/g) || []).length >= 3,
-  `(${(doc.match(/NON ÉTABLI/g) || []).length} occurrences)`);
+const rows = doc.split(/\r?\n/).filter(line => /^\|/.test(line));
+const rowFor = label => rows.find(line => line.includes(label));
+const licenseCell = row => row ? row.split('|').map(cell => cell.trim()).filter(Boolean)[4] || '' : '';
 
-/* Le code du projet lui-meme n'est pas declare comme licence. */
-check('le code du projet n est PAS presente comme sous licence',
-  /Casinobabe \(le projet lui-même\)[\s\S]{0,600}?NON ÉTABLI/.test(doc));
-
-/* Aucune licence fictive : le document ne doit pas affirmer qu'un composant
-   est sous licence sans en citer une. */
-const establishedRows = [...doc.matchAll(/^\|.*\*\*(ÉTABLI|À CONFIRMER)\*\*.*\|$/gm)];
-for (const [row] of establishedRows) {
-  const hasLicence = /MIT|Bitstream Vera|domaine public|Arev/i.test(row);
-  check('chaque ligne ETABLI cite une licence', hasLicence, row.slice(0, 90));
+for (const label of ['DejaVu Sans', 'wasmoon-lua5.1', 'lodash']) {
+  const row = rowFor(label);
+  check(`ligne d'inventaire présente : ${label}`, Boolean(row));
+  if (row) {
+    const licence = licenseCell(row);
+    const expected = label === 'DejaVu Sans' ? /Bitstream Vera/.test(licence) && /Arev/.test(licence) : /MIT/.test(licence);
+    check(`licence dans la cellule propre : ${label}`, expected, licence);
+  }
 }
-check('le document interdit explicitement la redistribution des non-etablis',
-  /ne doit pas être redistribué|Ne pas redistribuer/.test(doc));
+
+const blockers = [
+  'LibDBIcon-1.0',
+  'background.tga',
+  'Casinobabe (le projet lui-même)',
+];
+for (const label of blockers) {
+  const row = rowFor(label);
+  check(`blocage conservé comme NON ÉTABLI : ${label}`, Boolean(row && /NON ÉTABLI/.test(row)));
+}
+
+const libStub = rowFor('LibStub');
+check('LibStub reste À CONFIRMER (pas promu à tort)', Boolean(libStub && /À CONFIRMER/.test(libStub)));
+check('le document interdit la redistribution des composants non établis',
+  /Ne pas redistribuer|ne doit pas être redistribué/.test(doc));
+
+const establishedRows = rows.filter(row => /\*\*ÉTABLI\*\*/.test(row));
+for (const row of establishedRows) {
+  const licence = licenseCell(row);
+  check('chaque ligne ÉTABLI cite une licence dans sa propre cellule',
+    /MIT|Bitstream Vera|Arev/i.test(licence), licence.slice(0, 100));
+}
 
 console.log('');
-console.log(failures === 0 ? 'TIERS EMBARQUES : OK' : `TIERS EMBARQUES : ${failures} ECHEC(S)`);
+console.log(failures === 0 ? 'THIRD-PARTY NOTICE SNAPSHOT : OK' : `THIRD-PARTY NOTICE SNAPSHOT : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
