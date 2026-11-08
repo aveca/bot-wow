@@ -1,2 +1,20 @@
-4FB2D1C1C954C286305DFCF1C70A688C7E3E77FBA15E352A24A88916708F9FBA  Casinobabe-Fishing-Assistant-1.2.0.zip (reproduit depuis aveca/Casinobabe@257418c)
-1C132F367607EA186FEFFDE8BBDA0A1A9F94CDEC4B7850B93C57C271270BBA4F  Casinobabe-Fishing-Assistant-1.2.0.zip (dist existant, mods locaux non commités)
+A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C  casinobabe-fishing-1.2.0.zip (REPRODUCTIBLE - scripts/build-package.cjs depuis aveca/Casinobabe@257418c, 1344402 octets, 17 entrees, 16 entrees de manifeste)
+0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e  treeDigest canonique du meme paquet (identite du CONTENU - scripts/canonical-package-digest.mjs, 17 fichiers, 3004095 octets)
+4FB2D1C1C954C286305DFCF1C70A688C7E3E77FBA15E352A24A88916708F9FBA  Casinobabe-Fishing-Assistant-1.2.0.zip (build python d'origine, NON reproductible - deux builds differents, meme source)
+D225E63FE611690C71C705283F1BF77CDA04891E9A9C1C13C06D02CC380300F6  Casinobabe-Fishing-Assistant-1.2.0.zip (build python #1 du 2026-11-07, builtAt 2026-11-07T19:06:24)
+9FC19FEEBE69EBD55A10B4806C6A916C77F6E36566C74A4D70EE1C3509326FA1  Casinobabe-Fishing-Assistant-1.2.0.zip (build python #2 du 2026-11-07, builtAt 2026-11-07T19:06:28 - memes fichiers, SHA different)
+1C132F367607EA186FEFFDE8BBDA0A1A9F94CDEC4B7850B93C57C271270BBA4F  casinobabe-fishing-1.2.0.zip (objet R2 live, etat NON commitǸ - 6 fichiers differents de 257418c, 3 fichiers hors manifeste)
+fc9a1e0aa04059eb5ff433661afc23cea360fa771146b88972222d36d564f160  treeDigest canonique de l'objet R2 live (30 fichiers, 3174481 octets)
+
+# --- Historique du SHA reproductible cote BOT-WOW -------------------------
+# 2026-11-07 : F8138F3C52EB2498114AD5BCD3988DB39A105BD4B757646BF1C2B7548DA79781
+#             1 344 366 octets, treeDigest f69be8b34f74b2df68a177e0210b9bd73f6c99452c9279c291f2961173c90a53
+#             (build AVANT le durcissement d'integrite du 2026-11-08)
+# 2026-11-08 : A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C
+#             1 344 402 octets, treeDigest 0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e
+#             (build APRES : refus des liens symboliques, controle realpath sous
+#              SOURCE, provenance CLI confrontee au checkout reel puis marquee
+#              `provenanceVerified`, digest fail-closed). Le manifeste porte 60
+#              octets de plus : `provenanceVerified` et `overridesChecked`.
+#             Les deux valeurs restent reproductibles (2 builds identiques) ;
+#              seule la reference du builder change.
