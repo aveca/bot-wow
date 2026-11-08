@@ -1,8 +1,10 @@
 # Runbook — première vente TEST intégrale (Mollie test → téléchargement vérifié)
 
 **Date :** 2026-11-07 · **Établi par :** agent opencode (instruction ChatGPT, mission P0 « MOLLIE VALIDÉ → PREMIÈRE VENTE LIVRABLE »)
-**Statut :** runbook documentaire. **Ce runbook n'exécute aucune de ces opérations** : chaque étape sensible est une action propriétaire explicite (secrets, déploiement, merge, checkout).
-**Règle du projet :** ne jamais annoncer « prêt à vendre » tant qu'un paiement traversant TOUTE la chaîne n'aboutit pas à une livraison vérifiée. Ne jamais activer la production automatiquement.
+**Statut :** préparation documentaire uniquement. Ce runbook n'autorise ni paiement, ni remboursement, ni e-mail, ni changement de secret, ni déploiement.
+**Garde absolu :** `RELEASE_STATUS` reste `pending` en production. Ne jamais le passer à `confirmed` sur le Worker public pour réaliser ce test. Un POST de sonde sur le checkout public peut écrire dans le rate-limit KV même s'il répond 409 ; ne pas l'utiliser comme test « lecture seule ».
+**Précondition d'exécution future :** environnement isolé non public avec Worker, D1, R2 et credential Mollie `test_` distincts. Si cet environnement n'existe pas, arrêter la procédure : ne pas substituer la production.
+**Règle du projet :** ne jamais annoncer « prêt à vendre » tant qu'un paiement traversant TOUTE la chaîne n'aboutit pas à une livraison vérifiée. Aucun test de paiement ou d'e-mail ne sera lancé avant validation finale explicite.
 
 ---
 
@@ -45,36 +47,49 @@ Dans le tableau de bord Mollie du profil `pfl_L84sQNbb4i` : URL webhook = `https
 - Jeton d'organisation : le binding est **obligatoire** ; sans lui aucun appel Mollie (fail-closed, PR #90). Avec lui, `profileId` est transmis **dans le corps** de POST /payments (conformité doc Mollie — commit `49169a3` sur PR #90).
 - Fusion de la PR #90 requise avant tout test réel (la version déployée actuelle peut casser la création de paiement avec la clé standard + placeholder — le défaut historique « checkout Mollie N/N en échec » du 2026-10-27 est de cette famille).
 
-## 3. Chaîne TEST intégrale (clé `test_` standard recommandée)
+## 3. Procédure de test — environnement isolé uniquement
 
-Toutes les étapes ci-dessous opèrent en **mode test Mollie** : aucun euro réel en jeu, carte de test de la doc Mollie (« Testing their integration » de help.mollie.com — ne pas inventer de numéro ici). L'e-mail utilisé doit être **celui du propriétaire** : la livraison envoie un e-mail réel.
+**Aucune des commandes ci-dessous ne doit viser `api.bot-wow.com` ou le Worker de production.**
+Avant toute exécution future, vérifier séparément :
+- Worker de staging distinct, avec URL non publique et configuration connue ;
+- D1 de test et bucket R2 de test, sans binding vers les ressources de production ;
+- credential Mollie `test_` lié au profil BOT-WOW confirmé ;
+- `RELEASE_STATUS` propre au staging, sans modifier la valeur de production ;
+- fournisseur d'e-mail simulé/sink. Aucun e-mail client ; l'envoi vers une boîte propriétaire nécessite une approbation distincte.
 
-| # | Étape | Commande / action | Résultat attendu |
+| # | Étape préparatoire | Action autorisée lors d'une future exécution isolée | Preuve attendue |
 |---|---|---|---|
-| 0 | Vérifier le garde fermé | `curl.exe -s -X POST https://api.bot-wow.com/api/checkout -H "Content-Type: application/json" -d "{\"email\":\"probe@example.com\",\"lang\":\"fr\"}"` | **409** `delivery_unverified`, aucun appel Mollie |
-| 1 | Montrer la 409 → confirmer | Le propriétaire pose `RELEASE_STATUS=confirmed` (action secrets propriétaire, réversible — 2.4) | — |
-| 2 | Créer le paiement test | même POST avec l'e-mail propriétaire | **200** `paymentId` (`tr_…`, mode test) + `checkoutUrl` |
-| 3 | Payer | Page Mollie, carte de **test** (le refus et l'annulation sont testables de la même façon) | HTTP 200, accès page success |
-| 4 | Webhook | Automatique depuis Mollie | commande `paid`, licence `BOTW-…`, jeton téléchargement, e-mail livré |
-| 5 | **GET réel de l'objet R2** | ouvrir le lien `/api/download?t=…` reçu ; calculer `(Get-FileHash -Algorithm SHA256).Hash` et la taille | archive ZIP complète, taille/SHA à confronter à la référence (voir nuance §1 artefact) |
-| 6 | Activation x2 + garde | `POST /api/activate` `{"key":"BOTW-…","machine_id":"testa"}` puis `"testb"`, puis `"testc"` | 3ᵉ : `max_activations` refusé |
-| 7 | Webhook répété | rejouer le POST webhook du même `tr_…` | **200**, aucune seconde licence, aucun second e-mail |
-| 8 | Webhook invalide | POST sans `id`, et `id` inexistant | 400 / toléré sans effet de bord |
-| 9 | Remboursement test | créer un remboursement sur le paiement test (dashboard Mollie) | licence passée `revoked`, téléchargement suivant → **403** |
-| 10 | Refusé / annulé / expiré | navigateur : carte refusée, abandon, attente expiration | commandes `failed`/`canceled`/`expired`, **aucune licence, aucun e-mail** |
-| 11 | Lire les traces (lecture seule) | `npx wrangler d1 execute botwow-production --remote --command "SELECT provider,provider_id,status,amount,currency FROM orders ORDER BY created_at DESC LIMIT 10"` et sur `botwow-analytics` : `SELECT event,step,test FROM events ORDER BY ts DESC LIMIT 20` | commande test `mode=test` ⇒ `test=1` et **aucun euro de revenu** (`value_eur` NULL) comptabilisé |
-| 12 | Poignée de fin | dashboard Mollie : 0 paiement live, 0 frais ; licence de test révoquée au besoin | — |
-| 13 | **Remettre le garde** | `RELEASE_STATUS=pending` (propriétaire) + déploiement si besoin | POST checkout → **409** re-vérifié |
+| 0 | Vérifier l'isolation | Confirmer l'URL du Worker de staging, les IDs D1/R2 de test et l'absence de bindings de production | inventaire daté, sans secret |
+| 1 | Vérifier le credential | Exécuter `scripts/verify-mollie-profile.mjs --expect-pfl pfl_L84sQNbb4i` dans l'environnement propriétaire prévu, avec credential test uniquement | type de credential et profil public correspondant ; aucun secret affiché |
+| 2 | Vérifier le garde staging | Confirmer que le garde staging est fermé avant le test ; ne pas toucher à `RELEASE_STATUS` en production | réponse de refus sur l'URL staging |
+| 3 | Autoriser la charge test | Attendre l'approbation finale explicite avant toute création de paiement test ; plafond préparé : 1,00 EUR, mode test Mollie uniquement | approbation datée, montant et profil confirmés |
+| 4 | Créer le paiement test | Uniquement via le checkout staging avec credential `test_` | identifiant de paiement de test et URL de checkout staging |
+| 5 | Vérifier le webhook | Recevoir le webhook staging et relire l'état du paiement auprès de Mollie | paiement test confirmé côté serveur, montant/devise/produit vérifiés |
+| 6 | Vérifier le fulfillment | Générer une commande synthétique à ID texte, une licence et un jeton de téléchargement | une seule commande/licence ; état de livraison explicite |
+| 7 | Vérifier l'objet | Télécharger depuis le bucket R2 de test via le lien staging et calculer taille + SHA-256 | ZIP complet, hash comparé au build reproductible |
+| 8 | Vérifier l'activation | Activer deux machines synthétiques puis tenter une troisième | deux activations acceptées, troisième refusée |
+| 9 | Vérifier l'idempotence | Rejouer le même webhook de test | aucune seconde licence ni seconde livraison |
+| 10 | Vérifier les erreurs | Tester signature invalide, paiement refusé/annulé/expiré et jeton révoqué dans le staging | aucun fulfillment pour les paiements non payés ; téléchargement révoqué refusé |
+| 11 | Vérifier les traces | SELECT uniquement sur la D1 de staging ; aucun SELECT de lignes client en production | état cohérent, événements test exclus du revenu |
+| 12 | Terminer | Révoquer la licence de test, fermer le garde staging et conserver les preuves | staging fermé ; production inchangée |
 
-## 4. Règle de validation (critère « première vente »)
+**Remboursement :** même en mode test, ne créer un remboursement qu'après approbation explicite distincte.  
+**E-mail :** aucun e-mail ne part pendant cette préparation. Le test d'e-mail ne peut utiliser qu'un sink ou une boîte appartenant au propriétaire, après approbation explicite.
 
-Le commerce ne peut être re-présenté comme prêt **que si les 4 preuves existent datées** :
-1. email client réel (unique) contenant un lien de téléchargement ;
-2. **GET réel de l'objet R2** : ZIP complet par ce lien (taille + SHA-256 mesurés sur le fichier reçu) ;
-3. activation effective sur une machine + garde d'activations mesurée ;
-4. dashboard Mollie et D1 prouvant mode test / 0 € encaissé.
+## 4. Critères de réussite et de non-commercialisation
 
-Sans ces 4 preuves, la vitrine reste « status-only » (acheteur bloqué 409), quelles que soient les pages.
+Un test staging réussi exige des preuves datées de :
+1. paiement Mollie en mode test, sans encaissement réel ;
+2. webhook traité une seule fois et commande persistée avec ID texte ;
+3. licence et jeton créés sans doublon ;
+4. téléchargement R2 complet dont la taille et le SHA-256 correspondent à l'artefact attendu ;
+5. activation et limites vérifiées ;
+6. e-mail simulé/sink ou preuve séparée approuvée, sans client réel.
+
+Un test staging réussi **n'est pas une vente** et ne prouve pas que la production peut encaisser. Le passage commercial exige encore les droits de redistribution, un artefact autorisé et reproductible, la compatibilité datée, les méthodes LIVE Mollie réellement activées, le fulfillment de production validé et une autorisation finale.
+
+La production doit rester fermée pendant toute cette préparation : `RELEASE_STATUS=pending`, aucun POST de checkout de sonde, aucun paiement, aucun remboursement, aucun e-mail et aucun déploiement Worker.
+
 
 ## 5. Bloquants persistants (indépendants de cette chaîne)
 
