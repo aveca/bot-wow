@@ -45,7 +45,7 @@ for (const [page, file, claimRe] of [
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
     !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
   check(`${page} : invitation a contacter le support avant paiement`,
-    /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée/i.test(flat));
+    /do not purchase until delivery is confirmed|n'achetez pas tant que la livraison n'est pas confirmée|N’achetez pas : aucune livraison n’est actuellement proposée\./i.test(flat));
   check(`${page} : aucun champ e-mail ni formulaire d'achat n'est exposé`,
     !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(html));
   check(`${page} : prix 20,00 EUR inchange`,

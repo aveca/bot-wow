@@ -52,7 +52,7 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   await expect(page.locator('h1')).toContainText('Achat indisponible');
   await expect(page.locator('.pay-note')).toContainText('Aucun formulaire de paiement');
   await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
-  await expect(page.locator('#release-availability-notice')).toContainText("n'achetez pas tant que la livraison n'est pas confirmée");
+  await expect(page.locator('#release-availability-notice')).toContainText("N’achetez pas : aucune livraison n’est actuellement proposée.");
 
   // Les liens legaux FR pointent vers /legal/fr/ (pas /legal/)
   await expect(page.locator('a[href="../legal/fr/terms.html"]').first()).toBeAttached();

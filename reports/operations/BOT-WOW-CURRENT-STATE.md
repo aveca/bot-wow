@@ -3712,3 +3712,228 @@ Autorisation : déploiement technique réversible du Worker `botwow-api` depuis 
 - Retour arrière immédiat : redéployer la version `1513595c-6a53-4575-b013-9979b696dce3` (déploiement `6aecab2d-6545-4c76-a6b3-cfb089372884`).
 
 Prochaine action : décision du propriétaire sur le produit qui peut être vendu. Le checkout reste fermé.
+
+---
+
+# 2026-11-07 — Pont Factory V3 multi-dépôt (#143) et gate des verrous (#141)
+
+État daté de ce cycle. Faits marqués **[vérifié]** = observés dans cette
+session (lien ou sortie d'outil) ; **[rapporté]** = reprise d'un rapport
+antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
+
+## Issues traitées
+
+| Issue | task_id | Dépôt | Résultat |
+|---|---|---|---|
+| #143 | `BOTWOW-FACTORY-MULTIREPO-BRIDGE-INSTALL-20261107` | `aveca/bot-wow` | pont installé, PR ouverte |
+| #141 | `BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` | `aveca/bot-wow` | gate corrigé, PR ouverte |
+
+ACK Factory V3 publié sur #143 : <https://github.com/aveca/bot-wow/issues/143#issuecomment-6711832670> **[vérifié]**
+
+## #141 — gate `check-agent-state` (faux positif des verrous hérités)
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/ci-lock-checker-identity-20261107` (base `origin/main` @ `dab8722af28ac10e2f3f28e44a15bab2f2f54862`) |
+| Commit | `42076c2cb73fae1cc6d1590cbb28e21421fe9d48` |
+| PR | <https://github.com/aveca/bot-wow/pull/145> (ouverte, **non mergée**) |
+| CI sur le SHA exact | Validate **success** — run `42410751941` · UI quality **success** — run `42410751946` · GitGuardian **success** **[vérifié]** |
+
+- **Cause (directement vérifiée)** : le gate comparait les *scopes* seuls. Toute
+  PR qui hérite de `agents/locks.md` de `main` était rejetée comme si elle
+  reprenait un scope détenu par une autre PR. Sur `main` **pristine**, la même
+  commande échoue avec 6 conflits (`legal-draft`, `r2-provenance`,
+  `mollie-profile-prep`, `checkout-flag-draft`, `commercial-offer`,
+  `homepage-archive-copy`), tous pointant la PR #139 dont le fichier est
+  identique octet pour octet. Après correction : `AGENT STATE : OK`, exit 0.
+- **Correctif** : identité de verrou = `id` + `agent` + `branch`
+  (`scripts/agent-lock-gate.mjs`) ; même identité ⇒ pas de conflit ; identité
+  différente + `active` + non expiré ⇒ conflit réel conservé ; `done`,
+  `released` ou expiré ⇒ scope libre ; 404 distant ⇒ absence ; autre erreur de
+  lecture ⇒ visible (elle ne devient plus un succès silencieux).
+- **Tests** : `tests/agent-state-locks.test.mjs`, 36 contrôles déterministes,
+  câblé dans `npm test`. `npm run validate` exit 0, `npm test` exit 0,
+  `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` exit 0.
+- `agents/locks.md` **inchangé** : aucun verrou supprimé, expiré
+  artificiellement ni réattribué.
+- PR #137 et #140 : **non modifiées, non fermées**. La correction leur rend
+  la CI possible, mais **leurs tests ne sont pas considérés comme repassés**
+  tant qu'ils n'ont pas été relancés sur leur propre SHA.
+
+## #143 — pont Factory V3 multi-dépôt
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/factory-multirepo-bridge-20261107` (base `origin/main` @ `dab8722`) |
+| Commits | `64f830969aa5508c9ce0b39cdb5442873170e3b7` (pont) · `54570ec50f7734618610256cb5a264621908f2e2` (merge #141) · `f130a46770669574c341e549011512f6111dc69e` (tests sans écriture) |
+| PR | <https://github.com/aveca/bot-wow/pull/146> (ouverte, **non mergée**) |
+| Source | `aveca/sargagame` PR #1349, merge commit `87702066a79c03ff930500a2bad524df58c1f6f7` — **lecture seule**, dépôt non modifié **[vérifié]** |
+| CI sur le SHA exact | Validate **success** — run `42412792812` · GitGuardian **success** · UI quality run `42412792956` **[vérifié]** |
+
+- **PR empilée** : #146 contient le correctif #141 (`42076c2`). Sans lui, le
+  job Validate échoue sur le faux positif et `npm test` est skippé. Ordre de
+  fusion recommandé : **#145 puis #146**.
+- **Contrat repris à l'identique** : allowlist fermée des deux dépôts,
+  routage strict par dépôt local, déduplication dépôt/issue/task_id (clé
+  canonique + clé historique + id seul), statuts GitHub corrélés, blocage
+  humanGate/moneyPath, aucun runner cloud.
+- **Adaptations BOT-WOW (4, documentées dans le code)** : `DEFAULT_LOCAL_REPO`
+  = `aveca/bot-wow` (jamais Sargagame) ; repli journalisé ; libs
+  `lib/common.cjs` + `lib/memory.cjs` portées en sous-ensemble strict ;
+  `ensureDirs` injectable (les tests n'écrivent rien).
+- **Tests** : `tests/autopilot/multi-repo-bridge.test.cjs`, **84 contrôles**,
+  0 échec, aucun appel réseau, aucune écriture disque.
+- **Dry-run depuis le checkout BOT-WOW (preuve du routage)** : `local=aveca/bot-wow`,
+  #141 et #142 détectées **localement** avec leur task_id exact, 7 missions
+  Sargagame **relayées** (`imported=0 relayed=7` pour `aveca/sargagame`),
+  `ignored=0 rejected=0 statusFailures=0`, `.ai/` **non créé**,
+  `git status --porcelain` = 0 ligne. **[vérifié]**
+- `scripts/` et `tests/` sont dans la liste `DENY` de `scripts/build-site.mjs` :
+  ces fichiers ne peuvent pas être publiés sur Pages.
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement, aucun `workflow_dispatch`.
+- Aucun checkout, paiement, Mollie, prix, Worker, Pages, secret, binding, D1,
+  R2, webhook, e-mail ni mutation de production.
+- Aucune mission métier #141 / #142 **exécutée** ; le dry-run ne mute rien.
+- Aucune mission Sargagame importée ni exécutée dans ce checkout.
+- `aveca/sargagame` lu en lecture seule, non modifié.
+
+## Bloqueurs (inchangés)
+
+- **[non vérifié]** Profil marchand Mollie BOT-WOW et raccordement au Worker :
+  non établis depuis cet environnement ; aucun secret lu ni affiché.
+- **[non vérifié]** Provenance, licence et artefact reproductible du runtime
+  WoW Gold/PvP/XP : non établis à ce jour ; l'addon de pêche n'est pas le bot
+  complet.
+- **[rapporté]** Le checkout reste fermé ; aucune vente réelle n'est prouvée.
+  Voir <https://github.com/aveca/bot-wow/pull/139> et le runbook Mollie.
+
+## Prochaine action (une seule)
+
+**Importer les missions métier existantes dans la queue locale avec leur
+task_id exact, via le pont validé** (`npm run autopilot:bridge` depuis le
+checkout BOT-WOW) : #141 et #142 doivent y apparaître avec leurs task_id
+`BOTWOW-CI-LOCK-CHECKER-INHERITED-IDENTITY-20261107` et
+`BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`, sans doublon, puis
+attaquer la preuve de provenance du runtime Gold/PvP/XP.
+
+---
+
+# 2026-11-08 — Fiche produit PixelBuddy-style (#142) et preuve de provenance
+
+État daté de ce cycle. Faits marqués **[vérifié]** = observés dans cette
+session (lien ou sortie d'outil) ; **[rapporté]** = reprise d'un rapport
+antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
+
+## Issue traitée
+
+| Issue | task_id | Dépôt | Résultat |
+|---|---|---|---|
+| #142 | `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` | `aveca/bot-wow` | fiche produit écrite, cablée, testee, QA navigateur faite ; PR #154 ouverte (non mergée), CI verte sur SHA `8fcf6c5` ; preuve publiée sur #142 |
+
+## #142 — fiche produit PixelBuddy-style (EN + FR)
+
+| Élément | Valeur |
+|---|---|
+| Branche | `p0/storefront-product-sheet-20261107` (base `origin/main` @ `9a01a5098b8025cf6b1ca338f426033224459c99`) |
+| Pages écrites | `product.html` (EN), `fr/product.html` (FR) — classes CSS existantes uniquement, aucun changement d'asset, l'estampille `?v=560cff9a` reste valide |
+| Câblage | `sitemap.xml` (variantes EN/FR), `scripts/build-site.mjs` (FILES += `product.html`), `scripts/validate.mjs` (PUBLIC_PAGES += `product.html`, `fr/product.html`) |
+| Liens d'entrée | `buy.html`, `fr/buy.html`, `features.html`, `fr/features.html` (corps + liste footer) pointent vers `./product.html` ; CTA uniquement `./buy.html` ; pas d'ancres `#offre`/`#buy` ; pas de Mollie/Bitcoin sur les pages features |
+| Garde-fou | `tests/storefront-product-sheet.test.mjs` : parité EN/FR, parité registre `assets/modules.json` (titres, statuts, summaries, ordre), pilier rouge "non distribué" sur chaque module, compat `historical_unverified` (pas de serveur/date), interdits `undetectable`/`anti-ban`/Retail, pas de formulaire/POST/champ e-mail, licence + non-reproductibilité déclarées, provenance `F8138F3C…` / `1C132F36…`, liens et ancres résolus, sitemap/build/validate, a11y de base |
+| Câblage test | `package.json` : `test` chain += `tests/storefront-product-sheet.test.mjs` ; script `test:storefront` ajouté |
+| Résultats tests | `npm test` exit 0, `FICHE PRODUIT : OK` ; `npm run validate` exit 0 ; `git diff --check` exit 0 ; `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK` **[vérifié]** ; CI PR #154 verte sur SHA `8fcf6c5` : Validate run `42461482502` pass, ui-quality run `42461482463` pass, GitGuardian pass |
+| QA navigateur | Serveurs locaux before/after, captures 1440×900 + 390×844 dans `artifacts/ui/` ; pas de débordement, pas de cible < 44 px introduite, contraste WCAG OK sur les éléments introduits, `prefers-reduced-motion` respecté ; seule erreur console = `POST /api/track` 501 pré-existante (server Python) **[vérifié]** |
+| Verrou | `agents/locks.md` : `20261107-storefront` / scope `storefront-product-sheet`, **done**, expirant 2026-11-10, PR #154 ouverte, CI verte sur SHA `8fcf6c5` |
+| PR | https://github.com/aveca/bot-wow/pull/154 (ouverte, non mergée), CI verte sur SHA `8fcf6c5` |
+| Preuve issue #142 | https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423 (task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`) |
+| Rapport | `reports/operations/2026-11-07-storefront-product-sheet.md` |
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement, aucun `workflow_dispatch`.
+- Aucun checkout, paiement, Mollie, prix, Worker, Pages, secret, binding, D1, R2, webhook, e-mail ni mutation de production.
+- Le checkout public reste fermé : pas de formulaire, pas de paiement, pas d'e-mail.
+- `aveca/sargagame` lu en lecture seule, non modifié.
+- PR #148 (docs restart) et PR #150 (runtime) restent ouvertes, non mergées, CI verte sur leur SHA exact.
+
+## Bloqueurs (inchangés)
+
+- **[non vérifié]** Profil marchand Mollie BOT-WOW et raccordement au Worker : non établis ; aucun secret lu ni affiché.
+- **[non vérifié]** Provenance, licence et artefact reproductible du runtime WoW Gold/PvP/XP : non établis ; l'addon de pêche n'est pas le bot complet.
+- **[rapporté]** Le checkout reste fermé ; aucune vente réelle n'est prouvée. Voir <https://github.com/aveca/bot-wow/pull/139> et le runbook Mollie.
+- **[non vérifié]** Droits de redistribution du runtime non documentés dans `aveca/Casinobabe` (`B-licence`) → la fiche produit le déclare explicitement ; décision propriétaire requise avant toute vente.
+
+## Prochaine action (une seule)
+
+**Cycle #142 termine** : branche commitee (`8fcf6c5`), poussee, PR #154 ouverte, CI verte sur le SHA exact, commentaire de preuve publie sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` (<https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423>). Verrou `20261107-storefront` passe en `done`.
+
+**Prochaine action (globale)** : finaliser le runbook Mollie (#139) ; le checkout reste fermé jusqu'aux preuves de licence (`B-licence`) + livraison (`B-r2-live`) + profil Mollie dédié (`B-mollie`).
+
+
+---
+
+# 2026-11-08 â€” Mission #144 : dÃ©blocage commercial et prÃ©paration du premier paiement
+
+Ã‰tat datÃ© de ce cycle. **[vÃ©rifiÃ©]** = observÃ© dans cette session (lien ou sortie d'outil) ;
+**[rapportÃ©]** = repris d'un rapport antÃ©rieur avec son lien ; **[non vÃ©rifiÃ©]** = non Ã©tabli Ã  ce jour.
+
+## Synchronisation du runner
+
+- `node scripts/autopilot/multi-repo-bridge.cjs --relay-status=false` â†’ `MULTI-REPO-BRIDGE PASS Â· imported=9 relayed=10 ignored=0 rejected=0 statusFailures=0 local=aveca/bot-wow relayStatus=off` **[vÃ©rifiÃ©]**.
+- 9 missions importÃ©es (`status=new`), **aucune `started`** avant l'ACK de ce cycle. `aveca/sargagame` en lecture seule.
+- ACK `started` publiÃ© sur #144 : <https://github.com/aveca/bot-wow/issues/144#issuecomment-6719903507> ; heartbeat : <https://github.com/aveca/bot-wow/issues/144#issuecomment-6720416030>.
+
+## Produit et droits de distribution (prioritÃ© absolue)
+
+| Fait | Ã‰tat |
+|---|---|
+| Seul runtime existant en code + tests | noyau de pÃªche, `aveca/Casinobabe @ 257418c9a0c2c489a01226e8065ac9c8eaded954` (branche `feat/fishing-route-intelligence-v2`) **[vÃ©rifiÃ©]** |
+| Runtime WoW Gold / PvP / XP | **n'existe pas** â€” l'addon de pÃªche n'est pas le bot complet **[vÃ©rifiÃ©]** |
+| `LICENSE` / `COPYING` / `NOTICE` dans la source | **absents** â†’ droits de redistribution non documentÃ©s, `B-licence` **[vÃ©rifiÃ©, re-contrÃ´lÃ© ce cycle]** |
+| DÃ©pendance tierce | `wasmoon-lua5.1` (interprÃ©teur Lua 5.1 en WASM) â€” attribution requise dans ses termes **[vÃ©rifiÃ©]** |
+| CompatibilitÃ© annoncÃ©e | Classic Era = `historical_unverified`, sans serveur ni date de test â†’ aucune version confirmÃ©e **[vÃ©rifiÃ©]** |
+| ReproductibilitÃ© (builder durci) | SHA-256 `A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C` (1 344 402 o), empreinte canonique `0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e` (17 fichiers, 3 004 095 o), 2 builds identiques **[vÃ©rifiÃ©]** |
+| Objet R2 live | **non relu** : `r2_objects_list` et `r2_objects_get` renvoient HTTP 403 (code 10000). Faits antÃ©rieurs (`1C132F36â€¦`, 1 387 543 o, 30 entrÃ©es, 20 identiques / 6 diffÃ©rents / 3 hors manifeste) **[rapportÃ©]** |
+
+## PR #150 â€” intÃ©gritÃ© (point 3)
+
+Branche `p0/reproducible-runtime-package-20261107`, HEAD `e28626d`, base = merge de `158222e` (pas de rebase : force-push interdit).
+Trois dÃ©fauts corrigÃ©s : liens symboliques suivis pendant le build, digest non fail-closed, provenance CLI certifiÃ©e sans vÃ©rification. Tests nÃ©gatifs dÃ©terministes ajoutÃ©s.
+`npm run validate` exit 0 Â· `npm test` exit 0 Â· payment-flow / checkout-security / worker-fulfillment-reconciliation OK Â· `git diff --check` exit 0.
+CI verte sur `e28626d` : Validate `42471183238`, UI quality `42471182891`, GitGuardian. Preuve : <https://github.com/aveca/bot-wow/issues/151#issuecomment-6720399057>.
+Rapport : `reports/operations/2026-11-08-package-integrity-pr150.md`.
+
+## PR #154 â€” vitrine PixelBuddy (point 5)
+
+Divergence avec `main` rÃ©solue par merge de `158222e` (HEAD `366a735`) ; aucune modification Ã©crasÃ©e.
+Empreintes du paquet rÃ©alignÃ©es sur le builder durci (l'ancienne valeur ne correspondait plus Ã  ce que produit le builder corrigÃ©) ; pages FR/EN, CTA vers `./buy.html`, pilier rouge Â« non distribuÃ© Â» par module, registre paritÃ© â€” inchangÃ©s.
+`npm run validate` exit 0 Â· `npm test` exit 0 (`FICHE PRODUIT : OK`).
+CI verte sur `366a735` : Validate `42471572487`, UI quality `42471572472`, GitGuardian.
+**Aucun dÃ©ploiement de preview n'existe** : `.github/workflows/pages.yml` ne se dÃ©clenche que sur `push` vers `main` (pas de `pull_request`) **[vÃ©rifiÃ©]**.
+
+## Mollie (point 4) â€” non re-vÃ©rifiable ici
+
+Aucun accÃ¨s Mollie dans cet environnement. Faits **[rapportÃ©s]** (vÃ©rifiÃ©s par le propriÃ©taire le 2026-11-07) :
+profil BOT-WOW mÃ©thodes LIVE vides (`count=0`), `creditcard`/`applepay`/`googlepay` = `pending-review`,
+crÃ©ation LIVE â†’ HTTP 422 Â« The payment method is not active in your website profile Â», profil `verified`, `payments=[]`.
+
+VÃ©rifiÃ© **dans le code** (`worker/index.js`) :
+- `createMolliePayment` envoie `method: ["creditcard","ideal","bancontact","sofort","giropay","eps","przelewy24"]` â€” **Apple Pay et Google Pay absents** ;
+- `RELEASE_STATUS` vaut `"pending"` par dÃ©faut ; checkout refusÃ© en **HTTP 409 `delivery_unverified`** tant que la valeur effective n'est pas `confirmed`.
+
+**Conclusion : aucun encaissement n'est actuellement possible.** Aucun paiement, remboursement, email, ni modification de prix / secret / webhook / configuration.
+
+## Blocages restants
+
+1. **Aucune mÃ©thode de paiement LIVE active** (profil BOT-WOW) â€” externe au dÃ©pÃ´t.
+2. **Droits de redistribution non documentÃ©s** (`B-licence`) â€” dÃ©cision propriÃ©taire.
+3. **Artefact R2 de livraison non reproductible** (`B-r2-live`) â€” exige une Ã©criture R2 autorisÃ©e.
+4. **`RELEASE_STATUS` â‰  `confirmed`** â†’ le code refuse le checkout â€” verrou volontaire.
+5. **CohÃ©rence mÃ©thodes** : le code n'offre pas Apple Pay / Google Pay alors que le profil est en `pending-review` dessus â€” Ã  corriger **aprÃ¨s** activation, pas avant.
+6. **Aucune preview deployÃ©e** pour une PR ouverte.
+
+## Prochaine action concrÃ¨te pour obtenir le premier client payant
+
+DÃ©cision propriÃ©taire, dans cet ordre : (a) Ã©crire et committer la licence / les droits de redistribution du runtime Casinobabe â€” seul point qui dÃ©bloque lÃ©galement la vente ; (b) confirmer `RELEASE_STATUS=confirmed` aprÃ¨s certification de la livraison de bout en bout ; (c) activer une mÃ©thode LIVE dans le profil Mollie BOT-WOW, puis aligner la liste de mÃ©thodes du Worker sur ce qui est rÃ©ellement actif ; (d) en dernier, un test rÃ©el de maximum 1 â‚¬ avec validation explicite. Le checkout reste **fermÃ©** jusque-lÃ .

@@ -60,7 +60,7 @@ test('purchase unavailable: home pages expose no payment form (EN/FR)', async ({
   const errors = collectPageErrors(page);
   for (const [lang, route, notice] of [
     ['en', '/', /Do not purchase until delivery is confirmed/i],
-    ['fr', '/fr/', /n'achetez pas tant que la livraison n'est pas confirmée/i]
+    ['fr', '/fr/', /N’achetez pas\s*:\s*aucune livraison n’est actuellement proposée\./i]
   ]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();

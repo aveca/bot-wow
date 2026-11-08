@@ -1,0 +1,5502 @@
+{
+  "generatedAt": "2026-11-08T02:24:47.562Z",
+  "pages": [
+    {
+      "side": "before",
+      "page": "buy-en",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8812/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-buy-en-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Browser demo (simulated data)",
+            "w": 221,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project feature register",
+            "w": 165,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published terms",
+            "w": 115,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Privacy",
+            "w": 51,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published refund policy",
+            "w": 167,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project contact",
+            "w": 110,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Purchase unavailable"
+          },
+          {
+            "level": "H2",
+            "text": "Historical project notes — not an offer"
+          },
+          {
+            "level": "H2",
+            "text": "Browser demo — simulated data"
+          },
+          {
+            "level": "H2",
+            "text": "Before buying"
+          },
+          {
+            "level": "H2",
+            "text": "No purchase available"
+          },
+          {
+            "level": "H3",
+            "text": "Availability"
+          },
+          {
+            "level": "H2",
+            "text": "Availability questions"
+          },
+          {
+            "level": "H3",
+            "text": "Explore"
+          },
+          {
+            "level": "H3",
+            "text": "Information"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "buy-en",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-buy-en-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet — Fishing Assistant 1.2.0",
+            "w": 275,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Browser demo (simulated data)",
+            "w": 221,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project feature register",
+            "w": 165,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published terms",
+            "w": 115,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Privacy",
+            "w": 51,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published refund policy",
+            "w": 167,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project contact",
+            "w": 110,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Purchase unavailable"
+          },
+          {
+            "level": "H2",
+            "text": "Historical project notes — not an offer"
+          },
+          {
+            "level": "H2",
+            "text": "Fishing Assistant 1.2.0 — product sheet"
+          },
+          {
+            "level": "H2",
+            "text": "Browser demo — simulated data"
+          },
+          {
+            "level": "H2",
+            "text": "Before buying"
+          },
+          {
+            "level": "H2",
+            "text": "No purchase available"
+          },
+          {
+            "level": "H3",
+            "text": "Availability"
+          },
+          {
+            "level": "H2",
+            "text": "Availability questions"
+          },
+          {
+            "level": "H3",
+            "text": "Explore"
+          },
+          {
+            "level": "H3",
+            "text": "Information"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "features-en",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8812/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-features-en-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Docs",
+            "w": 42,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Home",
+            "w": 54,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Open the demo",
+            "w": 126,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View purchase status",
+            "w": 172,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Roadmap",
+            "w": 68,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Known issues",
+            "w": 96,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Terms · Privacy · Refunds",
+            "w": 172,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Features with verified status"
+          },
+          {
+            "level": "H3",
+            "text": "Browser route-planner demo"
+          },
+          {
+            "level": "H3",
+            "text": "Game-integrated modules"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibility"
+          },
+          {
+            "level": "H3",
+            "text": "Purchase and delivery"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & legal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "features-en",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-features-en-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Docs",
+            "w": 42,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Home",
+            "w": 54,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Open the demo",
+            "w": 126,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View purchase status",
+            "w": 172,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet — Fishing Assistant 1.2.0",
+            "w": 275,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Roadmap",
+            "w": 68,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Known issues",
+            "w": 96,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Terms · Privacy · Refunds",
+            "w": 172,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Features with verified status"
+          },
+          {
+            "level": "H3",
+            "text": "Browser route-planner demo"
+          },
+          {
+            "level": "H3",
+            "text": "Game-integrated modules"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibility"
+          },
+          {
+            "level": "H3",
+            "text": "Purchase and delivery"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & legal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "buy-fr",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8812/fr/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-buy-fr-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo navigateur (données simulées)",
+            "w": 262,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre du projet",
+            "w": 128,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Conditions publiées",
+            "w": 144,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Confidentialité",
+            "w": 107,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Politique de remboursement publiée",
+            "w": 260,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Contact projet",
+            "w": 105,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Achat indisponible"
+          },
+          {
+            "level": "H2",
+            "text": "Notes historiques du projet — pas une offre"
+          },
+          {
+            "level": "H2",
+            "text": "Démo navigateur — données simulées"
+          },
+          {
+            "level": "H2",
+            "text": "Avant d’acheter"
+          },
+          {
+            "level": "H2",
+            "text": "Aucun achat disponible"
+          },
+          {
+            "level": "H3",
+            "text": "Disponibilité"
+          },
+          {
+            "level": "H2",
+            "text": "Questions sur la disponibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Explorer"
+          },
+          {
+            "level": "H3",
+            "text": "Informations"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "buy-fr",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/fr/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-buy-fr-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo navigateur (données simulées)",
+            "w": 262,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre du projet",
+            "w": 128,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Conditions publiées",
+            "w": 144,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Confidentialité",
+            "w": 107,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Politique de remboursement publiée",
+            "w": 260,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Contact projet",
+            "w": 105,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Achat indisponible"
+          },
+          {
+            "level": "H2",
+            "text": "Notes historiques du projet — pas une offre"
+          },
+          {
+            "level": "H2",
+            "text": "Assistant de pêche 1.2.0 — fiche produit"
+          },
+          {
+            "level": "H2",
+            "text": "Démo navigateur — données simulées"
+          },
+          {
+            "level": "H2",
+            "text": "Avant d’acheter"
+          },
+          {
+            "level": "H2",
+            "text": "Aucun achat disponible"
+          },
+          {
+            "level": "H3",
+            "text": "Disponibilité"
+          },
+          {
+            "level": "H2",
+            "text": "Questions sur la disponibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Explorer"
+          },
+          {
+            "level": "H3",
+            "text": "Informations"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "features-fr",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8812/fr/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-features-fr-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Docs",
+            "w": 42,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Accueil",
+            "w": 64,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Ouvrir la démo",
+            "w": 119,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le statut d'achat",
+            "w": 166,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Feuille de route",
+            "w": 109,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Problèmes connus",
+            "w": 131,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fonctionnalités avec statut vérifié"
+          },
+          {
+            "level": "H3",
+            "text": "Démo de planificateur navigateur"
+          },
+          {
+            "level": "H3",
+            "text": "Modules intégrés au jeu"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Achat et livraison"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & légal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "features-fr",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/fr/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-features-fr-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Docs",
+            "w": 42,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Accueil",
+            "w": 64,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Ouvrir la démo",
+            "w": 119,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le statut d'achat",
+            "w": 166,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Feuille de route",
+            "w": 109,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Problèmes connus",
+            "w": 131,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fonctionnalités avec statut vérifié"
+          },
+          {
+            "level": "H3",
+            "text": "Démo de planificateur navigateur"
+          },
+          {
+            "level": "H3",
+            "text": "Modules intégrés au jeu"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Achat et livraison"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & légal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "product-en",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/product.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-product-en-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "See the dated compatibility records",
+            "w": 552,
+            "h": 41,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet",
+            "w": 100,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Module ledger",
+            "w": 103,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Purchase status",
+            "w": 112,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Documentation",
+            "w": 112,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Archived installation notes",
+            "w": 190,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Licence & activation",
+            "w": 142,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 30,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "terms",
+            "w": 38,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "privacy",
+            "w": 53,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "refunds",
+            "w": 53,
+            "h": 17,
+            "inline": true
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 5.51,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": true,
+            "ratio": 11.19,
+            "color": "rgb(141, 211, 168)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": true,
+            "ratio": 6.5,
+            "color": "rgb(155, 138, 212)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow h3",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "20px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "13.5px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 16.98,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(6,7,11)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fishing Assistant 1.2.0"
+          },
+          {
+            "level": "H2",
+            "text": "One product, eight modules, one of them real"
+          },
+          {
+            "level": "H3",
+            "text": "Reads pixels, never the process"
+          },
+          {
+            "level": "H3",
+            "text": "Float detection by colour, then a confirmation"
+          },
+          {
+            "level": "H3",
+            "text": "Spot memory and route planner"
+          },
+          {
+            "level": "H2",
+            "text": "Module ledger"
+          },
+          {
+            "level": "H3",
+            "text": "Fish — assistant + optimised rounds"
+          },
+          {
+            "level": "H3",
+            "text": "Inventory & vendor"
+          },
+          {
+            "level": "H3",
+            "text": "Navigate — spot-to-spot movement"
+          },
+          {
+            "level": "H3",
+            "text": "Recovery — the death chain"
+          },
+          {
+            "level": "H3",
+            "text": "More game clients (TBC/WotLK/Retail)"
+          },
+          {
+            "level": "H3",
+            "text": "Follower & quest assistance"
+          },
+          {
+            "level": "H3",
+            "text": "Grind & combat rotations"
+          },
+          {
+            "level": "H3",
+            "text": "Scripting — bounded custom tasks"
+          },
+          {
+            "level": "H2",
+            "text": "Package and requirements"
+          },
+          {
+            "level": "H2",
+            "text": "Build audit — source, hash, delta"
+          },
+          {
+            "level": "H2",
+            "text": "Why it is not for sale yet"
+          },
+          {
+            "level": "H2",
+            "text": "Questions this sheet answers"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & support"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "product-fr",
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:8811/fr/product.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-product-fr-desktop.png",
+      "data": {
+        "viewportWidth": 1440,
+        "documentScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 35,
+            "h": 44,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir les relevés de compatibilité datés",
+            "w": 552,
+            "h": 41,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Fiche produit",
+            "w": 95,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre des modules",
+            "w": 153,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Statut d'achat",
+            "w": 100,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Documentation",
+            "w": 112,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Notes d'installation archivées",
+            "w": 210,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Licence & activation",
+            "w": 142,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 30,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 34,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "conditions",
+            "w": 75,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "confidentialité",
+            "w": 113,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "remboursements",
+            "w": 105,
+            "h": 17,
+            "inline": true
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 5.51,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": true,
+            "ratio": 11.19,
+            "color": "rgb(141, 211, 168)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": true,
+            "ratio": 6.5,
+            "color": "rgb(155, 138, 212)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow h3",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "20px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "13.5px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 16.98,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(6,7,11)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Assistant de pêche 1.2.0"
+          },
+          {
+            "level": "H2",
+            "text": "Un produit, huit modules, un seul réel"
+          },
+          {
+            "level": "H3",
+            "text": "Lit des pixels, jamais le processus"
+          },
+          {
+            "level": "H3",
+            "text": "Détection du flotteur par couleur, puis confirmation"
+          },
+          {
+            "level": "H3",
+            "text": "Mémoire des spots et planificateur"
+          },
+          {
+            "level": "H2",
+            "text": "Registre des modules"
+          },
+          {
+            "level": "H3",
+            "text": "Pêche — assistant + rondes optimisées"
+          },
+          {
+            "level": "H3",
+            "text": "Inventaire & vendeur"
+          },
+          {
+            "level": "H3",
+            "text": "Navigation — déplacements spot à spot"
+          },
+          {
+            "level": "H3",
+            "text": "Récupération — chaîne de mort"
+          },
+          {
+            "level": "H3",
+            "text": "Autres clients (TBC/WotLK/Retail)"
+          },
+          {
+            "level": "H3",
+            "text": "Follower & assistance aux quêtes"
+          },
+          {
+            "level": "H3",
+            "text": "Grind & rotations de combat"
+          },
+          {
+            "level": "H3",
+            "text": "Scripting — tâches personnalisées bornées"
+          },
+          {
+            "level": "H2",
+            "text": "Paquet et prérequis"
+          },
+          {
+            "level": "H2",
+            "text": "Audit du build — source, empreinte, écart"
+          },
+          {
+            "level": "H2",
+            "text": "Pourquoi ce n'est pas encore en vente"
+          },
+          {
+            "level": "H2",
+            "text": "Questions auxquelles cette fiche répond"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & support"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "buy-en",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8812/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-buy-en-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Browser demo (simulated data)",
+            "w": 221,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project feature register",
+            "w": 165,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published terms",
+            "w": 115,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Privacy",
+            "w": 51,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published refund policy",
+            "w": 167,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project contact",
+            "w": 110,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Purchase unavailable"
+          },
+          {
+            "level": "H2",
+            "text": "Historical project notes — not an offer"
+          },
+          {
+            "level": "H2",
+            "text": "Browser demo — simulated data"
+          },
+          {
+            "level": "H2",
+            "text": "Before buying"
+          },
+          {
+            "level": "H2",
+            "text": "No purchase available"
+          },
+          {
+            "level": "H3",
+            "text": "Availability"
+          },
+          {
+            "level": "H2",
+            "text": "Availability questions"
+          },
+          {
+            "level": "H3",
+            "text": "Explore"
+          },
+          {
+            "level": "H3",
+            "text": "Information"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "buy-en",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-buy-en-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet — Fishing Assistant 1.2.0",
+            "w": 275,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Browser demo (simulated data)",
+            "w": 221,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project feature register",
+            "w": 165,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published terms",
+            "w": 115,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Privacy",
+            "w": 51,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Published refund policy",
+            "w": 167,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Project contact",
+            "w": 110,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Purchase unavailable"
+          },
+          {
+            "level": "H2",
+            "text": "Historical project notes — not an offer"
+          },
+          {
+            "level": "H2",
+            "text": "Fishing Assistant 1.2.0 — product sheet"
+          },
+          {
+            "level": "H2",
+            "text": "Browser demo — simulated data"
+          },
+          {
+            "level": "H2",
+            "text": "Before buying"
+          },
+          {
+            "level": "H2",
+            "text": "No purchase available"
+          },
+          {
+            "level": "H3",
+            "text": "Availability"
+          },
+          {
+            "level": "H2",
+            "text": "Availability questions"
+          },
+          {
+            "level": "H3",
+            "text": "Explore"
+          },
+          {
+            "level": "H3",
+            "text": "Information"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "features-en",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8812/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-features-en-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Home",
+            "w": 54,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Open the demo",
+            "w": 126,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View the module status ledger",
+            "w": 245,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View purchase status",
+            "w": 172,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Roadmap",
+            "w": 68,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Known issues",
+            "w": 96,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Terms · Privacy · Refunds",
+            "w": 172,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Features with verified status"
+          },
+          {
+            "level": "H3",
+            "text": "Browser route-planner demo"
+          },
+          {
+            "level": "H3",
+            "text": "Game-integrated modules"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibility"
+          },
+          {
+            "level": "H3",
+            "text": "Purchase and delivery"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & legal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "features-en",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-features-en-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Home",
+            "w": 54,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Open the demo",
+            "w": 126,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View the module status ledger",
+            "w": 245,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "View purchase status",
+            "w": 172,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet — Fishing Assistant 1.2.0",
+            "w": 275,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Roadmap",
+            "w": 68,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Known issues",
+            "w": 96,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Terms · Privacy · Refunds",
+            "w": 172,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Features with verified status"
+          },
+          {
+            "level": "H3",
+            "text": "Browser route-planner demo"
+          },
+          {
+            "level": "H3",
+            "text": "Game-integrated modules"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibility"
+          },
+          {
+            "level": "H3",
+            "text": "Purchase and delivery"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & legal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "buy-fr",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8812/fr/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-buy-fr-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo navigateur (données simulées)",
+            "w": 262,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre du projet",
+            "w": 128,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Conditions publiées",
+            "w": 144,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Confidentialité",
+            "w": 107,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Politique de remboursement publiée",
+            "w": 260,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Contact projet",
+            "w": 105,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Achat indisponible"
+          },
+          {
+            "level": "H2",
+            "text": "Notes historiques du projet — pas une offre"
+          },
+          {
+            "level": "H2",
+            "text": "Démo navigateur — données simulées"
+          },
+          {
+            "level": "H2",
+            "text": "Avant d’acheter"
+          },
+          {
+            "level": "H2",
+            "text": "Aucun achat disponible"
+          },
+          {
+            "level": "H3",
+            "text": "Disponibilité"
+          },
+          {
+            "level": "H2",
+            "text": "Questions sur la disponibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Explorer"
+          },
+          {
+            "level": "H3",
+            "text": "Informations"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "buy-fr",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/fr/buy.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-buy-fr-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Fiche produit — Assistant de pêche 1.2.0",
+            "w": 284,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo navigateur (données simulées)",
+            "w": 262,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre du projet",
+            "w": 128,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Conditions publiées",
+            "w": 144,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Confidentialité",
+            "w": 107,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Politique de remboursement publiée",
+            "w": 260,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Contact projet",
+            "w": 105,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": false
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": false
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": false
+          },
+          {
+            "sel": ".feat p",
+            "found": false
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": false
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.85,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,11)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Achat indisponible"
+          },
+          {
+            "level": "H2",
+            "text": "Notes historiques du projet — pas une offre"
+          },
+          {
+            "level": "H2",
+            "text": "Assistant de pêche 1.2.0 — fiche produit"
+          },
+          {
+            "level": "H2",
+            "text": "Démo navigateur — données simulées"
+          },
+          {
+            "level": "H2",
+            "text": "Avant d’acheter"
+          },
+          {
+            "level": "H2",
+            "text": "Aucun achat disponible"
+          },
+          {
+            "level": "H3",
+            "text": "Disponibilité"
+          },
+          {
+            "level": "H2",
+            "text": "Questions sur la disponibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Explorer"
+          },
+          {
+            "level": "H3",
+            "text": "Informations"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "before",
+      "page": "features-fr",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8812/fr/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-before-features-fr-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Accueil",
+            "w": 64,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Ouvrir la démo",
+            "w": 119,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le registre des modules",
+            "w": 225,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le statut d'achat",
+            "w": 166,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Feuille de route",
+            "w": 109,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Problèmes connus",
+            "w": 131,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "CGV · Confidentialité · Remboursements",
+            "w": 286,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fonctionnalités avec statut vérifié"
+          },
+          {
+            "level": "H3",
+            "text": "Démo de planificateur navigateur"
+          },
+          {
+            "level": "H3",
+            "text": "Modules intégrés au jeu"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Achat et livraison"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & légal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "features-fr",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/fr/features.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-features-fr-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "backlink2",
+            "text": "← Accueil",
+            "w": 64,
+            "h": 21,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Ouvrir la démo",
+            "w": 119,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le registre des modules",
+            "w": 225,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir le statut d'achat",
+            "w": 166,
+            "h": 21,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Fiche produit — Assistant de pêche 1.2.0",
+            "w": 284,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Feuille de route",
+            "w": 109,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Installation",
+            "w": 80,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Problèmes connus",
+            "w": 131,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "CGV · Confidentialité · Remboursements",
+            "w": 286,
+            "h": 40,
+            "inline": false
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 7.04,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": false
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": false
+          },
+          {
+            "sel": ".modrow h3",
+            "found": false
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": false
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": false
+          },
+          {
+            "sel": ".pay-note",
+            "found": false
+          },
+          {
+            "sel": ".price-includes li",
+            "found": false
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": false
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": false
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 8.84,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(6,7,13)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fonctionnalités avec statut vérifié"
+          },
+          {
+            "level": "H3",
+            "text": "Démo de planificateur navigateur"
+          },
+          {
+            "level": "H3",
+            "text": "Modules intégrés au jeu"
+          },
+          {
+            "level": "H3",
+            "text": "Compatibilité"
+          },
+          {
+            "level": "H3",
+            "text": "Achat et livraison"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & légal"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": false
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "product-en",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/product.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-product-en-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "See the dated compatibility records",
+            "w": 250,
+            "h": 37,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Product sheet",
+            "w": 100,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Module ledger",
+            "w": 103,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Demo (simulated data)",
+            "w": 162,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibility",
+            "w": 98,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Purchase status",
+            "w": 112,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Documentation",
+            "w": 112,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Archived installation notes",
+            "w": 190,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Licence & activation",
+            "w": 142,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 30,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "terms",
+            "w": 38,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "privacy",
+            "w": 53,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "refunds",
+            "w": 53,
+            "h": 17,
+            "inline": true
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 5.51,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": true,
+            "ratio": 11.19,
+            "color": "rgb(141, 211, 168)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": true,
+            "ratio": 6.5,
+            "color": "rgb(155, 138, 212)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow h3",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "19px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "700"
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 16.98,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(6,7,11)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Fishing Assistant 1.2.0"
+          },
+          {
+            "level": "H2",
+            "text": "One product, eight modules, one of them real"
+          },
+          {
+            "level": "H3",
+            "text": "Reads pixels, never the process"
+          },
+          {
+            "level": "H3",
+            "text": "Float detection by colour, then a confirmation"
+          },
+          {
+            "level": "H3",
+            "text": "Spot memory and route planner"
+          },
+          {
+            "level": "H2",
+            "text": "Module ledger"
+          },
+          {
+            "level": "H3",
+            "text": "Fish — assistant + optimised rounds"
+          },
+          {
+            "level": "H3",
+            "text": "Inventory & vendor"
+          },
+          {
+            "level": "H3",
+            "text": "Navigate — spot-to-spot movement"
+          },
+          {
+            "level": "H3",
+            "text": "Recovery — the death chain"
+          },
+          {
+            "level": "H3",
+            "text": "More game clients (TBC/WotLK/Retail)"
+          },
+          {
+            "level": "H3",
+            "text": "Follower & quest assistance"
+          },
+          {
+            "level": "H3",
+            "text": "Grind & combat rotations"
+          },
+          {
+            "level": "H3",
+            "text": "Scripting — bounded custom tasks"
+          },
+          {
+            "level": "H2",
+            "text": "Package and requirements"
+          },
+          {
+            "level": "H2",
+            "text": "Build audit — source, hash, delta"
+          },
+          {
+            "level": "H2",
+            "text": "Why it is not for sale yet"
+          },
+          {
+            "level": "H2",
+            "text": "Questions this sheet answers"
+          },
+          {
+            "level": "H3",
+            "text": "Product"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & support"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    },
+    {
+      "side": "after",
+      "page": "product-fr",
+      "viewport": "mobile",
+      "url": "http://127.0.0.1:8811/fr/product.html",
+      "status": 200,
+      "file": "C:\\factory\\worktrees\\botwow-storefront\\artifacts\\ui/storefront-after-product-fr-mobile.png",
+      "data": {
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "horizontalOverflow": false,
+        "overflowing": [],
+        "smallTapTargets": [
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "EN",
+            "w": 36,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "on",
+            "text": "FR",
+            "w": 33,
+            "h": 31,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Voir les relevés de compatibilité datés",
+            "w": 267,
+            "h": 37,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Fiche produit",
+            "w": 95,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Registre des modules",
+            "w": 153,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Démo (données simulées)",
+            "w": 183,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Compatibilité",
+            "w": 99,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Statut d'achat",
+            "w": 100,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Documentation",
+            "w": 112,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Notes d'installation archivées",
+            "w": 210,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "Licence & activation",
+            "w": 142,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "FAQ",
+            "w": 30,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "foot-mail",
+            "text": "support@bot-wow.com",
+            "w": 175,
+            "h": 40,
+            "inline": false
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "conditions",
+            "w": 75,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "confidentialité",
+            "w": 113,
+            "h": 17,
+            "inline": true
+          },
+          {
+            "tag": "a",
+            "cls": "",
+            "text": "remboursements",
+            "w": 105,
+            "h": 17,
+            "inline": true
+          }
+        ],
+        "contrast": [
+          {
+            "sel": ".st-no",
+            "found": true,
+            "ratio": 5.51,
+            "color": "rgb(255, 107, 107)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-ok",
+            "found": true,
+            "ratio": 11.19,
+            "color": "rgb(141, 211, 168)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-dev",
+            "found": true,
+            "ratio": 8.08,
+            "color": "rgb(201, 162, 39)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".st-plan",
+            "found": true,
+            "ratio": 6.5,
+            "color": "rgb(155, 138, 212)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "10.5px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow h3",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "19px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".modrow .m-desc",
+            "found": true,
+            "ratio": 6.71,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-card .amt b",
+            "found": true,
+            "ratio": 1.07,
+            "color": "rgba(0, 0, 0, 0)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "62px",
+            "fontWeight": "900"
+          },
+          {
+            "sel": ".pay-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".price-includes li",
+            "found": true,
+            "ratio": 16.49,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".cmptable table.vs td",
+            "found": true,
+            "ratio": 12.89,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(26,38,54)",
+            "fontSize": "14px",
+            "fontWeight": "700"
+          },
+          {
+            "sel": ".feat h3",
+            "found": true,
+            "ratio": 15.38,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "17px",
+            "fontWeight": "800"
+          },
+          {
+            "sel": ".feat p",
+            "found": true,
+            "ratio": 8.01,
+            "color": "rgb(163, 173, 184)",
+            "bg": "rgb(18,21,30)",
+            "fontSize": "13.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".honest-note",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12.5px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".band .mono",
+            "found": true,
+            "ratio": 5.18,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(10,12,18)",
+            "fontSize": "12px",
+            "fontWeight": "400"
+          },
+          {
+            "sel": ".mbar .mp small",
+            "found": true,
+            "ratio": 5.23,
+            "color": "rgb(122, 132, 150)",
+            "bg": "rgb(8,10,20)",
+            "fontSize": "11px",
+            "fontWeight": "500"
+          },
+          {
+            "sel": "nav .nav-links a",
+            "found": true,
+            "ratio": 16.98,
+            "color": "rgb(232, 236, 242)",
+            "bg": "rgb(6,7,11)",
+            "fontSize": "14.5px",
+            "fontWeight": "400"
+          }
+        ],
+        "headings": [
+          {
+            "level": "H1",
+            "text": "Assistant de pêche 1.2.0"
+          },
+          {
+            "level": "H2",
+            "text": "Un produit, huit modules, un seul réel"
+          },
+          {
+            "level": "H3",
+            "text": "Lit des pixels, jamais le processus"
+          },
+          {
+            "level": "H3",
+            "text": "Détection du flotteur par couleur, puis confirmation"
+          },
+          {
+            "level": "H3",
+            "text": "Mémoire des spots et planificateur"
+          },
+          {
+            "level": "H2",
+            "text": "Registre des modules"
+          },
+          {
+            "level": "H3",
+            "text": "Pêche — assistant + rondes optimisées"
+          },
+          {
+            "level": "H3",
+            "text": "Inventaire & vendeur"
+          },
+          {
+            "level": "H3",
+            "text": "Navigation — déplacements spot à spot"
+          },
+          {
+            "level": "H3",
+            "text": "Récupération — chaîne de mort"
+          },
+          {
+            "level": "H3",
+            "text": "Autres clients (TBC/WotLK/Retail)"
+          },
+          {
+            "level": "H3",
+            "text": "Follower & assistance aux quêtes"
+          },
+          {
+            "level": "H3",
+            "text": "Grind & rotations de combat"
+          },
+          {
+            "level": "H3",
+            "text": "Scripting — tâches personnalisées bornées"
+          },
+          {
+            "level": "H2",
+            "text": "Paquet et prérequis"
+          },
+          {
+            "level": "H2",
+            "text": "Audit du build — source, empreinte, écart"
+          },
+          {
+            "level": "H2",
+            "text": "Pourquoi ce n'est pas encore en vente"
+          },
+          {
+            "level": "H2",
+            "text": "Questions auxquelles cette fiche répond"
+          },
+          {
+            "level": "H3",
+            "text": "Produit"
+          },
+          {
+            "level": "H3",
+            "text": "Docs & support"
+          }
+        ],
+        "landmarks": {
+          "main": 1,
+          "nav": 1,
+          "footer": 1,
+          "h1": 1,
+          "skipLink": true
+        }
+      }
+    }
+  ],
+  "reducedMotion": {
+    "modrow": {
+      "transitionDuration": "1e-05s",
+      "animationDuration": "1e-05s"
+    },
+    "qaSummary": {
+      "transitionDuration": "1e-05s",
+      "animationDuration": "1e-05s"
+    },
+    "mbar": {
+      "transitionDuration": "0s",
+      "animationDuration": "1e-05s"
+    },
+    "motionMatches": true
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+    "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+    "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+    "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))"
+  ]
+}
