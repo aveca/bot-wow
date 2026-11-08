@@ -81,6 +81,15 @@ Cet inventaire décrit les objets R2 effectivement relus, pas un nouveau build p
 | `casinababe-fishing-1.2.0.zip` | 1 387 543 o | `1c132f367607ea186feffde8bbda0a1a9f94cdec4b7850b93c57c271270bba4f` |
 | `casinababe-fishing-1.2.1.zip` | 1 385 570 o | `ef294998a1ac5ce703739f7541ac63d0e61191f55fa8a7129b420b38adf79132` |
 
+Empreintes des composants tiers extraits de ces deux archives (identiques entre 1.2.0 et 1.2.1) :
+
+| Composant | Taille | SHA-256 |
+|---|---:|---|
+| `LibDBIcon-1.0.lua` | 7 600 o | `423a81279f10542cfca09441c4ec21f5433e3203e349162d677acf0519705ac9` |
+| `LibStub.lua` | 1 183 o | `6f704d6c93c6c156379d9b6789082ae6d96e4ea939e393bbf87f8791661f7c37` |
+| `background.tga` | 1 572 908 o | `89e8ecd08fac85003a302ae52093acd7e41c862be4517c87611074ce213e798b` |
+| `casino_uni.ttf` | 757 076 o | `7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954` |
+
 Les deux ZIP contiennent 30 entrées ; les 26 fichiers déclarés au manifeste passent SHA-256, taille et CRC. Deux scripts racine supplémentaires ne sont pas déclarés au manifeste : `Lancer-Casinobabe-Fishing-Assistant.bat` et `restaurer_previous.ps1`. Le second comporte une double barre de pipeline PowerShell et n'est pas validé. Le chemin de l'addon dans ces archives est `<racine-archive>/runtime-addon/Casinababe/`, différent du chemin de destination `package/addon/Casinababe/` du builder actuel. Cette divergence interdit d'affirmer que les archives R2 sont des sorties reproductibles du builder actuel.
 
 La police `casino_uni.ttf` porte le texte complet Bitstream Vera + Arev dans sa table TTF `nameID 13` (record Windows UTF-16BE, 9 530 octets). Pour éviter toute ambiguïté lors d'une prochaine distribution, joindre également un fichier de notice séparé au paquet reconstruit ; les archives R2 actuelles ne contiennent pas ce fichier de notice.
@@ -101,10 +110,7 @@ confirmer, pas un interdit.
 
 ## Mise à jour et non-régression
 
-`tests/third-party-notices.test.mjs` vérifie que **chaque fichier tiers présent
-dans `runtime-addon/`` apparaît dans ce document**, et qu'aucune ligne « NON ÉTABLI »
-n'est discrètement retirée. Ajouter un composant tiers sans l'inventorier fait échouer
-`npm test`.
+`tests/third-party-notices.test.mjs` est un garde-fou d'instantané pour les quatre composants tiers identifiés dans les objets R2 1.2.0 et 1.2.1 et pour les empreintes publiées ci-dessus. La source runtime n'étant pas versionnée dans ce dépôt, ce test ne parcourt pas dynamiquement un nouveau ZIP et ne garantit pas qu'un futur artefact n'ajoute aucun composant. Toute nouvelle archive doit être inspectée, puis son inventaire et ses empreintes doivent être mis à jour avant distribution.
 
 ## Journal des vérifications
 
