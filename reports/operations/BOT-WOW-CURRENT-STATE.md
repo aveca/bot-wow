@@ -3831,7 +3831,7 @@ antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
 
 | Issue | task_id | Dépôt | Résultat |
 |---|---|---|---|
-| #142 | `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` | `aveca/bot-wow` | fiche produit écrite, cablée, testee, QA navigateur faite ; PR ouverte (non mergée) |
+| #142 | `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` | `aveca/bot-wow` | fiche produit écrite, cablée, testee, QA navigateur faite ; PR #154 ouverte (non mergée), CI verte sur SHA `8fcf6c5` ; preuve publiée sur #142 |
 
 ## #142 — fiche produit PixelBuddy-style (EN + FR)
 
@@ -3843,9 +3843,11 @@ antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
 | Liens d'entrée | `buy.html`, `fr/buy.html`, `features.html`, `fr/features.html` (corps + liste footer) pointent vers `./product.html` ; CTA uniquement `./buy.html` ; pas d'ancres `#offre`/`#buy` ; pas de Mollie/Bitcoin sur les pages features |
 | Garde-fou | `tests/storefront-product-sheet.test.mjs` : parité EN/FR, parité registre `assets/modules.json` (titres, statuts, summaries, ordre), pilier rouge "non distribué" sur chaque module, compat `historical_unverified` (pas de serveur/date), interdits `undetectable`/`anti-ban`/Retail, pas de formulaire/POST/champ e-mail, licence + non-reproductibilité déclarées, provenance `F8138F3C…` / `1C132F36…`, liens et ancres résolus, sitemap/build/validate, a11y de base |
 | Câblage test | `package.json` : `test` chain += `tests/storefront-product-sheet.test.mjs` ; script `test:storefront` ajouté |
-| Résultats tests | `npm test` exit 0, `FICHE PRODUIT : OK` ; `npm run validate` exit 0 ; `git diff --check` exit 0 ; `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK` **[vérifié]** |
+| Résultats tests | `npm test` exit 0, `FICHE PRODUIT : OK` ; `npm run validate` exit 0 ; `git diff --check` exit 0 ; `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` → `AGENT STATE : OK` **[vérifié]** ; CI PR #154 verte sur SHA `8fcf6c5` : Validate run `42461482502` pass, ui-quality run `42461482463` pass, GitGuardian pass |
 | QA navigateur | Serveurs locaux before/after, captures 1440×900 + 390×844 dans `artifacts/ui/` ; pas de débordement, pas de cible < 44 px introduite, contraste WCAG OK sur les éléments introduits, `prefers-reduced-motion` respecté ; seule erreur console = `POST /api/track` 501 pré-existante (server Python) **[vérifié]** |
-| Verrou | `agents/locks.md` : `20261107-storefront` / scope `storefront-product-sheet`, actif, expirant 2026-11-10 |
+| Verrou | `agents/locks.md` : `20261107-storefront` / scope `storefront-product-sheet`, **done**, expirant 2026-11-10, PR #154 ouverte, CI verte sur SHA `8fcf6c5` |
+| PR | https://github.com/aveca/bot-wow/pull/154 (ouverte, non mergée), CI verte sur SHA `8fcf6c5` |
+| Preuve issue #142 | https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423 (task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`) |
 | Rapport | `reports/operations/2026-11-07-storefront-product-sheet.md` |
 
 ## Ce qui n'a PAS été fait (garde-fous)
@@ -3865,4 +3867,6 @@ antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
 
 ## Prochaine action (une seule)
 
-**Committer, pousser `p0/storefront-product-sheet-20261107`, ouvrir la PR (sans merger), vérifier le CI vert sur le SHA exact, publier le commentaire de preuve sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107`. Puis finaliser le runbook Mollie (#139) ; le checkout reste fermé jusqu'aux preuves de licence + livraison.**
+**Cycle #142 termine** : branche commitee (`8fcf6c5`), poussee, PR #154 ouverte, CI verte sur le SHA exact, commentaire de preuve publie sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` (<https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423>). Verrou `20261107-storefront` passe en `done`.
+
+**Prochaine action (globale)** : finaliser le runbook Mollie (#139) ; le checkout reste fermé jusqu'aux preuves de licence (`B-licence`) + livraison (`B-r2-live`) + profil Mollie dédié (`B-mollie`).

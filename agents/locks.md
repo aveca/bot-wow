@@ -12,4 +12,4 @@ Un scope `active` dont `expires` est dans le futur est pris. Ne pas le reprendre
 | 20261107-checkout-flag | checkout-flag-draft | cursor-cloud bc-aed68a08 | cursor/checkout-reopen-flag-0086 | active | 2026-11-10T00:00:00Z | PR brouillon, non fusionnée. Le checkout public reste fermé. |
 | 20261107-offer-diagnostic | commercial-offer | aveca | p0/commercial-offer-feasibility-20261107 | active | 2026-11-10T00:00:00Z | PR #135. Ne pas ouvrir un second diagnostic d'offre. |
 | 20261107-homepage-copy | homepage-archive-copy | aveca | fix/homepage-archive-copy-20261107 | active | 2026-11-10T00:00:00Z | PR #133. Ne pas éditer la copie d'accueil. |
-| 20261107-storefront | storefront-product-sheet | aveca/OpenCode | p0/storefront-product-sheet-20261107 | active | 2026-11-10T00:00:00Z | Fiche produit #142 écrite et cablée ; PR ouverte, CI en cours ; en attente de fusion |
+| 20261107-storefront | storefront-product-sheet | aveca/OpenCode | p0/storefront-product-sheet-20261107 | done | 2026-11-08T00:00:00Z | Fiche produit #142 écrite, cablee, testee, QA navigateur faite ; PR #154 ouverte, CI verte sur SHA 8fcf6c5 ; preuve publiee sur #142 |
