@@ -46,6 +46,80 @@ function arg(name, def) {
   return def;
 }
 
+/**
+ * Erreur d'integrite : le build doit ECHOUER, jamais livrer un paquet douteux.
+ */
+class IntegrityError extends Error {}
+
+/**
+ * Verifie qu'un chemin est un FICHIER REGULIER (ni lien symbolique, ni
+ * repertoire, ni fifo/socket/device) et que sa cible reelle reste
+ * STRICTEMENT sous `root`.
+ *
+ * POURQUOI : `readdirSync(..., { withFileTypes: true })` ne suit PAS les liens
+ * symboliques — un `Dirent` de lien symbolique a `isDirectory() === false` et
+ * `isFile() === false`. Un pointeur vers un repertoire etait donc pousse comme
+ * « fichier » puis lu par `readFileSync` (plantage EISDIR). Pire : un lien vers
+ * un FICHIER etait lu normalement, et le contenu d'un fichier EXTERIEUR a la
+ * source se retrouvait dans le paquet livre au client, declare au manifeste
+ * comme s'il venait de la source. Le paquet devenait falsifiable.
+ *
+ * On refuse donc explicitement tout lien symbolique AVANT toute lecture, et on
+ * confronte le realpath a la racine autorisee.
+ */
+function assertRegularFileInside(full, root, relForMessage) {
+  let st;
+  try {
+    st = fs.lstatSync(full);
+  } catch (e) {
+    throw new IntegrityError(`chemin illisible : ${relForMessage} (${e.code || e.message})`);
+  }
+  if (st.isSymbolicLink()) {
+    throw new IntegrityError(
+      `lien symbolique refuse : ${relForMessage} (les liens ne sont jamais livres)`,
+    );
+  }
+  if (!st.isFile()) {
+    throw new IntegrityError(
+      `entree non reguliere refusee : ${relForMessage} (${st.isDirectory() ? 'repertoire' : 'type special'})`,
+    );
+  }
+  const real = fs.realpathSync(full);
+  const realRoot = fs.realpathSync(root);
+  const rel = path.relative(realRoot, real);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new IntegrityError(
+      `cible hors de la source : ${relForMessage} -> ${real} (racine autorisee ${realRoot})`,
+    );
+  }
+}
+
+/** Meme garde pour les repertoires parcourus. */
+function assertDirectoryInside(full, root, relForMessage) {
+  let st;
+  try {
+    st = fs.lstatSync(full);
+  } catch (e) {
+    throw new IntegrityError(`chemin illisible : ${relForMessage} (${e.code || e.message})`);
+  }
+  if (st.isSymbolicLink()) {
+    throw new IntegrityError(
+      `lien symbolique (repertoire) refuse : ${relForMessage} (les liens ne sont jamais livres)`,
+    );
+  }
+  if (!st.isDirectory()) {
+    throw new IntegrityError(`entree non repertoire refusee : ${relForMessage}`);
+  }
+  const real = fs.realpathSync(full);
+  const realRoot = fs.realpathSync(root);
+  const rel = path.relative(realRoot, real);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new IntegrityError(
+      `cible hors de la source : ${relForMessage} -> ${real} (racine autorisee ${realRoot})`,
+    );
+  }
+}
+
 const SOURCE = path.resolve(arg('source', process.cwd()));
 const VERSION = arg('version', '0.0.0');
 const OUT = path.resolve(arg('out', path.join(process.cwd(), 'dist')));
@@ -68,17 +142,51 @@ const FORBIDDEN = [
   '.autopilot', 'bridge', 'site', 'tests',
 ];
 
+/**
+ * Parcours de la source. REFUSE tout lien symbolique (fichier ou repertoire)
+ * AVANT toute lecture, et confirme que chaque cible reelle reste sous `base`.
+ * Un lien vers un repertoire serait sinon pousse comme « fichier » (un Dirent
+ * de lien n'est ni `isDirectory()` ni `isFile()`) puis lu par `readFileSync`.
+ */
 function walk(dir, base = dir, acc = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (e.name.startsWith('.') && e.name !== '.gitignore') continue;
     const full = path.join(dir, e.name);
     const rel = path.relative(base, full).replace(/\\/g, '/');
     if (FORBIDDEN.includes(rel.split('/')[0])) continue;
-    if (e.isDirectory()) walk(full, base, acc);
-    else acc.push(rel);
+    if (e.isSymbolicLink()) {
+      throw new IntegrityError(
+        `lien symbolique refuse dans la source : ${rel} (les liens ne sont jamais livres)`,
+      );
+    }
+    if (e.isDirectory()) {
+      assertDirectoryInside(full, base, rel);
+      walk(full, base, acc);
+    } else if (e.isFile()) {
+      assertRegularFileInside(full, base, rel);
+      acc.push(rel);
+    } else {
+      throw new IntegrityError(`entree non reguliere refusee dans la source : ${rel}`);
+    }
   }
   return acc;
 }
+
+/** Variante defensive pour l'arborescence deja mise en scene (staging). */
+function walkStrict(dir, base = dir, acc = []) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    const rel = path.relative(base, full).replace(/\\/g, '/');
+    if (e.isSymbolicLink()) {
+      throw new IntegrityError(`lien symbolique refuse dans le paquet : ${rel}`);
+    }
+    if (e.isDirectory()) walkStrict(full, base, acc);
+    else if (e.isFile()) acc.push(full);
+    else throw new IntegrityError(`entree non reguliere refusee dans le paquet : ${rel}`);
+  }
+  return acc;
+}
+
 
 function sha256(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex');
@@ -193,8 +301,13 @@ function zipDirectory(dir, outFile, prefix = '') {
   (function walk(d, base = d) {
     for (const e of fs.readdirSync(d, { withFileTypes: true }).sort(byName)) {
       const full = path.join(d, e.name);
+      const rel = path.relative(base, full).replace(/\\/g, '/');
+      if (e.isSymbolicLink()) {
+        throw new IntegrityError(`lien symbolique refuse a l'archivage : ${rel}`);
+      }
       if (e.isDirectory()) walk(full, base);
-      else entries.push(full);
+      else if (e.isFile()) entries.push(full);
+      else throw new IntegrityError(`entree non reguliere refusee a l'archivage : ${rel}`);
     }
   })(dir);
 
@@ -274,20 +387,77 @@ function main() {
 
   const manifest = { name: 'casinobabe-fishing', version: VERSION, builtAt: null, source: null, files: {} };
 
-  // Provenance de la source : arguments CLI (priorite) sinon checkout Git.
+  // Provenance de la source.
+  //
+  // REGLE : une valeur fournie par la ligne de commande n'est JAMAIS certifiee
+  // telle quelle. Elle est confrontee au checkout reel (remote origin, ref
+  // resolue, HEAD). Si elle ne peut pas etre prouvee, le build ECHOUE : un
+  // manifeste portant une provenance falsifiee ferait croire a un artefact
+  // auto-documentant alors qu'il ne demontre rien.
   const git = gitInfo(SOURCE);
+  const provenanceVerified = !!git;
   const provenance = {
-    repository: arg('source-repo', git ? git.repository : '') || null,
-    ref: arg('source-ref', git ? git.ref : '') || null,
-    commit: arg('source-commit', git ? git.commit : '') || null,
+    repository: git ? git.repository : null,
+    ref: git ? git.ref : null,
+    commit: git ? git.commit : null,
     commitDate: git ? git.commitDate : null,
   };
+  const overrides = [];
+  for (const [flag, field] of [
+    ['source-repo', 'repository'],
+    ['source-ref', 'ref'],
+    ['source-commit', 'commit'],
+  ]) {
+    const value = arg(flag, null);
+    if (!value) continue;
+    overrides.push({ flag, field, value });
+    const actual = provenance[field];
+    if (!actual) {
+      throw new IntegrityError(
+        `--${flag} fourni mais la provenance reelle est illisible dans ${SOURCE} : `
+        + 'override refuse (il ne peut pas etre prouve)',
+      );
+    }
+    if (field === 'commit') {
+      // Une reference courte est acceptee si c'est un prefixe du HEAD reel,
+      // d'au moins 7 caracteres (sinon l'ambiguite est trop grande).
+      const a = String(value).toLowerCase();
+      const b = String(actual).toLowerCase();
+      const prefixOk = a.length >= 7 && b.startsWith(a);
+      if (a !== b && !prefixOk) {
+        throw new IntegrityError(
+          `--${flag} ${value} ne correspond pas au HEAD reel ${actual} : override refuse`,
+        );
+      }
+    } else if (String(value) !== String(actual)) {
+      throw new IntegrityError(
+        `--${flag} ${value} ne correspond pas a la valeur reelle ${actual} : override refuse`,
+      );
+    }
+  }
+  if (!provenanceVerified && overrides.length === 0) {
+    // Sans depot Git ni override, la provenance est declaree INCONNUE : le
+    // paquet reste constructible, mais rien n'est certifie.
+    provenance.repository = null;
+    provenance.ref = null;
+    provenance.commit = null;
+    provenance.commitDate = null;
+  }
+  provenance.overridesChecked = overrides.map((o) => o.flag);
   manifest.source = (provenance.repository || provenance.ref || provenance.commit) ? provenance : null;
+  // `provenanceVerified` dit au consommateur du manifeste si les valeurs ont
+  // ete confrontees au checkout reel. Il n'est ecrit que quand elles l'ont ete.
+  if (manifest.source && provenanceVerified) manifest.source.provenanceVerified = true;
   manifest.builtAt = resolveBuiltAt(SOURCE, provenance);
 
   const copy = (rel, destRel) => {
     const from = path.join(SOURCE, rel);
     if (!fs.existsSync(from)) return false;
+    // Garde d'integrite AVANT toute lecture : jamais de lien symbolique, et la
+    // cible reelle doit rester strictement sous SOURCE. Sans ce controle, un
+    // lien place dans la source ferait entrer dans le paquet livre un contenu
+    // exterieur, declare au manifeste comme provenant de la source.
+    assertRegularFileInside(from, SOURCE, rel.replace(/\\/g, '/'));
     // Les cles du manifeste utilisent ALWAYS des separateurs POSIX : le
     // manifeste doit etre identique quelle que soit la machine qui a
     // construit le paquet (Windows ou Linux).
@@ -401,6 +571,18 @@ function main() {
   console.log(`  bot       : ${botCount} script(s)`);
   console.log(`  archive   : ${count} entree(s)`);
   console.log(`  manifeste : ${Object.keys(manifest.files).length} entree(s) (sha256)`);
+  console.log(`  provenance: ${manifest.source ? (manifest.source.provenanceVerified ? 'verifiee contre le checkout reel' : 'NON verifiable') : 'inconnue'}`);
 }
 
-main();
+/* Un paquet dont l'integrite ou la provenance ne peut pas etre prouvee ne doit
+ * JAMAIS etre livre : le build echoue avec un message clair et un code non
+ * nul, plutot qu'un artefact douteux accompagne d'une pile d'appels. */
+try {
+  main();
+} catch (e) {
+  if (e instanceof IntegrityError) {
+    console.error(`ECHEC D'INTEGRITE — paquet non construit : ${e.message}`);
+    process.exit(1);
+  }
+  throw e;
+}

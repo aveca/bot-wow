@@ -18,6 +18,14 @@
  *     le paquet ;
  *   - il n'ecrit rien et ne modifie rien.
  *
+ * FAIL-CLOSED (2026-11-08) : le code de sortie 0 ne peut plus etre obtenu
+ * « faute de preuve du contraire ». Sortie non nulle des que l'integrite n'est
+ * PAS etablie : MANIFEST.json absent, MANIFEST.json illisible ou sans table
+ * `files`, fichier declare manquant, hash ou taille divergente, ou fichier
+ * livre absent du manifeste. Auparavant, un paquet SANS manifeste sortait en
+ * code 0 : l'outil paraissait valider un artefact qu'il n'avait pas pu
+ * verifier.
+ *
  * Convention de chemin :
  *   - l'empreinte porte les chemins RELATIFS A LA RACINE LIVREE (donc
  *     `package/addon/...` quand le paquet est range dans `package/`) : tout
@@ -38,7 +46,7 @@
  *   bytes       : taille totale
  *   manifest    : etat de l'integrite (ok / ecarts)
  *
- * Code de sortie : 0 si l'integrite est intacte, 1 sinon.
+ * Code de sortie : 0 UNIQUEMENT si l'integrite est etablie, 1 sinon.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -52,7 +60,9 @@ if (!dir || !existsSync(dir)) {
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', '__pycache__']);
 
-/** Liste recursive, triee par octets (independant de la locale). */
+/** Liste recursive, triee par octets (independant de la locale).
+ *  Un lien symbolique est refuse : lire sa cible ferait entrer dans l'empreinte
+ *  un contenu qui n'est pas celui livre. */
 function walk(base, current = base, acc = []) {
   for (const entry of readdirSync(current, { withFileTypes: true }).sort((a, b) => {
     const x = Buffer.from(a.name, 'utf8');
@@ -62,8 +72,12 @@ function walk(base, current = base, acc = []) {
     if (entry.name.startsWith('.') && entry.name !== '.gitignore') continue;
     if (SKIP_DIRS.has(entry.name)) continue;
     const full = join(current, entry.name);
+    if (entry.isSymbolicLink()) {
+      throw new Error(`lien symbolique refuse : ${relative(base, full).split(sep).join('/')}`);
+    }
     if (entry.isDirectory()) walk(base, full, acc);
-    else acc.push(full);
+    else if (entry.isFile()) acc.push(full);
+    else throw new Error(`entree non reguliere refusee : ${relative(base, full).split(sep).join('/')}`);
   }
   return acc;
 }
@@ -91,16 +105,32 @@ const treeDigest = createHash('sha256').update(canonicalText, 'utf8').digest('he
 const totalBytes = entries.reduce((sum, e) => sum + e.bytes, 0);
 
 // Integrite vis-a-vis du MANIFEST.json.
+//
+// REGLE FAIL-CLOSED : l'outil ne rend PAS un code 0 « faute de preuve du
+// contraire ». Sans manifeste, avec un manifeste illisible, avec un fichier
+// livre hors manifeste, l'integrite n'est PAS etablie — donc le code de sortie
+// est non nul. Un code 0 ne peut plus signifier « je n'ai pas pu verifier ».
 const manifestPath = join(root, 'MANIFEST.json');
 let manifest = null;
+let manifestError = null;
 const mismatches = [];
 const undeclared = [];
 const missing = [];
-if (existsSync(manifestPath)) {
+if (!existsSync(manifestPath)) {
+  manifestError = 'MANIFEST.json absent : l\'integrite du paquet ne peut pas etre etablie';
+} else {
   try {
     manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+      manifestError = 'MANIFEST.json n\'est pas un objet JSON';
+      manifest = null;
+    } else if (!manifest.files || typeof manifest.files !== 'object' || Array.isArray(manifest.files)) {
+      manifestError = 'MANIFEST.json sans table files exploitable';
+      manifest = null;
+    }
   } catch (e) {
-    manifest = { error: `MANIFEST.json illisible : ${e.message}` };
+    manifest = null;
+    manifestError = `MANIFEST.json illisible : ${e.message}`;
   }
 }
 if (manifest && manifest.files && typeof manifest.files === 'object') {
@@ -131,9 +161,15 @@ const result = {
   treeDigest,
   manifestPresent: !!manifest,
   manifestFiles: manifest && manifest.files ? Object.keys(manifest.files).length : 0,
+  manifestError,
   mismatches,
   undeclared,
   missing,
+  // Vrai seulement quand le manifeste existe, est lisible, et que chaque
+  // fichier livre est declare avec le bon contenu ET que chaque fichier
+  // declare est present. C'est la seule condition d'un code de sortie 0.
+  integrityEstablished: !manifestError && mismatches.length === 0
+    && missing.length === 0 && undeclared.length === 0,
 };
 
 if (process.argv.includes('--json')) {
@@ -142,13 +178,12 @@ if (process.argv.includes('--json')) {
   console.log(`treeDigest  : ${treeDigest}`);
   console.log(`files       : ${result.files}`);
   console.log(`bytes       : ${result.bytes}`);
-  console.log(`manifest    : ${result.manifestPresent ? `${result.manifestFiles} fichier(s) declare(s)` : 'absent'}`);
-  console.log(`integrite   : ${mismatches.length === 0 ? 'ok (toutes les entrees declarees correspondent)' : `${mismatches.length} ecart(s) : ${mismatches.join(', ')}`}`);
+  console.log(`manifest    : ${manifestError ? manifestError : (result.manifestPresent ? `${result.manifestFiles} fichier(s) declare(s)` : 'absent')}`);
+  console.log(`integrite   : ${result.integrityEstablished ? 'ok (toutes les entrees declarees correspondent)' : 'NON ETABLIE'}`);
+  if (mismatches.length) console.log(`  ecarts     : ${mismatches.length} (${mismatches.join(', ')})`);
   if (missing.length) console.log(`manquants   : ${missing.length} fichier(s) declare(s) mais absents : ${missing.join(', ')}`);
   if (undeclared.length) console.log(`hors manifeste : ${undeclared.length} fichier(s) : ${undeclared.join(', ')}`);
-  if (manifest && manifest.error) console.log(`manifest    : ${manifest.error}`);
 }
 
-// Sortie non nulle si l'integrite est rompue (les fichiers hors manifeste
-// sont signales mais ne font pas echouer : ils sont documentes).
-process.exit(mismatches.length === 0 && missing.length === 0 ? 0 : 1);
+// FAIL-CLOSED : integrite non etablie => code de sortie non nul.
+process.exit(result.integrityEstablished ? 0 : 1);

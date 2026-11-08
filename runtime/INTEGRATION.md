@@ -31,12 +31,22 @@
 |---|---|
 | Clé R2 cible | `casinobabe-fishing-1.2.0.zip` (`wrangler.toml` var `R2_OBJECT_KEY`, ligne 69) |
 | Bucket | `botwow-binaries` (binding `R2_BINARIES`) |
-| SHA-256 (reproductible, build BOT-WOW) | `F8138F3C52EB2498114AD5BCD3988DB39A105BD4B757646BF1C2B7548DA79781` |
-| Taille (reproductible) | 1 344 366 octets — 17 entrées ZIP, 16 entrées de manifeste |
-| Empreinte canonique du contenu | `f69be8b34f74b2df68a177e0210b9bd73f6c99452c9279c291f2961173c90a53` (17 fichiers, 3 004 035 octets) |
+| SHA-256 (reproductible, build BOT-WOW) | `A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C` |
+| Taille (reproductible) | 1 344 402 octets — 17 entrées ZIP, 16 entrées de manifeste |
+| Empreinte canonique du contenu | `0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e` (17 fichiers, 3 004 095 octets) |
 | SHA-256 (build python d'origine, **non reproductible**) | `4FB2D1C1…` / `D225E63F…` / `9FC19FEE…` selon le build |
 | SHA-256 (objet R2 live, état non commité) | `1C132F367607EA186FEFFDE8BBDA0A1A9F94CDEC4B7850B93C57C271270BBA4F` |
 | Taille (objet R2 live) | 1 387 543 octets — 30 entrées |
+
+> **Mise à jour du 2026-11-08 (durcissement d'intégrité).** Les SHA-256
+> reproductibles ci-dessus remplacent ceux du 2026-11-07
+> (`F8138F3C…`, 1 344 366 octets, treeDigest `f69be8b3…`). Le builder refuse
+> désormais les liens symboliques, contrôle que chaque cible réelle reste sous
+> `SOURCE`, confronte les overrides de provenance CLI au checkout réel et
+> marque `provenanceVerified` + `overridesChecked` dans le manifeste
+> (+60 octets, d'où le nouveau SHA). L'empreinte canonique change donc, mais
+> la reproductibilité est intacte : deux builds du même commit donnent le même
+> SHA. Détail voir `reports/operations/2026-11-08-package-integrity-pr150.md`.
 
 ### État R2 et configuration live — vérifié le 2026-11-07
 
@@ -89,7 +99,7 @@ Déterminisme obtenu (le build d'origine ne l'était pas) :
 - provenance inscrite dans le manifeste (`source.repository`, `source.ref`,
   `source.commit`).
 
-Preuves de reproductibilité (2026-11-07) :
+Preuves de reproductibilité (2026-11-07, build `F8138F3C…`) :
 
 | Mesure | Résultat |
 |---|---|
@@ -98,6 +108,17 @@ Preuves de reproductibilité (2026-11-07) :
 | Build après retour du checkout en **LF** | SHA-256 **identique** `F8138F3C…` |
 | Empreinte canonique du contenu (2 builds) | `f69be8b3…` **identique** |
 | Intégrité manifeste → contenu livré | `ok` (0 écart, 0 fichier hors manifeste, 0 fichier déclaré manquant) |
+
+Preuves de reproductibilité **après** le durcissement d'intégrité du 2026-11-08
+(build `A05FC380…`) :
+
+| Mesure | Résultat |
+|---|---|
+| Deux builds consécutifs, même source | SHA-256 **identique** `A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C`, octets identiques |
+| Empreinte canonique du contenu (2 builds) | `0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e` **identique** |
+| Intégrité manifeste → contenu livré | `integrityEstablished: true` (fail-closed actif) |
+| Contenu livré, checkout LF vs CRLF | octets livrés **identiques** (normalisation EOL à la copie) |
+| Provenance | `provenanceVerified: true`, `overridesChecked: []` — confrontée au checkout réel |
 
 ### Build d'origine (python) — mesuré NON reproductible
 
