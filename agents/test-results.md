@@ -19,3 +19,7 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-08 | `AGENT STATE : OK`, exit 0 |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
+| `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |
+| CI PR #150 sur SHA `e28626d` | GitHub Actions, 2026-11-08 | Validate `42471183238` success ; UI quality `42471182891` success ; GitGuardian success |
+| CI PR #154 sur SHA `366a735` (apres merge de main `158222e`) | GitHub Actions, 2026-11-08 | Validate `42471572487` success ; UI quality `42471572472` success ; GitGuardian success |
+| `r2_objects_list` / `r2_objects_get` sur `botwow-binaries` | Cloudflare API, lecture seule, 2026-11-08 | **HTTP 403, code 10000 "Authentication error"** sur les deux ; `r2_buckets_list` fonctionne. L'objet R2 n'a donc PAS pu etre relu ce cycle. |

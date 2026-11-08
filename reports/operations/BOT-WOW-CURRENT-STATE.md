@@ -3870,3 +3870,70 @@ antérieur avec son lien ; **[non vérifié]** = non établi à ce jour.
 **Cycle #142 termine** : branche commitee (`8fcf6c5`), poussee, PR #154 ouverte, CI verte sur le SHA exact, commentaire de preuve publie sur l'issue #142 avec le task_id `BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107` (<https://github.com/aveca/bot-wow/issues/142#issuecomment-6719109423>). Verrou `20261107-storefront` passe en `done`.
 
 **Prochaine action (globale)** : finaliser le runbook Mollie (#139) ; le checkout reste fermé jusqu'aux preuves de licence (`B-licence`) + livraison (`B-r2-live`) + profil Mollie dédié (`B-mollie`).
+
+
+---
+
+# 2026-11-08 â€” Mission #144 : dÃ©blocage commercial et prÃ©paration du premier paiement
+
+Ã‰tat datÃ© de ce cycle. **[vÃ©rifiÃ©]** = observÃ© dans cette session (lien ou sortie d'outil) ;
+**[rapportÃ©]** = repris d'un rapport antÃ©rieur avec son lien ; **[non vÃ©rifiÃ©]** = non Ã©tabli Ã  ce jour.
+
+## Synchronisation du runner
+
+- `node scripts/autopilot/multi-repo-bridge.cjs --relay-status=false` â†’ `MULTI-REPO-BRIDGE PASS Â· imported=9 relayed=10 ignored=0 rejected=0 statusFailures=0 local=aveca/bot-wow relayStatus=off` **[vÃ©rifiÃ©]**.
+- 9 missions importÃ©es (`status=new`), **aucune `started`** avant l'ACK de ce cycle. `aveca/sargagame` en lecture seule.
+- ACK `started` publiÃ© sur #144 : <https://github.com/aveca/bot-wow/issues/144#issuecomment-6719903507> ; heartbeat : <https://github.com/aveca/bot-wow/issues/144#issuecomment-6720416030>.
+
+## Produit et droits de distribution (prioritÃ© absolue)
+
+| Fait | Ã‰tat |
+|---|---|
+| Seul runtime existant en code + tests | noyau de pÃªche, `aveca/Casinobabe @ 257418c9a0c2c489a01226e8065ac9c8eaded954` (branche `feat/fishing-route-intelligence-v2`) **[vÃ©rifiÃ©]** |
+| Runtime WoW Gold / PvP / XP | **n'existe pas** â€” l'addon de pÃªche n'est pas le bot complet **[vÃ©rifiÃ©]** |
+| `LICENSE` / `COPYING` / `NOTICE` dans la source | **absents** â†’ droits de redistribution non documentÃ©s, `B-licence` **[vÃ©rifiÃ©, re-contrÃ´lÃ© ce cycle]** |
+| DÃ©pendance tierce | `wasmoon-lua5.1` (interprÃ©teur Lua 5.1 en WASM) â€” attribution requise dans ses termes **[vÃ©rifiÃ©]** |
+| CompatibilitÃ© annoncÃ©e | Classic Era = `historical_unverified`, sans serveur ni date de test â†’ aucune version confirmÃ©e **[vÃ©rifiÃ©]** |
+| ReproductibilitÃ© (builder durci) | SHA-256 `A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C` (1 344 402 o), empreinte canonique `0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e` (17 fichiers, 3 004 095 o), 2 builds identiques **[vÃ©rifiÃ©]** |
+| Objet R2 live | **non relu** : `r2_objects_list` et `r2_objects_get` renvoient HTTP 403 (code 10000). Faits antÃ©rieurs (`1C132F36â€¦`, 1 387 543 o, 30 entrÃ©es, 20 identiques / 6 diffÃ©rents / 3 hors manifeste) **[rapportÃ©]** |
+
+## PR #150 â€” intÃ©gritÃ© (point 3)
+
+Branche `p0/reproducible-runtime-package-20261107`, HEAD `e28626d`, base = merge de `158222e` (pas de rebase : force-push interdit).
+Trois dÃ©fauts corrigÃ©s : liens symboliques suivis pendant le build, digest non fail-closed, provenance CLI certifiÃ©e sans vÃ©rification. Tests nÃ©gatifs dÃ©terministes ajoutÃ©s.
+`npm run validate` exit 0 Â· `npm test` exit 0 Â· payment-flow / checkout-security / worker-fulfillment-reconciliation OK Â· `git diff --check` exit 0.
+CI verte sur `e28626d` : Validate `42471183238`, UI quality `42471182891`, GitGuardian. Preuve : <https://github.com/aveca/bot-wow/issues/151#issuecomment-6720399057>.
+Rapport : `reports/operations/2026-11-08-package-integrity-pr150.md`.
+
+## PR #154 â€” vitrine PixelBuddy (point 5)
+
+Divergence avec `main` rÃ©solue par merge de `158222e` (HEAD `366a735`) ; aucune modification Ã©crasÃ©e.
+Empreintes du paquet rÃ©alignÃ©es sur le builder durci (l'ancienne valeur ne correspondait plus Ã  ce que produit le builder corrigÃ©) ; pages FR/EN, CTA vers `./buy.html`, pilier rouge Â« non distribuÃ© Â» par module, registre paritÃ© â€” inchangÃ©s.
+`npm run validate` exit 0 Â· `npm test` exit 0 (`FICHE PRODUIT : OK`).
+CI verte sur `366a735` : Validate `42471572487`, UI quality `42471572472`, GitGuardian.
+**Aucun dÃ©ploiement de preview n'existe** : `.github/workflows/pages.yml` ne se dÃ©clenche que sur `push` vers `main` (pas de `pull_request`) **[vÃ©rifiÃ©]**.
+
+## Mollie (point 4) â€” non re-vÃ©rifiable ici
+
+Aucun accÃ¨s Mollie dans cet environnement. Faits **[rapportÃ©s]** (vÃ©rifiÃ©s par le propriÃ©taire le 2026-11-07) :
+profil BOT-WOW mÃ©thodes LIVE vides (`count=0`), `creditcard`/`applepay`/`googlepay` = `pending-review`,
+crÃ©ation LIVE â†’ HTTP 422 Â« The payment method is not active in your website profile Â», profil `verified`, `payments=[]`.
+
+VÃ©rifiÃ© **dans le code** (`worker/index.js`) :
+- `createMolliePayment` envoie `method: ["creditcard","ideal","bancontact","sofort","giropay","eps","przelewy24"]` â€” **Apple Pay et Google Pay absents** ;
+- `RELEASE_STATUS` vaut `"pending"` par dÃ©faut ; checkout refusÃ© en **HTTP 409 `delivery_unverified`** tant que la valeur effective n'est pas `confirmed`.
+
+**Conclusion : aucun encaissement n'est actuellement possible.** Aucun paiement, remboursement, email, ni modification de prix / secret / webhook / configuration.
+
+## Blocages restants
+
+1. **Aucune mÃ©thode de paiement LIVE active** (profil BOT-WOW) â€” externe au dÃ©pÃ´t.
+2. **Droits de redistribution non documentÃ©s** (`B-licence`) â€” dÃ©cision propriÃ©taire.
+3. **Artefact R2 de livraison non reproductible** (`B-r2-live`) â€” exige une Ã©criture R2 autorisÃ©e.
+4. **`RELEASE_STATUS` â‰  `confirmed`** â†’ le code refuse le checkout â€” verrou volontaire.
+5. **CohÃ©rence mÃ©thodes** : le code n'offre pas Apple Pay / Google Pay alors que le profil est en `pending-review` dessus â€” Ã  corriger **aprÃ¨s** activation, pas avant.
+6. **Aucune preview deployÃ©e** pour une PR ouverte.
+
+## Prochaine action concrÃ¨te pour obtenir le premier client payant
+
+DÃ©cision propriÃ©taire, dans cet ordre : (a) Ã©crire et committer la licence / les droits de redistribution du runtime Casinobabe â€” seul point qui dÃ©bloque lÃ©galement la vente ; (b) confirmer `RELEASE_STATUS=confirmed` aprÃ¨s certification de la livraison de bout en bout ; (c) activer une mÃ©thode LIVE dans le profil Mollie BOT-WOW, puis aligner la liste de mÃ©thodes du Worker sur ce qui est rÃ©ellement actif ; (d) en dernier, un test rÃ©el de maximum 1 â‚¬ avec validation explicite. Le checkout reste **fermÃ©** jusque-lÃ .
