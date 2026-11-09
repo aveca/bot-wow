@@ -422,8 +422,11 @@ try {
     restricted.head = git(['rev-parse', 'HEAD'], restricted.dir);
 
     const restrictedOut = join(tmp, 'dist-unverified-components');
-    mkdirSync(restrictedOut, { recursive: true });
-    writeFileSync(join(restrictedOut, 'previous-release-marker.txt'), 'keep-existing-output');
+    const previousPackageDir = join(restrictedOut, 'casinobabe-fishing-9.9.9');
+    mkdirSync(previousPackageDir, { recursive: true });
+    writeFileSync(join(previousPackageDir, 'previous-manifest-marker.txt'), 'keep-existing-package');
+    const previousArchive = join(restrictedOut, 'casinobabe-fishing-9.9.9.zip');
+    writeFileSync(previousArchive, 'keep-existing-archive');
     const restrictedArgs = baseArgs.map((a) => (
       a === SRC.dir ? restricted.dir : a === SRC.head ? restricted.head : a
     ));
@@ -440,8 +443,12 @@ try {
       !existsSync(join(restrictedOut, 'casinobabe-fishing-9.9.9.zip')),
     );
     check(
-      'le préflight ne détruit pas un artefact antérieur',
-      existsSync(join(restrictedOut, 'previous-release-marker.txt')),
+      'le préflight conserve le dossier du package précédent',
+      existsSync(join(previousPackageDir, 'previous-manifest-marker.txt')),
+    );
+    check(
+      'le préflight conserve les octets de l’archive précédente',
+      readFileSync(previousArchive, 'utf8') === 'keep-existing-archive',
     );
   }
 
