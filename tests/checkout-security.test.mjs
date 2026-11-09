@@ -68,6 +68,7 @@ function makeEnv(state) {
     MOLLIE_WEBHOOK_SECRET: 'test_webhook_secret_value',
     ADMIN_JWT_SECRET: 'test_admin_secret_value',
     RELEASE_STATUS: 'confirmed',
+    CHECKOUT_PUBLIC: 'enabled',
     state,
   };
 }

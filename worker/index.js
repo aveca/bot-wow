@@ -499,6 +499,17 @@ async function handleCheckout(request, env2) {
       "Retry-After": "3600"
     });
   }
+  // Second lock. Absent or any value other than the exact string keeps
+  // public checkout closed even when delivery has been marked confirmed.
+  // A request body cannot set this. The price table is unchanged.
+  if (!env2 || env2.CHECKOUT_PUBLIC !== "enabled") {
+    return jsonResponse2({
+      ok: false,
+      error: "checkout_closed",
+      message: lang === "fr" ? "L'achat public est fermé." : "Public checkout is closed.",
+      support: "support@bot-wow.com"
+    }, 409);
+  }
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {

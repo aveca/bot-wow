@@ -27,7 +27,7 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-function makeEnv(releaseStatus) {
+function makeEnv(releaseStatus, extra = {}) {
   const store = new Map();
   const kv = {
     get: async (k) => { const v = store.get(k); return v === undefined ? null : v; },
@@ -45,7 +45,7 @@ function makeEnv(releaseStatus) {
     },
     batch: async () => [],
   };
-  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus || 'pending' };
+  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus || 'pending', ...extra };
 }
 
 function call(body, env, ip) {
@@ -83,14 +83,30 @@ for (const attack of [
     res.status === 409 && b.error === 'delivery_unverified', `(status ${res.status})`);
 }
 
-/* 3. Livraison confirmee -> le checkout fonctionne (202/200 + url Mollie). */
+/* 3. Livraison confirmee sans le flag public : toujours ferme. */
 {
-  const env = makeEnv('confirmed');
-  // Fetch simule : on n'a pas de vrai reseau, on verifie juste que la garde
-  // ne bloque plus, i.e. que le code va jusqu'a l'appel Mollie.
+  const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const b = await res.json();
+  check('confirmed sans flag -> 409', res.status === 409, `(status ${res.status})`);
+  check('confirmed sans flag -> checkout_closed', b.error === 'checkout_closed', `(${b.error})`);
+}
+
+/* 4. Le corps ne peut pas allumer le flag. */
+{
+  const res = await call(
+    { email: 'd@test.fr', lang: 'fr', CHECKOUT_PUBLIC: 'enabled' },
+    makeEnv('confirmed'),
+  );
+  const b = await res.json();
+  check('flag injecte dans le corps -> 409', res.status === 409 && b.error === 'checkout_closed', `(status ${res.status})`);
+}
+
+/* 5. Les deux verrous serveur sont ouverts : la garde ne bloque plus. */
+{
+  const env = makeEnv('confirmed', { CHECKOUT_PUBLIC: 'enabled' });
   globalThis.fetch = async () => ({ ok: true, json: async () => ({ id: 'cst_test' }) });
-  const res = await call({ email: 'c@test.fr', lang: 'fr' }, env);
-  check('livraison confirmed -> la garde ne bloque plus (pas de 409)',
+  const res = await call({ email: 'e@test.fr', lang: 'fr' }, env);
+  check('confirmed + flag -> la garde ne bloque plus (pas de 409)',
     res.status !== 409, `(status ${res.status})`);
 }
 

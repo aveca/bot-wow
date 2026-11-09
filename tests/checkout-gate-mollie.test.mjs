@@ -35,7 +35,7 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-function makeEnv(releaseStatus) {
+function makeEnv(releaseStatus, extra = {}) {
   const store = new Map();
   const kv = {
     get: async (k) => { const v = store.get(k); return v === undefined ? null : v; },
@@ -53,7 +53,7 @@ function makeEnv(releaseStatus) {
     },
     batch: async () => [],
   };
-  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus };
+  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus, ...extra };
 }
 
 let MOLLIE_CALLS = [];
@@ -127,11 +127,19 @@ for (const attack of [
   check(`injection ${Object.keys(attack)[0]} -> 0 appel Mollie`, MOLLIE_CALLS.length === 0, `(${MOLLIE_CALLS.length})`);
 }
 
-/* 3. Statut confirme cote serveur : la garde ne bloque plus et le parcours
-      va bien jusqu'a la creation du paiement Mollie (reseau simule). */
+/* 3. Livraison confirmee, flag public absent : ferme, zero appel Mollie. */
 {
   MOLLIE_CALLS = [];
-  const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const res = await call({ email: 'c-closed@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const b = await res.json().catch(() => ({}));
+  check('confirmed sans flag -> 409 checkout_closed', res.status === 409 && b.error === 'checkout_closed', `(status ${res.status} ${b.error})`);
+  check('confirmed sans flag -> 0 appel Mollie', MOLLIE_CALLS.length === 0, `(${MOLLIE_CALLS.length})`);
+}
+
+/* 4. Les deux verrous serveur sont ouverts : le parcours va jusqu'a Mollie. */
+{
+  MOLLIE_CALLS = [];
+  const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed', { CHECKOUT_PUBLIC: 'enabled' }));
   const b = await res.json().catch(() => ({}));
   check('confirmed -> pas de 409', res.status !== 409, `(status ${res.status})`);
   check('confirmed -> reponse 200 avec un paymentId', res.status === 200 && !!b.paymentId, `(status ${res.status})`);
@@ -149,7 +157,7 @@ for (const attack of [
       du corps de la requete de paiement (plus d assertion vacument vraie). */
 {
   MOLLIE_CALLS = [];
-  const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed', { CHECKOUT_PUBLIC: 'enabled' }));
   const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
   check('un paiement Mollie est cree (prerequis au controle du montant)',
     paymentCalls.length === 1, `(${paymentCalls.length})`);
@@ -164,7 +172,7 @@ for (const attack of [
     !!body && body.metadata && body.metadata.product === 'bot-wow-lifetime',
     `(recu ${body && body.metadata ? body.metadata.product : 'aucun'})`);
   // Le navigateur ne doit jamais pouvoir imposer son propre montant.
-  const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed'));
+  const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed', { CHECKOUT_PUBLIC: 'enabled' }));
   const injectedPayments = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
   const lastBody = injectedPayments[injectedPayments.length - 1] && injectedPayments[injectedPayments.length - 1].body;
   check('un montant impose par le navigateur est ignore (reste le tarif serveur)',

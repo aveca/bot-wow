@@ -242,6 +242,7 @@ function makeEnv(state, opts = {}) {
     LICENSE_SECRET: 'test_license_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
     RELEASE_STATUS: opts.releaseStatus ?? 'confirmed',
+    CHECKOUT_PUBLIC: opts.checkoutPublic ?? 'enabled',
     RESEND_API_KEY: opts.resendKey === undefined ? 'test_resend_key' : opts.resendKey,
     state,
   };
