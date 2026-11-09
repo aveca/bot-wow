@@ -1,20 +1,35 @@
-# Third-party notices — what ships in `casinobabe-fishing-1.2.0.zip`
+# Third-party notices — BOT-WOW package candidate and historical R2 archives
 
-**Objet :** inventorier, pièce par pièce, les composants **tiers réellement embarqués**
-dans le paquet livré au client, avec la licence applicable et les obligations qui en
-découlent. Chaque ligne est fondée sur une **vérification réelle** (fichier embarqué,
-registre npm, table de noms de la police), pas sur une supposition.
+**Objet :** inventorier les composants tiers, leurs licences et les obligations de
+redistribution. Ce document distingue désormais les anciennes archives R2 du paquet
+candidat reconstruit depuis la source runtime corrigée.
 
 **Ce fichier ne crée aucune licence et n'accorde aucun droit.** Il constate l'état des
-droits. Tant qu'une ligne est marquée **NON ÉTABLI**, le composant correspondant ne doit
-pas être redistribué.
+droits et ne vaut pas autorisation de publication.
 
-## Portée : ce que contient réellement le paquet
+## État de la source candidate — vérifié le 10 novembre 2026
 
-`scripts/build-package.cjs` copie **tout** le dossier `runtime-addon/Casinobabe/` de la
-source (addon Lua, bibliothèques et médias), les scripts Python `scripts/fishing_*.py`
-et `scripts/focus_broker.py`, plus `config.example.json`, `INSTALL.md`, `MANIFEST.json`
-et `VERSION`. Les composants tiers ci-dessous sont donc **tous livrés au client**.
+La PR [aveca/Casinobabe#47](https://github.com/aveca/Casinobabe/pull/47), fusionnée dans
+`feat/fishing-route-intelligence-v2` au commit
+`b625ccec5fd61225dd92c5c54fa8721da76c3876`, retire du runtime candidat :
+
+- `LibStub.lua` et `LibDBIcon-1.0.lua` ; le bouton minimap est désormais natif ;
+- `media/background.tga` ; le fond est dessiné avec `SetColorTexture`.
+
+Les lignes 4 à 6 de l'inventaire ci-dessous documentent **uniquement les composants
+présents dans les anciennes archives R2 1.2.0 et 1.2.1**. Elles ne signifient pas que
+ces composants restent dans la source candidate. Le builder refuse toujours ces noms
+de fichiers s'ils réapparaissent.
+
+## Portée du paquet candidat
+
+`scripts/build-package.cjs` copie le dossier `runtime-addon/Casinobabe/` de la source,
+les scripts Python listés dans `BOT_FILES`, un gabarit de configuration généré, ainsi
+que `INSTALL.md`, `THIRD_PARTY_NOTICES.md`, `MANIFEST.json` et `VERSION`.
+
+Le paquet candidat doit être reconstruit et inspecté avant toute distribution.
+Les archives R2 1.2.0 et 1.2.1 sont des artefacts historiques non validés ; elles ne
+doivent pas être utilisées comme paquet de vente.
 
 ## Inventaire vérifié
 
@@ -94,23 +109,28 @@ Les deux ZIP contiennent 30 entrées ; les 26 fichiers déclarés au manifeste p
 
 La police `casino_uni.ttf` porte le texte complet Bitstream Vera + Arev dans sa table TTF `nameID 13` (record Windows UTF-16BE, 9 530 octets). Pour éviter toute ambiguïté lors d'une prochaine distribution, joindre également un fichier de notice séparé au paquet reconstruit ; les archives R2 actuelles ne contiennent pas ce fichier de notice.
 
-## Ce qui bloque la redistribution, exactement
+## Ce qui bloque encore une vente publique
 
-Trois composants et le code du projet lui-même n'ont pas de droits établis :
+1. **Les anciennes archives R2 1.2.0 et 1.2.1** contiennent encore les fichiers LibDBIcon,
+   LibStub et background.tga. Leur présence dans R2 ne les rend pas redistribuables.
+   Le code Worker référence actuellement la clé 1.2.0 ; elle ne doit pas être servie
+   comme release validée.
+2. **Le code Casinobabe lui-même** n'a pas de licence publique. Le propriétaire doit
+   confirmer les droits d'auteur et les conditions commerciales/propriétaires qui
+   encadrent le produit avant toute vente. Ce document ne choisit pas ces conditions.
+3. **La police DejaVu Sans** est redistribuable avec ses avis Bitstream Vera + Arev,
+   qui sont inclus dans le fichier TTF ; la notice séparée reste jointe au paquet.
 
-1. **LibDBIcon-1.0** (œuvre dérivée, aucune licence publiée) — permission de l'auteur
-   d'origine, ou remplacement par une implémentation écrite pour ce projet ;
-2. **`background.tga`** (origine inconnue) — identifier l'auteur et sa licence, ou
-   remplacer la texture ;
-3. **Le code Casinobabe lui-même** — décision du propriétaire sur la licence de son
-   propre code (licence propriétaire à rédiger, ou licence open source à choisir).
-
-Le quatrième point, **LibStub**, est un risque résiduel de « domaine public » à
-confirmer, pas un interdit.
+LibStub, LibDBIcon et background.tga sont désormais des références historiques pour
+les anciens ZIP, pas des dépendances du runtime candidat.
 
 ## Mise à jour et non-régression
 
-`tests/third-party-notices.test.mjs` est un garde-fou d'instantané pour les quatre composants tiers identifiés dans les objets R2 1.2.0 et 1.2.1 et pour les empreintes publiées ci-dessus. La source runtime n'étant pas versionnée dans ce dépôt, ce test ne parcourt pas dynamiquement un nouveau ZIP et ne garantit pas qu'un futur artefact n'ajoute aucun composant. Toute nouvelle archive doit être inspectée, puis son inventaire et ses empreintes doivent être mis à jour avant distribution.
+`tests/third-party-notices.test.mjs` conserve l'instantané des empreintes historiques
+R2 1.2.0/1.2.1. Le test du builder bloque les chemins non certifiés s'ils réapparaissent.
+La validation du paquet candidat doit en plus construire depuis le commit runtime exact,
+lire le manifeste et inspecter les entrées ZIP. Aucun test de fixture ne remplace cette
+validation de l'artefact réel.
 
 ## Journal des vérifications
 
