@@ -1,5 +1,5 @@
-A05FC3802C5C86BDD189777A8D76C47AF99FC24436ADBE8779E71F2412C3DF8C  casinobabe-fishing-1.2.0.zip (REPRODUCTIBLE - scripts/build-package.cjs depuis aveca/Casinobabe@257418c, 1344402 octets, 17 entrees, 16 entrees de manifeste)
-0d9f39019215dba83927600cdc132fe606bdeabbc2a874bc1e8506f9cf3bf33e  treeDigest canonique du meme paquet (identite du CONTENU - scripts/canonical-package-digest.mjs, 17 fichiers, 3004095 octets)
+526E5CBDF12B0DFC9E474AE5CF26E68CAB42B9904E31279ADF0A57E7DA074D90  casinobabe-fishing-1.2.0.zip (REPRODUCTIBLE - scripts/build-package.cjs depuis aveca/Casinobabe@257418c, 1349341 octets, 18 entrees, 17 entrees de manifeste)
+79dc1ccaf3564d40e40bb3180602ead52ac529f68724f89ca05d6751e092b2f4  treeDigest canonique du meme paquet (identite du CONTENU - scripts/canonical-package-digest.mjs, 18 fichiers, 3015151 octets)
 4FB2D1C1C954C286305DFCF1C70A688C7E3E77FBA15E352A24A88916708F9FBA  Casinobabe-Fishing-Assistant-1.2.0.zip (build python d'origine, NON reproductible - deux builds differents, meme source)
 D225E63FE611690C71C705283F1BF77CDA04891E9A9C1C13C06D02CC380300F6  Casinobabe-Fishing-Assistant-1.2.0.zip (build python #1 du 2026-11-07, builtAt 2026-11-07T19:06:24)
 9FC19FEEBE69EBD55A10B4806C6A916C77F6E36566C74A4D70EE1C3509326FA1  Casinobabe-Fishing-Assistant-1.2.0.zip (build python #2 du 2026-11-07, builtAt 2026-11-07T19:06:28 - memes fichiers, SHA different)
@@ -18,3 +18,12 @@ fc9a1e0aa04059eb5ff433661afc23cea360fa771146b88972222d36d564f160  treeDigest can
 #              octets de plus : `provenanceVerified` et `overridesChecked`.
 #             Les deux valeurs restent reproductibles (2 builds identiques) ;
 #              seule la reference du builder change.
+# 2026-11-09 : 526E5CBDF12B0DFC9E474AE5CF26E68CAB42B9904E31279ADF0A57E7DA074D90
+#             1 349 341 octets, treeDigest 79dc1ccaf3564d40e40bb3180602ead52ac529f68724f89ca05d6751e092b2f4
+#             (18 fichiers, 3 015 151 octets, 17 entrees de manifeste)
+#             (build APRES : THIRD_PARTY_NOTICES.md est LIVRE dans le paquet et
+#              declare au manifeste. La licence de la police DejaVu Sans
+#              (Bitstream Vera + Arev) exige que l'avis de copyright soit inclus
+#              dans toutes les copies : avant cette correction, distribuer
+#              l'archive violait cette licence. Le build refuse desormais de
+#              produire un paquet sans le document. 2 builds identiques.)
