@@ -568,9 +568,8 @@ function main() {
   const noticeSrc = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
   if (!fs.existsSync(noticeSrc)) {
     console.error(
-      'distribution/THIRD_PARTY_NOTICES.md est absent : le paquet embarque des '
-      + 'composants tiers (police DejaVu Sans, LibStub, LibDBIcon-1.0) dont les '
-      + 'notices doivent être livrées. Paquet NON construit.',
+      'distribution/THIRD_PARTY_NOTICES.md est absent : la police DejaVu Sans '
+      + 'embarquée exige ses avis de licence. Paquet NON construit.',
     );
     process.exit(1);
   }
