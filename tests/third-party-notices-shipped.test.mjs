@@ -107,8 +107,9 @@ try {
   mkdirSync(join(fakeRoot, 'tests', 'helpers'), { recursive: true });
   const builderSrc = readFileSync(BUILD, 'utf8');
   writeFileSync(join(fakeRoot, 'scripts', 'build-package.cjs'), builderSrc);
-  /* INSTALL.md present (optionnel) mais PAS les notices : le build doit refuser. */
+  /* INSTALL.md et requirements.txt présents, mais PAS les notices : le build doit refuser. */
   writeFileSync(join(fakeRoot, 'distribution', 'INSTALL.md'), '# install\n');
+  writeFileSync(join(fakeRoot, 'distribution', 'requirements.txt'), 'numpy>=1.26,<3\n');
   const src2 = join(tmp, 'src2');
   makeSource(src2);
   const noNotices = runBuild(
