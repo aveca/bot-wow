@@ -90,18 +90,18 @@ if (forbidden.length) fail('forbidden content: ' + forbidden.join(', '));
 const addonDir = 'package/addon/Casinobabe/';
 const tocPath = addonDir + 'Casinobabe.toc';
 const toc = entries.get(tocPath).toString('utf8');
-const tocFiles = toc.split(/\\r?\\n/).map((line) => line.trim())
+const tocFiles = toc.split(/\r?\n/).map((line) => line.trim())
   .filter((line) => line && !line.startsWith('#'));
 for (const file of tocFiles) {
-  const normalized = file.replace(/\\\\/g, '/');
+  const normalized = file.replace(/\\/g, '/');
   if (!entries.has(addonDir + normalized)) fail('.toc references missing addon file: ' + file);
 }
 
 // Vérifie la fermeture des imports Python locaux : tout module fishing_* ou
 // focus_broker importé doit être livré dans le même dossier scripts/.
-const pythonEntries = [...entries.keys()].filter((name) => /^package\\/scripts\\/[^/]+\\.py$/.test(name));
+const pythonEntries = [...entries.keys()].filter((name) => /^package\/scripts\/[^/]+\.py$/.test(name));
 const pythonModules = new Set(pythonEntries.map((name) => name.slice('package/scripts/'.length, -3)));
-const localImports = /^(?:\\s*from\\s+|\\s*import\\s+)(fishing_[A-Za-z0-9_]+|focus_broker)\\b/gm;
+const localImports = /^\s*(?:from\s+|import\s+)(fishing_[A-Za-z0-9_]+|focus_broker)\b/gm;
 for (const name of pythonEntries) {
   const source = entries.get(name).toString('utf8');
   for (const match of source.matchAll(localImports)) {
