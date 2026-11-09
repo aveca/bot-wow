@@ -529,6 +529,35 @@ function main() {
     fs.writeFileSync(path.join(stage, 'INSTALL.md'), buf);
     manifest.files['INSTALL.md'] = { sha256: sha256(buf), bytes: buf.length, source: 'distribution/INSTALL.md', eol: 'LF' };
   }
+  /* OBLIGATION DE LICENCE, PAS UNE OPTION.
+     Le paquet embarque la police DejaVu Sans (media/casino_uni.ttf) et les
+     bibliothèques LibStub / LibDBIcon-1.0. La licence Bitstream Vera + Arev de
+     la police exige que « l'avis de copyright et la permission soient inclus
+     dans toutes les copies ». Le document d'attribution est donc LIVRE avec le
+     paquet et DÉCLARÉ au manifeste : sans ça, distribuer l'archive violerait
+     la licence de la police, et personne ne pourrait vérifier la conformité.
+     Le fichier est refusé s'il est absent : le build échoue plutôt que de
+     produire un paquet non conforme. */
+  const noticeSrc = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
+  if (!fs.existsSync(noticeSrc)) {
+    console.error(
+      'distribution/THIRD_PARTY_NOTICES.md est absent : le paquet embarque des '
+      + 'composants tiers (police DejaVu Sans, LibStub, LibDBIcon-1.0) dont les '
+      + 'notices doivent être livrées. Paquet NON construit.',
+    );
+    process.exit(1);
+  }
+  {
+    const res = normalizeText(fs.readFileSync(noticeSrc));
+    const buf = res.buf;
+    fs.writeFileSync(path.join(stage, 'THIRD_PARTY_NOTICES.md'), buf);
+    manifest.files['THIRD_PARTY_NOTICES.md'] = {
+      sha256: sha256(buf),
+      bytes: buf.length,
+      source: 'distribution/THIRD_PARTY_NOTICES.md',
+      eol: 'LF',
+    };
+  }
   if (NOTES && fs.existsSync(NOTES)) {
     const res = normalizeText(fs.readFileSync(NOTES));
     const buf = res.buf;
