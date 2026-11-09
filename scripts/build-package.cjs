@@ -562,7 +562,21 @@ function main() {
     eol: 'LF',
   };
 
-  // 4. notes de version + documentation
+  // 4. dépendances Python du runtime (requises pour une installation reproductible)
+  const requirementsSrc = path.join(REPO_ROOT, 'distribution', 'requirements.txt');
+  if (!fs.existsSync(requirementsSrc)) {
+    throw new IntegrityError('distribution/requirements.txt absent : dépendances runtime non déclarées.');
+  }
+  {
+    const buf = normalizeText(fs.readFileSync(requirementsSrc)).buf;
+    fs.writeFileSync(path.join(stage, 'requirements.txt'), buf);
+    manifest.files['requirements.txt'] = {
+      sha256: sha256(buf), bytes: buf.length,
+      source: 'distribution/requirements.txt', eol: 'LF',
+    };
+  }
+
+  // 5. notes de version + documentation
   const docSrc = path.join(REPO_ROOT, 'distribution', 'INSTALL.md');
   if (fs.existsSync(docSrc)) {
     const res = normalizeText(fs.readFileSync(docSrc));
