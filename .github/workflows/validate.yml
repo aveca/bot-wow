@@ -65,33 +65,45 @@ jobs:
 
       - name: Build twice and verify byte-identical real package candidates (no publication)
         shell: bash
-        working-directory: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          SOURCE_SHA="$(git -C Casinababe rev-parse HEAD)"
+          WORKSPACE_ROOT="$GITHUB_WORKSPACE"
+          if [[ ! -d "$WORKSPACE_ROOT/Casinababe/.git" ]]; then
+            WORKSPACE_ROOT="$(dirname "$GITHUB_WORKSPACE")"
+          fi
+          BOT_WOW_DIR="$WORKSPACE_ROOT/bot-wow"
+          SOURCE_DIR="$WORKSPACE_ROOT/Casinababe"
+          if [[ ! -d "$BOT_WOW_DIR/.git" || ! -d "$SOURCE_DIR/.git" ]]; then
+            echo "::error::Expected sibling checkouts bot-wow/ and Casinababe/ under $WORKSPACE_ROOT"
+            printf 'GITHUB_WORKSPACE=%s\n' "$GITHUB_WORKSPACE"
+            find "$(dirname "$GITHUB_WORKSPACE")" -maxdepth 2 -type d -name .git -print
+            exit 1
+          fi
+
+          SOURCE_SHA="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
           OUT_FIRST="/tmp/botwow-package-candidate-first"
           OUT_SECOND="/tmp/botwow-package-candidate-second"
 
-          node bot-wow/scripts/build-package.cjs \
-            --source Casinababe \
+          node "$BOT_WOW_DIR/scripts/build-package.cjs" \
+            --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \
             --out "$OUT_FIRST" \
             --source-repo aveca/Casinababe \
             --source-ref feat/fishing-route-intelligence-v2 \
             --source-commit "$SOURCE_SHA"
-          node bot-wow/scripts/verify-package-archive.cjs \
+          node "$BOT_WOW_DIR/scripts/verify-package-archive.cjs" \
             "$OUT_FIRST/$ZIP_NAME" \
             1.2.2-rc.1 "$SOURCE_SHA"
 
-          node bot-wow/scripts/build-package.cjs \
-            --source Casinababe \
+          node "$BOT_WOW_DIR/scripts/build-package.cjs" \
+            --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \
             --out "$OUT_SECOND" \
             --source-repo aveca/Casinababe \
             --source-ref feat/fishing-route-intelligence-v2 \
             --source-commit "$SOURCE_SHA"
-          node bot-wow/scripts/verify-package-archive.cjs \
+          node "$BOT_WOW_DIR/scripts/verify-package-archive.cjs" \
             "$OUT_SECOND/$ZIP_NAME" \
             1.2.2-rc.1 "$SOURCE_SHA"
 
