@@ -292,7 +292,15 @@ try {
     'package/addon/Casinobabe/Casinobabe.toc', 'package/addon/Casinobabe/Casinobabe.lua']) {
     const a = readFileSync(join(pkgDir, rel));
     const b = readFileSync(join(pkgCrlf, rel));
-    check(`fins de ligne normalisees : ${rel}`, a.equals(b), `${a.length} vs ${b.length} octets`);
+    let firstDiff = -1;
+    for (let i = 0; i < Math.min(a.length, b.length); i++) {
+      if (a[i] !== b[i]) { firstDiff = i; break; }
+    }
+    check(
+      `fins de ligne normalisees : ${rel}`,
+      a.equals(b),
+      `${a.length} vs ${b.length} octets; firstDiff=${firstDiff}; LF=${a.toString('hex')}; CRLF=${b.toString('hex')}`,
+    );
   }
   check('aucun CRLF ne subsiste dans le contenu livre',
     !readFileSync(join(pkgCrlf, 'package', 'scripts', 'fishing_bot.py')).includes(0x0d));
