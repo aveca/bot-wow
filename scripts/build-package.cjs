@@ -375,6 +375,30 @@ function zipDirectory(dir, outFile, prefix = '') {
   return entries.length;
 }
 
+/**
+ * Composants explicitement NON ÉTABLIS dans distribution/THIRD_PARTY_NOTICES.md.
+ * Le builder refuse leur présence, même si les notices sont bien copiées :
+ * une notice n'accorde aucun droit de redistribution.
+ *
+ * Retirer un nom de cette liste exige une preuve de licence/provenance ou un
+ * remplacement original vérifié et documenté. Le contrôle par nom est
+ * volontairement conservateur pour éviter un contournement par changement de
+ * contenu tout en gardant le même chemin d'addon.
+ */
+function assertNoUnverifiedAddonComponents(files) {
+  const blockedNames = new Set(['libdbicon-1.0.lua', 'background.tga']);
+  const blocked = files
+    .map((rel) => rel.replace(/\\\\/g, '/'))
+    .filter((rel) => blockedNames.has(path.posix.basename(rel).toLowerCase()))
+    .sort();
+  if (blocked.length) {
+    throw new IntegrityError(
+      'composants addon non certifiés refusés : ' + blocked.join(', ')
+      + '. Voir distribution/THIRD_PARTY_NOTICES.md ; aucune archive ne doit être produite.',
+    );
+  }
+}
+
 function main() {
   if (!fs.existsSync(SOURCE)) {
     console.error(`Source introuvable : ${SOURCE}`);
@@ -485,7 +509,9 @@ function main() {
   const addonDir = path.join(SOURCE, 'runtime-addon', 'Casinobabe');
   let addonCount = 0;
   if (fs.existsSync(addonDir)) {
-    for (const rel of walk(addonDir)) {
+    const addonFiles = walk(addonDir);
+    assertNoUnverifiedAddonComponents(addonFiles);
+    for (const rel of addonFiles) {
       if (copy(path.join('runtime-addon', 'Casinobabe', rel), path.join('addon', 'Casinobabe', rel))) addonCount++;
     }
   }
