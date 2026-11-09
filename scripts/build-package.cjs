@@ -388,7 +388,7 @@ function zipDirectory(dir, outFile, prefix = '') {
 function assertNoUnverifiedAddonComponents(files) {
   const blockedNames = new Set(['libdbicon-1.0.lua', 'background.tga']);
   const blocked = files
-    .map((rel) => rel.replace(/\\\\/g, '/'))
+    .map((rel) => rel.replace(/\\/g, '/'))
     .filter((rel) => blockedNames.has(path.posix.basename(rel).toLowerCase()))
     .sort();
   if (blocked.length) {
