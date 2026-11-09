@@ -201,7 +201,7 @@ try {
   }
   const tocPath = join(installedAddon, 'Casinobabe.toc');
   const toc = readFileSync(tocPath, 'utf8');
-  const tocEntries = toc.split(/\\r?\\n/).map((line) => line.trim())
+  const tocEntries = toc.split(/\r?\n/).map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'));
   check('installation simulée : le ZIP contient des fichiers addon', [...zipEntries.keys()].some((name) => name.startsWith(addonPrefix)));
   check('installation simulée : le dossier AddOns/Casinobabe est créé', existsSync(installedAddon));
