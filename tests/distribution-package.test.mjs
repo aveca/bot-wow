@@ -213,6 +213,7 @@ try {
     tocEntries.some((entry) => entry.toLowerCase().endsWith('.lua')), tocEntries.join(', '));
   check('la documentation d\'installation est livree', staged.includes('INSTALL.md'));
   check('le gabarit de configuration est livre', staged.includes('config.example.json'));
+  check('les dependances Python sont declarees et livrees', staged.includes('requirements.txt'));
 
   // ── Provenance : confrontee au checkout reel, et marquee comme telle ────
   check('le manifeste porte la provenance de la source', !!manifest.source, JSON.stringify(manifest.source));
