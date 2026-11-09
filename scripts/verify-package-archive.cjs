@@ -61,6 +61,7 @@ const required = [
   'VERSION',
   'package/INSTALL.md',
   'package/THIRD_PARTY_NOTICES.md',
+  'package/requirements.txt',
   'package/config.example.json',
   'package/addon/Casinobabe/Casinobabe.toc',
   'package/scripts/fishing_bot.py',
