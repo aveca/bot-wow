@@ -64,6 +64,18 @@ const required = [
   'package/config.example.json',
   'package/addon/Casinobabe/Casinobabe.toc',
   'package/scripts/fishing_bot.py',
+  'package/scripts/fishing_observer.py',
+  'package/scripts/fishing_memory.py',
+  'package/scripts/fishing_popup.py',
+  'package/scripts/focus_broker.py',
+  'package/scripts/fishing_process.py',
+  'package/scripts/fishing_controls.py',
+  'package/scripts/fishing_client.py',
+  'package/scripts/fishing_recovery.py',
+  'package/scripts/fishing_safety.py',
+  'package/scripts/fishing_navigation.py',
+  'package/scripts/fishing_minimap.py',
+  'package/scripts/fishing_spots.py',
 ];
 for (const name of required) if (!entries.has(name)) fail('required file missing: ' + name);
 
