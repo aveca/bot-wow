@@ -15,7 +15,7 @@
  * Une source non Git ne peut plus certifier une provenance fournie par CLI.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, symlinkSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,7 +49,7 @@ function seedSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   mkdirSync(join(dir, 'state'), { recursive: true });
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\nCasinobabe.lua\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("bot")\n');
   writeFileSync(join(dir, 'scripts', 'fishing_observer.py'), 'print("obs")\n');
@@ -158,6 +158,22 @@ try {
 
   check('l\'addon est livre', staged.some((f) => f.endsWith('Casinobabe.toc')));
   check('le bot est livre', staged.some((f) => f.endsWith('fishing_bot.py')));
+
+  // Installation locale simulée dans un dossier WoW isolé : aucun client réel.
+  const fakeWow = join(tmp, 'fake-wow');
+  const installedAddon = join(fakeWow, 'Interface', 'AddOns', 'Casinobabe');
+  cpSync(join(pkgDir, 'package', 'addon', 'Casinobabe'), installedAddon, { recursive: true });
+  const tocPath = join(installedAddon, 'Casinobabe.toc');
+  const toc = readFileSync(tocPath, 'utf8');
+  const tocEntries = toc.split(/\\r?\\n/).map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  check('installation simulée : le dossier AddOns/Casinobabe est créé', existsSync(installedAddon));
+  check('installation simulée : le manifeste WoW .toc est présent', existsSync(tocPath));
+  check('activation simulée : chaque fichier déclaré par le .toc existe',
+    tocEntries.every((entry) => existsSync(join(installedAddon, entry))),
+    tocEntries.filter((entry) => !existsSync(join(installedAddon, entry))).join(', '));
+  check('activation simulée : le .toc référence au moins un fichier Lua',
+    tocEntries.some((entry) => entry.toLowerCase().endsWith('.lua')), tocEntries.join(', '));
   check('la documentation d\'installation est livree', staged.includes('INSTALL.md'));
   check('le gabarit de configuration est livre', staged.includes('config.example.json'));
 
