@@ -590,8 +590,15 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     '(URL de production absente)');
 }
 
-const RELEASE_KEY = 'casinobabe-fishing-1.2.0.zip';
-const ZIP_BYTES = Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x62, 0x6f, 0x74, 0x77]);
+const RELEASE_KEY = process.env.BOTWOW_PACKAGE_KEY || 'casinobabe-fishing-1.2.0.zip';
+const PACKAGE_FIXTURE_PATH = process.env.BOTWOW_PACKAGE_FIXTURE || null;
+const ZIP_BYTES = PACKAGE_FIXTURE_PATH
+  ? new Uint8Array(readFileSync(PACKAGE_FIXTURE_PATH))
+  : Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x62, 0x6f, 0x74, 0x77]);
+
+if (PACKAGE_FIXTURE_PATH) {
+  console.log(`PACKAGE FIXTURE: ${PACKAGE_FIXTURE_PATH} (${ZIP_BYTES.length} octets)`);
+}
 
 function seedArtifact(state) {
   state.r2.set(RELEASE_KEY, { body: ZIP_BYTES });
