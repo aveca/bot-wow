@@ -82,7 +82,7 @@ jobs:
             --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \
             --out "$OUT_FIRST" \
-            --source-repo aveca/Casinababe \
+            --source-repo aveca/Casinobabe \
             --source-ref feat/fishing-route-intelligence-v2 \
             --source-commit "$SOURCE_SHA"
           node "$BOT_WOW_DIR/scripts/verify-package-archive.cjs" \
@@ -93,7 +93,7 @@ jobs:
             --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \
             --out "$OUT_SECOND" \
-            --source-repo aveca/Casinababe \
+            --source-repo aveca/Casinobabe \
             --source-ref feat/fishing-route-intelligence-v2 \
             --source-commit "$SOURCE_SHA"
           node "$BOT_WOW_DIR/scripts/verify-package-archive.cjs" \
