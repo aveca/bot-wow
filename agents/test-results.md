@@ -31,3 +31,9 @@ La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `n
 | CI PR #150 sur SHA `e28626d` | GitHub Actions, 2026-11-08 | Validate `42471183238` success ; UI quality `42471182891` success ; GitGuardian success |
 | CI PR #154 sur SHA `366a735` (apres merge de main `158222e`) | GitHub Actions, 2026-11-08 | Validate `42471572487` success ; UI quality `42471572472` success ; GitGuardian success |
 | `r2_objects_list` / `r2_objects_get` sur `botwow-binaries` | Cloudflare API, lecture seule, 2026-11-08 | **HTTP 403, code 10000 "Authentication error"** sur les deux ; `r2_buckets_list` fonctionne. L'objet R2 n'a donc PAS pu etre relu ce cycle. |
+| `npm test` | local, 2026-11-09, branche `cursor/pixel-visual-redesign-0da7` | exit 0 |
+| `npm run validate` | local, 2026-11-09 | exit 0, `BOT-WOW validation PASS` |
+| `npm run audit:css` | local, 2026-11-09 | exit 0, 0 jeton CSS manquant. Classes manquantes préexistantes (docs, variantes A/B), aucune classe nouvelle orpheline |
+| `git diff --check` | local, 2026-11-09 | exit 0 |
+| `npx playwright test` | Chromium local contre `_site`, 2026-11-09 | exit 0 (desktop + mobile) |
+| `prefers-reduced-motion` sur `/` | Playwright, 2026-11-09 | vidéo en pause, `autoplay` faux, mascotte reste le PNG |

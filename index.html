@@ -15,13 +15,13 @@
 <meta property="og:description" content="BOT-WOW is a paused project. The browser demo uses simulated data; no gameplay-automation software is offered or authorized.">
 <meta property="og:url" content="https://bot-wow.com/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="./assets/favicon.svg?v=560cff9a" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.svg?v=4b2caa7f" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/site.css?v=560cff9a">
-<link rel="stylesheet" href="./assets/style.css?v=560cff9a">
-<link rel="stylesheet" href="./assets/variant-c.css?v=560cff9a">
+<link rel="stylesheet" href="./assets/site.css?v=4b2caa7f">
+<link rel="stylesheet" href="./assets/style.css?v=4b2caa7f">
+<link rel="stylesheet" href="./assets/variant-c.css?v=4b2caa7f">
 </head>
 <body>
 <a class="skip-link" href="#hero">Skip to main content</a>
@@ -54,6 +54,7 @@
     </div>
   </div>
   <section class="hero variant-c" id="hero">
+    <img class="pixel-float" src="./assets/pixel/buddy.png" width="192" height="192" alt="" decoding="async">
     <div class="hero__wrapper">
       <h1 class="hero__title"><span class="word">BOT-WOW</span><span class="word">project</span><span class="word">status</span></h1>
       <p class="hero__lead">BOT-WOW is a historical project, not software that is ready to install or buy. The only public interactive experience is a browser-based planning demo with simulated data; it does not read a game screen, send clicks or control a character.</p>
@@ -92,8 +93,56 @@
         <h2 class="h2">Explore the browser demo</h2>
         <p class="lead">A standalone visualization using simulated data. No account, email, download, game client or gameplay control is involved.</p>
       </header>
+      <div class="pixel-stage">
+        <figure class="pixel-film">
+          <video data-film poster="./assets/media/demo-film-poster.jpg" muted playsinline preload="none" width="960" height="540">
+            <source src="./assets/media/demo-film.mp4" type="video/mp4">
+          </video>
+          <button type="button" class="btn btn-ghost" data-film-replay hidden data-play-label="Play the clip">Replay the clip</button>
+          <figcaption>Recording of the browser planner. Simulated data. It plays once, then stays on the last frame.</figcaption>
+        </figure>
+        <div class="pixel-side">
+          <figure>
+            <img class="pixel-sprite" src="./assets/pixel/buddy.png" data-gif="./assets/pixel/buddy.gif" width="192" height="192" alt="Placeholder pixel mascot. Not a product screenshot." loading="lazy" decoding="async">
+            <figcaption>Placeholder mascot. Replace it with the owner’s artwork.</figcaption>
+          </figure>
+          <figure>
+            <img src="./assets/evidence/fishing-real-capture.webp" width="640" height="360" alt="Simulated fishing map shown in the browser demo." loading="lazy" decoding="async">
+            <figcaption>Simulated map from the public demo.</figcaption>
+          </figure>
+        </div>
+      </div>
       <p class="center"><a class="btn btn-ghost btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="project-demo">Explore the browser demo</a></p>
       <p class="center"><a class="radar-next-link" href="./demo.html" data-track="cta_click" data-cta-id="steps-demo">Open the simulated planner</a></p>
+    </div>
+  </section>
+  <section class="pad" id="records">
+    <div class="w">
+      <header class="section-head">
+        <h2 class="h2">What is on record</h2>
+        <p class="lead">These cards repeat published project facts. They are not customer quotes. No verified customer purchase is shown here.</p>
+      </header>
+      <ul class="pixel-badges">
+        <li>Checkout closed</li>
+        <li>Browser demo only</li>
+        <li>Simulated data</li>
+        <li>No Blizzard affiliation</li>
+      </ul>
+      <div class="pixel-quotes">
+        <blockquote>
+          <p>The only public interactive experience is a browser planner with simulated data. It does not control a character.</p>
+          <footer>Project status · this site</footer>
+        </blockquote>
+        <blockquote>
+          <p>No client package, installation, licence, activation or delivery is currently offered.</p>
+          <footer>Purchase status · this site</footer>
+        </blockquote>
+        <blockquote>
+          <p>Intended for private servers, not official Blizzard servers. The rules of each server apply.</p>
+          <footer>Published scope note</footer>
+        </blockquote>
+      </div>
+      <p class="center"><a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="records-status">Check purchase status</a></p>
     </div>
   </section>
   <section class="pad price" id="buy"><span id="offre" aria-hidden="true"></span>
@@ -132,6 +181,6 @@
   </ul></div>
  </div><div class="foot-bottom"><div class="disclaimer">BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment.</div><span class="mono small">BOT-WOW · project status</span></div></div></footer>
 <div class="mbar" role="region" aria-label="Purchase status"><div class="mp" style="color:var(--mut2)">20,00 € <small>documented target price · historical</small></div><a class="btn btn-ghost" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-status">Check status</a></div>
-<script type="module" src="./assets/app.js?v=560cff9a"></script>
+<script type="module" src="./assets/app.js?v=4b2caa7f"></script>
 </body>
 </html>

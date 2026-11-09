@@ -15,13 +15,13 @@
 <meta property="og:description" content="BOT-WOW est un projet en pause. La démo navigateur utilise des données simulées ; aucun logiciel d’automatisation de gameplay n’est proposé ni autorisé.">
 <meta property="og:url" content="https://bot-wow.com/fr/">
 <meta property="og:image" content="https://bot-wow.com/assets/og-botwow.jpg">
-<link rel="icon" href="../assets/favicon.svg?v=560cff9a" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=4b2caa7f" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=560cff9a">
-<link rel="stylesheet" href="../assets/style.css?v=560cff9a">
-<link rel="stylesheet" href="../assets/variant-c.css?v=560cff9a">
+<link rel="stylesheet" href="../assets/site.css?v=4b2caa7f">
+<link rel="stylesheet" href="../assets/style.css?v=4b2caa7f">
+<link rel="stylesheet" href="../assets/variant-c.css?v=4b2caa7f">
 </head>
 <body>
 <a class="skip-link" href="#hero">Aller au contenu principal</a>
@@ -54,6 +54,7 @@
     </div>
   </div>
   <section class="hero variant-c" id="hero">
+    <img class="pixel-float" src="../assets/pixel/buddy.png" width="192" height="192" alt="" decoding="async">
     <div class="hero__wrapper">
       <h1 class="hero__title"><span class="word">BOT-WOW</span><span class="word">statut</span><span class="word">du projet</span></h1>
       <p class="hero__lead">BOT-WOW est un projet historique, pas un logiciel prêt à installer ou à acheter. La seule expérience interactive publique est une démo de planification dans le navigateur, avec des données simulées ; elle ne lit aucun écran de jeu, n’envoie aucun clic et ne contrôle aucun personnage.</p>
@@ -92,8 +93,56 @@
         <h2 class="h2">Explorer la démo navigateur</h2>
         <p class="lead">Une visualisation autonome avec des données simulées. Aucun compte, e-mail, téléchargement, client de jeu ou contrôle du gameplay n’est nécessaire.</p>
       </header>
+      <div class="pixel-stage">
+        <figure class="pixel-film">
+          <video data-film poster="../assets/media/demo-film-poster.jpg" muted playsinline preload="none" width="960" height="540">
+            <source src="../assets/media/demo-film.mp4" type="video/mp4">
+          </video>
+          <button type="button" class="btn btn-ghost" data-film-replay hidden data-play-label="Lire l’extrait">Revoir l’extrait</button>
+          <figcaption>Enregistrement du planificateur dans le navigateur. Données simulées. Il se joue une fois, puis reste sur la dernière image.</figcaption>
+        </figure>
+        <div class="pixel-side">
+          <figure>
+            <img class="pixel-sprite" src="../assets/pixel/buddy.png" data-gif="../assets/pixel/buddy.gif" width="192" height="192" alt="Mascotte pixel provisoire. Ce n’est pas une capture du produit." loading="lazy" decoding="async">
+            <figcaption>Mascotte provisoire. À remplacer par l’illustration du propriétaire.</figcaption>
+          </figure>
+          <figure>
+            <img src="../assets/evidence/fishing-real-capture.webp" width="640" height="360" alt="Carte de pêche simulée affichée dans la démo navigateur." loading="lazy" decoding="async">
+            <figcaption>Carte simulée de la démo publique.</figcaption>
+          </figure>
+        </div>
+      </div>
       <p class="center"><a class="btn btn-ghost btn-lg" href="./demo.html" data-track="cta_click" data-cta-id="project-demo">Explorer la démo navigateur</a></p>
       <p class="center"><a class="radar-next-link" href="./demo.html" data-track="cta_click" data-cta-id="steps-demo">Ouvrir le planificateur simulé</a></p>
+    </div>
+  </section>
+  <section class="pad" id="records">
+    <div class="w">
+      <header class="section-head">
+        <h2 class="h2">Ce qui est documenté</h2>
+        <p class="lead">Ces cartes reprennent des faits déjà publiés. Ce ne sont pas des citations de clients. Aucun achat client vérifié n’est affiché ici.</p>
+      </header>
+      <ul class="pixel-badges">
+        <li>Paiement fermé</li>
+        <li>Démo navigateur seulement</li>
+        <li>Données simulées</li>
+        <li>Pas d’affiliation Blizzard</li>
+      </ul>
+      <div class="pixel-quotes">
+        <blockquote>
+          <p>La seule expérience interactive publique est un planificateur dans le navigateur, avec des données simulées. Elle ne contrôle aucun personnage.</p>
+          <footer>Statut du projet · ce site</footer>
+        </blockquote>
+        <blockquote>
+          <p>Aucun paquet client, aucune installation, licence, activation ou livraison n’est actuellement proposé.</p>
+          <footer>Statut d’achat · ce site</footer>
+        </blockquote>
+        <blockquote>
+          <p>Destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Les règles de chaque serveur s’appliquent.</p>
+          <footer>Note de périmètre publiée</footer>
+        </blockquote>
+      </div>
+      <p class="center"><a class="btn btn-ghost btn-lg" href="#buy" data-track="cta_click" data-cta-id="records-status">Vérifier la disponibilité</a></p>
     </div>
   </section>
   <section class="pad price" id="buy"><span id="offre" aria-hidden="true"></span>
@@ -132,6 +181,6 @@
   </ul></div>
  </div><div class="foot-bottom"><div class="disclaimer">BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment. World of Warcraft est une marque de Blizzard Entertainment.</div><span class="mono small">BOT-WOW · statut du projet</span></div></div></footer>
 <div class="mbar" role="region" aria-label="Statut de disponibilité"><div class="mp" style="color:var(--mut2)">20,00 € <small>prix cible documenté · historique</small></div><a class="btn btn-ghost" style="padding:10px 22px" href="#buy" data-track="cta_click" data-cta-id="mbar-status">Voir le statut</a></div>
-<script type="module" src="../assets/app.js?v=560cff9a"></script>
+<script type="module" src="../assets/app.js?v=4b2caa7f"></script>
 </body>
 </html>
