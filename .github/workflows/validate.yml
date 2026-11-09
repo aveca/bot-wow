@@ -108,6 +108,9 @@ jobs:
             exit 1
           fi
 
+          BOTWOW_PACKAGE_FIXTURE="$ZIP_FIRST" BOTWOW_PACKAGE_KEY="$ZIP_NAME" \
+            node "$BOT_WOW_DIR/tests/delivery-replay.test.mjs"
+
           echo "PACKAGE REPRODUCIBILITY: PASS"
           echo "source_sha=$SOURCE_SHA"
           sha256sum "$ZIP_FIRST" "$ZIP_SECOND"
