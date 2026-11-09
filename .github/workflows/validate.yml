@@ -56,7 +56,7 @@ jobs:
         with:
           repository: aveca/Casinobabe
           ref: feat/fishing-route-intelligence-v2
-          path: Casinobabe
+          path: bot-wow/.source/runtime-source
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,9 +70,9 @@ jobs:
           set -euo pipefail
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
           pwd
-          ls -ld "$GITHUB_WORKSPACE/bot-wow" "$GITHUB_WORKSPACE/bot-wow/.source/Casinababe"
+          ls -ld "$GITHUB_WORKSPACE/bot-wow" "$GITHUB_WORKSPACE/bot-wow/.source/runtime-source"
           BOT_WOW_DIR="$GITHUB_WORKSPACE/bot-wow"
-          SOURCE_DIR="$GITHUB_WORKSPACE/bot-wow/.source/Casinababe"
+          SOURCE_DIR="$GITHUB_WORKSPACE/bot-wow/.source/runtime-source"
           SOURCE_SHA="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
           OUT_FIRST="/tmp/botwow-package-candidate-first"
