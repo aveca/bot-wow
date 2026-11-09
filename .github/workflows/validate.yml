@@ -65,6 +65,7 @@ jobs:
 
       - name: Build twice and verify byte-identical real package candidates (no publication)
         shell: bash
+        working-directory: bot-wow/..
         run: |
           set -euo pipefail
           SOURCE_SHA="$(git -C Casinababe rev-parse HEAD)"
