@@ -65,22 +65,14 @@ jobs:
 
       - name: Build twice and verify byte-identical real package candidates (no publication)
         shell: bash
+        working-directory: \${{ github.workspace }}/bot-wow
         run: |
           set -euo pipefail
-          WORKSPACE_ROOT="$GITHUB_WORKSPACE"
-          if ! git -C "$WORKSPACE_ROOT/Casinababe" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-            WORKSPACE_ROOT="$(dirname "$GITHUB_WORKSPACE")"
-          fi
-          BOT_WOW_DIR="$WORKSPACE_ROOT/bot-wow"
-          SOURCE_DIR="$WORKSPACE_ROOT/Casinababe"
-          if ! git -C "$BOT_WOW_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
-            || ! git -C "$SOURCE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-            echo "::error::Expected BOT-WOW and Casinababe checkouts as sibling repositories."
-            printf 'GITHUB_WORKSPACE=%s\n' "$GITHUB_WORKSPACE"
-            printf 'WORKSPACE_ROOT=%s\n' "$WORKSPACE_ROOT"
-            exit 1
-          fi
-
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          pwd
+          ls -ld "$GITHUB_WORKSPACE/bot-wow" "$GITHUB_WORKSPACE/Casinababe"
+          BOT_WOW_DIR="$GITHUB_WORKSPACE/bot-wow"
+          SOURCE_DIR="$GITHUB_WORKSPACE/Casinababe"
           SOURCE_SHA="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
           OUT_FIRST="/tmp/botwow-package-candidate-first"
