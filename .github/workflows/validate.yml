@@ -40,3 +40,43 @@ jobs:
       # l'ecart entre le depot et son empreinte.
       - name: Recompute deterministic asset fingerprint and URLs
         run: node scripts/versionne-assets.mjs
+
+  # Build the real source checkout into an isolated candidate. Never upload it.
+  package-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout BOT-WOW
+        uses: actions/checkout@v4
+        with:
+          path: bot-wow
+
+      - name: Checkout Casinobabe runtime source
+        uses: actions/checkout@v4
+        with:
+          repository: aveca/Casinobabe
+          ref: feat/fishing-route-intelligence-v2
+          path: Casinobabe
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build and verify real package candidate (no publication)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(git -C Casinobabe rev-parse HEAD)"
+          node bot-wow/scripts/build-package.cjs \
+            --source Casinobabe \
+            --version 1.2.2-rc.1 \
+            --out /tmp/botwow-package-candidate \
+            --source-repo aveca/Casinobabe \
+            --source-ref feat/fishing-route-intelligence-v2 \
+            --source-commit "$SOURCE_SHA"
+          node bot-wow/scripts/verify-package-archive.cjs \
+            /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip \
+            1.2.2-rc.1 "$SOURCE_SHA"
+          sha256sum /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip
+          stat -c 'candidate_size_bytes=%s' /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip

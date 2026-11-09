@@ -128,12 +128,25 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 
 /** Fichiers du bot Python livre au client. */
 const BOT_FILES = [
+  // Entry point + every local module imported by the runtime (directly or
+  // through the recovery/navigation helpers). Missing modules silently
+  // disabled death recovery and navigation in the previous package.
   'scripts/fishing_bot.py',
   'scripts/fishing_observer.py',
   'scripts/fishing_memory.py',
   'scripts/fishing_popup.py',
   'scripts/focus_broker.py',
-  'scripts/fishing-oneclick.ps1',
+  'scripts/fishing_process.py',
+  'scripts/fishing_map.py',
+  'scripts/fishing_screen.py',
+  'scripts/fishing_mapread.py',
+  'scripts/fishing_controls.py',
+  'scripts/fishing_client.py',
+  'scripts/fishing_recovery.py',
+  'scripts/fishing_safety.py',
+  'scripts/fishing_navigation.py',
+  'scripts/fishing_minimap.py',
+  'scripts/fishing_spots.py',
 ];
 
 /** Repertoires exclus (donnees de session, journaux, memoire). */
@@ -549,7 +562,21 @@ function main() {
     eol: 'LF',
   };
 
-  // 4. notes de version + documentation
+  // 4. dépendances Python du runtime (requises pour une installation reproductible)
+  const requirementsSrc = path.join(REPO_ROOT, 'distribution', 'requirements.txt');
+  if (!fs.existsSync(requirementsSrc)) {
+    throw new IntegrityError('distribution/requirements.txt absent : dépendances runtime non déclarées.');
+  }
+  {
+    const buf = normalizeText(fs.readFileSync(requirementsSrc)).buf;
+    fs.writeFileSync(path.join(stage, 'requirements.txt'), buf);
+    manifest.files['requirements.txt'] = {
+      sha256: sha256(buf), bytes: buf.length,
+      source: 'distribution/requirements.txt', eol: 'LF',
+    };
+  }
+
+  // 5. notes de version + documentation
   const docSrc = path.join(REPO_ROOT, 'distribution', 'INSTALL.md');
   if (fs.existsSync(docSrc)) {
     const res = normalizeText(fs.readFileSync(docSrc));
@@ -558,20 +585,18 @@ function main() {
     manifest.files['INSTALL.md'] = { sha256: sha256(buf), bytes: buf.length, source: 'distribution/INSTALL.md', eol: 'LF' };
   }
   /* OBLIGATION DE LICENCE, PAS UNE OPTION.
-     Le paquet embarque la police DejaVu Sans (media/casino_uni.ttf) et les
-     bibliothèques LibStub / LibDBIcon-1.0. La licence Bitstream Vera + Arev de
-     la police exige que « l'avis de copyright et la permission soient inclus
-     dans toutes les copies ». Le document d'attribution est donc LIVRE avec le
-     paquet et DÉCLARÉ au manifeste : sans ça, distribuer l'archive violerait
-     la licence de la police, et personne ne pourrait vérifier la conformité.
-     Le fichier est refusé s'il est absent : le build échoue plutôt que de
-     produire un paquet non conforme. */
+     Le runtime actuel embarque la police DejaVu Sans (media/casino_uni.ttf).
+     Sa licence Bitstream Vera + Arev exige que l'avis de copyright et la
+     permission accompagnent chaque copie. LibStub, LibDBIcon-1.0 et
+     background.tga ont été retirés du runtime candidat ; les anciennes
+     archives R2 restent historiques et ne sont pas une source de build.
+     Le document d'attribution est livré et déclaré au manifeste. Sans notice,
+     le build échoue plutôt que de produire un paquet non conforme. */
   const noticeSrc = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
   if (!fs.existsSync(noticeSrc)) {
     console.error(
-      'distribution/THIRD_PARTY_NOTICES.md est absent : le paquet embarque des '
-      + 'composants tiers (police DejaVu Sans, LibStub, LibDBIcon-1.0) dont les '
-      + 'notices doivent être livrées. Paquet NON construit.',
+      'distribution/THIRD_PARTY_NOTICES.md est absent : la police DejaVu Sans '
+      + 'embarquée exige ses avis de licence. Paquet NON construit.',
     );
     process.exit(1);
   }

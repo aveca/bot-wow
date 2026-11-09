@@ -1,0 +1,6 @@
+# Runtime dependencies for the Windows fishing assistant (Python 3.11+)
+numpy>=1.26,<3
+opencv-python-headless>=4.10,<5
+Pillow>=10,<13
+mss>=9,<11
+pywin32>=306; sys_platform == "win32"
