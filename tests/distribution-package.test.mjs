@@ -263,7 +263,7 @@ try {
   const SRC_CRLF = join(tmp, 'src-crlf');
   mkdirSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(SRC_CRLF, 'scripts'), { recursive: true });
-  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\nCasinababe.lua\r\n');
+  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\nCasinobabe.lua\r\n');
   writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_bot.py'), 'print("bot")\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_observer.py'), 'print("obs")\r\n');
@@ -292,15 +292,7 @@ try {
     'package/addon/Casinobabe/Casinobabe.toc', 'package/addon/Casinobabe/Casinobabe.lua']) {
     const a = readFileSync(join(pkgDir, rel));
     const b = readFileSync(join(pkgCrlf, rel));
-    let firstDiff = -1;
-    for (let i = 0; i < Math.min(a.length, b.length); i++) {
-      if (a[i] !== b[i]) { firstDiff = i; break; }
-    }
-    check(
-      `fins de ligne normalisees : ${rel}`,
-      a.equals(b),
-      `${a.length} vs ${b.length} octets; firstDiff=${firstDiff}; LF=${a.toString('hex')}; CRLF=${b.toString('hex')}`,
-    );
+    check(`fins de ligne normalisees : ${rel}`, a.equals(b), `${a.length} vs ${b.length} octets`);
   }
   check('aucun CRLF ne subsiste dans le contenu livre',
     !readFileSync(join(pkgCrlf, 'package', 'scripts', 'fishing_bot.py')).includes(0x0d));
