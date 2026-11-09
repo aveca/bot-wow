@@ -83,7 +83,10 @@ if (manifest.source.provenanceVerified !== true) fail('source provenance is not 
 const missing = [];
 const mismatched = [];
 for (const [name, info] of Object.entries(manifest.files || {})) {
-  const bytes = entries.get(name);
+  // The manifest is rooted at the staged package directory; ZIP entries keep
+  // that directory as the "package/" prefix. VERSION and MANIFEST stay at root.
+  const zipName = entries.has(name) ? name : (entries.has('package/' + name) ? 'package/' + name : null);
+  const bytes = zipName ? entries.get(zipName) : null;
   if (!bytes) { missing.push(name); continue; }
   const actual = crypto.createHash('sha256').update(bytes).digest('hex');
   if (actual !== info.sha256) mismatched.push(name);
