@@ -351,6 +351,41 @@ try {
       check('la provenance courte est marquee verifiee', m.source?.provenanceVerified === true);
     }
   }
+  // ── 7. COMPOSANTS SANS DROITS ÉTABLIS : REFUS FAIL-CLOSED ───────────────
+  {
+    const restricted = makeGitSource(tmp, 'src-unverified-addon-components');
+    mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0'), { recursive: true });
+    mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media'), { recursive: true });
+    writeFileSync(
+      join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0', 'LibDBIcon-1.0.lua'),
+      '-- fixture: adaptation tierce sans licence établie\\n',
+    );
+    writeFileSync(
+      join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media', 'background.tga'),
+      Buffer.from('fixture texture sans provenance'),
+    );
+    git(['add', '-A'], restricted.dir);
+    git(['commit', '-m', 'add restricted addon component fixtures'], restricted.dir);
+    restricted.head = git(['rev-parse', 'HEAD'], restricted.dir);
+
+    const restrictedOut = join(tmp, 'dist-unverified-components');
+    const restrictedArgs = baseArgs.map((a) => (
+      a === SRC.dir ? restricted.dir : a === SRC.head ? restricted.head : a
+    ));
+    const result = expectBuildFailure(
+      'composants non certifiés : le build échoue',
+      [...restrictedArgs, '--out', restrictedOut],
+      /composants addon non certifiés refusés/i,
+    );
+    const output = result.stdout + '\\n' + result.stderr;
+    check('LibDBIcon-1.0 est explicitement bloqué', output.includes('LibDBIcon-1.0.lua'));
+    check('background.tga est explicitement bloqué', output.includes('background.tga'));
+    check(
+      'aucune archive ZIP n’est produite après le refus juridique',
+      !existsSync(join(restrictedOut, 'casinobabe-fishing-9.9.9.zip')),
+    );
+  }
+
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
