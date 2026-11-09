@@ -74,7 +74,7 @@ jobs:
           BOT_WOW_DIR="$GITHUB_WORKSPACE/bot-wow"
           SOURCE_DIR="$GITHUB_WORKSPACE/bot-wow/.source/runtime-source"
           SOURCE_SHA="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
-          ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
+          ZIP_NAME="casinobabe-fishing-1.2.2-rc.1.zip"
           OUT_FIRST="/tmp/botwow-package-candidate-first"
           OUT_SECOND="/tmp/botwow-package-candidate-second"
 
