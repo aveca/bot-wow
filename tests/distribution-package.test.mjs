@@ -15,11 +15,12 @@
  * Une source non Git ne peut plus certifier une provenance fournie par CLI.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, symlinkSync, cpSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { inflateRawSync } from 'node:zlib';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -30,6 +31,30 @@ let failures = 0;
 function check(name, ok, detail = '') {
   if (ok) console.log(`  ok   ${name}`);
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
+}
+
+function readZipEntries(zipPath) {
+  const zip = readFileSync(zipPath);
+  const entries = new Map();
+  let offset = 0;
+  while (offset + 30 <= zip.length && zip.readUInt32LE(offset) === 0x04034b50) {
+    const method = zip.readUInt16LE(offset + 8);
+    const compressedSize = zip.readUInt32LE(offset + 18);
+    const uncompressedSize = zip.readUInt32LE(offset + 22);
+    const nameLength = zip.readUInt16LE(offset + 26);
+    const extraLength = zip.readUInt16LE(offset + 28);
+    const nameStart = offset + 30;
+    const name = zip.toString('utf8', nameStart, nameStart + nameLength);
+    const dataStart = nameStart + nameLength + extraLength;
+    const compressed = zip.subarray(dataStart, dataStart + compressedSize);
+    const data = method === 0 ? Buffer.from(compressed)
+      : method === 8 ? inflateRawSync(compressed)
+        : (() => { throw new Error('ZIP compression method unsupported: ' + method); })();
+    if (data.length !== uncompressedSize) throw new Error('ZIP entry size mismatch: ' + name);
+    entries.set(name, data);
+    offset = dataStart + compressedSize;
+  }
+  return entries;
 }
 
 function git(args, cwd) {
@@ -159,14 +184,26 @@ try {
   check('l\'addon est livre', staged.some((f) => f.endsWith('Casinobabe.toc')));
   check('le bot est livre', staged.some((f) => f.endsWith('fishing_bot.py')));
 
-  // Installation locale simulée dans un dossier WoW isolé : aucun client réel.
+  // Installation depuis le ZIP réellement produit, dans un faux dossier WoW isolé.
+  const zipEntries = readZipEntries(join(OUT, 'casinobabe-fishing-9.9.9.zip'));
   const fakeWow = join(tmp, 'fake-wow');
   const installedAddon = join(fakeWow, 'Interface', 'AddOns', 'Casinobabe');
-  cpSync(join(pkgDir, 'package', 'addon', 'Casinobabe'), installedAddon, { recursive: true });
+  const addonPrefix = 'package/addon/Casinobabe/';
+  for (const [entryName, bytes] of zipEntries) {
+    if (!entryName.startsWith(addonPrefix)) continue;
+    const relative = entryName.slice(addonPrefix.length);
+    if (!relative || relative.split('/').includes('..') || relative.startsWith('/')) {
+      throw new Error('Chemin addon dangereux dans le ZIP : ' + entryName);
+    }
+    const target = join(installedAddon, ...relative.split('/'));
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+  }
   const tocPath = join(installedAddon, 'Casinobabe.toc');
   const toc = readFileSync(tocPath, 'utf8');
   const tocEntries = toc.split(/\\r?\\n/).map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'));
+  check('installation simulée : le ZIP contient des fichiers addon', [...zipEntries.keys()].some((name) => name.startsWith(addonPrefix)));
   check('installation simulée : le dossier AddOns/Casinobabe est créé', existsSync(installedAddon));
   check('installation simulée : le manifeste WoW .toc est présent', existsSync(tocPath));
   check('activation simulée : chaque fichier déclaré par le .toc existe',
