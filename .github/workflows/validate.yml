@@ -63,20 +63,46 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build and verify real package candidate (no publication)
+      - name: Build twice and verify byte-identical real package candidates (no publication)
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_SHA="$(git -C Casinobabe rev-parse HEAD)"
+          SOURCE_SHA="$(git -C Casinababe rev-parse HEAD)"
+          ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
+          OUT_FIRST="/tmp/botwow-package-candidate-first"
+          OUT_SECOND="/tmp/botwow-package-candidate-second"
+
           node bot-wow/scripts/build-package.cjs \
-            --source Casinobabe \
+            --source Casinababe \
             --version 1.2.2-rc.1 \
-            --out /tmp/botwow-package-candidate \
-            --source-repo aveca/Casinobabe \
+            --out "$OUT_FIRST" \
+            --source-repo aveca/Casinababe \
             --source-ref feat/fishing-route-intelligence-v2 \
             --source-commit "$SOURCE_SHA"
           node bot-wow/scripts/verify-package-archive.cjs \
-            /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip \
+            "$OUT_FIRST/$ZIP_NAME" \
             1.2.2-rc.1 "$SOURCE_SHA"
-          sha256sum /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip
-          stat -c 'candidate_size_bytes=%s' /tmp/botwow-package-candidate/casinobabe-fishing-1.2.2-rc.1.zip
+
+          node bot-wow/scripts/build-package.cjs \
+            --source Casinababe \
+            --version 1.2.2-rc.1 \
+            --out "$OUT_SECOND" \
+            --source-repo aveca/Casinababe \
+            --source-ref feat/fishing-route-intelligence-v2 \
+            --source-commit "$SOURCE_SHA"
+          node bot-wow/scripts/verify-package-archive.cjs \
+            "$OUT_SECOND/$ZIP_NAME" \
+            1.2.2-rc.1 "$SOURCE_SHA"
+
+          ZIP_FIRST="$OUT_FIRST/$ZIP_NAME"
+          ZIP_SECOND="$OUT_SECOND/$ZIP_NAME"
+          if ! cmp -s "$ZIP_FIRST" "$ZIP_SECOND"; then
+            echo "::error::Two builds from the same source SHA produced different ZIP bytes."
+            sha256sum "$ZIP_FIRST" "$ZIP_SECOND"
+            exit 1
+          fi
+
+          echo "PACKAGE REPRODUCIBILITY: PASS"
+          echo "source_sha=$SOURCE_SHA"
+          sha256sum "$ZIP_FIRST" "$ZIP_SECOND"
+          stat -c 'candidate_size_bytes=%s' "$ZIP_FIRST"
