@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createIsolatedDatabase } from './helpers/d1-sqlite-adapter.mjs';
-import { applyProdSchema, seedProdFixture } from './helpers/prod-fixture.mjs';
+import { applyProdSchema, applyProdSchemaPreMigration, seedProdFixture, seedLegacyFixture } from './helpers/prod-fixture.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -54,10 +54,13 @@ const MIGRATION = readFileSync(
 /* ===================================================================== */
 console.log('=== MIGRATION 0004 : reconciliation (base isolee, SQL reel) ===');
 
+/* L'etat AVANT : les migrations 0001..0003 SEULES (identifiants entiers).
+   La production a deja applique 0004 : cet etat n'existe plus en vrai, il
+   sert uniquement a prouver l'effet de la migration. */
 const iso = createIsolatedDatabase({ foreignKeys: true });
 const db = iso.db;
-applyProdSchema(db);
-seedProdFixture(db, { now: FIXED_NOW });
+applyProdSchemaPreMigration(db);
+seedLegacyFixture(db, { now: FIXED_NOW });
 
 // The live DB currently has zero activations, but add one synthetic child row
 // so the migration test proves ON DELETE CASCADE cannot silently erase them.
@@ -78,9 +81,19 @@ check('avant migration : 14 commandes', before.orders === 14, `(${before.orders}
 check('avant migration : 5 licences', before.licenses === 5, `(${before.licenses})`);
 check('avant migration : 5 jetons de téléchargement', before.downloads === 5, `(${before.downloads})`);
 check('avant migration : activation synthetic pour tester ON DELETE CASCADE', before.activations === 1, `(${before.activations})`);
-check('avant migration : orders.id est INTEGER', typeof db.prepare('SELECT id FROM orders LIMIT 1').get().id === 'number');
-check('avant migration : licenses.order_id est INTEGER',
-  typeof db.prepare('SELECT order_id FROM licenses LIMIT 1').get().order_id === 'number');
+/* Le DDL est TEXT depuis la migration 0002. Ce sont les VALEURS stockees qui
+   ont une forme numerique : c'est exactement le cas que traite la branche
+   `CAST(id AS TEXT) GLOB '[0-9]*'` de 0004. On verifie les donnees, pas un
+   type de colonne qui n'a JAMAIS ete INTEGER en production. */
+check('avant migration : les identifiants stockes ont une forme numerique',
+  /^[0-9]+$/.test(String(db.prepare('SELECT id FROM orders LIMIT 1').get().id)),
+  `(${db.prepare('SELECT id FROM orders LIMIT 1').get().id})`);
+check('avant migration : les references de licence stockees ont une forme numerique',
+  /^[0-9]+$/.test(String(db.prepare('SELECT order_id FROM licenses LIMIT 1').get().order_id)));
+check('avant migration : le DDL orders.id est deja TEXT (depuis la migration 0002)',
+  /id\s+TEXT\s+PRIMARY KEY/i.test(
+    db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='orders'").get().sql
+  ));
 
 /* --- application --------------------------------------------------------- */
 let migrationError = null;
@@ -209,11 +222,11 @@ iso.close();
 console.log('');
 console.log('=== APRES MIGRATION : le vrai Worker doit livrer ===');
 
-/* On repart d'une base migree fraiche pour executer le Worker. */
+/* On repart d'une base deja migree (0001..0004) pour executer le Worker :
+   c'est l'etat reel de la production. */
 const iso2 = createIsolatedDatabase({ foreignKeys: true });
 applyProdSchema(iso2.db);
 seedProdFixture(iso2.db, { now: FIXED_NOW });
-applyMigration(iso2.db, MIGRATION);
 iso2.db.exec('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, event TEXT NOT NULL, page TEXT NOT NULL, lang TEXT NOT NULL, cta TEXT, mode TEXT, years INTEGER, step TEXT, ref TEXT, test INTEGER NOT NULL DEFAULT 0, ip_hash TEXT, ua TEXT, value_eur REAL, source TEXT)');
 iso2.db.exec('CREATE TABLE IF NOT EXISTS rl (bucket TEXT NOT NULL, window INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (bucket, window))');
 
@@ -335,15 +348,43 @@ async function call(path, { method = 'GET', body = null } = {}) {
     approve.status === 401, `(status=${approve.status})`);
 }
 
-/* --- les 14 commandes et 5 licences historiques restent exploitables ------ */
+/* --- les 14 commandes et 5 licences du jeu de donnees restent exploitables -- */
+/* Le jeu de donnees post-migration porte des identifiants deja au format TEXT
+   final (`ord_tr_*`, `ord_bitcoin_manual_*`, `ord_free_*`) : c'est l'etat reel
+   de la production. Ce qui doit etre prouve ici, c'est que la jointure
+   commande <-> licence tient sur TOUT le jeu, pas seulement sur un prefixe. */
 {
-  const hist = iso2.db.prepare(
-    "SELECT COUNT(*) c FROM orders o JOIN licenses l ON l.order_id = o.id WHERE o.id LIKE 'ord_legacy_%'"
+  /* Le Worker a cree des commandes/licences EN PLUS pendant ce test : ce qui
+     doit etre prouve, c'est que chacune des 5 licences du jeu de donnees
+     retrouve SA commande, et qu'aucune licence ne reste orpheline. */
+  const expectedJoins = [
+    ['BOTWOW-AAAAA-BBBBB-CCCCC-DDDDD-EEEEE', 'tr_SYN01'],
+    ['BOTWOW-FFFFF-GGGGG-HHHHH-IIIII-JJJJJ', 'tr_SYN03'],
+    ['BOTWOW-KKKKK-LLLLL-MMMMM-NNNNN-OOOOO', 'tr_SYN06'],
+    ['BOTWOW-PPPPP-QQQQQ-RRRRR-SSSSS-TTTTT', 'tr_SYN08'],
+    ['BOTWOW-UUUUU-VVVVV-WWWWW-XXXXX-YYYYY', 'BTC-BBBB2222'],
+  ];
+  let allJoin = true;
+  const seen = [];
+  for (const [key, ref] of expectedJoins) {
+    const row = iso2.db.prepare(
+      'SELECT o.provider_id FROM licenses l JOIN orders o ON o.id = l.order_id WHERE l.key = ?'
+    ).get(key);
+    if (!row || row.provider_id !== ref) { allJoin = false; seen.push(`${key}->${row ? row.provider_id : 'oriente'}`); }
+  }
+  check('post-migration : chacune des 5 licences du jeu de donnees retrouve sa commande',
+    allJoin, seen.length ? `(${seen.join(', ')})` : '');
+  const orphans = iso2.db.prepare(
+    'SELECT COUNT(*) c FROM licenses l LEFT JOIN orders o ON o.id = l.order_id WHERE o.id IS NULL'
   ).get().c;
-  check('post-migration : les licences historiques restent jointes a leur commande',
-    hist === 5, `(${hist} jointures ord_legacy_*)`);
-  const legacy = iso2.db.prepare("SELECT COUNT(*) c FROM orders WHERE id LIKE 'ord_legacy_%'").get().c;
-  check('post-migration : les 14 commandes historiques sont toujours la', legacy === 14, `(${legacy})`);
+  check('post-migration : aucune licence orpheline apres migration', orphans === 0, `(${orphans})`);
+  const joined = iso2.db.prepare(
+    'SELECT COUNT(*) c FROM orders o JOIN licenses l ON l.order_id = o.id'
+  ).get().c;
+  check('post-migration : toutes les licences jointes (jeu de donnees + tests)', joined >= 5, `(${joined})`);
+  const ordersKept = iso2.db.prepare('SELECT COUNT(*) c FROM orders').get().c;
+  check('post-migration : les 14 commandes du jeu de donnees sont toujours la',
+    ordersKept >= 14, `(${ordersKept})`);
   /* les commandes creees pendant ce test s'ajoutent, sans rien ecraser :
      14 historiques + 2 paiements Mollie simules + 1 commande Bitcoin */
   const total = iso2.db.prepare('SELECT COUNT(*) c FROM orders').get().c;
