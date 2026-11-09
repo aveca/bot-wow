@@ -65,7 +65,7 @@ jobs:
 
       - name: Build twice and verify byte-identical real package candidates (no publication)
         shell: bash
-        working-directory: \${{ github.workspace }}/bot-wow
+        working-directory: ${{ github.workspace }}/bot-wow
         run: |
           set -euo pipefail
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
