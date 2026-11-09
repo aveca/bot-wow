@@ -263,7 +263,7 @@ try {
   const SRC_CRLF = join(tmp, 'src-crlf');
   mkdirSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(SRC_CRLF, 'scripts'), { recursive: true });
-  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\n');
+  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\nCasinababe.lua\r\n');
   writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_bot.py'), 'print("bot")\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_observer.py'), 'print("obs")\r\n');
@@ -439,17 +439,15 @@ try {
     check('LibDBIcon-1.0 est explicitement bloqué', output.includes('LibDBIcon-1.0.lua'));
     check('background.tga est explicitement bloqué', output.includes('background.tga'));
     check(
-      'aucune archive ZIP n’est produite après le refus juridique',
-      !existsSync(join(restrictedOut, 'casinobabe-fishing-9.9.9.zip')),
+      'le préflight conserve l’archive précédente sans la remplacer',
+      existsSync(previousArchive)
+        && readFileSync(previousArchive, 'utf8') === 'keep-existing-archive',
     );
     check(
       'le préflight conserve le dossier du package précédent',
       existsSync(join(previousPackageDir, 'previous-manifest-marker.txt')),
     );
-    check(
-      'le préflight conserve les octets de l’archive précédente',
-      readFileSync(previousArchive, 'utf8') === 'keep-existing-archive',
-    );
+
   }
 
 } finally {
