@@ -138,6 +138,8 @@ const BOT_FILES = [
   'scripts/focus_broker.py',
   'scripts/fishing_process.py',
   'scripts/fishing_map.py',
+  'scripts/fishing_screen.py',
+  'scripts/fishing_mapread.py',
   'scripts/fishing_controls.py',
   'scripts/fishing_client.py',
   'scripts/fishing_recovery.py',
