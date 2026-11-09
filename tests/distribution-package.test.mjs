@@ -411,7 +411,7 @@ try {
     mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media'), { recursive: true });
     writeFileSync(
       join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0', 'LibDBIcon-1.0.lua'),
-      '-- fixture: adaptation tierce sans licence établie\\n',
+      '-- fixture: adaptation tierce sans licence établie\n',
     );
     writeFileSync(
       join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media', 'background.tga'),
