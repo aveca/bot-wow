@@ -369,6 +369,8 @@ try {
     restricted.head = git(['rev-parse', 'HEAD'], restricted.dir);
 
     const restrictedOut = join(tmp, 'dist-unverified-components');
+    mkdirSync(restrictedOut, { recursive: true });
+    writeFileSync(join(restrictedOut, 'previous-release-marker.txt'), 'keep-existing-output');
     const restrictedArgs = baseArgs.map((a) => (
       a === SRC.dir ? restricted.dir : a === SRC.head ? restricted.head : a
     ));
@@ -383,6 +385,10 @@ try {
     check(
       'aucune archive ZIP n’est produite après le refus juridique',
       !existsSync(join(restrictedOut, 'casinobabe-fishing-9.9.9.zip')),
+    );
+    check(
+      'le préflight ne détruit pas un artefact antérieur',
+      existsSync(join(restrictedOut, 'previous-release-marker.txt')),
     );
   }
 
