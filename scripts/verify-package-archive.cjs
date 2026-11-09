@@ -70,6 +70,8 @@ const required = [
   'package/scripts/focus_broker.py',
   'package/scripts/fishing_process.py',
   'package/scripts/fishing_map.py',
+  'package/scripts/fishing_screen.py',
+  'package/scripts/fishing_mapread.py',
   'package/scripts/fishing_controls.py',
   'package/scripts/fishing_client.py',
   'package/scripts/fishing_recovery.py',
