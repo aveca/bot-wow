@@ -237,7 +237,7 @@ function makeEnv(state, opts = {}) {
         return state.r2.get(key) || null;
       },
     },
-    R2_OBJECT_KEY: opts.r2Key === undefined ? 'casinobabe-fishing-1.2.0.zip' : opts.r2Key,
+    R2_OBJECT_KEY: opts.r2Key === undefined ? (process.env.BOTWOW_PACKAGE_KEY || 'casinobabe-fishing-1.2.0.zip') : opts.r2Key,
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     LICENSE_SECRET: 'test_license_secret',
