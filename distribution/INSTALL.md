@@ -13,10 +13,11 @@ documentation d'installation.
 ```
 package/
   addon/Casinobabe/        -> à copier dans <WoW>\Interface\AddOns\Casinobabe
-  scripts/fishing_*.py     -> le bot (Python 3.11+)
-  scripts/focus_broker.py
+  scripts/fishing_*.py     -> le bot et ses modules (Python 3.11+)
+  requirements.txt         -> dépendances Python nécessaires
   config.example.json      -> gabarit de configuration
   INSTALL.md               -> ce document
+  THIRD_PARTY_NOTICES.md   -> avis de licences tiers
 MANIFEST.json              -> SHA-256 de chaque fichier (intégrité)
 VERSION                    -> version du paquet
 RELEASE-NOTES.md           -> notes de version
@@ -27,7 +28,8 @@ RELEASE-NOTES.md           -> notes de version
 | Élément | Exigence |
 |---|---|
 | Windows | 10 ou 11 (64 bits) |
-| Python | 3.11 ou plus récent (`python --version`) |
+| Python | 3.11 ou plus récent (`python --version`) + pip |
+| Dépendances | Installation via `requirements.txt` (OpenCV, NumPy, Pillow, MSS, pywin32) |
 | WoW | Classic (anniversaire ou classique) **et** le client en jeu |
 | Ecran | résolution native, le client visible (le bot lit la fenêtre) |
 
