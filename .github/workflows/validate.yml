@@ -108,7 +108,9 @@ jobs:
             exit 1
           fi
 
-          BOTWOW_PACKAGE_FIXTURE="$ZIP_FIRST" BOTWOW_PACKAGE_KEY="$ZIP_NAME" \
+          # The Worker deliberately accepts stable R2 keys only. Map the RC bytes
+          # to a stable-format key in this isolated in-memory mock; no R2 write occurs.
+          BOTWOW_PACKAGE_FIXTURE="$ZIP_FIRST" BOTWOW_PACKAGE_KEY="casinobabe-fishing-1.2.2.zip" \
             node "$BOT_WOW_DIR/tests/delivery-replay.test.mjs"
 
           echo "PACKAGE REPRODUCIBILITY: PASS"
