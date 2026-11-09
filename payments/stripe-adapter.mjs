@@ -124,19 +124,28 @@ export function validateConfig(config, priceTable) {
   if (String(config.currency || '').toUpperCase() === 'EUR' && false) {
     /* garde-fou explicite : aucune devise n'est négociée ici. */
   }
-  if (config.productKey && priceTable && !(config.productKey in priceTable)) {
-    problems.push(`productKey "${config.productKey}" absent de la table produit`);
+  if (!config.productKey || typeof config.productKey !== 'string') {
+    problems.push('productKey obligatoire');
   }
-  if (config.productKey && priceTable && config.productKey in priceTable) {
+  const hasPlan = Boolean(
+    priceTable
+    && typeof priceTable === 'object'
+    && Object.prototype.hasOwnProperty.call(priceTable, config.productKey),
+  );
+  if (!hasPlan) {
+    problems.push(`plan absent de la table produit pour ${config.productKey || '(vide)'}`);
+  } else {
     const plan = priceTable[config.productKey];
-    if (plan.amount !== config.amount) {
+    if (!plan || !Number.isInteger(plan.amount) || plan.amount <= 0) {
+      problems.push(`montant du plan invalide pour ${config.productKey}`);
+    } else if (plan.amount !== config.amount) {
       problems.push(
         `amount ${config.amount} ≠ plan ${plan.amount} pour ${config.productKey}`,
       );
     }
-    if (String(plan.currency).toUpperCase() !== String(config.currency).toUpperCase()) {
+    if (!plan || String(plan.currency || '').toUpperCase() !== String(config.currency).toUpperCase()) {
       problems.push(
-        `currency ${config.currency} ≠ plan ${plan.currency} pour ${config.productKey}`,
+        `currency ${config.currency} ≠ plan ${plan?.currency || '(absente)'} pour ${config.productKey}`,
       );
     }
   }
@@ -170,9 +179,13 @@ export function buildCheckoutSessionBody(config) {
   if (config.locale) body.set('locale', config.locale);
   if (config.metadata) {
     for (const [k, v] of Object.entries(config.metadata)) {
-      body.set(`metadata[${k}]`, String(v));
+      if (k !== 'product' && k !== 'source') {
+        body.set(`metadata[${k}]`, String(v));
+      }
     }
   }
+  body.set('metadata[product]', config.productKey);
+  body.set('metadata[source]', 'bot-wow-stripe-test');
   return body;
 }
 
@@ -188,9 +201,9 @@ export async function createCheckoutSession(config, {
   assertTestMode(config.mode);
   validateConfig(config, config.priceTable || null);
   const secret = secrets[config.secretKeyEnv];
-  if (!secret) {
+  if (typeof secret !== 'string' || !secret.startsWith('sk_test_')) {
     throw new StripeConfigError(
-      `secret absent pour la variable ${config.secretKeyEnv} — aucun appel émis`,
+      'clé Stripe refusée : seul le préfixe sk_test_ est accepté — aucun appel émis',
     );
   }
   const body = buildCheckoutSessionBody(config);
@@ -214,7 +227,7 @@ export async function createCheckoutSession(config, {
     mode: json.mode,
     paymentStatus: json.payment_status,
     amountTotal: json.amount_total,
-    currency: json.currency,
+    currency: String(json.currency || '').toUpperCase(),
     apiMode: config.mode,
   };
 }
@@ -323,13 +336,12 @@ export function buildSignatureHeader(payload, secret, {
  * `checkout.session.completed` arrivé deux fois, ou après un
  * `payment_intent.payment_failed`, ne crée jamais de double livraison.
  */
-export function handleWebhookEvent(rawEvent, context) {
+export function handleWebhookEvent(rawEvent, context = {}) {
   const {
     secret, header, payload, state, priceTable, productKey,
     now = Date.now(), onDuplicate,
   } = context;
 
-  /* 1. signature */
   const verified = verifyWebhookSignature({
     payload, header, secret, now,
   });
@@ -338,62 +350,174 @@ export function handleWebhookEvent(rawEvent, context) {
     return { action: 'reject', reason: 'event_unparsable', status: 400 };
   }
 
-  /* 2. type connu */
   const KNOWN = new Set([
     'checkout.session.completed',
     'checkout.session.expired',
-    'payment_intent.pucceeded',
+    'payment_intent.succeeded',
     'payment_intent.payment_failed',
   ]);
   if (!KNOWN.has(event.type)) {
     return { action: 'ignore', reason: `unknown_type:${event.type}`, status: 200 };
   }
 
-  /* 5. idempotence (avant tout effet de bord) */
   const eventId = event.id;
   if (!eventId) return { action: 'reject', reason: 'missing_event_id', status: 400 };
-  if (state && state.isProcessed && state.isProcessed(eventId)) {
+  if (state?.isProcessed?.(eventId)) {
     if (typeof onDuplicate === 'function') onDuplicate(eventId);
     return { action: 'duplicate', eventId, status: 200 };
   }
 
-  /* 3 + 4. conformité puis statut de paiement */
-  if (event.type === 'checkout.session.completed'
-    || event.type === 'payment_intent.succeeded') {
-    const session = event.data && event.data.object ? event.data.object : {};
-    const amount = Number(session.amount_total ?? session.amount ?? 0);
-    const currency = String(session.currency || '').toUpperCase();
-    const plan = priceTable && priceTable[productKey];
-    if (plan && (amount !== plan.amount || currency !== plan.currency.toUpperCase())) {
-      return { action: 'reject', reason: 'amount_or_currency_mismatch', status: 400, eventId };
-    }
-    const paymentStatus = String(session.payment_status || '').toLowerCase();
-    if (paymentStatus !== 'paid' && paymentStatus !== 'succeeded') {
-      return { action: 'defer', reason: `payment_status_${paymentStatus || 'unknown'}`, status: 200, eventId };
-    }
-    if (state && state.markProcessed) state.markProcessed(eventId);
-    return { action: 'fulfill', eventId, event, status: 200 };
+  if (event.type === 'checkout.session.expired') {
+    state?.markEventProcessed?.(eventId);
+    return { action: 'ignore', reason: event.type, eventId, status: 200 };
   }
 
   if (event.type === 'payment_intent.payment_failed') {
-    if (state && state.markProcessed) state.markProcessed(eventId);
+    // A failed attempt is terminal only for this event ID, not for the
+    // PaymentIntent: Stripe may later emit a succeeded event after a retry.
+    state?.markEventProcessed?.(eventId);
     return { action: 'payment_failed', eventId, event, status: 200 };
   }
 
-  /* session expirée : rien à livrer */
-  return { action: 'ignore', reason: event.type, status: 200, eventId };
+  const object = event.data?.object;
+  if (!object || typeof object !== 'object') {
+    return { action: 'reject', reason: 'event_object_missing', eventId, status: 400 };
+  }
+
+  const isPaymentIntent = event.type === 'payment_intent.succeeded';
+  const paymentStatus = String(
+    isPaymentIntent ? object.status || '' : object.payment_status || '',
+  ).toLowerCase();
+  if (paymentStatus !== 'paid' && paymentStatus !== 'succeeded') {
+    return {
+      action: 'defer',
+      reason: `payment_status_${paymentStatus || 'unknown'}`,
+      eventId,
+      status: 200,
+    };
+  }
+
+  const plan = priceTable
+    && Object.prototype.hasOwnProperty.call(priceTable, productKey)
+    ? priceTable[productKey]
+    : null;
+  if (!plan) {
+    return { action: 'reject', reason: 'plan_missing', eventId, status: 400 };
+  }
+
+  if (!productKey || object.metadata?.product !== productKey) {
+    return { action: 'reject', reason: 'product_mismatch', eventId, status: 400 };
+  }
+
+  const amount = Number(
+    isPaymentIntent
+      ? object.amount_received ?? object.amount ?? 0
+      : object.amount_total ?? 0,
+  );
+  const currency = String(object.currency || '').toUpperCase();
+  const planCurrency = String(plan.currency || '').toUpperCase();
+  if (!Number.isInteger(plan.amount) || amount !== plan.amount || !planCurrency
+    || currency !== planCurrency) {
+    return { action: 'reject', reason: 'amount_or_currency_mismatch', eventId, status: 400 };
+  }
+
+  if (!state
+    || typeof state.claimFulfillment !== 'function'
+    || typeof state.markProcessed !== 'function'
+    || typeof state.markFailed !== 'function') {
+    return { action: 'reject', reason: 'idempotency_state_unavailable', eventId, status: 503 };
+  }
+
+  // Checkout Session and PaymentIntent events share the same payment-intent
+  // key, preventing two different event IDs from causing duplicate delivery.
+  const paymentIntentId = isPaymentIntent ? object.id : object.payment_intent;
+  const fulfillmentKey = String(paymentIntentId || object.id || eventId);
+  const claim = state.claimFulfillment(eventId, fulfillmentKey);
+  if (claim === 'processed') {
+    if (typeof onDuplicate === 'function') onDuplicate(eventId);
+    return { action: 'duplicate', eventId, fulfillmentKey, status: 200 };
+  }
+  if (claim === 'processing') {
+    return { action: 'in_progress', eventId, fulfillmentKey, status: 200 };
+  }
+  if (claim !== 'claimed') {
+    return { action: 'reject', reason: 'idempotency_claim_failed', eventId, status: 503 };
+  }
+
+  // The caller MUST call state.markProcessed(eventId, fulfillmentKey) only
+  // after delivery succeeds, or state.markFailed(...) when delivery fails.
+  // A failed delivery is therefore retryable and never marked completed here.
+  return { action: 'fulfill', eventId, fulfillmentKey, event, status: 200 };
 }
 
 /**
- * État d'idempotence en mémoire (tests isolés ; en production ce serait D1,
- * exactement comme `webhook_events` côté Mollie).
+ * Mémoire d'idempotence réservée aux tests isolés.
+ * En production, les claims doivent être transactionnels et persistants.
  */
 export function createMemoryEventState(initial = []) {
-  const processed = new Set(initial);
+  const eventStatuses = new Map(initial.map((id) => [String(id), 'processed']));
+  const fulfillmentStatuses = new Map();
+  const fulfillmentEvents = new Map();
+
+  function addEventForKey(key, eventId) {
+    if (!fulfillmentEvents.has(key)) fulfillmentEvents.set(key, new Set());
+    fulfillmentEvents.get(key).add(eventId);
+  }
+
   return {
-    isProcessed: (id) => processed.has(id),
-    markProcessed: (id) => { processed.add(id); },
-    _processed: processed,
+    isProcessed: (id) => eventStatuses.get(String(id)) === 'processed',
+    markEventProcessed: (id) => { eventStatuses.set(String(id), 'processed'); },
+    claimFulfillment(eventId, fulfillmentKey) {
+      const id = String(eventId);
+      const key = String(fulfillmentKey);
+      const eventStatus = eventStatuses.get(id);
+      if (eventStatus === 'processed') return 'processed';
+      if (eventStatus === 'processing') return 'processing';
+
+      const fulfillmentStatus = fulfillmentStatuses.get(key);
+      if (fulfillmentStatus === 'processed') {
+        eventStatuses.set(id, 'processed');
+        return 'processed';
+      }
+      if (fulfillmentStatus === 'processing') {
+        eventStatuses.set(id, 'processing');
+        addEventForKey(key, id);
+        return 'processing';
+      }
+
+      eventStatuses.set(id, 'processing');
+      fulfillmentStatuses.set(key, 'processing');
+      addEventForKey(key, id);
+      return 'claimed';
+    },
+    markProcessed(eventId, fulfillmentKey) {
+      const id = String(eventId);
+      eventStatuses.set(id, 'processed');
+      if (fulfillmentKey) {
+        const key = String(fulfillmentKey);
+        fulfillmentStatuses.set(key, 'processed');
+        for (const relatedId of fulfillmentEvents.get(key) || []) {
+          eventStatuses.set(relatedId, 'processed');
+        }
+      }
+    },
+    markFailed(eventId, fulfillmentKey) {
+      const id = String(eventId);
+      if (eventStatuses.get(id) === 'processing') eventStatuses.set(id, 'failed');
+      if (fulfillmentKey) {
+        const key = String(fulfillmentKey);
+        if (fulfillmentStatuses.get(key) === 'processing') {
+          fulfillmentStatuses.set(key, 'failed');
+        }
+        for (const relatedId of fulfillmentEvents.get(key) || []) {
+          if (eventStatuses.get(relatedId) === 'processing') {
+            eventStatuses.set(relatedId, 'failed');
+          }
+        }
+      }
+    },
+    _eventStatuses: eventStatuses,
+    _fulfillmentStatuses: fulfillmentStatuses,
   };
 }
 

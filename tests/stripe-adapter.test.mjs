@@ -28,6 +28,7 @@ function fixtureConfig(overrides = {}) {
     amount: 2000,
     currency: 'eur',
     productKey: 'bot-wow-lifetime',
+    priceTable: { 'bot-wow-lifetime': { amount: 2000, currency: 'eur' } },
     productName: 'BOT-WOW Fishing Assistant',
     productDescription: 'Fishing Assistant 1.2.0 — WoW Classic assistant',
     metadata: { sessionId: 'sess_test_1', customerEmail: 'client@example.com' },
@@ -100,8 +101,25 @@ console.log('=== 2. CREATE CHECKOUT SESSION (mode test) ===');
       `(reçu ${session.mode})`);
     check('montant est 2000 centimes', session.amountTotal === 2000,
       `(reçu ${session.amountTotal})`);
-    check('devise est eur', session.currency === 'eur', `(reçu ${session.currency})`);
+    check('devise est EUR', session.currency === 'EUR', `(reçu ${session.currency})`);
   }
+}
+
+
+{
+  const config = fixtureConfig();
+  let fetchCalls = 0;
+  let rejected = false;
+  try {
+    await createCheckoutSession(config, {
+      secrets: { STRIPE_SECRET_KEY: 'sk_live_never_send_this' },
+      fetchImpl: async () => { fetchCalls += 1; throw new Error('fetch must not run'); },
+    });
+  } catch (e) {
+    rejected = e instanceof Error && e.code === 'stripe_config_invalid';
+  }
+  check('clé sk_live_ refusée avant tout fetch', rejected && fetchCalls === 0,
+    `rejected=${rejected}, fetchCalls=${fetchCalls}`);
 }
 
 console.log('');
@@ -261,6 +279,184 @@ const productKey = 'bot-wow-lifetime';
   check('devise incohérente est rejetée', result.action === 'reject',
     `(retourne ${result.action})`);
   check('statut est 400', result.status === 400, `(reçu ${result.status})`);
+}
+
+
+console.log('');
+console.log('=== 5. FAIL-CLOSED / PAYMENTINTENT / FULFILLMENT RETRIES ===');
+
+function signedEvent(event, state, overrides = {}) {
+  const payload = JSON.stringify(event);
+  const header = buildSignatureHeader(payload, secret);
+  return handleWebhookEvent(event, {
+    secret, header, payload, state, priceTable, productKey,
+    ...overrides,
+  });
+}
+
+{
+  const event = {
+    id: 'evt_plan_missing',
+    type: 'checkout.session.completed',
+    data: { object: {
+      id: 'cs_plan_missing',
+      payment_intent: 'pi_plan_missing',
+      payment_status: 'paid',
+      amount_total: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const result = signedEvent(event, createMemoryEventState(), { priceTable: {} });
+  check('plan absent -> fail-closed', result.action === 'reject' && result.reason === 'plan_missing');
+}
+
+{
+  const event = {
+    id: 'evt_product_mismatch',
+    type: 'checkout.session.completed',
+    data: { object: {
+      id: 'cs_product_mismatch',
+      payment_intent: 'pi_product_mismatch',
+      payment_status: 'paid',
+      amount_total: 2000,
+      currency: 'eur',
+      metadata: { product: 'different-product' },
+    } },
+  };
+  const result = signedEvent(event, createMemoryEventState());
+  check('metadata produit absent/mismatch -> fail-closed',
+    result.action === 'reject' && result.reason === 'product_mismatch');
+}
+
+{
+  const event = {
+    id: 'evt_pi_succeeded',
+    type: 'payment_intent.succeeded',
+    data: { object: {
+      id: 'pi_test_succeeded',
+      object: 'payment_intent',
+      status: 'succeeded',
+      amount: 2000,
+      amount_received: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const state = createMemoryEventState();
+  const result = signedEvent(event, state);
+  check('payment_intent.succeeded + status=succeeded -> fulfill',
+    result.action === 'fulfill' && result.fulfillmentKey === 'pi_test_succeeded');
+  state.markProcessed(result.eventId, result.fulfillmentKey);
+  const duplicate = signedEvent(event, state);
+  check('PaymentIntent rejoué après fulfillment -> duplicate', duplicate.action === 'duplicate');
+}
+
+{
+  const state = createMemoryEventState();
+  const failed = {
+    id: 'evt_pi_failed_first',
+    type: 'payment_intent.payment_failed',
+    data: { object: {
+      id: 'pi_retry_order',
+      object: 'payment_intent',
+      status: 'requires_payment_method',
+      amount: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const succeeded = {
+    id: 'evt_pi_succeeded_later',
+    type: 'payment_intent.succeeded',
+    data: { object: {
+      id: 'pi_retry_order',
+      object: 'payment_intent',
+      status: 'succeeded',
+      amount: 2000,
+      amount_received: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  check('payment_failed reçu avant succeeded ne verrouille pas le paiement',
+    signedEvent(failed, state).action === 'payment_failed'
+      && signedEvent(succeeded, state).action === 'fulfill');
+}
+
+{
+  const state = createMemoryEventState();
+  const event = {
+    id: 'evt_delivery_retry',
+    type: 'checkout.session.completed',
+    data: { object: {
+      id: 'cs_delivery_retry',
+      payment_intent: 'pi_delivery_retry',
+      payment_status: 'paid',
+      amount_total: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const first = signedEvent(event, state);
+  check('première livraison revendique une clé idempotente', first.action === 'fulfill');
+  state.markFailed(first.eventId, first.fulfillmentKey);
+  const retry = signedEvent(event, state);
+  check('échec fulfillment permet un rejeu', retry.action === 'fulfill');
+  state.markProcessed(retry.eventId, retry.fulfillmentKey);
+  const replay = signedEvent(event, state);
+  check('livraison terminée ne peut pas être doublée', replay.action === 'duplicate');
+}
+
+{
+  const state = createMemoryEventState();
+  const checkout = {
+    id: 'evt_checkout_completed',
+    type: 'checkout.session.completed',
+    data: { object: {
+      id: 'cs_shared_payment',
+      payment_intent: 'pi_shared_payment',
+      payment_status: 'paid',
+      amount_total: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const first = signedEvent(checkout, state);
+  state.markProcessed(first.eventId, first.fulfillmentKey);
+  const paymentIntent = {
+    id: 'evt_payment_intent_succeeded',
+    type: 'payment_intent.succeeded',
+    data: { object: {
+      id: 'pi_shared_payment',
+      object: 'payment_intent',
+      status: 'succeeded',
+      amount: 2000,
+      amount_received: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  check('Checkout + PaymentIntent du même paiement -> une seule livraison',
+    signedEvent(paymentIntent, state).action === 'duplicate');
+}
+
+{
+  const event = {
+    id: 'evt_no_state',
+    type: 'checkout.session.completed',
+    data: { object: {
+      id: 'cs_no_state',
+      payment_intent: 'pi_no_state',
+      payment_status: 'paid',
+      amount_total: 2000,
+      currency: 'eur',
+      metadata: { product: 'bot-wow-lifetime' },
+    } },
+  };
+  const result = signedEvent(event, null);
+  check('absence de store idempotent -> fail-closed 503',
+    result.action === 'reject' && result.status === 503);
 }
 
 console.log('');
