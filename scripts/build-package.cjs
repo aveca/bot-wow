@@ -128,12 +128,22 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 
 /** Fichiers du bot Python livre au client. */
 const BOT_FILES = [
+  // Entry point + every local module imported by the runtime (directly or
+  // through the recovery/navigation helpers). Missing modules silently
+  // disabled death recovery and navigation in the previous package.
   'scripts/fishing_bot.py',
   'scripts/fishing_observer.py',
   'scripts/fishing_memory.py',
   'scripts/fishing_popup.py',
   'scripts/focus_broker.py',
-  'scripts/fishing-oneclick.ps1',
+  'scripts/fishing_process.py',
+  'scripts/fishing_controls.py',
+  'scripts/fishing_client.py',
+  'scripts/fishing_recovery.py',
+  'scripts/fishing_safety.py',
+  'scripts/fishing_navigation.py',
+  'scripts/fishing_minimap.py',
+  'scripts/fishing_spots.py',
 ];
 
 /** Repertoires exclus (donnees de session, journaux, memoire). */
