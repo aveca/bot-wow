@@ -103,6 +103,18 @@ for (const p of ['legal/terms.html', 'legal/fr/terms.html']) {
     /r[ée]f[ée]rence historique|historical reference/i.test(around), `"${around.slice(0, 120).trim()}"`);
 }
 
+/* Les clauses de vente restent visibles uniquement comme archive historique. */
+for (const p of ['legal/terms.html', 'legal/fr/terms.html']) {
+  if (!pages.includes(p)) continue;
+  const t = strip(read(p));
+  const archived = p.includes('/fr/')
+    ? /archive historique uniquement.*ne constituent pas des conditions commerciales ou contractuelles actuelles/i
+    : /historical archive only.*not current commercial or contractual terms/i;
+  check(`${p} : conditions clairement marquees comme archive non contractuelle`, archived.test(t));
+  check(`${p} : aucune affirmation que l'offre est actuellement commercialisee`,
+    !/page describes the offer currently on sale|page décrit l'offre actuellement commercialisée/i.test(t));
+}
+
 /* Les donnees structurees ne doivent jamais porter un prix actif. */
 for (const p of pages) {
   const h = read(p);
