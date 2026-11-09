@@ -70,9 +70,9 @@ jobs:
           set -euo pipefail
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
           pwd
-          ls -ld "$GITHUB_WORKSPACE/bot-wow" "$GITHUB_WORKSPACE/Casinababe"
+          ls -ld "$GITHUB_WORKSPACE/bot-wow" "$GITHUB_WORKSPACE/bot-wow/.source/Casinababe"
           BOT_WOW_DIR="$GITHUB_WORKSPACE/bot-wow"
-          SOURCE_DIR="$GITHUB_WORKSPACE/Casinababe"
+          SOURCE_DIR="$GITHUB_WORKSPACE/bot-wow/.source/Casinababe"
           SOURCE_SHA="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           ZIP_NAME="casinababe-fishing-1.2.2-rc.1.zip"
           OUT_FIRST="/tmp/botwow-package-candidate-first"
