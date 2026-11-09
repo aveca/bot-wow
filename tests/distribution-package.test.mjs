@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { inflateRawSync } from 'node:zlib';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -30,6 +31,30 @@ let failures = 0;
 function check(name, ok, detail = '') {
   if (ok) console.log(`  ok   ${name}`);
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
+}
+
+function readZipEntries(zipPath) {
+  const zip = readFileSync(zipPath);
+  const entries = new Map();
+  let offset = 0;
+  while (offset + 30 <= zip.length && zip.readUInt32LE(offset) === 0x04034b50) {
+    const method = zip.readUInt16LE(offset + 8);
+    const compressedSize = zip.readUInt32LE(offset + 18);
+    const uncompressedSize = zip.readUInt32LE(offset + 22);
+    const nameLength = zip.readUInt16LE(offset + 26);
+    const extraLength = zip.readUInt16LE(offset + 28);
+    const nameStart = offset + 30;
+    const name = zip.toString('utf8', nameStart, nameStart + nameLength);
+    const dataStart = nameStart + nameLength + extraLength;
+    const compressed = zip.subarray(dataStart, dataStart + compressedSize);
+    const data = method === 0 ? Buffer.from(compressed)
+      : method === 8 ? inflateRawSync(compressed)
+        : (() => { throw new Error('ZIP compression method unsupported: ' + method); })();
+    if (data.length !== uncompressedSize) throw new Error('ZIP entry size mismatch: ' + name);
+    entries.set(name, data);
+    offset = dataStart + compressedSize;
+  }
+  return entries;
 }
 
 function git(args, cwd) {
@@ -49,7 +74,7 @@ function seedSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   mkdirSync(join(dir, 'state'), { recursive: true });
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\nCasinobabe.lua\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("bot")\n');
   writeFileSync(join(dir, 'scripts', 'fishing_observer.py'), 'print("obs")\n');
@@ -158,6 +183,34 @@ try {
 
   check('l\'addon est livre', staged.some((f) => f.endsWith('Casinobabe.toc')));
   check('le bot est livre', staged.some((f) => f.endsWith('fishing_bot.py')));
+
+  // Installation depuis le ZIP réellement produit, dans un faux dossier WoW isolé.
+  const zipEntries = readZipEntries(join(OUT, 'casinobabe-fishing-9.9.9.zip'));
+  const fakeWow = join(tmp, 'fake-wow');
+  const installedAddon = join(fakeWow, 'Interface', 'AddOns', 'Casinobabe');
+  const addonPrefix = 'package/addon/Casinobabe/';
+  for (const [entryName, bytes] of zipEntries) {
+    if (!entryName.startsWith(addonPrefix)) continue;
+    const relative = entryName.slice(addonPrefix.length);
+    if (!relative || relative.split('/').includes('..') || relative.startsWith('/')) {
+      throw new Error('Chemin addon dangereux dans le ZIP : ' + entryName);
+    }
+    const target = join(installedAddon, ...relative.split('/'));
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+  }
+  const tocPath = join(installedAddon, 'Casinobabe.toc');
+  const toc = readFileSync(tocPath, 'utf8');
+  const tocEntries = toc.split(/\r?\n/).map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  check('installation simulée : le ZIP contient des fichiers addon', [...zipEntries.keys()].some((name) => name.startsWith(addonPrefix)));
+  check('installation simulée : le dossier AddOns/Casinobabe est créé', existsSync(installedAddon));
+  check('installation simulée : le manifeste WoW .toc est présent', existsSync(tocPath));
+  check('activation simulée : chaque fichier déclaré par le .toc existe',
+    tocEntries.every((entry) => existsSync(join(installedAddon, entry))),
+    tocEntries.filter((entry) => !existsSync(join(installedAddon, entry))).join(', '));
+  check('activation simulée : le .toc référence au moins un fichier Lua',
+    tocEntries.some((entry) => entry.toLowerCase().endsWith('.lua')), tocEntries.join(', '));
   check('la documentation d\'installation est livree', staged.includes('INSTALL.md'));
   check('le gabarit de configuration est livre', staged.includes('config.example.json'));
 
@@ -210,7 +263,7 @@ try {
   const SRC_CRLF = join(tmp, 'src-crlf');
   mkdirSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(SRC_CRLF, 'scripts'), { recursive: true });
-  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\n');
+  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\nCasinobabe.lua\r\n');
   writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_bot.py'), 'print("bot")\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_observer.py'), 'print("obs")\r\n');
@@ -351,6 +404,52 @@ try {
       check('la provenance courte est marquee verifiee', m.source?.provenanceVerified === true);
     }
   }
+  // ── 7. COMPOSANTS SANS DROITS ÉTABLIS : REFUS FAIL-CLOSED ───────────────
+  {
+    const restricted = makeGitSource(tmp, 'src-unverified-addon-components');
+    mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0'), { recursive: true });
+    mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media'), { recursive: true });
+    writeFileSync(
+      join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0', 'LibDBIcon-1.0.lua'),
+      '-- fixture: adaptation tierce sans licence établie\n',
+    );
+    writeFileSync(
+      join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media', 'background.tga'),
+      Buffer.from('fixture texture sans provenance'),
+    );
+    git(['add', '-A'], restricted.dir);
+    git(['commit', '-m', 'add restricted addon component fixtures'], restricted.dir);
+    restricted.head = git(['rev-parse', 'HEAD'], restricted.dir);
+
+    const restrictedOut = join(tmp, 'dist-unverified-components');
+    const previousPackageDir = join(restrictedOut, 'casinobabe-fishing-9.9.9');
+    mkdirSync(previousPackageDir, { recursive: true });
+    writeFileSync(join(previousPackageDir, 'previous-manifest-marker.txt'), 'keep-existing-package');
+    const previousArchive = join(restrictedOut, 'casinobabe-fishing-9.9.9.zip');
+    writeFileSync(previousArchive, 'keep-existing-archive');
+    const restrictedArgs = baseArgs.map((a) => (
+      a === SRC.dir ? restricted.dir : a === SRC.head ? restricted.head : a
+    ));
+    const result = expectBuildFailure(
+      'composants non certifiés : le build échoue',
+      [...restrictedArgs, '--out', restrictedOut],
+      /composants addon non certifiés refusés/i,
+    );
+    const output = result.stdout + '\\n' + result.stderr;
+    check('LibDBIcon-1.0 est explicitement bloqué', output.includes('LibDBIcon-1.0.lua'));
+    check('background.tga est explicitement bloqué', output.includes('background.tga'));
+    check(
+      'le préflight conserve l’archive précédente sans la remplacer',
+      existsSync(previousArchive)
+        && readFileSync(previousArchive, 'utf8') === 'keep-existing-archive',
+    );
+    check(
+      'le préflight conserve le dossier du package précédent',
+      existsSync(join(previousPackageDir, 'previous-manifest-marker.txt')),
+    );
+
+  }
+
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
