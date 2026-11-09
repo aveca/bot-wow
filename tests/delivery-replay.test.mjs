@@ -25,6 +25,7 @@
  * avec un etat en memoire. Aucun paiement, aucun e-mail envoye.
  */
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -697,6 +698,52 @@ function seedArtifact(state) {
   check('cle R2 invalide : 503 sans lire le seau',
     res.status === 503 && body.error === 'artifact_unavailable' && state.r2Gets.length === beforeGets,
     `(status=${res.status} lectures=${state.r2Gets.length - beforeGets})`);
+}
+
+/* --- 14. Parcours E2E isolé : paiement -> activation -> artefact exact --- */
+{
+  const state = newState();
+  seedArtifact(state);
+  const env = makeEnv(state);
+  globalThis.__resendState = { ok: true, sent: state.emails };
+  paymentState = paidPayment('tr_PACKAGE_E2E', 'client-package-e2e@example.com');
+
+  const paid = await callWorker('/api/mollie-webhook', {
+    method: 'POST', body: { id: 'tr_PACKAGE_E2E' }, env,
+  });
+  const license = state.licenses[0];
+  const token = state.downloads[0]?.token;
+
+  check('E2E : paiement confirmé crée une seule licence et un jeton',
+    paid.status === 200 && state.orders[0]?.status === 'paid'
+      && state.licenses.length === 1 && !!token,
+    `(status=${paid.status} licences=${state.licenses.length})`);
+
+  const activation = await callWorker('/api/activate', {
+    method: 'POST', body: { key: license?.key, machine_id: 'machine-package-e2e' }, env,
+  });
+  const activationBody = await activation.json();
+  check('E2E : activation du client acceptée',
+    activation.status === 200 && activationBody.ok === true
+      && state.activations.some((a) => a.machine_id === 'machine-package-e2e'),
+    `(status=${activation.status})`);
+
+  const downloaded = await callWorker('/api/download?t=' + encodeURIComponent(token), { env });
+  const bytes = new Uint8Array(await downloaded.arrayBuffer());
+  const deliveredSha256 = createHash('sha256').update(bytes).digest('hex');
+  const expectedSha256 = createHash('sha256').update(ZIP_BYTES).digest('hex');
+
+  check('E2E : téléchargement du package configuré renvoie HTTP 200',
+    downloaded.status === 200 && downloaded.headers.get('content-type') === 'application/zip',
+    `(status=${downloaded.status})`);
+  check('E2E : le hash SHA-256 des octets livrés correspond exactement au package fixture',
+    deliveredSha256 === expectedSha256,
+    `(attendu=${expectedSha256} reçu=${deliveredSha256})`);
+  check('E2E : nom du package livré identique à la clé d’artefact configurée',
+    downloaded.headers.get('content-disposition') === `attachment; filename="${RELEASE_KEY}"`);
+  check('E2E : une seule licence, une seule activation et un seul reçu de livraison',
+    state.licenses.length === 1 && state.activations.length === 1
+      && state.deliveries.filter((d) => d.status === 'sent').length === 1);
 }
 
 /* --------------------------------------------------------------- fin */
