@@ -41,13 +41,15 @@ Classic specific (couleurs d'eau, taille de la minicarte).
 
 1. Décompressez l'archive dans un dossier de votre choix (par exemple
    `C:\Casinobabe\`).
-2. Copiez `package\addon\Casinobabe` dans
+2. Dans le dossier extrait, installez les dépendances :
+   `python -m pip install -r requirements.txt`.
+3. Copiez `package\addon\Casinobabe` dans
    `<WoW>\Interface\AddOns\Casinobabe`
    (`<WoW>` = le dossier d'installation du client, par exemple
    `C:\Program Files (x86)\World of Warcraft\_anniversary_`).
-3. Copiez `package\config.example.json` vers
+4. Copiez `package\config.example.json` vers
    `<dossier du bot>\state\fishing-bot-config.json` et ajustez les valeurs.
-4. Vérifiez l'intégrité du paquet avec `MANIFEST.json` (SHA-256) avant de
+5. Vérifiez l'intégrité du paquet avec `MANIFEST.json` (SHA-256) avant de
    lancer : un fichier modifié doit être réinstallé.
 
 ## 4. Configuration initiale
