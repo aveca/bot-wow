@@ -3,7 +3,9 @@
 **Date :** 2026-11-10
 **Dépôt :** `aveca/bot-wow` — branche de publication : `docs/purchase-intent-measurement-findings-20261110`
 **Contexte :** travail de l'agent Grok Bot du 27/10/2026 (« mesurer les CTA d'achat invisibles »),
-poursuivi et cloturé ici.
+poursuivi et clôturé ici.
+
+**Mise à jour 2026-11-10T07:16Z :** le défaut vivant décrit dans ce bilan est corrigé dans la PR #176. Le script ne classe plus les boutons de statut comme une intention de checkout ; seul un élément portant explicitement `data-checkout-enabled="true"` et `data-cta-id` émet `checkout_requested`. Des tests comportementaux couvrent le bouton `nav-buy`, les anciens identifiants et le CTA activé. Aucun checkout public n'a été activé.
 
 ---
 
