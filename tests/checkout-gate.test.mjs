@@ -45,7 +45,7 @@ function makeEnv(releaseStatus) {
     },
     batch: async () => [],
   };
-  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus || 'pending' };
+  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus || 'pending', STRIPE_SECRET_KEY: 'sk_test_unit', STRIPE_WEBHOOK_SECRET: 'whsec_test' };
 }
 
 function call(body, env, ip) {

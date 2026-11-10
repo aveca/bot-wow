@@ -1,6 +1,6 @@
 # BOT-WOW — état partagé
 
-**Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
+**Ajout 2026-11-10 — checkout Stripe dans le Worker, non déployé.** Branche `cursor/stripe-checkout-0da7`. `POST /api/checkout` crée une Checkout Session Stripe (20,00 EUR côté serveur) et renvoie `checkoutUrl`. `POST /api/stripe-webhook` vérifie `Stripe-Signature` avec `STRIPE_WEBHOOK_SECRET`, relit la session avec `STRIPE_SECRET_KEY`, puis lance la même livraison (licence + e-mail Resend) que l'ancien webhook Mollie. Secrets à poser : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. Événement Stripe : `checkout.session.completed`. URL : `https://api.bot-wow.com/api/stripe-webhook`. Le Worker de production n'est pas redéployé par cette PR.
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 

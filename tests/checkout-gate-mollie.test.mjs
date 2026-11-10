@@ -53,36 +53,31 @@ function makeEnv(releaseStatus) {
     },
     batch: async () => [],
   };
-  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus };
+  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus, STRIPE_SECRET_KEY: 'sk_test_unit', STRIPE_WEBHOOK_SECRET: 'whsec_test' };
 }
 
 let MOLLIE_CALLS = [];
 const realFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : (input && input.url) || String(input);
-  if (/mollie\.com/.test(url)) {
-    // On capture le CORPS de la requete : c'est la seule facon de verifier
-    // le montant et la devise reellement envoyes au prestataire.
+  if (/api\.stripe\.com/.test(url)) {
     let parsedBody = null;
     if (init && init.body) {
-      try { parsedBody = JSON.parse(init.body); } catch { parsedBody = null; }
+      try { parsedBody = Object.fromEntries(new URLSearchParams(String(init.body))); } catch { parsedBody = null; }
     }
     MOLLIE_CALLS.push({
       url,
       method: (init && init.method) || 'GET',
       body: parsedBody,
     });
-    // Reponses simulees conformes a l'API Mollie (aucun appel reseau reel).
-    if (/\/payments$/.test(url) && (init && init.method) === 'POST') {
+    if (/\/checkout\/sessions$/.test(url) && (init && init.method) === 'POST') {
       return new Response(JSON.stringify({
-        id: 'tr_simulated',
-        _links: { checkout: { href: 'https://www.mollie.com/checkout/simulated' } },
-      }), { status: 201, headers: { 'content-type': 'application/json' } });
+        id: 'cs_simulated',
+        url: 'https://checkout.stripe.com/c/pay/cs_simulated',
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
     }
-    if (/\/customers/.test(url)) {
-      return new Response(JSON.stringify({ id: 'cst_simulated' }), { status: 201, headers: { 'content-type': 'application/json' } });
-    }
-    return new Response(JSON.stringify({ id: 'mollie_simulated' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ id: 'cs_simulated', url: 'https://checkout.stripe.com/c/pay/cs_simulated' }), { status: 200, headers: { 'content-type': 'application/json' } });
   }
   return realFetch(input, init);
 };
@@ -133,12 +128,10 @@ for (const attack of [
   check('confirmed -> pas de 409', res.status !== 409, `(status ${res.status})`);
   check('confirmed -> reponse 200 avec un paymentId', res.status === 200 && !!b.paymentId, `(status ${res.status})`);
   check('confirmed -> une checkoutUrl Mollie est renvoyee',
-    !!b.checkoutUrl && /mollie\.com/.test(b.checkoutUrl), `(${b.checkoutUrl})`);
+    !!b.checkoutUrl && /stripe\.com/.test(b.checkoutUrl), `(${b.checkoutUrl})`);
   // Le parcours doit avoir REELLEMENT appele Mollie : client + paiement.
-  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
-  const customerCalls = MOLLIE_CALLS.filter((c) => /\/customers/.test(c.url));
-  check('confirmed -> un client Mollie est cree', customerCalls.length >= 1, `(${MOLLIE_CALLS.length} appels)`);
-  check('confirmed -> un paiement Mollie est cree', paymentCalls.length === 1, `(${paymentCalls.length})`);
+  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/checkout\/sessions$/.test(c.url) && c.method === 'POST');
+  check('confirmed -> une session Stripe est creee', paymentCalls.length === 1, `(${paymentCalls.length})`);
 }
 
 /* 4. Le tarif envoye a Mollie est exactement celui de PRICE_TABLE :
@@ -147,26 +140,24 @@ for (const attack of [
 {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'));
-  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
-  check('un paiement Mollie est cree (prerequis au controle du montant)',
+  const paymentCalls = MOLLIE_CALLS.filter((c) => /\/checkout\/sessions$/.test(c.url) && c.method === 'POST');
+  check('une session Stripe est creee (prerequis au controle du montant)',
     paymentCalls.length === 1, `(${paymentCalls.length})`);
   const body = paymentCalls[0] && paymentCalls[0].body;
-  check('montant envoye a Mollie conforme a PRICE_TABLE',
-    !!body && body.amount && body.amount.value === EXPECTED_VALUE,
-    `(attendu ${EXPECTED_VALUE} ${EXPECTED_CURRENCY}, recu ${body && body.amount ? body.amount.value + ' ' + body.amount.currency : 'aucun'})`);
-  check('devise envoyee a Mollie conforme a PRICE_TABLE',
-    !!body && body.amount && body.amount.currency === EXPECTED_CURRENCY,
-    `(attendu ${EXPECTED_CURRENCY}, recu ${body && body.amount ? body.amount.currency : 'aucune'})`);
+  check('montant envoye a Stripe conforme a PRICE_TABLE',
+    !!body && body['line_items[0][price_data][unit_amount]'] === String(EXPECTED_CENTS),
+    `(attendu ${EXPECTED_CENTS}, recu ${body && body['line_items[0][price_data][unit_amount]']})`);
+  check('devise envoyee a Stripe conforme a PRICE_TABLE',
+    !!body && String(body['line_items[0][price_data][currency]'] || '').toUpperCase() === EXPECTED_CURRENCY,
+    `(attendu ${EXPECTED_CURRENCY}, recu ${body && body['line_items[0][price_data][currency]']})`);
   check('produit verrouille dans les metadonnees',
-    !!body && body.metadata && body.metadata.product === 'bot-wow-lifetime',
-    `(recu ${body && body.metadata ? body.metadata.product : 'aucun'})`);
-  // Le navigateur ne doit jamais pouvoir imposer son propre montant.
+    !!body && body['metadata[product]'] === 'bot-wow-lifetime',
+    `(recu ${body && body['metadata[product]']})`);
   const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed'));
-  const injectedPayments = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
-  const lastBody = injectedPayments[injectedPayments.length - 1] && injectedPayments[injectedPayments.length - 1].body;
-  check('un montant impose par le navigateur est ignore (reste le tarif serveur)',
-    injected.status !== 200 || (!!lastBody && lastBody.amount && lastBody.amount.value === EXPECTED_VALUE),
-    `(recu ${lastBody && lastBody.amount ? lastBody.amount.value : 'aucun'})`);
+  const injectedPayments = MOLLIE_CALLS.filter((c) => /\/checkout\/sessions$/.test(c.url) && c.method === 'POST');
+  check('un montant impose par le navigateur est refuse avant Stripe',
+    injected.status === 400 && injectedPayments.length === paymentCalls.length,
+    `(status ${injected.status}, sessions ${injectedPayments.length})`);
 }
 
 try { fs.unlinkSync(tmpWorker); } catch {}

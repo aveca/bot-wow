@@ -74,11 +74,9 @@ MAIL_FROM = "BOT-WOW <licences@bot-wow.com>"
 # SECRETS deja configures en production (conserver, ne jamais reprint) :
 #   ADMIN_EMAIL, ADMIN_JWT_SECRET, ADMIN_PASSWORD_HASH, CONTACT_EMAIL,
 #   EXPORT_TOKEN, LICENSE_SECRET
-# A POSER (absents = le checkout et la livraison e-mail echouent) :
-#   MOLLIE_API_KEY        cle API Mollie (mode test ou live selon le compte)
-#   MOLLIE_WEBHOOK_SECRET secret de signature des webhooks (optionnel :
-#                         le webhook verifie l'etat du paiement via l'API)
-#   RESEND_API_KEY        envoi des e-mails de livraison
-#   MOLLIE_PROFILE_ID    (actuellement un placeholder : a configurer chez
-#                         Mollie puis a remplacer ici)
+# A POSER pour le checkout Stripe (absents = le paiement echoue) :
+#   STRIPE_SECRET_KEY      cle secrete Stripe (sk_test_... ou sk_live_...)
+#   STRIPE_WEBHOOK_SECRET  secret de signature du endpoint checkout.session.completed
+#   RESEND_API_KEY         envoi des e-mails de livraison
+# Les anciennes cles Mollie ne sont plus lues par worker/index.js.
 # ---------------------------------------------------------------------------

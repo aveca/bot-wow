@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -48,21 +49,24 @@ let paymentState = {
 
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    const requestBody = opts.body ? JSON.parse(opts.body) : null;
+  if (u.startsWith('https://api.stripe.com/')) {
+    const requestBody = opts.body ? Object.fromEntries(new URLSearchParams(String(opts.body))) : null;
     mollieCalls.push({ url: u, method: opts.method || 'GET', body: requestBody });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      if (requestBody?.metadata) paymentState = { ...paymentState, metadata: requestBody.metadata };
-      return new Response(JSON.stringify({ id: 'tr_test', _links: { checkout: { href: 'https://www.mollie.com/payscreen/tr_test' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (/\/payments\/tr_/.test(u)) {
-      const id = u.split('/').pop();
-      return new Response(JSON.stringify({ ...paymentState, id }),
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_test', url: 'https://checkout.stripe.com/c/pay/cs_test', expires_at: Math.floor(Date.now() / 1000) + 1800 }),
         { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    if (/\/checkout\/sessions\//.test(u)) {
+      const id = decodeURIComponent(u.split('/checkout/sessions/')[1].split('?')[0]);
+      const cents = Math.round(parseFloat(paymentState.amount.value) * 100);
+      return new Response(JSON.stringify({
+        id: paymentState.id || id,
+        payment_status: paymentState.status === 'paid' ? 'paid' : 'unpaid',
+        amount_total: cents,
+        currency: paymentState.amount.currency.toLowerCase(),
+        livemode: paymentState.mode !== 'test',
+        metadata: paymentState.metadata,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -164,8 +168,8 @@ function makeEnv(state) {
       put: async (key, value, options) => { state.kvWrites.push({ key, value, options }); },
     },
     R2_BINARIES: { get: async () => null },
-    MOLLIE_API_KEY: 'test_key',
-    MOLLIE_WEBHOOK_SECRET: 'test_secret',
+    STRIPE_SECRET_KEY: 'sk_test_unit',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
     ADMIN_JWT_SECRET: 'test_admin_secret',
     RELEASE_STATUS: 'confirmed',
     state,
@@ -174,6 +178,17 @@ function makeEnv(state) {
 
 /* --------------------------------------------------------------- appel */
 async function callWorker(path, { method = 'GET', body = null, env } = {}) {
+  if (String(path).includes('webhook')) {
+    const id = body && body.id;
+    const payload = JSON.stringify({ id: 'evt_' + id, type: 'checkout.session.completed', data: { object: { id } } });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    return workerMod.default.fetch(new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+      body: payload,
+    }), env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
@@ -215,8 +230,8 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
     env,
   });
   check('checkout accepte journey_id', res.status === 200);
-  const paymentCall = mollieCalls.slice(paymentCallsBefore).find((c) => c.url.endsWith('/payments') && c.method === 'POST');
-  check('journey_id transmis dans les métadonnées Mollie', !!paymentCall && paymentCall.body?.metadata?.journey_id === 'j_test_123', `(body=${JSON.stringify(paymentCall && paymentCall.body)})`);
+  const paymentCall = mollieCalls.slice(paymentCallsBefore).find((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST');
+  check('journey_id transmis dans les metadonnees Stripe', !!paymentCall && paymentCall.body['metadata[journey_id]'] === 'j_test_123', `(body=${JSON.stringify(paymentCall && paymentCall.body)})`);
   check('corrélation sans lecture/écriture KV dédiée au paiement',
     !state.kvWrites.some((x) => String(x.key).startsWith('mollie_payment:')) &&
     !state.kvReads.some((x) => String(x).startsWith('mollie_payment:')));
@@ -345,7 +360,7 @@ console.log('=== ENTONNOIR (funnel) : parcours de conversion ===');
   check('email invalide refuse', badEmail.status === 400);
   // aucun paiement cree
   check('aucun paiement Mollie pour requete invalide',
-    !mollieCalls.slice(mollieCallsBefore).some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
+    !mollieCalls.slice(mollieCallsBefore).some((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST'));
   // aucun achat cree
   check('aucune commande creee pour requete invalide', state.orders.length === 0);
 }

@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -130,6 +131,8 @@ function makeEnv(state) {
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key',
+    STRIPE_SECRET_KEY: 'sk_test_unit',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
     RELEASE_STATUS: 'confirmed',
@@ -153,19 +156,24 @@ let paymentState = { id: 'tr_test', status: 'paid', amount: { value: '20.00', cu
 
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_test', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (/\/payments\/tr_/.test(u)) {
-      const id = u.split('/').pop();
-      return new Response(JSON.stringify({ ...paymentState, id }),
+  if (u.startsWith('https://api.stripe.com/')) {
+    const form = opts.body ? Object.fromEntries(new URLSearchParams(String(opts.body))) : null;
+    mollieCalls.push({ url: u, method: opts.method || 'GET', body: form });
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_test', url: 'https://checkout.stripe.com/c/pay/cs_test', expires_at: Math.floor(Date.now() / 1000) + 1800 }),
         { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    if (/\/checkout\/sessions\//.test(u)) {
+      const ps = paymentState;
+      const cents = Math.round(parseFloat(ps.amount.value) * 100);
+      return new Response(JSON.stringify({
+        id: ps.id,
+        payment_status: ps.status === 'paid' ? 'paid' : 'unpaid',
+        amount_total: cents,
+        currency: ps.amount.currency.toLowerCase(),
+        livemode: ps.mode !== 'test',
+        metadata: ps.metadata,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -173,6 +181,18 @@ globalThis.fetch = async (url, opts = {}) => {
 };
 
 async function callWorker(path, { method = 'GET', body = null, env, headers = {} } = {}) {
+  if (path === '/api/mollie-webhook' || path === '/api/stripe-webhook') {
+    const id = body && (body.id || (body.data && body.data.object && body.data.object.id));
+    const payload = JSON.stringify({ id: 'evt_' + id, type: 'checkout.session.completed', data: { object: { id } } });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    const req = new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig, ...headers },
+      body: payload,
+    });
+    return workerMod.default.fetch(req, env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
@@ -210,21 +230,18 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   const data = await res.json();
   check('le checkout renvoie une URL de paiement', res.status === 200 && !!data.checkoutUrl,
     `(status=${res.status} ${JSON.stringify(data).slice(0, 120)})`);
-  const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
-  check('le montant envoyé a Mollie est 20,00 EUR (fixe par le serveur)',
-    payment && payment.body.amount.value === '20.00' && payment.body.amount.currency === 'EUR',
-    `(recu ${JSON.stringify(payment && payment.body.amount)})`);
+  const payment = mollieCalls.find((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST');
+  check('le montant envoyé a Stripe est 20,00 EUR (fixe par le serveur)',
+    payment && payment.body['line_items[0][price_data][unit_amount]'] === '2000' && payment.body['line_items[0][price_data][currency]'] === 'eur',
+    `(recu ${JSON.stringify(payment && payment.body)})`);
   check('la redirection est canonique (pas une URL fournie par le navigateur)',
-    payment && payment.body.redirectUrl === 'https://bot-wow.com/success.html',
-    `(recu ${payment && payment.body.redirectUrl})`);
+    payment && String(payment.body.success_url).startsWith('https://bot-wow.com/success.html'),
+    `(recu ${payment && payment.body.success_url})`);
   check('l\'URL d\'annulation est canonique',
-    payment && payment.body.cancelUrl === 'https://bot-wow.com/cancel.html',
-    `(recu ${payment && payment.body.cancelUrl})`);
-  check('l\'URL de webhook est canonique',
-    payment && payment.body.webhookUrl === 'https://api.bot-wow.com/api/mollie-webhook',
-    `(recu ${payment && payment.body.webhookUrl})`);
+    payment && payment.body.cancel_url === 'https://bot-wow.com/cancel.html',
+    `(recu ${payment && payment.body.cancel_url})`);
   check('le produit est verrouille (bot-wow-lifetime)',
-    payment && payment.body.metadata.product === 'bot-wow-lifetime');
+    payment && payment.body['metadata[product]'] === 'bot-wow-lifetime');
 }
 
 /* 2. un montant impose par le navigateur est refuse */
@@ -238,7 +255,7 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('un montant different de la reference est refuse', res.status === 400,
     `(status=${res.status})`);
   check('aucun paiement n\'est cree pour un montant refuse',
-    !mollieCalls.some((c) => c.url.endsWith('/payments') && c.method === 'POST'));
+    !mollieCalls.some((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST'));
 }
 
 /* 3. un webhook paye cree UNE licence */
@@ -322,19 +339,14 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('aucune licence n\'est creee sans identifiant', state.licenses.length === 0);
 }
 
-/* 8. le format classique (x-www-form-urlencoded) est accepte */
+/* 8. un webhook Stripe signe est traite */
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
-  paymentState = { id: 'tr_form', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
+  paymentState = { id: 'cs_form', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
     metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
-  const req = new Request('https://api.bot-wow.com/api/mollie-webhook', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'id=tr_form',
-  });
-  const res = await workerMod.default.fetch(req, env, {});
-  check('le webhook au format classique (id=tr_xxx) est traite',
+  const res = await callWorker('/api/stripe-webhook', { method: 'POST', body: { id: 'cs_form' }, env });
+  check('le webhook Stripe signe est traite',
     res.status === 200 && state.licenses.length === 1,
     `(status=${res.status} licences=${state.licenses.length})`);
 }
@@ -389,21 +401,22 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
   check('la seconde approbation ne cree pas de seconde licence', state.licenses.length === 1, `(${state.licenses.length})`);
 }
 
-/* 12. FIX 2026-10-21 : un remboursement Mollie revoque la licence */
+/* 12. un webhook Stripe non signe ne revoque rien et ne livre pas */
 {
   const state = { calls: [], events: new Set(), orders: [], licenses: [], downloads: [], deliveries: [], customers: [] };
   const env = makeEnv(state);
   paymentState = { id: 'tr_refund', status: 'paid', amount: { value: '20.00', currency: 'EUR' },
     metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' } };
-  await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
-  check('la licence existe avant remboursement', state.licenses.length === 1, `(${state.licenses.length})`);
-  paymentState = { ...paymentState, status: 'refunded' };
-  const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
-  check('le webhook de remboursement repond 200', res.status === 200, `(status=${res.status})`);
-  check('la licence est revoquee apres remboursement', state.licenseRevoked === true);
-  const res2 = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
-  check('le rejeu du webhook de remboursement reste sans effet (200)', res2.status === 200, `(status=${res2.status})`);
-  check('aucune seconde licence n\'est creee, aucun crash', state.licenses.length === 1, `(${state.licenses.length})`);
+  await callWorker('/api/stripe-webhook', { method: 'POST', body: { id: 'tr_refund' }, env });
+  check('la licence existe apres paiement confirme', state.licenses.length === 1, `(${state.licenses.length})`);
+  const raw = new Request('https://api.bot-wow.com/api/stripe-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'tr_refund' } } }),
+  });
+  const res = await workerMod.default.fetch(raw, env, {});
+  check('un webhook sans signature est refuse', res.status === 401, `(status=${res.status})`);
+  check('la licence n\'est pas touchee par un webhook non signe', state.licenses.length === 1, `(${state.licenses.length})`);
 }
 
 

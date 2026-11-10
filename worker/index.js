@@ -407,7 +407,7 @@ __name(jsonResponse, "jsonResponse");
 
 // src/mollie.ts
 import { createHmac } from "crypto";
-var MOLLIE_API_BASE = "https://api.mollie.com/v2";
+var STRIPE_API = "https://api.stripe.com/v1";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
@@ -422,26 +422,6 @@ var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
 var CHECKOUT_RATE_LIMIT = { max: 5, windowMs: 3e5 };
 /* Etat de livraison du paquet telechargeable, decide cote serveur. */
 var RELEASE_STATUS = "pending";
-// Mapping langue du site -> locale Mollie.
-// Source : liste officielle des `locale` acceptes par l'API Mollie
-// (POST /customers et POST /payments) :
-//   ca_ES cs_CZ da_DK de_AT de_CH de_DE de_LU el_GR en_BE en_GB en_NL en_US
-//   es_ES fi_FI fr_BE fr_FR fr_LU hu_HU is_IS it_IT lt_LT lv_LV nb_NO nl_BE
-//   nl_NL pl_PL pt_PT sk_SK sl_SI sv_SE tr_TR
-// Les codes courts ("en", "fr"...) ne sont PAS acceptes par l'API : il faut
-// une locale ISO 15897 "xx_XX". `ru` n'a pas de page hebergee Mollie : on
-// retombe sur en_US plutot que d'envoyer une valeur invalide (422).
-var MOLLIE_LOCALES = {
-  fr: "fr_FR",
-  en: "en_US",
-  de: "de_DE",
-  es: "es_ES",
-  pt: "pt_PT"
-};
-var MOLLIE_LOCALE_FALLBACK = "en_US";
-function toMollieLocale(lang) {
-  return MOLLIE_LOCALES[String(lang || "").toLowerCase()] || MOLLIE_LOCALE_FALLBACK;
-}
 // FIX 2026-10-21 : le TARIF est fixe COTE SERVEUR.
 // Avant, le montant venait du navigateur (`body.amount || 2e3`) : un client
 // pouvait demander un montant arbitraire (y compris 1,00 EUR) et c'etait le
@@ -451,7 +431,7 @@ var PRICE_TABLE = {
 };
 var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
-var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
+var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/stripe-webhook";
 async function handleCheckout(request, env2) {
   const ip = getClientIp2(request);
   const rl = await checkRateLimit2(env2.RATE_LIMIT, "checkout", ip, CHECKOUT_RATE_LIMIT);
@@ -474,8 +454,6 @@ async function handleCheckout(request, env2) {
   const plan = PRICE_TABLE[PRODUCT_METADATA_KEY];
   const amount = plan.amount;
   const currency = plan.currency;
-  const redirectUrl = CANONICAL_REDIRECT_URL;
-  const webhookUrl = CANONICAL_WEBHOOK_URL;
   if (!email || !validateEmail2(email)) {
     return jsonResponse2({ ok: false, error: "invalid_email" }, 400);
   }
@@ -489,196 +467,127 @@ async function handleCheckout(request, env2) {
   // les essais du produit. Le checkout n'est plus bloqué par RELEASE_STATUS.
   // Le montant, la devise et le produit restent décidés ici, jamais par le corps.
   try {
-    const customer = await getOrCreateMollieCustomer(env2, email, lang);
-    const payment = await createMolliePayment(env2, {
-      customerId: customer.id,
-      amount: { value: (amount / 100).toFixed(2), currency },
-      description: plan.description,
-      redirectUrl,
-      cancelUrl: CANONICAL_CANCEL_URL,
-      webhookUrl,
-      metadata: {
-        email,
-        lang,
-        product: PRODUCT_METADATA_KEY,
-        journey_id: journeyId || ""
-      }
+    const session = await createStripeCheckoutSession(env2, {
+      email,
+      lang,
+      journeyId,
+      amount,
+      currency,
+      description: plan.description
     });
-    // Evenement serveur : commande de paiement creee (cote serveur, montant
-    // verifie). Ne confirme pas un paiement reussi : seule la notification
-    // webhook Mollie peut confirmer.
-    await emitFunnelEvent(env2, 'checkout_created', journeyId, '/api/checkout', lang, { step: 'checkout_created' });
+    await emitFunnelEvent(env2, "checkout_created", journeyId, "/api/checkout", lang, { step: "checkout_created" });
     return jsonResponse2({
-      paymentId: payment.id,
-      checkoutUrl: payment._links?.checkout?.href || `https://www.mollie.com/payscreen/${payment.id}`,
-      expiresAt: new Date(Date.now() + 30 * 6e4).toISOString()
-      // 30 min
+      paymentId: session.id,
+      checkoutUrl: session.url,
+      expiresAt: new Date((Number(session.expires_at) || Math.floor(Date.now() / 1000) + 1800) * 1000).toISOString()
     });
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("Checkout error:", error && error.message);
     if (error instanceof Response) return error;
-    // Evenement serveur : echec de creation du paiement.
-    await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/checkout', lang, { step: 'checkout_failed' });
-    return jsonResponse2({ ok: false, error: "checkout_failed", detail: error && error.message }, 500);
+    await emitFunnelEvent(env2, "checkout_failed", journeyId, "/api/checkout", lang, { step: "checkout_failed" });
+    return jsonResponse2({ ok: false, error: "checkout_failed" }, 500);
   }
 }
 __name(handleCheckout, "handleCheckout");
-async function handleMollieWebhook(request, env2) {
-  // PROTOCOLE : webhook classique de la Payments API Mollie.
-  // Mollie envoie un POST dont le corps contient `id=tr_xxx` ; on interroge
-  // l'API avec la cle serveur pour obtenir l'etat REEL du paiement. La
-  // signature HMAC (autre format de webhook) n'est pas exigee : si elle est
-  // presente et que le secret est configure, elle est verifiee en
-  // complement (une verification supplementaire, jamais la source de verite).
+async function handleStripeWebhook(request, env2) {
+  if (!env2.STRIPE_WEBHOOK_SECRET || !env2.STRIPE_SECRET_KEY) {
+    console.error("Webhook Stripe: secret manquant");
+    return new Response("Server Error", { status: 500 });
+  }
   let payload;
   try {
     payload = await request.text();
   } catch {
     return new Response("Bad Request", { status: 400 });
   }
-  const signature = request.headers.get("Mollie-Signature");
-  if (signature && env2.MOLLIE_WEBHOOK_SECRET) {
-    if (!verifyMollieSignature(payload, signature, env2.MOLLIE_WEBHOOK_SECRET)) {
-      console.error("Invalid webhook signature");
-      return new Response("Invalid Signature", { status: 401 });
-    }
+  const signature = request.headers.get("Stripe-Signature") || "";
+  if (!verifyStripeSignature(payload, signature, env2.STRIPE_WEBHOOK_SECRET)) {
+    console.error("Webhook Stripe: signature invalide");
+    return new Response("Invalid Signature", { status: 401 });
   }
-  let event = null;
+  let event;
   try {
     event = JSON.parse(payload);
   } catch {
-    event = null;
+    return new Response("Bad Request", { status: 400 });
   }
-  let paymentId = null;
-  if (event && typeof event === "object") {
-    paymentId = event.id || event.payload?.id || (typeof event.data?.id === "string" ? event.data.id : null);
+  if (!event || event.type !== "checkout.session.completed") {
+    return new Response("OK", { status: 200 });
   }
-  if (!paymentId) {
-    try {
-      paymentId = new URLSearchParams(payload).get("id");
-    } catch {
-      paymentId = null;
-    }
+  const sessionId = event.data && event.data.object && event.data.object.id;
+  if (!sessionId) {
+    return new Response("Missing session ID", { status: 400 });
   }
-  if (!paymentId) {
-    console.error("Webhook: aucun identifiant de paiement recu");
-    return new Response("Missing payment ID", { status: 400 });
-  }
-  let payment;
+  let session;
   try {
-    payment = await fetchMolliePayment(env2, paymentId, true);
+    session = await fetchStripeSession(env2, sessionId);
   } catch (e) {
-    console.error("Webhook: lecture du paiement impossible", e && e.message);
+    console.error("Webhook Stripe: lecture de la session impossible", e && e.message);
     return new Response("Server Error", { status: 500 });
   }
-  if (!payment || !payment.id) {
-    console.error(`Webhook: paiement ${paymentId} introuvable via l'API`);
-    return new Response("OK", { status: 200 });
-  }
-  // DISTINCTION REEL / TEST.
-  // L'API Mollie renvoie `mode` = "live" | "test". Un paiement de test ne
-  // doit JAMAIS compter comme du chiffre d'affaires. Regle fail-safe : seul
-  // un mode explicitement "test" est marque test=1 ; un mode absent est
-  // traite comme un paiement reel (on ne perd jamais une vente mesuree).
-  const paymentMode = String(payment.mode || "").toLowerCase();
-  const isTestPayment = paymentMode === "test";
+  const payment = sessionToPayment(session);
+  const isTestPayment = payment.mode === "test";
   if (payment.metadata?.product !== PRODUCT_METADATA_KEY) {
-    console.log(`Webhook: Ignoring payment ${paymentId} - not our product`);
+    console.log(`Webhook: session ${sessionId} ignoree - autre produit`);
     return new Response("OK", { status: 200 });
   }
-  // VERIFICATION REELLE : montant, devise, produit, statut.
   const plan = PRICE_TABLE[PRODUCT_METADATA_KEY];
   const paidAmount = Math.round(parseFloat(payment.amount?.value || "0") * 100);
   const paidCurrency = String(payment.amount?.currency || "").toUpperCase();
   if (paidAmount !== plan.amount || paidCurrency !== plan.currency) {
-    console.error(`Webhook: montant inattendu pour ${paymentId}: ${paidAmount} ${paidCurrency} (attendu ${plan.amount} ${plan.currency})`);
+    console.error(`Webhook: montant inattendu pour ${sessionId}: ${paidAmount} ${paidCurrency}`);
     return new Response("Amount mismatch", { status: 400 });
   }
   const email = String(payment.metadata?.email || "").toLowerCase();
   const lang = validateLang2(payment.metadata?.lang || "fr");
   if (!email) {
-    console.error("Webhook: aucun e-mail dans les metadonnees du paiement");
     return new Response("Missing email", { status: 400 });
   }
-  const status = String(payment.status || "");
-  // FIX 2026-10-21 : un remboursement ou une contestation doit revoquer la
-  // licence liee — AVANT le garde statut-ouvert (sinon jamais traitee).
-  if (status === "refunded" || status === "charged_back") {
-    await revokeLicense(env2, payment, email, `refund:${paymentId}`);
+  if (payment.status !== "paid") {
+    console.log(`Webhook: session ${sessionId} payment_status=${payment.status}`);
     return new Response("OK", { status: 200 });
   }
-  if (status !== "paid" && status !== "failed" && status !== "expired" && status !== "canceled") {
-    // open / pending : rien a faire, la confirmation suivra.
-    console.log(`Webhook: paiement ${paymentId} statut=${status} (en attente)`);
-    return new Response("OK", { status: 200 });
-  }
-  // GARDE-FOU D'IDEMPOTENCE : l'insertion de l'evenement est atomique et
-  // sert de verrou. Deux notifications simultanees ne peuvent donc pas creer
-  // deux licences. La cle est l'identifiant du paiement (stable quel que
-  // soit le type d'evenement).
-  const eventId = `payment:${paymentId}`;
+  const eventId = `payment:${sessionId}`;
   let alreadyLocked = false;
   try {
     await env2.DB.prepare(
-      "INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'mollie', ?)"
+      "INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'stripe', ?)"
     ).bind(eventId, Date.now()).run();
   } catch (e) {
     const msg = String(e && e.message || "");
     if (/UNIQUE|constraint/i.test(msg)) {
       alreadyLocked = true;
-      console.log(`Webhook: paiement ${paymentId} deja verrouille, etat de la livraison verifie`);
     } else {
       console.error("Webhook: insertion de l'evenement impossible", msg);
       return new Response("Server Error", { status: 500 });
     }
   }
-  // Le journey_id opaque est transmis dans les métadonnées Mollie du checkout.
-  // On le récupère ici sans lecture KV supplémentaire.
   const rawJourneyId = payment.metadata?.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
   let paymentRef = null;
   try {
     paymentRef = await hashPaymentReference(payment.id);
   } catch {
-    // La télémétrie reste facultative : une erreur de hachage ne bloque pas le webhook.
   }
-  // FIX 2026-10-21 (audit paiement) : un remboursement ou une contestation
-  // doit revoquer la licence liee (le signal existait mais n'etait jamais
-  // branche sur le flux du webhook).
-  if (status === "paid") {
-    try {
+  try {
     if (alreadyLocked) {
       await resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef, isTestPayment);
     } else {
       await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef, isTestPayment);
-    // Evenement serveur : paiement confirme par Mollie (etat verifie via API).
-    // Ecris APRÈS fulfillOrder pour ne rien ecrire si la livraison echoue
-    // (schema de production avec orders.id INTEGER -> datatype mismatch).
-    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
-    // MESURE DE CONVERSION (V11.2).
-    // Cette ligne n'est ecrite QUE par le serveur, apres verification du
-    // paiement via l'API Mollie. Un clic, une ouverture de checkout et un
-    // paiement confirme restent donc trois evenements distincts, et un
-    // evenement "conversion" ne peut pas etre forge depuis le navigateur
-    // (le point de collecte public ne l'accepte pas).
-    // L'echec de cette mesure ne doit JAMAIS empecher la livraison de la
-    // licence : l'echec est attrape et journalise.
-    try {
-      await recordConversion(env2, payment, email, lang, isTestPayment);
-    } catch (e) {
-      console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+      await emitFunnelEvent(env2, "payment_confirmed", journeyId, "/api/stripe-webhook", lang, { step: "payment_confirmed", ref: paymentRef, test: isTestPayment ? 1 : 0 });
+      try {
+        await recordConversion(env2, payment, email, lang, isTestPayment);
+      } catch (e) {
+        console.error("Webhook: mesure de conversion impossible", String(e && e.message || ""));
+      }
     }
-    }
-    } catch (e) {
-      console.error("Webhook: livraison impossible", String(e && e.message || ""));
-      return new Response("Server Error", { status: 500 });
-    }
-  } else if (!alreadyLocked) {
-    await markOrderFailed(env2, payment, email, eventId, journeyId, lang, paymentRef);
+  } catch (e) {
+    console.error("Webhook: livraison impossible", String(e && e.message || ""));
+    return new Response("Server Error", { status: 500 });
   }
   return new Response("OK", { status: 200 });
 }
-__name(handleMollieWebhook, "handleMollieWebhook");
+__name(handleStripeWebhook, "handleStripeWebhook");
 /**
  * Enregistre une CONVERSION confirmee dans la base de telemetrie.
  *
@@ -711,7 +620,7 @@ async function recordConversion(env2, payment, email, lang, isTest) {
   await db.prepare(
     "INSERT INTO events (ts, event, page, lang, cta, mode, years, step, ref, test, ip_hash, ua, value_eur, source) " +
     "VALUES (?, 'conversion', '/', ?, NULL, NULL, NULL, 'paid', ?, ?, NULL, NULL, ?, ?)"
-  ).bind(Date.now(), lang === "fr" ? "fr" : "en", ref, isTest ? 1 : 0, isTest ? null : amount, "mollie").run();
+  ).bind(Date.now(), lang === "fr" ? "fr" : "en", ref, isTest ? 1 : 0, isTest ? null : amount, "stripe").run();
   console.log("Conversion enregistree", ref, amount);
 }
 
@@ -771,12 +680,12 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   // orders <-> licenses ne pouvait donc jamais aboutir.
   const orderId = `ord_${payment.id}`;
   let order = await env2.DB.prepare(
-    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'stripe' AND provider_id = ?) LIMIT 1"
   ).bind(orderId, payment.id).first();
   if (!order) {
     await env2.DB.prepare(`
       INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-      VALUES (?, 'mollie', ?, ?, ?, ?, 'paid', ?, ?, ?)
+      VALUES (?, 'stripe', ?, ?, ?, ?, 'paid', ?, ?, ?)
     `).bind(
       orderId,
       payment.id,
@@ -790,7 +699,7 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
     order = { id: orderId };
   }
   let license = await env2.DB.prepare(
-    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'stripe' AND o.provider_id = ? LIMIT 1"
   ).bind(payment.id).first();
   if (!license) {
     const licenseKey = generateLicenseKey2();
@@ -799,7 +708,7 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
       VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
     `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
     license = { id: licenseResult?.meta?.last_row_id ?? null, key: licenseKey };
-    await emitFunnelEvent(env2, 'license_created', journeyId, '/api/mollie-webhook', lang, { step: 'license_created', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    await emitFunnelEvent(env2, 'license_created', journeyId, '/api/stripe-webhook', lang, { step: 'license_created', ref: paymentRef, test: isTestPayment ? 1 : 0 });
   }
   let download = await env2.DB.prepare(
     "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
@@ -827,22 +736,22 @@ __name(fulfillOrder, "fulfillOrder");
 async function resumeFulfillment(env2, payment, email, lang, journeyId, paymentRef, isTestPayment) {
   const orderId = `ord_${payment.id}`;
   const order = await env2.DB.prepare(
-    "SELECT * FROM orders WHERE id = ? OR (provider = 'mollie' AND provider_id = ?) LIMIT 1"
+    "SELECT * FROM orders WHERE id = ? OR (provider = 'stripe' AND provider_id = ?) LIMIT 1"
   ).bind(orderId, payment.id).first();
   if (!order) {
     console.log(`Webhook: reprise de la livraison ${payment.id} (aucune commande)`);
     await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef, isTestPayment);
-    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/stripe-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
     try { await recordConversion(env2, payment, email, lang, isTestPayment); } catch (e) { console.error("Webhook: mesure de conversion impossible", String(e && e.message || "")); }
     return;
   }
   const license = await env2.DB.prepare(
-    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'mollie' AND o.provider_id = ? LIMIT 1"
+    "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'stripe' AND o.provider_id = ? LIMIT 1"
   ).bind(payment.id).first();
   if (!license) {
     console.log(`Webhook: reprise de la livraison ${payment.id} (licence manquante)`);
     await fulfillOrder(env2, payment, email, lang, `payment:${payment.id}`, journeyId, paymentRef, isTestPayment);
-    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/mollie-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    await emitFunnelEvent(env2, 'payment_confirmed', journeyId, '/api/stripe-webhook', lang, { step: 'payment_confirmed', ref: paymentRef, test: isTestPayment ? 1 : 0 });
     try { await recordConversion(env2, payment, email, lang, isTestPayment); } catch (e) { console.error("Webhook: mesure de conversion impossible", String(e && e.message || "")); }
     return;
   }
@@ -871,7 +780,7 @@ async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, p
   const amount = Math.round(parseFloat(payment.amount.value) * 100);
   await env2.DB.prepare(`
     INSERT INTO orders (id, provider, provider_id, email, amount, currency, status, metadata, created_at, updated_at)
-    VALUES (?, 'mollie', ?, ?, ?, ?, 'failed', ?, ?, ?)
+    VALUES (?, 'stripe', ?, ?, ?, ?, 'failed', ?, ?, ?)
   `).bind(
     `ord_${payment.id}`,
     payment.id,
@@ -884,7 +793,7 @@ async function markOrderFailed(env2, payment, email, eventId, journeyId, lang, p
   ).run();
   console.log(`Order failed: ${payment.id}`);
   // Evenement serveur : echec de paiement confirme par Mollie.
-  await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/mollie-webhook', lang, { step: 'checkout_failed', ref: paymentRef });
+  await emitFunnelEvent(env2, 'checkout_failed', journeyId, '/api/stripe-webhook', lang, { step: 'checkout_failed', ref: paymentRef });
 }
 __name(markOrderFailed, "markOrderFailed");
 async function revokeLicense(env2, payment, email, eventId) {
@@ -892,12 +801,12 @@ async function revokeLicense(env2, payment, email, eventId) {
   const license = await env2.DB.prepare(`
     SELECT l.id, l.key FROM licenses l
     JOIN orders o ON o.id = l.order_id
-    WHERE o.provider = 'mollie' AND o.provider_id = ?
+    WHERE o.provider = 'stripe' AND o.provider_id = ?
   `).bind(payment.id).first();
   if (license) {
     await env2.DB.batch([
       env2.DB.prepare("UPDATE licenses SET status = ? WHERE id = ?").bind("revoked", license.id),
-      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "mollie", payment.id)
+      env2.DB.prepare("UPDATE orders SET status = ? WHERE provider = ? AND provider_id = ?").bind("refunded", "stripe", payment.id)
     ]);
     console.log(`License revoked for payment ${payment.id}`);
   } else {
@@ -906,96 +815,91 @@ async function revokeLicense(env2, payment, email, eventId) {
   // L'evenement de remboursement est journalise meme sans licence associee :
   // ce MARQUEUR rend les rejeux du webhook naturellement sans effet.
   try {
-    await env2.DB.prepare("INSERT OR IGNORE INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "mollie", now).run();
+    await env2.DB.prepare("INSERT OR IGNORE INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)").bind(eventId, "stripe", now).run();
   } catch (e) {
     console.error("Refund event logging failed:", e && e.message);
   }
 }
 __name(revokeLicense, "revokeLicense");
-async function getOrCreateMollieCustomer(env2, email, locale) {
-  const cached = await env2.DB.prepare(
-    "SELECT * FROM mollie_customers WHERE email = ?"
-  ).bind(email).first();
-  if (cached) return cached;
-  const response = await mollieFetch(env2, "POST", "/customers", {
-    email,
-    locale: toMollieLocale(locale),
-    metadata: { source: "bot-wow" }
-  });
-  const customer = response;
-  await env2.DB.prepare(`
-    INSERT INTO mollie_customers (id, email, locale, metadata, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(customer.id, email, locale, JSON.stringify(customer.metadata), Date.now(), Date.now()).run();
-  return customer;
-}
-__name(getOrCreateMollieCustomer, "getOrCreateMollieCustomer");
-async function createMolliePayment(env2, params) {
-  const body = {
-    customerId: params.customerId,
-    amount: params.amount,
-    description: params.description,
-    redirectUrl: params.redirectUrl,
-    cancelUrl: params.cancelUrl,
-    webhookUrl: params.webhookUrl,
-    metadata: params.metadata,
-    method: ["creditcard", "ideal", "bancontact", "sofort", "giropay", "eps", "przelewy24"],
-    locale: toMollieLocale(params.metadata.lang)
-  };
-  return mollieFetch(env2, "POST", "/payments", body, true);
-}
-__name(createMolliePayment, "createMolliePayment");
-async function fetchMolliePayment(env2, paymentId, includeProfileId = false) {
-  return mollieFetch(env2, "GET", `/payments/${paymentId}`, void 0, includeProfileId);
-}
-__name(fetchMolliePayment, "fetchMolliePayment");
-async function mollieFetch(env2, method, path, body, includeProfileId = false) {
-  let url = `${MOLLIE_API_BASE}${path}`;
-  if (includeProfileId && env2.MOLLIE_PROFILE_ID) {
-    const separator = url.includes("?") ? "&" : "?";
-    url += `${separator}profileId=${encodeURIComponent(env2.MOLLIE_PROFILE_ID)}`;
-  }
-  const headers = {
-    "Authorization": `Bearer ${env2.MOLLIE_API_KEY}`,
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-  };
-  const response = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : void 0
+async function createStripeCheckoutSession(env2, params) {
+  if (!env2 || !env2.STRIPE_SECRET_KEY) throw new Error("stripe_not_configured");
+  const body = new URLSearchParams();
+  body.set("mode", "payment");
+  body.set("success_url", CANONICAL_REDIRECT_URL + "?session_id={CHECKOUT_SESSION_ID}");
+  body.set("cancel_url", CANONICAL_CANCEL_URL);
+  body.set("customer_email", params.email);
+  body.set("line_items[0][quantity]", "1");
+  body.set("line_items[0][price_data][currency]", String(params.currency || "EUR").toLowerCase());
+  body.set("line_items[0][price_data][unit_amount]", String(params.amount));
+  body.set("line_items[0][price_data][product_data][name]", params.description);
+  body.set("metadata[email]", params.email);
+  body.set("metadata[lang]", params.lang);
+  body.set("metadata[product]", PRODUCT_METADATA_KEY);
+  if (params.journeyId) body.set("metadata[journey_id]", params.journeyId);
+  body.set("expires_at", String(Math.floor(Date.now() / 1000) + 30 * 60));
+  const response = await fetch(STRIPE_API + "/checkout/sessions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + env2.STRIPE_SECRET_KEY,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: body.toString()
   });
   if (!response.ok) {
-    const error = await response.text();
-    console.error(`Mollie API error (${response.status}):`, error);
-    throw new Error(`Mollie API error: ${response.status} - ${error}`);
+    console.error("Stripe API error", response.status);
+    throw new Error("stripe_api_" + response.status);
   }
   return response.json();
 }
-__name(mollieFetch, "mollieFetch");
-function verifyMollieSignature(payload, signatureHeader, secret) {
+__name(createStripeCheckoutSession, "createStripeCheckoutSession");
+async function fetchStripeSession(env2, sessionId) {
+  const response = await fetch(STRIPE_API + "/checkout/sessions/" + encodeURIComponent(sessionId), {
+    headers: { "Authorization": "Bearer " + env2.STRIPE_SECRET_KEY }
+  });
+  if (!response.ok) {
+    console.error("Stripe session error", response.status);
+    throw new Error("stripe_session_" + response.status);
+  }
+  return response.json();
+}
+__name(fetchStripeSession, "fetchStripeSession");
+function sessionToPayment(session) {
+  const cents = Number(session.amount_total || 0);
+  return {
+    id: session.id,
+    status: session.payment_status === "paid" ? "paid" : String(session.payment_status || ""),
+    mode: session.livemode ? "live" : "test",
+    amount: {
+      value: (cents / 100).toFixed(2),
+      currency: String(session.currency || "").toUpperCase()
+    },
+    metadata: session.metadata || {}
+  };
+}
+__name(sessionToPayment, "sessionToPayment");
+function verifyStripeSignature(payload, signatureHeader, secret) {
   try {
-    const parts = signatureHeader.split(",");
+    const parts = String(signatureHeader || "").split(",");
     let timestamp = "";
-    let signature = "";
+    const signatures = [];
     for (const part of parts) {
-      const [key, value] = part.split("=");
+      const eq = part.indexOf("=");
+      if (eq < 0) continue;
+      const key = part.slice(0, eq).trim();
+      const value = part.slice(eq + 1).trim();
       if (key === "t") timestamp = value;
-      if (key === "v1") signature = value;
+      if (key === "v1") signatures.push(value);
     }
-    if (!timestamp || !signature) return false;
+    if (!timestamp || signatures.length === 0) return false;
     const now = Math.floor(Date.now() / 1e3);
-    if (Math.abs(now - parseInt(timestamp)) > 300) {
-      console.warn("Webhook timestamp outside tolerance");
-      return false;
-    }
-    const expected = createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest("hex");
-    return timingSafeEqual(signature, expected);
+    if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
+    const expected = createHmac("sha256", secret).update(timestamp + "." + payload).digest("hex");
+    return signatures.some((signature) => timingSafeEqual(signature, expected));
   } catch {
     return false;
   }
 }
-__name(verifyMollieSignature, "verifyMollieSignature");
+__name(verifyStripeSignature, "verifyStripeSignature");
 function timingSafeEqual(a, b) {
   if (a.length !== b.length) return false;
   let result = 0;
@@ -1123,7 +1027,7 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
       console.error("[EMAIL] consignation impossible:", e && e.message);
     }
     // Evenement serveur : echec de livraison e-mail.
-    await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_failed', test: isTestPayment ? 1 : 0 });
+    await emitFunnelEvent(env2, 'delivery_failed', journeyId, '/api/stripe-webhook', lang, { step: 'delivery_failed', test: isTestPayment ? 1 : 0 });
   } else {
     // PREUVE DE LIVRAISON : un envoi REUSSI laisse aussi un recu durable.
     try {
@@ -1144,7 +1048,7 @@ async function sendDeliveryEmail2(env2, email, key, downloadUrl, lang, journeyId
       console.error("[EMAIL] consignation de l'envoi impossible:", e && e.message);
     }
     // Evenement serveur : licence livree par e-mail.
-    await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/mollie-webhook', lang, { step: 'delivery_sent', test: isTestPayment ? 1 : 0 });
+    await emitFunnelEvent(env2, 'delivery_sent', journeyId, '/api/stripe-webhook', lang, { step: 'delivery_sent', test: isTestPayment ? 1 : 0 });
   }
   return status;
 }
@@ -3825,8 +3729,8 @@ var index_default = {
       if (path === "/api/checkout" && method === "POST") {
         return handleCheckout(request, env2);
       }
-      if (path === "/api/mollie-webhook" && method === "POST") {
-        return handleMollieWebhook(request, env2);
+      if (path === "/api/stripe-webhook" && method === "POST") {
+        return handleStripeWebhook(request, env2);
       }
       if (path === "/api/bitcoin/checkout" && method === "POST") {
         return handleBitcoinCheckout(request, env2);

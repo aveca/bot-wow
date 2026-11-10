@@ -65,6 +65,8 @@ function makeEnv(state) {
     RATE_LIMIT: kv,
     R2_BINARIES: { get: async () => null },
     MOLLIE_API_KEY: 'test_key_secret_value',
+    STRIPE_SECRET_KEY: 'sk_test_secret_value',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
     MOLLIE_WEBHOOK_SECRET: 'test_webhook_secret_value',
     ADMIN_JWT_SECRET: 'test_admin_secret_value',
     RELEASE_STATUS: 'confirmed',
@@ -82,14 +84,11 @@ const realFetch = globalThis.fetch;
 let mollieCalls = [];
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_test', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+  if (u.startsWith('https://api.stripe.com/')) {
+    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? Object.fromEntries(new URLSearchParams(String(opts.body))) : null });
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_test', url: 'https://checkout.stripe.com/c/pay/cs_test' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -137,7 +136,7 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
   check('la reponse 429 indique rate_limited', limitedBody && limitedBody.error === 'rate_limited',
     `(corps ${JSON.stringify(limitedBody)})`);
   check('aucun paiement Mollie cree pour la tentative refusee',
-    mollieCalls.filter((c) => c.url.endsWith('/payments') && c.method === 'POST').length === 5,
+    mollieCalls.filter((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST').length === 5,
     `(appels ${mollieCalls.length})`);
 
   // une autre IP a son propre budget
@@ -175,14 +174,12 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
       method: 'POST', body: { email: 'loc@test.fr', lang }, env,
       headers: { 'cf-connecting-ip': '192.0.2.5' },
     });
-    const payment = mollieCalls.find((c) => c.url.endsWith('/payments') && c.method === 'POST');
-    const customer = mollieCalls.find((c) => c.url.endsWith('/customers') && c.method === 'POST');
-    const loc = payment && payment.body.locale;
-    check(`locale Mollie pour lang=${lang} est ${expected}`, loc === expected, `(recu ${loc})`);
-    check(`locale client pour lang=${lang} est acceptée par l'API Mollie`,
-      !!loc && MOLLIELOCALES.has(loc), `(recu ${loc})`);
-    check(`locale client pour lang=${lang} est la meme sur /customers`,
-      !customer || customer.body.locale === loc, `(client ${customer && customer.body.locale} / paiement ${loc})`);
+    const payment = mollieCalls.find((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST');
+    check('le montant reste 2000 centimes', payment && payment.body['line_items[0][price_data][unit_amount]'] === '2000');
+    const langSent = payment && payment.body['metadata[lang]'];
+    const supported = new Set(['fr', 'en', 'de', 'es', 'pt', 'ru']);
+    const normalized = supported.has(lang) ? lang : 'fr';
+    check(`langue envoyee a Stripe pour lang=${lang}`, langSent === normalized, `(recu ${langSent}, attendu ${normalized})`);
   }
 }
 
@@ -196,7 +193,7 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
     headers: { 'cf-connecting-ip': '192.0.2.60' },
   });
   const text = await res.text();
-  const secrets = ['test_key_secret_value', 'test_webhook_secret_value', 'test_admin_secret_value', 'MOLLIE_API_KEY'];
+  const secrets = ['test_key_secret_value', 'sk_test_secret_value', 'whsec_test', 'test_webhook_secret_value', 'test_admin_secret_value'];
   const leaked = secrets.filter((s) => text.includes(s));
   check('la reponse du checkout ne fuite aucun secret', leaked.length === 0, `(fuite ${JSON.stringify(leaked)})`);
 }
@@ -218,7 +215,7 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
   });
   check('un montant different de la reference est refuse en 400', badAmount.status === 400, `(statut ${badAmount.status})`);
   check('aucun paiement Mollie cree pour une entree invalide',
-    mollieCalls.filter((c) => c.url.endsWith('/payments') && c.method === 'POST').length === 0,
+    mollieCalls.filter((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST').length === 0,
     `(appels ${mollieCalls.length})`);
 
   const badJson = await callWorker('/api/checkout', {
