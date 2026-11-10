@@ -120,6 +120,23 @@ for (const [label, status] of [
   check(label + ' -> zero Mollie calls', MOLLIE_CALLS.length === 0, '(' + MOLLIE_CALLS.length + ')');
 }
 
+/* 1b. With the source flag explicitly confirmed, the server binding must still be exact. */
+for (const [label, status] of [
+  ['binding-absent', undefined],
+  ['binding-pending', 'pending'],
+  ['binding-invalid', 'oui-mais-non'],
+  ['binding-case-mismatch', 'CONFIRMED'],
+  ['binding-whitespace', ' confirmed '],
+]) {
+  MOLLIE_CALLS = [];
+  const res = await call({ email: 'gate@test.fr', lang: 'fr' }, makeEnv(status), confirmedWorkerMod);
+  const body = await res.json().catch(() => ({}));
+  check(label + ' with source confirmed -> HTTP 409 delivery_unverified',
+    res.status === 409 && body.error === 'delivery_unverified', '(status ' + res.status + ')');
+  check(label + ' with source confirmed -> zero Mollie calls',
+    MOLLIE_CALLS.length === 0, '(' + MOLLIE_CALLS.length + ')');
+}
+
 /* 2. Client-supplied status fields cannot override the server binding. */
 for (const attack of [
   { RELEASE_STATUS: 'confirmed' },
