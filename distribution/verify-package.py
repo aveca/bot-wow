@@ -203,8 +203,8 @@ def main() -> int:
             )
         else:
             print(
-                "PACKAGE INTEGRITY OK — manifest, SHA-256, file sizes, inventory and "
-                "release metadata verified for version " + manifest["version"] + "."
+                "PACKAGE INTEGRITY OK — files match the manifest; the manifest claims release mode "
+                "for version " + manifest["version"] + ". No publisher signature is verified."
             )
         return 0
     except (OSError, ValueError, VerificationError) as exc:
