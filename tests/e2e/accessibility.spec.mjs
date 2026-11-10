@@ -61,7 +61,7 @@ test('accessibility: beta reservation is announced and Stripe handoff is explici
     await expect(stripe).toBeVisible();
     await expect(stripe).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
     await expect(offer).toContainText(/manual|manuelle/i);
-    await expect(offer).toContainText(/full refund|remboursement intégral/i);
+    await expect(offer).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#email')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
