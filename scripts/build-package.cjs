@@ -519,7 +519,7 @@ function main() {
     );
   }
 
-  const pkgDir = path.join(OUT, 'casinababe-fishing-' + VERSION);
+  const pkgDir = path.join(OUT, 'casinobabe-fishing-' + VERSION);
   const stage = path.join(pkgDir, 'package');
   fs.rmSync(pkgDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(stage, 'scripts'), { recursive: true });
