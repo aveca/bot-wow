@@ -5,7 +5,7 @@
  * CE QUI EST TESTE
  * ----------------
  * 1. la barre existe dans les deux langues et pointe vers le statut de disponibilité ;
- * 2. la barre affiche uniquement le statut indisponible, jamais un prix ou une offre ;
+ * 2. la barre affiche le prix de réservation bêta et la livraison manuelle ;
  * 3. le CSS la rend visible sur desktop UNIQUEMENT via .is-on (donc invisible
  *    a l'ouverture, visible apres le hero) ;
  * 4. mobile : visible en permanence (media query max-width:760px) ;
@@ -53,14 +53,14 @@ for (const [name, html] of [['EN', en], ['FR', fr]]) {
     !!mbar && /role="region"/.test(mbar) && /aria-label=/.test(mbar));
 }
 
-/* 2. la barre est un statut, pas une offre commerciale */
+/* 2. la barre affiche l'offre bêta à 20 €, sans fausse promesse de livraison immédiate */
 for (const [name, html, expected] of [
-  ['EN', en, /Not for sale\s*<small>purchase unavailable<\/small>/i],
-  ['FR', fr, /Pas en vente\s*<small>achat indisponible<\/small>/i],
+  ['EN', en, /20,00 €\s*<small>beta reservation · manual delivery<\/small>/i],
+  ['FR', fr, /20,00 €\s*<small>réservation bêta · livraison manuelle<\/small>/i],
 ]) {
   const mbar = extractMbar(html) || '';
-  check(`${name} : la barre annonce explicitement l’absence d’offre`, expected.test(mbar), `(${mbar.slice(0, 120)})`);
-  check(`${name} : aucun prix ou montant dans la barre`, !/\d+[,.]?\d*\s*€/.test(mbar), `(${mbar.slice(0, 120)})`);
+  check(`${name} : la barre annonce la réservation bêta à 20 €`, expected.test(mbar), `(${mbar.slice(0, 120)})`);
+  check(`${name} : le montant de réservation est visible`, /20,00 €/.test(mbar), `(${mbar.slice(0, 120)})`);
 }
 
 /* 3. aucune fausse urgence (compte a rebours, stock, "plus que X") */
