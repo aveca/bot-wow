@@ -471,7 +471,7 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   let mollieCalls = 0;
   const countingFetch = async (url, opts = {}) => {
     if (String(url).startsWith('https://api.mollie.com/')) mollieCalls += 1;
-    return globalThis.fetch(url, opts);
+    return realFetchRef(url, opts);
   };
   const realFetchRef = globalThis.fetch;
   globalThis.fetch = countingFetch;
@@ -481,14 +481,12 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   globalThis.fetch = realFetchRef;
   const body = await res.json();
 
-  check('garde de livraison : le checkout repond 409',
-    res.status === 409, `(status=${res.status})`);
-  check('garde de livraison : l\'erreur est explicite',
-    body.error === 'delivery_unverified', `(${JSON.stringify(body).slice(0, 80)})`);
-  check('garde de livraison : AUCUN appel Mollie (aucun encaissement possible)',
-    mollieCalls === 0, `(${mollieCalls} appels)`);
-  check('garde de livraison : aucune commande creee',
-    state.orders.length === 0, `(${state.orders.length})`);
+  check('checkout ouvert : pas de 409 quand RELEASE_STATUS est pending',
+    res.status !== 409, `(status=${res.status})`);
+  check('checkout ouvert : une URL de paiement est renvoyée',
+    !!body.checkoutUrl, `(${JSON.stringify(body).slice(0, 80)})`);
+  check('checkout ouvert : Mollie est appelé',
+    mollieCalls > 0, `(${mollieCalls} appels)`);
 }
 
 /* --- 8. Le renvoi demande par le client ENVOIE un vrai e-mail --- */

@@ -15,4 +15,5 @@
 | BOTWOW-P0-PACKAGE-INTEGRITY-PR150-20261108 | package-integrity | done | PR #150 durcie et rebasee sur main 158222e ; CI verte sur e28626d ; preuve sur #151 |
 | BOTWOW-PIXELBUDDY-STYLE-STOREFRONT-READINESS-20261107 | storefront-product-sheet | done | Fiche produit PixelBuddy-style EN+FR, registre de modules parite, provenance publiee, pas de checkout ; PR #154 fusionnee dans main c1cbb0a (2026-11-08T10:51:25Z) ; preuve sur #142 |
 | BOTWOW-P0-REAL-PAYMENT-TEST-PREP-20261107 | p0-real-payment-test-prep | in-progress | Mission #144 : ACK started publie, produits/licence verifies, PR #150 durcie, PR #154 rebase + empreintes, Mollie non re-verifiable (rapporte) |
-| BOTWOW-P0-PACKAGE-INTEGRITY-PR150-20261108 | package-integrity | done | 3 defauts corriges dans la PR #150 (symlinks, digest fail-closed, provenance CLI) + tests negatifs ; CI verte sur e28626d ; https://github.com/aveca/bot-wow/issues/151#issuecomment-6720399057 |
+| BOTWOW-P0-PACKAGE-INTEGRITY-PR150-20261108 | package-integrity | done | 3 defauts corriges dans la PR #150 (symlinks, digest fail-closed, provenance CLI) + tests negatifs ; CI verte sur e28626d ; https://github.com/aveca/bot-wow/issues/151#issuecomment-6720399057 |
+| 20261109-pixel-skin | storefront-pixel-skin | done | https://github.com/aveca/bot-wow/pull/172 commit 2900e3004e02235266eff39207498ddf3b801f67 |

@@ -13,12 +13,12 @@
 <meta property="og:title" content="Assistant de pêche 1.2.0 — fiche produit · BOT-WOW">
 <meta property="og:description" content="Mécanisme mesuré, registre des modules et provenance reproductible du paquet. Non commercialisé — paiement fermé.">
 <meta property="og:url" content="https://bot-wow.com/fr/product.html">
-<link rel="icon" href="../assets/favicon.svg?v=560cff9a" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg?v=8ae2bd42" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=560cff9a">
-<link rel="stylesheet" href="../assets/style.css?v=560cff9a">
+<link rel="stylesheet" href="../assets/site.css?v=8ae2bd42">
+<link rel="stylesheet" href="../assets/style.css?v=8ae2bd42">
 </head>
 <body>
 <a class="skip-link" href="#hero">Aller au contenu principal</a>
@@ -95,6 +95,19 @@
         disparaître en silence.</p>
     </header>
     <div class="honest-note" role="note"><b>Destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Les règles de chaque serveur s'appliquent.</b> Aucune autorisation de Blizzard n'est revendiquée ni documentée. N'utilisez pas BOT-WOW avec les services exploités par Blizzard.</div>
+    <div class="pixel-stage">
+      <figure class="pixel-film">
+        <video data-film poster="../assets/media/demo-film-poster.jpg" muted playsinline preload="none" width="960" height="540">
+          <source src="../assets/media/demo-film.mp4" type="video/mp4">
+        </video>
+        <button type="button" class="btn btn-ghost" data-film-replay hidden data-play-label="Lire l’extrait">Revoir l’extrait</button>
+        <figcaption>Enregistrement du planificateur navigateur. Aucun client de jeu n’est montré.</figcaption>
+      </figure>
+      <figure class="pixel-shot">
+        <img class="pixel-sprite" src="../assets/pixel/buddy.png" data-gif="../assets/pixel/buddy.gif" width="192" height="192" alt="Mascotte pixel provisoire. Ce n’est pas une capture du produit." loading="lazy" decoding="async">
+        <figcaption>Mascotte provisoire pour la fiche produit.</figcaption>
+      </figure>
+    </div>
     <div class="feats" style="margin-top:34px">
       <div class="feat">
         <h3>Lit des pixels, jamais le processus</h3>
@@ -331,22 +344,21 @@
   <!-- ========================================================= AVAILABILITY -->
   <section class="pad" id="availability" style="padding-top:26px"><div class="w">
     <header class="section-head">
-      <h2 class="h2">Pourquoi ce n'est pas encore en vente</h2>
-      <p class="lead">Cinq conditions restent ouvertes. Chacune est une décision ou une preuve,
-        pas une ligne de marketing — et le paiement reste fermé tant qu'elles ne sont pas levées.</p>
+      <h2 class="h2">Acheter la licence de pêche</h2>
+      <p class="lead">Le propriétaire a confirmé les droits de redistribution le 2026-11-10. La licence est en vente à 20,00 €. Cette fiche sépare toujours ce qui a des tests de ce qui n’en a pas.</p>
     </header>
     <div class="price-wrap"><article class="price-card">
-      <div class="price-tag">Achat indisponible</div>
+      <div class="price-tag">À vie · 20,00 €</div>
+      <p class="scope-callout"><b>Destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Les règles de chaque serveur s'appliquent.</b> L’assistant de pêche a été testé sur des serveurs privés. Il n’est pas fait pour les serveurs officiels de Blizzard.</p>
       <ul class="price-includes">
-        <li><span><b>Les droits de redistribution ne sont pas documentés</b> dans le dépôt source : le propriétaire doit écrire qui peut redistribuer le runtime.</span></li>
+        <li><span><b>Les droits de redistribution ont été confirmés par le propriétaire</b> le 2026-11-10. Le dépôt source n’a toujours pas de fichier de licence SPDX.</span></li>
         <li><span><b>L'artefact de livraison configuré n'est pas le build reproductible</b> et embarque du code non commité, plus deux exécutables absents de son propre manifeste.</span></li>
-        <li><span><b>Aucun relevé de serveur daté</b> n'est publié : la matrice de compatibilité ne porte ni nom de serveur ni date de test.</span></li>
-        <li><span><b>Aucune livraison client de bout en bout n'est certifiée</b> : ni émission de licence, ni livraison de téléchargement, ni activation n'ont été prouvées sur ce produit.</span></li>
-        <li><span><b>Une fiche produit ne peut pas être une page de vente</b> tant que les conditions ci-dessus ne sont pas levées — cette page décrit ce qui existe, elle ne l'offre pas.</span></li>
+        <li><span><b>Aucun nom de serveur public daté</b> n’est publié dans la matrice. Le propriétaire indique que les essais ont eu lieu sur des serveurs privés.</span></li>
+        <li><span>Le paiement est sur la page d’achat. Cette fiche ne collecte pas d’e-mail.</span></li>
       </ul>
-      <p class="pay-note">Aucun formulaire de paiement n'est disponible. Aucune adresse e-mail n'est collectée et aucun paiement ne peut être lancé.</p>
+      <p class="pay-note">Le paiement est ouvert sur la page d’achat. Cette fiche ne collecte pas d’e-mail et ne lance pas un paiement elle-même.</p>
       <div class="center mt">
-        <a class="btn btn-ghost" href="./buy.html" data-track="cta_click" data-cta-id="product-buy-status">Vérifier la disponibilité</a>
+        <a class="btn btn-gold" href="./buy.html" data-track="cta_click" data-cta-id="product-buy-status">Acheter · 20,00 €</a>
         <a class="btn btn-ghost" href="mailto:support@bot-wow.com" data-track="cta_click" data-cta-id="product-contact">Contact projet</a>
       </div>
     </article></div>
@@ -405,6 +417,6 @@
 </footer>
 
 <div class="mbar" role="region" aria-label="Statut de disponibilité"><div class="mp" style="color:var(--mut2)">20,00 € <small>prix cible historique · pas une offre</small></div><a class="btn btn-ghost" style="padding:10px 22px" href="./buy.html" data-track="cta_click" data-cta-id="mbar-status">Voir le statut</a></div>
-<script type="module" src="../assets/app.js?v=560cff9a"></script>
+<script type="module" src="../assets/app.js?v=8ae2bd42"></script>
 </body>
 </html>

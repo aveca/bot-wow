@@ -249,7 +249,7 @@ console.log("=== 6. agents/locks.md reel ===");
   check("heritage identique du fichier reel = 0 conflit", inherited.length === 0, JSON.stringify(inherited));
 
   // Une PR qui prendrait le meme scope avec une AUTRE identite reste un conflit.
-  const firstActive = rows.find((r) => r.status === "active" && r.scopes.length > 0);
+  const firstActive = rows.find((r) => r.status === "active" && r.scopes.length > 0 && Date.parse(r.expires) > Date.now());
   assert.ok(firstActive, "le fichier reel doit contenir au moins un verrou actif");
   const mutated = rows.map((r) =>
     r.id === firstActive.id ? { ...r, branch: `${r.branch}-autre` } : r,

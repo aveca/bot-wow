@@ -29,10 +29,10 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.locator('h1')).toContainText('Purchase unavailable');
-  await expect(page.locator('.pay-note')).toContainText('No payment form is available');
-  await expect(page.locator('.checkout-blocked')).toContainText('Purchase unavailable');
-  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
+  await expect(page.locator('h1')).toContainText('Lifetime licence');
+  await expect(page.locator('.pay-note')).toContainText('fixed on the server');
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
 
   // Les liens legaux pointent vers /legal/ (pas /legal/fr/)
   await expect(page.locator('a[href="./legal/terms.html"]').first()).toBeAttached();
@@ -49,10 +49,10 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(page.locator('h1')).toContainText('Achat indisponible');
-  await expect(page.locator('.pay-note')).toContainText('Aucun formulaire de paiement');
-  await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
-  await expect(page.locator('#release-availability-notice')).toContainText("N’achetez pas : aucune livraison n’est actuellement proposée.");
+  await expect(page.locator('h1')).toContainText('Licence à vie');
+  await expect(page.locator('.pay-note')).toContainText('fixé côté serveur');
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#before-buying')).toContainText(/serveurs privés/i);
 
   // Les liens legaux FR pointent vers /legal/fr/ (pas /legal/)
   await expect(page.locator('a[href="../legal/fr/terms.html"]').first()).toBeAttached();

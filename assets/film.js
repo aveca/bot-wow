@@ -13,13 +13,23 @@
  *     (l'utilisateur garde toujours la main).
  */
 (function () {
+  var reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* ignore */ }
+
+  /* Le GIF ne respecte pas prefers-reduced-motion : on ne l'affiche
+     que si le mouvement est accepté. Sans JS, le PNG statique reste. */
+  if (!reduce) {
+    var sprites = document.querySelectorAll('img.pixel-sprite[data-gif]');
+    for (var i = 0; i < sprites.length; i++) {
+      var gif = sprites[i].getAttribute('data-gif');
+      if (gif) sprites[i].setAttribute('src', gif);
+    }
+  }
+
   var film = document.querySelector('[data-film]');
   if (!film) return;
   var replay = document.querySelector('[data-film-replay]');
   var playLabel = replay ? replay.getAttribute('data-play-label') : null;
-
-  var reduce = false;
-  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* ignore */ }
 
   function offerPlay(label) {
     if (!replay) return;

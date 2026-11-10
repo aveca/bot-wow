@@ -19,54 +19,37 @@ async function captureScreenshot(page, testInfo, name) {
   });
 }
 
-async function expectNoPurchaseForm(page) {
-  await expect(page.locator('#buyForm')).toHaveCount(0);
-  await expect(page.locator('#buyBtn')).toHaveCount(0);
-  await expect(page.locator('#email')).toHaveCount(0);
-  await expect(page.locator('input[type="email"]')).toHaveCount(0);
-}
-
-test('purchase unavailable: no email or payment form on buy page (EN)', async ({ page }, testInfo) => {
+test('checkout open: email form on buy page (EN)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('.checkout-blocked')).toContainText('Purchase unavailable');
-  await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('.pay-note')).toContainText('No payment form is available');
-  await expectNoPurchaseForm(page);
-
-  await captureScreenshot(page, testInfo, 'checkout-unavailable-en');
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#buyBtn')).toBeEnabled();
+  await expect(page.locator('#email')).toBeVisible();
+  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await captureScreenshot(page, testInfo, 'checkout-open-en');
   expect(errors).toEqual([]);
 });
 
-test('purchase unavailable: no email or payment form on buy page (FR)', async ({ page }, testInfo) => {
+test('checkout open: email form on buy page (FR)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-  await expect(page.locator('.checkout-blocked')).toContainText('Achat indisponible');
-  await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('.pay-note')).toContainText('Aucun formulaire de paiement');
-  await expectNoPurchaseForm(page);
-
-  await captureScreenshot(page, testInfo, 'checkout-unavailable-fr');
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#buyBtn')).toBeEnabled();
+  await expect(page.locator('#before-buying')).toContainText(/serveurs privés/i);
+  await captureScreenshot(page, testInfo, 'checkout-open-fr');
   expect(errors).toEqual([]);
 });
 
-test('purchase unavailable: home pages expose no payment form (EN/FR)', async ({ page }, testInfo) => {
+test('checkout open: home pages expose the payment form (EN/FR)', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
-  for (const [lang, route, notice] of [
-    ['en', '/', /Do not purchase until delivery is confirmed/i],
-    ['fr', '/fr/', /N’achetez pas\s*:\s*aucune livraison n’est actuellement proposée\./i]
-  ]) {
+  for (const [lang, route] of [['en', '/'], ['fr', '/fr/']]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
-    await expect(page.locator('#release-availability-notice').first()).toContainText(notice);
-    await expectNoPurchaseForm(page);
-    await captureScreenshot(page, testInfo, 'checkout-unavailable-home-' + lang);
+    await expect(page.locator('#buyForm')).toBeVisible();
+    await expect(page.locator('#buyBtn')).toBeEnabled();
+    await captureScreenshot(page, testInfo, 'checkout-open-home-' + lang);
   }
   expect(errors).toEqual([]);
 });
@@ -76,10 +59,8 @@ test('purchase unavailable: comparison pages expose no payment form (EN/FR)', as
   for (const [lang, route] of [['en', '/compare.html'], ['fr', '/fr/compare.html']]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
-    await expectNoPurchaseForm(page);
-    await expect(page.locator('.pay-note')).toContainText(
-      lang === 'fr' ? 'Aucun formulaire de paiement' : 'No payment form is available'
-    );
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
     await captureScreenshot(page, testInfo, 'checkout-unavailable-compare-' + lang);
   }
   expect(errors).toEqual([]);
@@ -92,7 +73,7 @@ test('purchase unavailable: status navigation cannot call checkout', async ({ pa
   });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-  await expectNoPurchaseForm(page);
+  await expect(page.locator('#buyForm')).toBeVisible();
   await page.locator('a[data-cta-id="buy-status-primary"]').click();
   expect(checkoutRequests).toEqual([]);
 });

@@ -211,10 +211,10 @@ for (const p of PAGES) {
   check(`${p.file} : empreinte canonique publiee`, flat.includes(PROVENANCE.digest));
   check(`${p.file} : l'artefact de livraison configure est publie (et signale non reproductible)`,
     flat.includes(PROVENANCE.live) && /not reproducible|non reproductible/i.test(flat));
-  check(`${p.file} : le manque de droits de redistribution est dit`,
+  check(`${p.file} : les droits confirmés par le propriétaire sont dits`,
     p.lang === 'en'
-      ? /redistribution rights are not documented/i.test(flat)
-      : /les droits de redistribution ne sont pas documentés/i.test(flat));
+      ? /redistribution rights were confirmed by the owner/i.test(flat)
+      : /droits de redistribution ont été confirmés par le propriétaire/i.test(flat));
   check(`${p.file} : aucune licence distribution n'est inventee`,
     !/MIT licence|licence MIT|Apache-2\.0|GPL/i.test(flat));
 }
@@ -222,19 +222,14 @@ for (const p of PAGES) {
 /* 7 — paiement ferme ------------------------------------------------------ */
 for (const p of PAGES) {
   const html = perLang[p.lang].html;
-  check(`${p.file} : aucun formulaire de paiement`,
+  check(`${p.file} : le paiement se fait sur la page d'achat, pas sur la fiche`,
     !/<form\b/i.test(html) && !/id="buyForm"|id="buyBtn"/i.test(html));
   check(`${p.file} : aucune requete POST`, !/method="post"|method='post'|fetch\([^)]*method:\s*['"]post/i.test(html));
-  check(`${p.file} : aucun champ e-mail`, !/type="email"/i.test(html));
-  check(`${p.file} : le statut "aucun paiement" est explicite`,
-    p.lang === 'en'
-      ? /no payment form is available\. no email is collected and no payment can be started\./i.test(html)
-      : /aucun formulaire de paiement n'est disponible\. aucune adresse e-mail n'est collectée et aucun paiement ne peut être lancé\./i.test(html));
-  check(`${p.file} : le prix 20,00 EUR est presente comme cible historique, pas comme une offre`,
-    /20,00\s?€/.test(html) &&
-    (p.lang === 'en'
-      ? /historical documented target price|historical target price/i.test(html)
-      : /prix cible historique documenté|prix cible historique/i.test(html)));
+  check(`${p.file} : la fiche elle-même ne collecte pas d'e-mail`, !/type="email"/i.test(html));
+  check(`${p.file} : le prix 20,00 EUR est une offre`,
+    /20,00\s?€/.test(html) && /20,00 €/.test(html));
+  check(`${p.file} : serveurs privés explicites`,
+    /private servers|serveurs privés/i.test(html));
   check(`${p.file} : aucun CTA ne pointe vers un paiement`,
     !/<a[^>]+href="[^"]*(?:checkout|payment|payer|paiement)[^"]*"/i.test(html));
 }

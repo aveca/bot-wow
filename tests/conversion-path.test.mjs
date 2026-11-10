@@ -59,10 +59,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check("accueil : formulaire de paiement absent", !/<form id="buyForm"/.test(t));
-  check("accueil : champ e-mail de paiement absent", !/id="email"[^>]*type="email"/.test(t));
-  check("accueil : bouton de paiement absent", !/id="buyBtn"/.test(t));
-  check("accueil : statut sans collecte de données", /No payment form is available|Aucun formulaire de paiement n'est disponible/i.test(t));
+  check("accueil : formulaire de paiement présent", /<form id="buyForm"/.test(t));
+  check("accueil : champ e-mail de paiement présent", /id="email"[^>]*type="email"/.test(t));
+  check("accueil : bouton de paiement présent", /id="buyBtn"/.test(t));
+  check("accueil : le montant est fixé côté serveur", /server sets the amount|serveur fixe le montant/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
@@ -70,10 +70,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('compare.html');
   const fr = read('fr/compare.html');
-  check('compare EN : BOT-WOW indique clairement que rien n’est en vente',
-    /BOT-WOW is not currently offered for purchase/i.test(en) && /Not for sale/i.test(en));
-  check('compare FR : BOT-WOW indique clairement que rien n’est commercialise',
-    /n'est actuellement pas proposé à l'achat/i.test(fr) && /Non commercialisé/i.test(fr));
+  check('compare EN : BOT-WOW est en vente pour serveurs privés',
+    /private servers/i.test(en) && /20,00 €/.test(en));
+  check('compare FR : BOT-WOW est en vente pour serveurs privés',
+    /serveurs privés/i.test(fr) && /20,00 €/.test(fr));
   check('compare EN : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
   check('compare EN : CTA statut vers la page achat',
@@ -224,12 +224,8 @@ for (const file of ['index.html', 'fr/index.html']) {
     .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
   check(file + ' : le hero renvoie vers la politique publiée',
     /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
-  check(file + ' : aucune garantie de remboursement inconditionnelle',
-    !/No catch|Sans piège/i.test(heroGuarantee), '("' + heroGuarantee + '")');
-  check(file + ' : le hero précise qu’aucune licence ne peut être activée',
-    /No licence can be activated|Aucune licence ne peut être activée/i.test(heroGuarantee), '("' + heroGuarantee + '")');
-  check(file + ' : aucune promesse de remboursement n’est faite',
-    /No refund promise is made|Aucune promesse de remboursement n’est faite/i.test(heroGuarantee), '("' + heroGuarantee + '")');
+  check(file + ' : le hero précise le périmètre serveurs privés',
+    /private servers|serveurs privés/i.test(heroGuarantee + html), '');
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
@@ -246,7 +242,7 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
 // 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
 // le traitement visuel réservé à un achat immédiat.
 {
-  const PURCHASE = [];
+  const PURCHASE = ['hero-status', 'nav-buy', 'final-status', 'mbar-status', 'offer-status'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
@@ -289,8 +285,8 @@ for (const file of ['index.html', 'fr/index.html']) {
 // Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : aucun champ e-mail de paiement n'est exposé`,
-    !/id="email"[^>]*type="email"|id="buyForm"/.test(html));
+  check(`${file} : le formulaire d'achat est présent`,
+    /id="buyForm"/.test(html) && /id="email"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));

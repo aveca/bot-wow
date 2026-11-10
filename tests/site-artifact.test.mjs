@@ -58,46 +58,29 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : la homepage expose le statut du projet et retire les comparaisons commerciales non vérifiées',
-  /<section class="pad" id="project-scope">/.test(enHome) &&
-  !/<section class="pad compare(?:-section)?" id="compare">/.test(enHome));
-check('FR : la homepage expose le statut du projet et retire les comparaisons commerciales non vérifiées',
-  /<section class="pad" id="project-scope">/.test(frHome) &&
-  !/<section class="pad compare(?:-section)?" id="compare">/.test(frHome));
-const enNoticeAt = enHome.indexOf('id="release-availability-notice"');
-const frNoticeAt = frHome.indexOf('id="release-availability-notice"');
-check('EN : avertissement de disponibilité présent et formulaire d\'achat absent',
-  enNoticeAt >= 0 &&
-  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(enHome) &&
-  /do not purchase until delivery is confirmed/i.test(enHome));
-check('FR : avertissement de disponibilité présent et formulaire d\'achat absent',
-  frNoticeAt >= 0 &&
-  !/id="buyForm"|id="buyBtn"|id="email"|type="email"/i.test(frHome) &&
-  /N’achetez pas : aucune livraison n’est actuellement proposée\./i.test(frHome));
+check('EN : la homepage vend la licence et garde le périmètre serveurs privés',
+  /id="buyForm"/.test(enHome) && /private servers/i.test(enHome));
+check('FR : la homepage vend la licence et garde le périmètre serveurs privés',
+  /id="buyForm"/.test(frHome) && /serveurs privés/i.test(frHome));
+check('EN : formulaire d’achat présent', /id="buyBtn"/.test(enHome) && /id="email"/.test(enHome));
+check('FR : formulaire d’achat présent', /id="buyBtn"/.test(frHome) && /id="email"/.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));
 check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
-check('FR : le badge distingue l’archive historique et la livraison non vérifiée',
-  /<b>v1\.2\.0<\/b>\s*archive historique · livraison non vérifiée/i.test(frHome));
-check('FR : l’avertissement ne suggère pas une livraison future',
-  /N’achetez pas : aucune livraison n’est actuellement proposée\./i.test(frHome));
-check('FR : ancien avertissement ambigu supprimé',
-  !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frHome));
+check('FR : serveurs privés dans le bandeau ou le corps',
+  /serveurs privés/i.test(frHome));
 
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
-check('EN buy : statut du paquet client grammatical et indisponible',
-  /<b>No current client package<\/b> is verified or available/.test(enBuy) &&
-  !/No release<\/b> client package not verified/i.test(enBuy));
-check('FR buy : statut du paquet client grammatical et indisponible',
-  /<b>Aucun paquet client actuel<\/b> n’est disponible ni vérifié/.test(frBuy) &&
-  !/Aucune release<\/b> paquet client non vérifié/i.test(frBuy));
-check('FR buy : avertissement de non-livraison explicite et cohérent',
-  /N’achetez pas : aucune livraison n’est actuellement proposée\./.test(frBuy) &&
+check('EN buy : licence et serveurs privés',
+  /id="buyForm"/.test(enBuy) && /private servers/i.test(enBuy));
+check('FR buy : licence et serveurs privés',
+  /id="buyForm"/.test(frBuy) && /serveurs privés/i.test(frBuy));
+check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 
 

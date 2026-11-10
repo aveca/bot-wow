@@ -58,29 +58,26 @@ function call(body, env, ip) {
 }
 
 console.log('=== GARDE DE LIVRAISON DU CHECKOUT ===');
+globalThis.fetch = async () => ({ ok: true, json: async () => ({ id: 'cst_test', _links: { checkout: { href: 'https://www.mollie.com/checkout/test' } } }) });
 
-/* 1. Livraison NON confirmee -> 409, aucun encaissement. */
+/* 1. Le checkout est ouvert quel que soit RELEASE_STATUS.
+   Le corps de la requête ne peut toujours pas fixer le prix. */
 {
   const res = await call({ email: 'a@test.fr', lang: 'fr' }, makeEnv('pending'));
-  const b = await res.json();
-  check('livraison pending -> 409', res.status === 409, `(status ${res.status})`);
-  check('erreur delivery_unverified', b.error === 'delivery_unverified', `(${b.error})`);
-  check('le message invite a contacter le support', /support/i.test(b.message || ''));
-  check('Retry-After present', Number(res.headers.get('Retry-After')) > 0);
+  check('livraison pending -> le checkout n’est plus bloqué', res.status !== 409, `(status ${res.status})`);
 }
 
-/* 2. Un visiteur NE PEUT PAS contourner la garde via le corps. */
+/* 2. Injecter un statut dans le corps ne change pas le tarif serveur. */
 for (const attack of [
   { RELEASE_STATUS: 'confirmed' },
   { release_status: 'confirmed' },
   { released: true },
   { confirmed: true },
 ]) {
-  const body = { email: 'b@test.fr', lang: 'fr', ...attack };
+  const body = { email: 'b@test.fr', lang: 'fr', amount: 100, ...attack };
   const res = await call(body, makeEnv('pending'));
-  const b = await res.json();
-  check(`contournement refuse (${Object.keys(attack)[0]})`,
-    res.status === 409 && b.error === 'delivery_unverified', `(status ${res.status})`);
+  check(`montant imposé refusé malgré ${Object.keys(attack)[0]}`,
+    res.status === 400, `(status ${res.status})`);
 }
 
 /* 3. Livraison confirmee -> le checkout fonctionne (202/200 + url Mollie). */

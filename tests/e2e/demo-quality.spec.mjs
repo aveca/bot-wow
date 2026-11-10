@@ -98,36 +98,22 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   await expect(heroStatus).toBeVisible();
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
   if (lang === 'fr') {
-    await expect(navStatus).toContainText('Vérifier la disponibilité');
-    await expect(heroStatus).toContainText('Vérifier la disponibilité');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
+    await expect(navStatus).toContainText('Acheter');
+    await expect(heroStatus).toContainText('Payer 20,00 €');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Acheter');
   } else {
-    await expect(navStatus).toContainText('Check purchase status');
-    await expect(heroStatus).toContainText('Check purchase status');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
+    await expect(navStatus).toContainText('Buy');
+    await expect(heroStatus).toContainText('Pay 20,00 €');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Buy');
   }
 
-  // Checkout is status-only: no email field or payment form is rendered.
-  await expect(page.locator('#buyBtn')).toHaveCount(0);
-  await expect(page.locator('#buyForm')).toHaveCount(0);
-  await expect(page.locator('input[type="email"]')).toHaveCount(0);
+  await expect(page.locator('#buyBtn')).toBeEnabled();
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('input[type="email"]')).toBeVisible();
   await expect(page.locator('.pay-note')).toContainText(
-    lang === 'fr' ? 'Aucun formulaire de paiement' : 'No payment form is available'
+    lang === 'fr' ? 'fixé côté serveur' : 'fixed on the server'
   );
-
-  // Le message de blocage est visible
-  await expect(page.locator('.checkout-blocked')).toBeVisible();
-
-  // L'avertissement de disponibilite est present (texte selon la langue)
-  if (lang === 'fr') {
-    await expect(page.locator('#release-availability-notice')).toContainText('N’achetez pas : aucune livraison n’est actuellement proposée.');
-  } else {
-    await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
-  }
-
-  // No fake form can be submitted with Enter because no form or email field exists.
-  await expect(page.locator('#buyForm')).toHaveCount(0);
-  await expect(page.locator('#email')).toHaveCount(0);
+  await expect(page.locator('#before-buying')).toContainText(/serveurs privés|private servers/i);
 }
 
 test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
@@ -135,8 +121,8 @@ test('homepage: demo and purchase-status paths remain visible and responsive', a
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toBeVisible();
-  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
+  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
@@ -155,19 +141,18 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
   });
 
   for (const route of [
-    { path: '/', label: 'Check purchase status', bar: 'Purchase status' },
-    { path: '/fr/', label: 'Vérifier la disponibilité', bar: 'Statut de disponibilité' },
+    { path: '/', label: 'Buy the lifetime licence', bar: 'Buy the licence' },
+    { path: '/fr/', label: 'Acheter la licence à vie', bar: 'Acheter la licence' },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    await expect(page.locator('#buy')).toBeVisible();
     const statusCta = page.locator('a[data-cta-id="hero-status"]');
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('#buyBtn')).toHaveCount(0);
-    await expect(page.locator('#buyForm')).toHaveCount(0);
-    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await expect(page.locator('#buyForm')).toBeVisible();
+    await expect(page.locator('#buyBtn')).toBeEnabled();
     await expect(page.locator('[data-cta-id="hero-offer"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="final-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
     await statusCta.click();
     await expect(page.locator('#buy')).toBeInViewport();
@@ -192,7 +177,6 @@ test('comparison EN/FR: status CTAs navigate to the status page and never start 
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-    await expect(page.locator('#release-availability-notice')).toBeVisible();
     const statusCta = page.locator('a[data-cta-id="compare-status"]');
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
@@ -220,7 +204,7 @@ test('closed checkout: pressing Enter cannot submit the email form EN/FR', async
     if (/\/api\/checkout(?:\/|$)/i.test(url.pathname)) checkoutRequests.push(url.pathname);
   });
 
-  for (const path of ['/', '/fr/', '/buy.html', '/fr/buy.html', '/compare.html', '/fr/compare.html']) {
+  for (const path of ['/compare.html', '/fr/compare.html']) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
     const before = page.url();
@@ -265,7 +249,7 @@ test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
   await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
-  await expect(page.locator('#release-availability-notice')).toContainText(/do not purchase until delivery is confirmed/i);
+  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);
@@ -292,8 +276,8 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('Purchase unavailable');
-    await expect(mobileOffer).toContainText('No verified downloadable release');
+    await expect(mobileOffer).toContainText('20,00 €');
+    await expect(mobileOffer).toContainText('Private servers');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -337,8 +321,8 @@ test('French demo: locale stays French and all key navigation targets are locali
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('Achat indisponible');
-    await expect(mobileOffer).toContainText('Aucun paquet téléchargeable vérifié');
+    await expect(mobileOffer).toContainText('20,00 €');
+    await expect(mobileOffer).toContainText('Serveurs privés');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
