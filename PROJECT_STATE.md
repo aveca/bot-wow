@@ -1,3 +1,23 @@
+**Ajout 2026-11-10 — paquet addon rendu livrable : liste blanche, TOC dédiée, tests d'installation réelle.**
+Branche `p0/package-whitelist-toc-20261110`. Le builder ne copie plus tout le dossier
+addon de la source : il applique une **liste blanche** (`LiveErrorCapture.lua` +
+`CasinobabeFishing.lua`) et GÉNÈRE une TOC `Casinobabe.toc` BOT-WOW. Tout autre
+fichier du addon source est exclu **et déclaré** dans `MANIFEST.json`
+(`distribution.addon.excluded`, avec la raison). Preuves exécutables :
+`tests/package-addon-install.test.mjs` (35 contrôles, Lua 5.1 réel via wasmoon +
+un mock WoW original) construit un vrai paquet, l'extrait dans un faux dossier WoW et
+le charge ; `tests/distribution-package.test.mjs`, `tests/third-party-notices-shipped.test.mjs`
+et `tests/package-release-rights-gate.test.mjs` vérifient la liste blanche, la
+déclaration des exclus et le refus de release. Résultat sur la vraie source
+`aveca/Casinobabe` : 2 fichiers de la liste blanche + TOC générée, **6 fichiers
+exclus**, dont `Casinobabe.lua` (interface casino), LibStub, LibDBIcon-1.0,
+background.tga et la police DejaVu Sans. Les fichiers `.lua` réellement livrés
+ont été chargés sous Lua 5.1 sans erreur, sans LibStub, sans LibDBIcon, sans
+police. **Aucun paiement, aucun prix, aucun secret, aucun Worker, aucune écriture R2
+n'a été touché.** Le blocage commercial restant est inchangé : les conditions de
+licence client ne sont toujours pas publiées. Rapport :
+`reports/operations/2026-11-10-addon-whitelist-delivery.md`.
+
 # BOT-WOW — état partagé
 
 **Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut

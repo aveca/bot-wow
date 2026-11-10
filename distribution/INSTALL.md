@@ -13,6 +13,9 @@ documentation d'installation.
 ```
 package/
   addon/Casinobabe/        -> à copier dans <WoW>\Interface\AddOns\Casinobabe
+                             (fichiers du module de pêche UNIQUEMENT, livrés
+                              par liste blanche : CasinobabeFishing.lua,
+                              LiveErrorCapture.lua, Casinobabe.toc générée)
   scripts/fishing_*.py     -> le bot et ses modules (Python 3.11+)
   requirements.txt         -> dépendances Python nécessaires
   config.example.json      -> gabarit de configuration
@@ -22,6 +25,11 @@ MANIFEST.json              -> SHA-256 de chaque fichier (intégrité)
 VERSION                    -> version du paquet
 RELEASE-NOTES.md           -> notes de version
 ```
+
+Le dossier `addon/Casinobabe` ne contient **que** les fichiers nécessaires au mode
+pêche. L'interface casino n'est pas livrée : elle n'était pas utilisée par ce
+module. `MANIFEST.json` liste en annexe les fichiers de la source qui ont été
+exclus, avec la raison, afin que rien ne soit retiré silencieusement.
 
 ## 2. Prérequis
 

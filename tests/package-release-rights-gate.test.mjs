@@ -21,8 +21,10 @@ const check = (name, ok, detail = '') => {
 function seedSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinababe.toc'), '## Interface: 20506\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinababe.lua'), '-- fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- fixture\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\n');
 }
 

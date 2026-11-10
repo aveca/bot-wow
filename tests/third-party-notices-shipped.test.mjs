@@ -33,12 +33,16 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
 };
 
-/* Source de test minimale mais réaliste : addon + scripts. */
+/* Source de test minimale mais réaliste : addon + scripts.
+   Modele du vrai depot source : l'unique fichier addon livre l'interface
+   casino, mais la LISTE BLANCHE BOT-WOW ne garde que le module de peche. */
 function makeSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- addon\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- addon\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("bot")\n');
   writeFileSync(join(dir, 'scripts', 'fishing_observer.py'), 'print("obs")\n');
 }
@@ -78,17 +82,27 @@ try {
         /THIRD_PARTY_NOTICES\.md$/.test(String(entry.source || '')), String(entry.source));
     }
 
-    /* --- 4. chaque composant tiers embarque est nomme ------------------- */
+    /* --- 4. chaque composant tiers concerne est traite ------------------ */
+    /* 2026-11-10 : la liste blanche du addon n'embarque PLUS de composant
+       tiers (DejaVu Sans, LibStub, LibDBIcon-1.0, background.tga sont exclus).
+       Le document livre doit malgre tout nommer chaque composant qu'il
+       mentionne et dire lequel est embarque, exclu, ou seulement declare :
+       un lecteur doit pouvoir verifier la conformite sans autre source. */
     const text = readFileSync(stageNotices, 'utf8');
     for (const comp of [
-      'DejaVu Sans',            // media/casino_uni.ttf
       'wasmoon-lua5.1',         // dependance declaree
       'lodash',                 // dependance transitive
+    ]) {
+      check(`le document livre nomme ${comp}`, text.includes(comp));
+    }
+    for (const comp of [
+      'DejaVu Sans',            // media/casino_uni.ttf
       'LibStub',                // Libs/LibStub/LibStub.lua
       'LibDBIcon-1.0',          // Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua
       'background.tga',         // media/background.tga
     ]) {
-      check(`le document livre nomme ${comp}`, text.includes(comp));
+      check(`le document livre nomme ${comp} et declare sa non-livraison`,
+        text.includes(comp) && /liste blanche/i.test(text));
     }
     /* Le texte de licence doit etre dans le document LIVRE, pas seulement
        dans le depot : c'est l'obligation. */
