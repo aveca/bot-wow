@@ -1,6 +1,6 @@
 # BOT-WOW — état partagé
 
-**Ajout 2026-11-10 — checkout Stripe dans le Worker, non déployé.** Branche `cursor/stripe-checkout-0da7`. `POST /api/checkout` crée une Checkout Session Stripe (20,00 EUR côté serveur) et renvoie `checkoutUrl`. `POST /api/stripe-webhook` vérifie `Stripe-Signature` avec `STRIPE_WEBHOOK_SECRET`, relit la session avec `STRIPE_SECRET_KEY`, puis lance la même livraison (licence + e-mail Resend) que l'ancien webhook Mollie. Secrets à poser : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. Événement Stripe : `checkout.session.completed`. URL : `https://api.bot-wow.com/api/stripe-webhook`. Le Worker de production n'est pas redéployé par cette PR.
+**Ajout 2026-11-10 — checkout Stripe dans le Worker, non déployé.** PR https://github.com/aveca/bot-wow/pull/173, commit `7dad348`. `POST /api/checkout` crée une Checkout Session Stripe (20,00 EUR côté serveur) et renvoie `checkoutUrl`. `POST /api/stripe-webhook` vérifie `Stripe-Signature` avec `STRIPE_WEBHOOK_SECRET`, relit la session avec `STRIPE_SECRET_KEY`, puis lance la même livraison (licence + e-mail Resend) que l'ancien webhook Mollie. Secrets à poser : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. Événement Stripe : `checkout.session.completed`. URL : `https://api.bot-wow.com/api/stripe-webhook`. Le Worker de production n'est pas redéployé par cette PR.
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
