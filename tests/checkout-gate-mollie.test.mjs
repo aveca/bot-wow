@@ -20,6 +20,11 @@ const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=
 /* Source de verite du tarif : PRICE_TABLE du Worker (jamais invente ici).
    On lit le montant et la devise directement dans le code livre. */
 const workerSource = fs.readFileSync(path.join(REPO, 'worker', 'index.js'), 'utf8');
+const tmpConfirmedWorker = path.join(HERE, '.worker-release-confirmed.mjs');
+const confirmedSource = workerSource.replace('var RELEASE_STATUS = "pending";', 'var RELEASE_STATUS = "confirmed";');
+if (confirmedSource === workerSource) throw new Error('RELEASE_STATUS source flag fixture anchor missing');
+fs.writeFileSync(tmpConfirmedWorker, confirmedSource);
+const confirmedWorkerMod = await import('file:///' + tmpConfirmedWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 const priceMatch = workerSource.match(/PRICE_TABLE\s*=\s*\{[\s\S]*?amount:\s*(\d+),\s*currency:\s*"([A-Z]+)"/);
 if (!priceMatch) {
   console.log('FAIL source de verite PRICE_TABLE introuvable dans worker/index.js');
@@ -87,13 +92,13 @@ globalThis.fetch = async (input, init) => {
   return realFetch(input, init);
 };
 
-function call(body, env) {
+function call(body, env, worker = workerMod) {
   const req = new Request('https://api.bot-wow.com/api/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': '203.0.113.10' },
     body: JSON.stringify(body),
   });
-  return workerMod.default.fetch(req, env, {});
+  return worker.default.fetch(req, env, {});
 }
 
 console.log('=== GARDE CHECKOUT : AUCUN APPEL MOLLIE ===');
@@ -103,6 +108,7 @@ for (const [label, status] of [
   ['absent', undefined],
   ['pending', 'pending'],
   ['invalid', 'oui-mais-non'],
+  ['secret-confirmed-but-source-pending', 'confirmed'],
   ['case-mismatch', 'CONFIRMED'],
   ['whitespace', ' confirmed '],
 ]) {
@@ -130,7 +136,7 @@ for (const attack of [
 /* 3. Explicit server-side confirmation permits the mocked Mollie path. */
 {
   MOLLIE_CALLS = [];
-  const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'), confirmedWorkerMod);
   const b = await res.json().catch(() => ({}));
   check('confirmed -> pas de 409', res.status !== 409, `(status ${res.status})`);
   check('confirmed -> reponse 200 avec un paymentId', res.status === 200 && !!b.paymentId, `(status ${res.status})`);
@@ -146,7 +152,7 @@ for (const attack of [
 /* 4. The mocked provider receives the exact server-controlled PRICE_TABLE amount and currency. */
 {
   MOLLIE_CALLS = [];
-  const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'));
+  const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'), confirmedWorkerMod);
   const paymentCalls = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
   check('un paiement Mollie est cree (prerequis au controle du montant)',
     paymentCalls.length === 1, `(${paymentCalls.length})`);
@@ -161,7 +167,7 @@ for (const attack of [
     !!body && body.metadata && body.metadata.product === 'bot-wow-lifetime',
     `(recu ${body && body.metadata ? body.metadata.product : 'aucun'})`);
   // Le navigateur ne doit jamais pouvoir imposer son propre montant.
-  const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed'));
+  const injected = await call({ email: 'e@test.fr', lang: 'fr', amount: 100 }, makeEnv('confirmed'), confirmedWorkerMod);
   const injectedPayments = MOLLIE_CALLS.filter((c) => /\/payments$/.test(c.url) && c.method === 'POST');
   const lastBody = injectedPayments[injectedPayments.length - 1] && injectedPayments[injectedPayments.length - 1].body;
   check('un montant impose par le navigateur est ignore (reste le tarif serveur)',
@@ -170,6 +176,7 @@ for (const attack of [
 }
 
 try { fs.unlinkSync(tmpWorker); } catch {}
+try { fs.unlinkSync(tmpConfirmedWorker); } catch {}
 console.log(failures === 0 ? '\nGARDE MOLLIE : OK' : `\nGARDE MOLLIE : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
 
