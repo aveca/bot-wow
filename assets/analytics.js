@@ -16,7 +16,7 @@
  *   planner_mode   { mode }                       mode du planificateur
  *   ownership_view { years }                      horizon du cout de possession
  *   checkout_start { step }                       depart du checkout (soumission formulaire)
- *   checkout_requested { step }                   clic sur un CTA d'achat
+ *   checkout_requested { step }                   clic sur un CTA checkout explicitement activé
  *   checkout_error { step }                       echec du checkout
  *   journey_view   { cta, step }                  changement de section
  *
@@ -234,16 +234,18 @@
     track('ownership_view', { years: Number(btn.getAttribute('data-years')) });
   }, { passive: true });
 
-  /* 4. Clics sur les CTA d'achat (checkout_requested). */
-  // Écouteur élargi : couvre maintenant 7 IDs CTA buy-réels (contre 4 auparavant),
-  // tout en excluant les boutons de démonstration/navigation qui n'ouvrent pas
-  // le checkout (hero-demo, final-demo, telemetry-*, radar-, journey-*, steps-demo,
-  // compare-cta). Le serveur conserve le contrôle : seul payment_confirmed →
-  // license_created → delivery_sent crée une conversion réelle.
+  /* 4. Intention de checkout : opt-in explicite uniquement.
+   * Les boutons de statut « Purchase unavailable » ne sont pas une intention
+   * d'achat. Tant que la vente est fermée, aucun élément ne porte cet attribut.
+   * Le futur CTA réel devra ajouter data-checkout-enabled="true" uniquement
+   * lorsque le checkout public aura été validé et activé.
+   */
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
+    var el = ev.target.closest ? ev.target.closest('[data-checkout-enabled="true"]') : null;
     if (!el) return;
-    track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
+    var id = el.getAttribute('data-cta-id');
+    if (!id) return;
+    track('checkout_requested', { step: id });
   }, { passive: true });
 
   /* 5. Depart et echec du checkout (soumission du formulaire). */
