@@ -108,6 +108,41 @@ jobs:
           console.log('RELEASE RIGHTS: BLOCKED AS EXPECTED; source provenance exact; client terms pending.');
           NODE
 
+
+          # Exercise the release gate against the REAL pinned source checkout,
+          # not only the unit-test fixture. Existing artifacts must survive refusal.
+          OUT_RELEASE="/tmp/botwow-package-candidate-release"
+          RELEASE_PKG="$OUT_RELEASE/casinababe-fishing-1.2.2-rc.1"
+          RELEASE_ZIP="$OUT_RELEASE/casinababe-fishing-1.2.2-rc.1.zip"
+          RELEASE_LOG="/tmp/botwow-release-gate.log"
+          mkdir -p "$RELEASE_PKG"
+          printf 'KEEP PACKAGE\\n' > "$RELEASE_PKG/sentinel.txt"
+          printf 'KEEP ZIP\\n' > "$RELEASE_ZIP"
+
+          if node "$BOT_WOW_DIR/scripts/build-package.cjs" \\
+            --source "$SOURCE_DIR" \\
+            --version 1.2.2-rc.1 \\
+            --out "$OUT_RELEASE" \\
+            --source-repo aveca/Casinobabe \\
+            --source-ref feat/fishing-route-intelligence-v2 \\
+            --source-commit "$SOURCE_SHA" \\
+            --release > "$RELEASE_LOG" 2>&1; then
+            echo "::error::Release build unexpectedly succeeded while client licence terms are pending."
+            cat "$RELEASE_LOG"
+            exit 1
+          fi
+
+          if ! grep -Fq 'release refusée' "$RELEASE_LOG" \\
+            || ! grep -Fq 'Code original Casinababe' "$RELEASE_LOG"; then
+            echo "::error::Real-source release gate failed for an unexpected reason."
+            cat "$RELEASE_LOG"
+            exit 1
+          fi
+          test "$(cat "$RELEASE_PKG/sentinel.txt")" = 'KEEP PACKAGE'
+          test "$(cat "$RELEASE_ZIP")" = 'KEEP ZIP'
+          test ! -e "$RELEASE_PKG/package"
+          echo "REAL SOURCE RELEASE GATE: BLOCKED; existing package and ZIP preserved."
+
           node "$BOT_WOW_DIR/scripts/build-package.cjs" \
             --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \
