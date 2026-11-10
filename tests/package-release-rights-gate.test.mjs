@@ -23,6 +23,10 @@ function seedSource(dir) {
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinababe.toc'), '## Interface: 20506\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinababe.lua'), '-- fixture\n');
+  // factory#82 : le builder livre une LISTE BLANCHE — ces deux fichiers
+  // whitelistés doivent exister dans toute source de test.
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- lec fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fishing fixture\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\n');
 }
 
