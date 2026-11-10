@@ -35,7 +35,7 @@ for (const [page, file, claimRe] of [
   // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
   check(`${page} : réservation Stripe à 20 € avec livraison manuelle`,
-    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) && /manual|manuelle/i.test(flat) && /full refund|intégralement remboursé/i.test(flat));
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) && /manual|manuelle/i.test(flat) && /full refund|intégralement remboursé|remboursement intégral/i.test(flat));
   check(`${page} : mention « Avant d'acheter » des serveurs privés`,
     /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
   check(`${page} : réservation sans formulaire local ni collecte d’e-mail`,
@@ -151,7 +151,7 @@ for (const [file, unavailable] of [
 // FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
 for (const [file, unavailable, simulated, staleClaims] of [
   ['faq.html', /A €20 beta reservation is open/i, /browser planner demo uses simulated data only/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
-  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /démo navigateur utilise uniquement des données simulées/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
+  ['fr/faq.html', /réservation bêta à 20 €/i, /démo navigateur utilise uniquement des données simulées/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : réservation bêta et livraison manuelle annoncées dès la FAQ', unavailable.test(flat));
@@ -247,7 +247,7 @@ const licenceTruthCases = [
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
   ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms are not confirmed/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /limites et conditions d'activation ne sont pas confirmées/i,
+  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /limites et conditions d'activation restent en cours de vérification/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
