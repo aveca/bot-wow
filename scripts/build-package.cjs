@@ -611,16 +611,15 @@ function main() {
     excludedAddon.push({ file: rel, reason });
     if (!ADDON_EXCLUDED[rel]) unlistedAddon.push(rel);
   }
-  for (const rel of unlistedAddon) {
-    unresolvedRights.push({ component: `fichier addon non inventoríe : ${rel}`, status: 'NON ETABLI' });
-  }
-
-
   if (!fs.existsSync(NOTICE_FILE)) throw new IntegrityError('distribution/THIRD_PARTY_NOTICES.md absent : droits non vérifiables');
   const noticeDocument = fs.readFileSync(NOTICE_FILE, 'utf8');
   const rightsReview = inspectDistributionRights(noticeDocument);
   const git = gitInfo(SOURCE);
   const unresolvedRights = rightsReview.unresolved.slice();
+  // Les fichiers inconnus restent exclus en QA et bloquent explicitement toute release.
+  for (const rel of unlistedAddon) {
+    unresolvedRights.push({ component: `fichier addon non inventorié : ${rel}`, status: 'NON ÉTABLI' });
+  }
   const sourceRepositoryMatches = !!git && sameRepository(git.repository, rightsReview.expectedRepository);
   const sourceCommitMatches = !!git && !!rightsReview.expectedSourceCommit
     && String(git.commit).toLowerCase() === rightsReview.expectedSourceCommit;
