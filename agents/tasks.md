@@ -17,3 +17,4 @@
 | BOTWOW-P0-REAL-PAYMENT-TEST-PREP-20261107 | p0-real-payment-test-prep | in-progress | Mission #144 : ACK started publie, produits/licence verifies, PR #150 durcie, PR #154 rebase + empreintes, Mollie non re-verifiable (rapporte) |
 | BOTWOW-P0-PACKAGE-INTEGRITY-PR150-20261108 | package-integrity | done | 3 defauts corriges dans la PR #150 (symlinks, digest fail-closed, provenance CLI) + tests negatifs ; CI verte sur e28626d ; https://github.com/aveca/bot-wow/issues/151#issuecomment-6720399057 |
 | 20261109-pixel-skin | storefront-pixel-skin | done | https://github.com/aveca/bot-wow/pull/172 commit 2900e3004e02235266eff39207498ddf3b801f67 |
+| 20261110-purchase-intent-telemetry | purchase-intent-telemetry | done | PR #176 : `nav-buy` remplacé par `nav-status` sur les accueils EN/FR ; `cta_click` conservé, plus de faux `checkout_requested` ; test du vrai Analytics + HTML EN/FR ajouté |
