@@ -59,10 +59,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check("accueil : formulaire de paiement présent", /<form id="buyForm"/.test(t));
-  check("accueil : champ e-mail de paiement présent", /id="email"[^>]*type="email"/.test(t));
-  check("accueil : bouton de paiement présent", /id="buyBtn"/.test(t));
-  check("accueil : le montant est fixé côté serveur", /server sets the amount|serveur fixe le montant/i.test(t));
+  check("accueil : achat indisponible sans formulaire, e-mail ni bouton", 
+    /id="purchase-unavailable"/.test(t) &&
+    !/<form id="buyForm"|id="email"[^>]*type="email"|id="buyBtn"/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
@@ -285,8 +284,9 @@ for (const file of ['index.html', 'fr/index.html']) {
 // Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : le formulaire d'achat est présent`,
-    /id="buyForm"/.test(html) && /id="email"/.test(html));
+  check(`${file} : aucun formulaire ni champ e-mail de paiement`,
+    !/id="buyForm"|id="email"|id="buyBtn"|type="email"/i.test(html) &&
+    /id="purchase-unavailable"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));
