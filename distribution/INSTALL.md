@@ -50,7 +50,7 @@ Classic specific (couleurs d'eau, taille de la minicarte).
 4. Copiez `package\config.example.json` vers
    `<dossier du bot>\state\fishing-bot-config.json` et ajustez les valeurs.
 5. Depuis la racine du dossier extrait, vérifiez l'intégrité avant toute
-   installation ou exécution : `py -3 package\\verify-package.py`.
+   installation ou exécution : `py -3 package/verify-package.py`.
    Le vérificateur contrôle chaque SHA-256 et taille, refuse les liens symboliques,
    les fichiers absents et les fichiers supplémentaires. Il exige aussi un manifeste
    de release autorisé : un candidat QA est refusé par défaut. Ne contournez jamais
