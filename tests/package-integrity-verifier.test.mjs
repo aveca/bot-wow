@@ -116,7 +116,7 @@ try {
     cases.push(f);
     const result = run(f.root);
     assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.match(result.stdout, /PACKAGE INTEGRITY OK.*release metadata verified/);
+    assert.match(result.stdout, /PACKAGE INTEGRITY OK.*manifest claims release mode/);
     console.log('  ok   valid release archive verifies');
   }
   {
