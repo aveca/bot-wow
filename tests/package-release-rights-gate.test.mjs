@@ -41,7 +41,7 @@ try {
     (qa.stderr || qa.stdout).slice(-500));
 
   if (qa.status === 0) {
-    const manifestPath = join(qaOut, 'casinababe-fishing-0.0.1', 'MANIFEST.json');
+    const manifestPath = join(qaOut, 'casinobabe-fishing-0.0.1', 'MANIFEST.json');
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     const unresolved = manifest.distribution?.unresolvedComponents || [];
     check('le manifeste marque explicitement le build comme QA',
@@ -58,8 +58,8 @@ try {
   }
 
   const releaseOut = join(tmp, 'release');
-  const releasePackageDir = join(releaseOut, 'casinababe-fishing-0.0.1');
-  const releaseZip = join(releaseOut, 'casinababe-fishing-0.0.1.zip');
+  const releasePackageDir = join(releaseOut, 'casinobabe-fishing-0.0.1');
+  const releaseZip = join(releaseOut, 'casinobabe-fishing-0.0.1.zip');
   mkdirSync(releasePackageDir, { recursive: true });
   writeFileSync(join(releasePackageDir, 'sentinel.txt'), 'KEEP PACKAGE\n');
   writeFileSync(releaseZip, 'KEEP ZIP\n');
