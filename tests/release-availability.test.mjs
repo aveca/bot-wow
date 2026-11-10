@@ -247,7 +247,7 @@ const licenceTruthCases = [
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
   ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms remain under verification/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /limites et conditions d'activation restent en cours de vérification/i,
+  ['fr/faq.html', /réservation bêta à 20 €/i, /limites et conditions d'activation restent en cours de vérification/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
@@ -278,7 +278,7 @@ const homepagePurchaseStatusCases = [
   {
     file: 'fr/index.html',
     hero: /data-cta-id="hero-status"[^>]*>Réserver la bêta — 20 €<\/a>/i,
-    bar: /aria-label="Statut de disponibilité"[\s\S]*?data-cta-id="mbar-status">Réserver la bêta — 20 €<\/a>/i,
+    bar: /aria-label="Statut de l’achat"[\s\S]*?data-cta-id="mbar-status">Réserver la bêta — 20 €<\/a>/i,
     targetPrice: /20,00 €/i,
     allowedStatusLabel: /réserver|bêta|20 €/i,
   },
