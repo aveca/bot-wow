@@ -245,7 +245,7 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
-  ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms are not confirmed/i,
+  ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms remain under verification/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
   ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /limites et conditions d'activation restent en cours de vérification/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
