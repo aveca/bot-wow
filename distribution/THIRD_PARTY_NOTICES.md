@@ -18,14 +18,30 @@ La PR [aveca/Casinobabe#47](https://github.com/aveca/Casinobabe/pull/47), fusion
 
 Les lignes 4 à 6 de l'inventaire ci-dessous documentent **uniquement les composants
 présents dans les anciennes archives R2 1.2.0 et 1.2.1**. Elles ne signifient pas que
-ces composants restent dans la source candidate. Le builder refuse toujours ces noms
-de fichiers s'ils réapparaissent.
+ces composants restent dans la source candidate.
 
 ## Portée du paquet candidat
 
-`scripts/build-package.cjs` copie le dossier `runtime-addon/Casinobabe/` de la source,
-les scripts Python listés dans `BOT_FILES`, un gabarit de configuration généré, ainsi
-que `INSTALL.md`, `THIRD_PARTY_NOTICES.md`, `MANIFEST.json` et `VERSION`.
+`scripts/build-package.cjs` copie uniquement les deux fichiers Lua de la liste blanche (`LiveErrorCapture.lua`, `CasinobabeFishing.lua`) et la TOC BOT-WOW générée, les scripts Python listés dans `BOT_FILES`, un gabarit de configuration généré, ainsi que `INSTALL.md`, `THIRD_PARTY_NOTICES.md`, `MANIFEST.json` et `VERSION`.
+
+**Liste blanche du dossier addon (2026-11-10).** Le builder ne copie plus le dossier
+addon « tel quel ». Il applique une **liste blanche** : seuls `LiveErrorCapture.lua` et
+`CasinobabeFishing.lua` entrent dans le paquet, comme `Casinobabe.toc` générée par le
+builder. Tout autre fichier présent dans la source est exclu **et déclaré** dans
+`MANIFEST.json` avec la raison exacte de son exclusion ; aucun fichier n'est retiré en
+silence. Conséquence directe pour les composants tiers :
+
+| Composant | Statut de livraison |
+|---|---|
+| `media/casino_uni.ttf` (DejaVu Sans) | **non livré** — la liste blanche l'exclut ; aucun `SetFont`/`ttf` dans le module de pêche livré |
+| `Libs/LibStub/LibStub.lua`, `Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua` | **non livrés** — la liste blanche les exclut ; 0 référence dans le module de pêche livré |
+| `media/background.tga` | **non livré** — la liste blanche l'exclut |
+| `Casinobabe.lua` (interface casino historique) | **non livré** — la liste blanche l'exclut |
+
+Le paquet pêche ne contient donc **plus aucun** composant tiers embarqué. Le texte de
+licence de la police DejaVu et l'état des droits des fichiers exclus restent dans ce
+document : ils décrivent ce qui a été **écarté** et pourquoi, et restent opposables si
+l'un de ces fichiers devait revenir dans le paquet.
 
 Le paquet candidat doit être reconstruit et inspecté avant toute distribution.
 Les archives R2 1.2.0 et 1.2.1 sont des artefacts historiques non validés ; elles ne
@@ -158,6 +174,6 @@ candidat courant.
 | Composant | Présence | Fondement de la décision | Statut |
 |---|---|---|---|
 | Code original Casinobabe | oui | Déclaration du titulaire enregistrée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md`. Les modalités contractuelles destinées au client ne sont pas encore publiées. | **À CONFIRMER** — la titularité est déclarée, mais les conditions de licence client doivent être finalisées avant distribution |
-| Police DejaVu Sans | oui | Licence Bitstream Vera + Arev embarquée dans le TTF ; avis et permissions joints dans cette notice livrée avec le paquet. | **ÉTABLI** — redistribution autorisée avec les avis de licence |
-| LibStub / LibDBIcon-1.0 / background.tga | non | Absents du commit source exact ci-dessus ; le bouton minimap est natif et le fond est dessiné avec `SetColorTexture`. | **EXCLU** — ces fichiers ne font pas partie du candidat courant |
+| Police DejaVu Sans | non | Exclue par la **liste blanche** du dossier addon (2026-11-10) : aucun `SetFont` ni référence `ttf` dans les fichiers livrés. Redevable des avis Bitstream Vera + Arev dès qu'elle serait livrée. | **ÉTABLI** mais **non livrée** — licence établie, fichier absent du paquet |
+| LibStub / LibDBIcon-1.0 / background.tga | non | Absents du commit source exact ci-dessus **et** exclus par la liste blanche : le bouton minimap est natif, le fond est dessiné avec `SetColorTexture`, et le module de pêche livré n'utilise aucune bibliothèque. | **EXCLU** — ces fichiers ne font pas partie du candidat courant et la liste blanche empêche leur retour silencieux |
 | wasmoon-lua5.1 / lodash | non | Dépendances déclarées mais non embarquées dans le ZIP candidat. | **NON EMBARQUÉ** — aucun binaire de ces dépendances n'est distribué dans le paquet |
