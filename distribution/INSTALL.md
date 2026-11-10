@@ -40,7 +40,7 @@ Classic specific (couleurs d'eau, taille de la minicarte).
 ## 3. Installation
 
 1. Décompressez l'archive dans un dossier de votre choix (par exemple
-   `C:\\Casinababe\\`).
+   `C:\Casinababe\`).
 2. Depuis la racine du dossier extrait, vérifiez l'intégrité avant toute
    installation ou exécution : `py -3 package/verify-package.py`.
    Le vérificateur contrôle chaque SHA-256 et taille, refuse les liens symboliques,
@@ -52,12 +52,12 @@ Classic specific (couleurs d'eau, taille de la minicarte).
    internes, mais ne prouve pas l'identité de l'éditeur ni les droits de distribution.
 3. Installez les dépendances depuis la racine extraite :
    `python -m pip install -r package/requirements.txt`.
-4. Copiez `package\\addon\\Casinababe` dans
-   `<WoW>\\Interface\\AddOns\\Casinababe`
+4. Copiez `package\addon\Casinababe` dans
+   `<WoW>\Interface\AddOns\Casinababe`
    (`<WoW>` = le dossier d'installation du client, par exemple
-   `C:\\Program Files (x86)\\World of Warcraft\\_anniversary_`).
-5. Copiez `package\\config.example.json` vers
-   `<dossier du bot>\\state\\fishing-bot-config.json` et ajustez les valeurs.
+   `C:\Program Files (x86)\World of Warcraft\_anniversary_`).
+5. Copiez `package\config.example.json` vers
+   `<dossier du bot>\state\fishing-bot-config.json` et ajustez les valeurs.
 
 ## 4. Configuration initiale
 
