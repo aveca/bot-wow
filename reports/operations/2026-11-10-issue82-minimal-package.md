@@ -34,15 +34,20 @@ Checkout détaché `C:\factory\worktrees\casinobabe-pin` @ `b625ccec…` (« fix
 
 | Commande | Résultat |
 |---|---|
-| `node scripts\build-package.cjs --source C:\factory\worktrees\casinobabe-pin --version 1.2.3-wl.1 --out …\wl-first` (×2, wl-second) | 2 fichiers addon + TOC générée, 16 scripts, 3 exclusions déclarées, provenance vérifiée |
-| SHA-256 des deux ZIP | `48818cebdde8518d5f056d441d2704dd60a809685a362b9976e88998273d0c89` = **byte-identiques** (176 892 octets) |
-| `node scripts\verify-package-archive.cjs …\wl-first\casinobabe-fishing-1.2.3-wl.1.zip 1.2.3-wl.1 b625ccec…` | **PASS** (25 entrées, 24 SHA-256) |
+| `node scripts\build-package.cjs --source C:\factory\worktrees\casinobabe-pin --version 1.2.3-wl.1 --out <tmp>\botwow-rebuild-a` puis `…\botwow-rebuild-b` (2 runs indépendants) | 2 fichiers addon + TOC générée, 16 scripts, 3 exclusions déclarées, provenance vérifiée contre le checkout réel |
+| SHA-256 des deux ZIP | `14beafc73c9b840c4b8f7c525032047a9186435ba5a3950814efc522c26f5ade` = **byte-identiques** (176 903 octets, 25 entrées) |
+| `node scripts\verify-package-archive.cjs <ZIP réel> 1.2.3-wl.1 b625ccec…` | **PASS** (exit 0) — entries=25, manifest_files=24, zip_bytes=176903, zip_sha256=`14beafc7…` |
 | `node scripts\build-package.cjs … --release` | **REFUSÉ** (« Code original Casinobabe »), sentinelles préservées |
 | `node scripts\verify-bot-files-closure.mjs --manifest <MANIFEST réel> --scripts-dir <pin>/scripts` | **PASS** (16 scripts = fermeture BFS 16 modules) |
 | `BOTWOW_PACKAGE_FIXTURE=<ZIP réel> node tests\package-addon-activation.test.mjs` | **17/17 OK** (dont 10 contrôles sur octets réels) |
-| `BOTWOW_PACKAGE_FIXTURE=<ZIP réel> BOTWOW_PACKAGE_KEY=casinobabe-fishing-1.2.0.zip node tests\delivery-replay.test.mjs` | **LIVRAISON REPRISE : OK** — SHA-256 livré == ZIP exact, une licence/un jeton/un reçu |
+| `BOTWOW_PACKAGE_FIXTURE=<ZIP réel> BOTWOW_PACKAGE_KEY=casinobabe-fishing-1.2.0.zip node tests\delivery-replay.test.mjs` | **LIVRAISON REPRISE : OK** (exit 0, 69 contrôles verts) — SHA-256 livré == ZIP exact (`14beafc7…`), une licence/un jeton/un reçu de livraison |
 | `npm run validate` | **PASS** |
-| `npm test` (chaîne complète, 30 suites) | **PASS** |
+| `npm test` (chaîne complète, 30 suites) | **PASS** (exit 0) |
+
+### 4 bis — Correction de mesure et constat de livraison (2026-11-10, preuves réelles)
+
+- **Correction de mesure.** La valeur publiée dans une première version de ce rapport (`48818cebdde8518d5f056d441d2704dd60a809685a362b9976e88998273d0c89`, 176 892 octets) n'est **pas reproductible** avec le builder livré : deux builds indépendants redonnent `14beafc73c9b840c4b8f7c525032047a9186435ba5a3950814efc522c26f5ade` (176 903 octets), byte-identiques. Deux variantes d'un champ unique ont été testées pour expliquer l'écart de 11 octets : `builtAt=null` → 176 916 octets (`46c75f2c…`), `commitDate=null` → 176 897 octets (`deed2203…`). Aucune ne reproduit `48818ceb…` : l'ancienne valeur provient d'un état antérieur du builder. Le builder livré est déterministe → les preuves publiées sont corrigées sur la mesure réelle. Aucune réécriture d'historique : le message du commit `880ae28` conserve l'ancienne valeur, la correction est portée par un commit documentaire dédié.
+- **Constat de livraison (fail-closed, comportement voulu).** Le worker de téléchargement valide la clé d'artefact configurée avec `/^casinobabe-fishing-\d+\.\d+\.\d+\.zip$/` (`worker/index.js`, garde-fou « serve only the configured release »). Une clé suffixée (`casinobabe-fishing-1.2.3-wl.1.zip`) est donc rejetée : 503 `artifact_unavailable`, 9 échecs de contrôles dans `delivery-replay` — échec **attendu** du garde-fou, pas un défaut du paquet. Avec une clé conforme `X.Y.Z` (`casinobabe-fishing-1.2.0.zip`) et les octets réels en fixture : **LIVRAISON REPRISE : OK**, SHA-256 livré exactement égal à celui du ZIP réel.
 
 ## 5. CI
 
