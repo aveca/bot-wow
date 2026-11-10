@@ -370,6 +370,29 @@ for (const file of ['modules.html', 'fr/modules.html']) {
 
 
 
+// Search previews and structured data must not turn a historical target into a live offer.
+for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
+  const html = read(file);
+  const head = html.slice(0, html.indexOf('</head>'));
+  check(file + ' : aperçu social décrit un statut, pas un prix ou une vente',
+    /<meta property="og:type" content="website">/.test(head) &&
+    !/<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros|one payment|un paiement|à vie|lifetime)/i.test(head));
+  check(file + ' : aucun prix ou offre dans les données structurées',
+    !/"@type"\s*:\s*"Offer"|"offers"\s*:/i.test(head) &&
+    !/"@type"\s*:\s*"Product"/i.test(head) &&
+    /"@type"\s*:\s*"WebPage"/i.test(head));
+}
+for (const [file, noPaymentClaim, noPriceQuestion] of [
+  ['index.html', /After the payment provider confirms|licence key and the download link are sent by email/i, /What do I get for 20,00 €\?/i],
+  ['fr/index.html', /Après confirmation du paiement|la clé de licence et le lien de téléchargement sont envoyés par e-mail/i, /Qu’est-ce que j’ai pour 20,00 €\?/i],
+]) {
+  const html = read(file);
+  check(file + ' : aucune promesse de livraison après paiement', !noPaymentClaim.test(html));
+  check(file + ' : aucune FAQ présentant une licence à 20 € comme disponible', !noPriceQuestion.test(html));
+  check(file + ' : statut « pas en vente » affiché dans le héros', /hero__price-value">(?:Not for sale|Pas en vente)</i.test(html));
+  check(file + ' : démo explicitement simulée', /simulated data|données simulées/i.test(html));
+}
+
 // Closed checkout pages must not expose a fake email field or disabled payment form.
 for (const file of ['compare.html', 'fr/compare.html']) {
   const html = read(file);
