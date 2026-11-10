@@ -70,10 +70,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('compare.html');
   const fr = read('fr/compare.html');
-  check('compare EN : BOT-WOW est en vente pour serveurs privés',
-    /private servers/i.test(en) && /20,00 €/.test(en));
-  check('compare FR : BOT-WOW est en vente pour serveurs privés',
-    /serveurs privés/i.test(fr) && /20,00 €/.test(fr));
+  check('compare EN : BOT-WOW est en vente à 20 €',
+    /tested in real conditions/i.test(en) && /20,00 €/.test(en));
+  check('compare FR : BOT-WOW est en vente à 20 €',
+    /testé en conditions réelles/i.test(fr) && /20,00 €/.test(fr));
   check('compare EN : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
   check('compare EN : CTA statut vers la page achat',
@@ -83,15 +83,15 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('compare FR : CTA statut vers la page achat',
     /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(fr));
   check('compare : aucun lien interne mort vers #buy', !/href="#buy"/.test(en + fr));
-  check('compare : sources concurrentes et dates de consultation visibles',
-    /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
-      && /https:\/\/pixelwowbot\.com\//.test(fr) && /06\/11\/2026/.test(fr));
-  check('compare EN : prix concurrent conformes à la page publique',
-    /€1\.99 for 48 hours; €19\.99 per 30 days; individual roles from €6\.99/.test(en));
-  check('compare FR : prix concurrent conformes à la page publique',
-    /1,99 € pour 48 h ; 19,99 € par 30 jours ; rôles individuels à partir de 6,99 €/.test(fr));
-  check('compare : compatibilité WoW Forever attribuée au vendeur, pas à BOT-WOW',
-    /WoW Forever/.test(en) && /WoW Forever/.test(fr));
+  check('compare : comparaison générique, sans vendeur nommé',
+    /typical rental/i.test(en) && /location habituelle/i.test(fr)
+      && !/pixelwowbot\.com/i.test(en + fr));
+  check('compare EN : pas de grille tarifaire recopiée',
+    !/€1\.99 for 48 hours/.test(en));
+  check('compare FR : pas de grille tarifaire recopiée',
+    !/1,99 € pour 48 h/.test(fr));
+  check('compare : aucun nom de serveur concurrent attribué à BOT-WOW',
+    !/WoW Forever/.test(en + fr));
   check('compare : ancien calculateur de cout retire', !/id="ownership"/.test(en + fr));
 }
 
@@ -224,8 +224,8 @@ for (const file of ['index.html', 'fr/index.html']) {
     .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
   check(file + ' : le hero renvoie vers la politique publiée',
     /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
-  check(file + ' : le hero précise le périmètre serveurs privés',
-    /private servers|serveurs privés/i.test(heroGuarantee + html), '');
+  check(file + ' : le hero précise que le produit a été testé en conditions réelles',
+    /tested in real conditions|testé en conditions réelles/i.test(heroGuarantee + html), '');
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
@@ -242,7 +242,7 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
 // 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
 // le traitement visuel réservé à un achat immédiat.
 {
-  const PURCHASE = ['hero-status', 'nav-buy', 'final-status', 'mbar-status', 'offer-status'];
+  const PURCHASE = ['hero-status', 'nav-buy', 'features-buy', 'compare-home-buy', 'final-status', 'mbar-status', 'offer-status'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]

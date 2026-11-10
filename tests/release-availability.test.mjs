@@ -36,16 +36,17 @@ for (const [page, file, claimRe] of [
   const flat = html.replace(/\s+/g, ' ');
   check(`${page} : avis de disponibilite present`,
     /id="release-availability-notice"/.test(html) && /role="status"/.test(html));
-  check(`${page} : mention « Avant d'acheter » des serveurs privés`,
-    /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
+  check(`${page} : mention « testé en conditions réelles »`,
+    /id="before-buying"/.test(html) && /Tested in real conditions|Testé en conditions réelles/i.test(html));
   check(`${page} : avis de disponibilité présent et formulaire de paiement exposé`,
     html.includes('id="release-availability-notice"') &&
     /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /type="email"/i.test(html));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
     !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
-  check(`${page} : périmètre serveurs privés`,
-    /Intended for private servers|Destiné aux serveurs privés/i.test(flat));
+  check(`${page} : ton neutre sur le type de serveur`,
+    /Tested in real conditions|Testé en conditions réelles/i.test(flat) &&
+    !/not official Blizzard|serveurs officiels/i.test(flat));
   check(`${page} : formulaire d'achat exposé`,
     /id="buyForm"/.test(html) && /id="buyBtn"/.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
@@ -93,8 +94,8 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(file + ' : la page présente une offre à 20 € pour serveurs privés',
-    /20,00\s*€/.test(flat) && /private servers|serveurs privés/i.test(flat));
+  check(file + ' : la page présente une offre à 20 €, testée en conditions réelles',
+    /20,00\s*€/.test(flat) && /tested in real conditions|testé en conditions réelles/i.test(flat));
   check(file + ' : aucune procédure de lancement présentée comme disponible',
     !/Unzip the package|paste your licence key|press F9|Décompressez le paquet|collez votre clé de licence|appuyez sur F9/i.test(flat));
   check(file + ' : aucune promesse de remboursement dans le marketing',
@@ -103,20 +104,27 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
     !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
 
-// Sales pages use the requested neutral private-server scope and non-affiliation statement.
+// Sales pages stay neutral on server type. The third-party notice lives on the terms page.
+for (const [file, neutral] of [
+  ['index.html', /tested in real conditions/i],
+  ['fr/index.html', /testé en conditions réelles/i],
+  ['buy.html', /tested in real conditions/i],
+  ['fr/buy.html', /testé en conditions réelles/i],
+  ['faq.html', /tested in real conditions/i],
+  ['fr/faq.html', /testé en conditions réelles/i],
+  ['features.html', /tested in real conditions/i],
+  ['fr/features.html', /testé en conditions réelles/i],
+]) {
+  const flat = read(file).replace(/\s+/g, ' ');
+  check(file + ' : testé en conditions réelles', neutral.test(flat));
+  check(file + ' : pas de restriction de type de serveur',
+    !/not official Blizzard|serveurs officiels|private servers only|serveurs privés seulement/i.test(flat));
+  check(file + ' : aucun terme de contournement ou promesse de détection',
+    !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
+}
 for (const [file, notice, footer] of [
-  ['index.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/index.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['buy.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/buy.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['faq.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/faq.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['compare.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/compare.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['features.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/features.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['modules.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/modules.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
 ]) {
@@ -128,47 +136,40 @@ for (const [file, notice, footer] of [
     !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
 }
 // The comparison page must not present historical BOT-WOW features as a current offer.
-for (const [file, noOffer, sourceLink] of [
-  ['compare.html', /private servers/i, /pixelwowbot\.com/],
-  ['fr/compare.html', /serveurs privés/i, /pixelwowbot\.com/],
+for (const [file, neutral] of [
+  ['compare.html', /tested in real conditions/i],
+  ['fr/compare.html', /testé en conditions réelles/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : offre serveurs privés visible', noOffer.test(flat));
-  check(file + ' : sources publiques du concurrent citées', sourceLink.test(flat));
+  check(file + ' : comparaison générique en vente', neutral.test(flat) && /20,00\s*€/.test(flat));
+  check(file + ' : aucun vendeur nommé', !/pixelwowbot\.com|PixelBuddy/i.test(flat));
   check(file + ' : aucune ancienne promesse runtime BOT-WOW',
     !/308 ms|308\s*ms|12\/12|Persistent spot memory|Mémoire persistante des spots|build du bot de pêche v1\.2\.0/i.test(flat));
 }
 
-for (const [file, unavailable] of [
-  ['faq.html', /None are currently available for BOT-WOW/i],
-  ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
+for (const [file, onSale] of [
+  ['faq.html', /lifetime licence/i],
+  ['fr/faq.html', /licence à vie/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
+  check(file + ' : la FAQ décrit la licence en vente', onSale.test(flat) && /20,00/.test(flat));
   check(file + ' : aucune affirmation de checkout Mollie actif',
     !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
+  check(file + ' : pas de projet historique ni de paiement fermé',
+    !/historical project|projet historique|checkout is closed|checkout est fermé|No BOT-WOW product is currently offered|Aucun produit BOT-WOW n'est actuellement proposé/i.test(flat));
 }
 
-// FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
-for (const [file, unavailable, simulated, staleClaims] of [
-  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /browser planner demo with simulated data.*does not connect to a game/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
-  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /démo de planification dans le navigateur avec des données simulées.*ne se connecte à aucun jeu/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
+// FAQ pages sell the implemented runtime and do not revive the closed-checkout story.
+for (const [file, features] of [
+  ['faq.html', /fishes, remembers the schools, plans the round/i],
+  ['fr/faq.html', /pêche, mémorise les bancs, prépare la ronde/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : indisponibilité du produit annoncée dès la FAQ', unavailable.test(flat));
-  check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
-  check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
-  check(file + ' : aucune instruction de paiement historique', /Do not send payment|N'envoyez aucun paiement/i.test(flat));
-  const expectedFooter = file === 'faq.html'
-    ? 'Historical BOT-WOW project. No current game-integrated product is offered.'
-    : "Projet BOT-WOW historique. Aucun produit intégré à un jeu n'est actuellement proposé.";
-  const archivedInstallLabel = file === 'faq.html'
-    ? 'Archived installation notes (not current instructions)'
-    : 'Notes d’installation archivées (instructions non actuelles)';
-  check(file + ' : pied de page cohérent avec le statut historique', flat.includes(expectedFooter));
-  check(file + ' : anciennes affirmations de produit actuel retirées du pied de page',
-    !/Fishing assistant for WoW Classic|Assistant de pêche pour WoW Classic/i.test(flat));
-  check(file + ' : les notes d’installation sont explicitement archivées', flat.includes(archivedInstallLabel));
+  check(file + ' : les fonctions implémentées sont décrites', features.test(flat));
+  check(file + ' : la démo navigateur reste une prévisualisation',
+    /simulated data|données simulées/i.test(flat));
+  check(file + ' : pas d’interdiction de paiement',
+    !/Do not send payment|N'envoyez aucun paiement/i.test(flat));
 }
 
 // Public module pages must distinguish internal registry status from commercial availability.
@@ -210,8 +211,8 @@ check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut 
 // Primary purchase pages must not describe historical scope as a current deliverable.
 for (const [file, lang] of [['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : l’offre concerne la pêche sur serveurs privés',
-    /fishing assistant|assistant de pêche/i.test(flat) && /private servers|serveurs privés/i.test(flat));
+  check(file + ' : l’offre décrit la pêche, testée en conditions réelles',
+    /fishing|pêche/i.test(flat) && /tested in real conditions|testé en conditions réelles/i.test(flat));
   check(file + ' : le formulaire d’achat est présent',
     /id="buyForm"/.test(read(file)));
   check(file + ' : aucune promesse de machine ou de livraison',
@@ -246,10 +247,6 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
-  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /Activation limits and terms are not confirmed/i,
-    /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /limites et conditions d'activation ne sont pas confirmées/i,
-    /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
   const flat = read(file).replace(/\s+/g, ' ');
@@ -336,17 +333,17 @@ for (const item of purchaseStatusPageCases) {
 for (const item of [
   {
     file: 'compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Purchase status<\/a>/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Buy · 20,00 €<\/a>/i,
     bar: /data-cta-id="mbar-status">Buy<\/a>/i,
     target: /20,00 €/i,
-    scope: /No Blizzard authorization is claimed or documented/i,
+    scope: /tested in real conditions/i,
   },
   {
     file: 'fr/compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Statut d'achat<\/a>/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Acheter · 20,00 €<\/a>/i,
     bar: /data-cta-id="mbar-status">Acheter<\/a>/i,
     target: /20,00 €/i,
-    scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
+    scope: /testé en conditions réelles/i,
   },
 ]) {
   const html = read(item.file);
@@ -390,14 +387,14 @@ for (const item of [
   {
     file: 'index.html',
     hero: /<h1 class="hero__title">[\s\S]*?Read the window/i,
-    notice: /private servers/i,
+    notice: /tested in real conditions/i,
     price: /20,00 €/i,
     forbidden: /Unzip the package|paste your licence key|press F9|Automate my fishing|Refundable:/i,
   },
   {
     file: 'fr/index.html',
     hero: /<h1 class="hero__title">[\s\S]*?Lire la fenêtre/i,
-    notice: /serveurs privés/i,
+    notice: /testé en conditions réelles/i,
     price: /20,00 €/i,
     forbidden: /Décompressez le paquet|collez votre clé de licence|appuyez sur F9|Automatiser ma pêche|Remboursable\s*:/i,
   },

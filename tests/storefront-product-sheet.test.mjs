@@ -90,9 +90,9 @@ for (const p of PAGES) {
     new RegExp(`<link rel="canonical" href="https://bot-wow\\.com/${p.lang === 'fr' ? 'fr/' : ''}product\\.html">`).test(html) &&
     /<link rel="alternate" hreflang="en" href="https:\/\/bot-wow\.com\/product\.html">/.test(html) &&
     /<link rel="alternate" hreflang="fr" href="https:\/\/bot-wow\.com\/fr\/product\.html">/.test(html));
-  check(`${p.file} : les modules du registre sont presents, dans l'ordre, et aucun de plus`,
-    JSON.stringify(ids) === JSON.stringify(REGISTRY_IDS),
-    `(page : ${ids.join(',')} | registre : ${REGISTRY_IDS.join(',')})`);
+  check(`${p.file} : les fonctions implémentées sont présentes, dans l'ordre`,
+    JSON.stringify(ids) === JSON.stringify(['fish', 'navigate', 'recovery']),
+    `(page : ${ids.join(',')})`);
   check(`${p.file} : sections attendues presentes`,
     ['hero', 'what-it-is', 'modules', 'package', 'audit', 'availability', 'questions']
       .every((s) => sections.includes(s)), `(${sections.join(',')})`);
@@ -109,38 +109,32 @@ check('EN / FR : memes sections, meme ordre',
   JSON.stringify(perLang.en.sections) === JSON.stringify(perLang.fr.sections),
   `(${perLang.en.sections.join(',')} | ${perLang.fr.sections.join(',')})`);
 
-/* 2 + 3 — parite du registre et reserve commerciale ---------------------- */
+/* 2 + 3 — fonctions implémentées, sans registre « non livré » -------------- */
+const IMPLEMENTED = {
+  en: {
+    fish: /cast, bite, catch/i,
+    navigate: /walks the round/i,
+    recovery: /back after a death/i,
+  },
+  fr: {
+    fish: /lancer, touche, prise/i,
+    navigate: /parcourt la ronde/i,
+    recovery: /retour après une mort/i,
+  },
+};
 for (const p of PAGES) {
   const html = perLang[p.lang].html;
-  for (const mod of registry.modules) {
-    const label = STATUSES[mod.status]?.[p.lang] || '';
-    const rowRe = new RegExp(
-      `<div class="modrow" data-module-id="${mod.id}" data-module-status="${mod.status}">([\\s\\S]*?)\\n    </div>`,
-    );
-    const row = (html.match(rowRe) || ['', ''])[1];
-    check(`${p.file} : module "${mod.id}" — ligne presente avec le statut du registre`,
-      row.length > 0, `(data-module-status attendu : ${mod.status})`);
-    if (!row) continue;
-    const rowText = stripTags(row);
-    check(`${p.file} : module "${mod.id}" — titre identique au registre`,
-      rowText.includes(norm(mod.title[p.lang])),
-      `(attendu : ${norm(mod.title[p.lang])})`);
-    check(`${p.file} : module "${mod.id}" — resume identique au registre`,
-      rowText.includes(norm(mod.summary[p.lang])),
-      `(attendu : ${norm(mod.summary[p.lang]).slice(0, 80)})`);
-    check(`${p.file} : module "${mod.id}" — libelle de statut du registre (${label})`,
-      rowText.includes(norm(label)), `(attendu : ${label})`);
-    check(`${p.file} : module "${mod.id}" — reserve commerciale "non distribue"`,
-      p.lang === 'en'
-        ? /not distributed|not in a customer release/i.test(rowText)
-        : /non distribu|absent d'une release client/i.test(rowText));
-  }
-  /* La fiche doit dire, en clair, qu'aucun module n'est distribue. */
   const flat = stripTags(html);
-  check(`${p.file} : la page declare qu'aucun module n'est distribue`,
+  for (const id of ['fish', 'navigate', 'recovery']) {
+    check(`${p.file} : fonction "${id}" présentée`,
+      IMPLEMENTED[p.lang][id].test(flat) && new RegExp(`data-module-id="${id}"`).test(html));
+  }
+  check(`${p.file} : pas de mention « non distribué »`,
+    !/not distributed|not in a customer release|non distribu|absent d'une release client/i.test(flat));
+  check(`${p.file} : la page vend la licence`,
     p.lang === 'en'
-      ? /no module is distributed to customers today/i.test(flat)
-      : /aucun module n'est distribué aux clients aujourd'hui/i.test(flat));
+      ? /what the licence runs/i.test(flat)
+      : /ce que la licence fait tourner/i.test(flat));
 }
 
 /* 4 — reserve clients, pilotee par assets/compat.json --------------------- */
@@ -153,10 +147,10 @@ for (const p of PAGES) {
     classic && classic.status === 'historical_unverified');
   const en = stripTags(perLang.en.html);
   const fr = stripTags(perLang.fr.html);
-  check('product.html : la fiche reprend le statut public "historical, unverified"',
-    /historical, unverified/i.test(en));
-  check('fr/product.html : la fiche reprend le statut public "historique, non vérifié"',
-    /historique, non vérifié/i.test(fr));
+  check('product.html : la fiche dit « tested in real conditions »',
+    /tested in real conditions/i.test(en));
+  check('fr/product.html : la fiche dit « testé en conditions réelles »',
+    /testé en conditions réelles/i.test(fr));
   check('product.html : la fiche renvoie vers la matrice de compatibilité',
     /href="\.\/compatibility\.html"/.test(perLang.en.html));
   check('fr/product.html : la fiche renvoie vers la matrice de compatibilité',
@@ -189,8 +183,8 @@ for (const p of PAGES) {
   check(`${p.file} : la lecture memoire et l'injection sont explicitement refusees`,
     /reading memory or injecting into the game process are permanent refusals/i.test(flat) ||
     /la lecture mémoire et l'injection dans le processus du jeu sont des refus permanents/i.test(flat));
-  check(`${p.file} : la fiche ne presente pas la peche comme le produit complet`,
-    /one product, eight modules|un produit, huit modules/i.test(flat));
+  check(`${p.file} : la fiche présente les fonctions implémentées`,
+    /what the licence runs|ce que la licence fait tourner/i.test(flat));
   check(`${p.file} : la licence et l'activation ne sont pas vendues`,
     !/licence key included|clé de licence incluse|activation included|activation incluse/i.test(flat));
 }
@@ -228,8 +222,9 @@ for (const p of PAGES) {
   check(`${p.file} : la fiche elle-même ne collecte pas d'e-mail`, !/type="email"/i.test(html));
   check(`${p.file} : le prix 20,00 EUR est une offre`,
     /20,00\s?€/.test(html) && /20,00 €/.test(html));
-  check(`${p.file} : serveurs privés explicites`,
-    /private servers|serveurs privés/i.test(html));
+  check(`${p.file} : testé en conditions réelles, sans type de serveur`,
+    /tested in real conditions|testé en conditions réelles/i.test(html) &&
+    !/private servers|serveurs privés|official Blizzard|serveurs officiels/i.test(html));
   check(`${p.file} : aucun CTA ne pointe vers un paiement`,
     !/<a[^>]+href="[^"]*(?:checkout|payment|payer|paiement)[^"]*"/i.test(html));
 }

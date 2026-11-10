@@ -32,7 +32,7 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
   await expect(page.locator('h1')).toContainText('Lifetime licence');
   await expect(page.locator('.pay-note')).toContainText('fixed on the server');
   await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/tested in real conditions/i);
 
   // Les liens legaux pointent vers /legal/ (pas /legal/fr/)
   await expect(page.locator('a[href="./legal/terms.html"]').first()).toBeAttached();
@@ -52,7 +52,7 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   await expect(page.locator('h1')).toContainText('Licence à vie');
   await expect(page.locator('.pay-note')).toContainText('fixé côté serveur');
   await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('#before-buying')).toContainText(/serveurs privés/i);
+  await expect(page.locator('#before-buying')).toContainText(/testé en conditions réelles/i);
 
   // Les liens legaux FR pointent vers /legal/fr/ (pas /legal/)
   await expect(page.locator('a[href="../legal/fr/terms.html"]').first()).toBeAttached();

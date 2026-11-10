@@ -113,7 +113,7 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   await expect(page.locator('.pay-note')).toContainText(
     lang === 'fr' ? 'fixé côté serveur' : 'fixed on the server'
   );
-  await expect(page.locator('#before-buying')).toContainText(/serveurs privés|private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/testé en conditions réelles|tested in real conditions/i);
 }
 
 test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
@@ -122,7 +122,7 @@ test('homepage: demo and purchase-status paths remain visible and responsive', a
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/tested in real conditions/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
@@ -172,8 +172,8 @@ test('comparison EN/FR: status CTAs navigate to the status page and never start 
   });
 
   for (const route of [
-    { path: '/compare.html', label: 'Purchase status', bar: 'Purchase status', target: /\/buy\.html$/ },
-    { path: '/fr/compare.html', label: "Statut d'achat", bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
+    { path: '/compare.html', label: 'Buy · 20,00 €', bar: 'Buy', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: 'Acheter · 20,00 €', bar: 'Acheter', target: /\/fr\/buy\.html$/ },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -249,7 +249,7 @@ test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
   await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/tested in real conditions/i);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);

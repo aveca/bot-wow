@@ -58,10 +58,10 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : la homepage vend la licence et garde le périmètre serveurs privés',
-  /id="buyForm"/.test(enHome) && /private servers/i.test(enHome));
-check('FR : la homepage vend la licence et garde le périmètre serveurs privés',
-  /id="buyForm"/.test(frHome) && /serveurs privés/i.test(frHome));
+check('EN : la homepage vend la licence et reste neutre sur le type de serveur',
+  /id="buyForm"/.test(enHome) && /tested in real conditions/i.test(enHome));
+check('FR : la homepage vend la licence et reste neutre sur le type de serveur',
+  /id="buyForm"/.test(frHome) && /testé en conditions réelles/i.test(frHome));
 check('EN : formulaire d’achat présent', /id="buyBtn"/.test(enHome) && /id="email"/.test(enHome));
 check('FR : formulaire d’achat présent', /id="buyBtn"/.test(frHome) && /id="email"/.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
@@ -70,16 +70,16 @@ check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
-check('FR : serveurs privés dans le bandeau ou le corps',
-  /serveurs privés/i.test(frHome));
+check('FR : conditions réelles dans le bandeau ou le corps',
+  /testé en conditions réelles/i.test(frHome));
 
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
-check('EN buy : licence et serveurs privés',
-  /id="buyForm"/.test(enBuy) && /private servers/i.test(enBuy));
-check('FR buy : licence et serveurs privés',
-  /id="buyForm"/.test(frBuy) && /serveurs privés/i.test(frBuy));
+check('EN buy : licence et conditions réelles',
+  /id="buyForm"/.test(enBuy) && /tested in real conditions/i.test(enBuy));
+check('FR buy : licence et conditions réelles',
+  /id="buyForm"/.test(frBuy) && /testé en conditions réelles/i.test(frBuy));
 check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 

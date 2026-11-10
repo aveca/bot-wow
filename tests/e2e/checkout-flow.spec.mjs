@@ -26,7 +26,7 @@ test('checkout open: email form on buy page (EN)', async ({ page }, testInfo) =>
   await expect(page.locator('#buyForm')).toBeVisible();
   await expect(page.locator('#buyBtn')).toBeEnabled();
   await expect(page.locator('#email')).toBeVisible();
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/tested in real conditions/i);
   await captureScreenshot(page, testInfo, 'checkout-open-en');
   expect(errors).toEqual([]);
 });
@@ -37,7 +37,7 @@ test('checkout open: email form on buy page (FR)', async ({ page }, testInfo) =>
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('#buyForm')).toBeVisible();
   await expect(page.locator('#buyBtn')).toBeEnabled();
-  await expect(page.locator('#before-buying')).toContainText(/serveurs privés/i);
+  await expect(page.locator('#before-buying')).toContainText(/testé en conditions réelles/i);
   await captureScreenshot(page, testInfo, 'checkout-open-fr');
   expect(errors).toEqual([]);
 });
