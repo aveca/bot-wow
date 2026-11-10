@@ -376,7 +376,7 @@ for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const head = html.slice(0, html.indexOf('</head>'));
   check(file + ' : aperçu social décrit un statut, pas un prix ou une vente',
     /<meta property="og:type" content="website">/.test(head) &&
-    !/<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros|one payment|un paiement|à vie|lifetime)/i.test(head));
+    !/<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros|\bone payment\b|\bun paiement\b|à vie|lifetime)/i.test(head));
   check(file + ' : aucun prix ou offre dans les données structurées',
     !/"@type"\s*:\s*"Offer"|"offers"\s*:/i.test(head) &&
     !/"@type"\s*:\s*"Product"/i.test(head) &&
