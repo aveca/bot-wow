@@ -18,6 +18,16 @@ n'a été touché.** Le blocage commercial restant est inchangé : les condition
 licence client ne sont toujours pas publiées. Rapport :
 `reports/operations/2026-11-10-addon-whitelist-delivery.md`.
 
+**Publié le 2026-11-10 :** commit `8315085ec60a4bb95b9359310594af5346615047`, PR <https://github.com/aveca/bot-wow/pull/182> (ouverte, base `main`).
+**CI réelle sur la PR :** workflow `Validate Bot-Wow` — run `42852227058`,
+jobs `validate` et `package-candidate` en **success** (`npm ci` puis `npm run validate`
+puis la suite de distribution). `tests/package-addon-install.test.mjs` a réellement
+tourné sur runner (`LIVRAISON ADDON : OK`), ce qui valide la nouvelle devDependency
+`wasmoon-lua5.1@1.18.10` sous `npm ci`. Le workflow `ui-quality` tourne séparément.
+Recouvrement de fichiers signalé dans la PR : `scripts/build-package.cjs`,
+`distribution/INSTALL.md` et `package.json` sont aussi modifiés par la PR #179
+(`feat/package-self-verification-20261110`) — résolution de conflit nécessaire au merge.
+
 # BOT-WOW — état partagé
 
 **Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut
