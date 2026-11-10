@@ -58,9 +58,8 @@ function call(body, env, ip) {
 }
 
 console.log('=== GARDE DE LIVRAISON DU CHECKOUT ===');
-globalThis.fetch = async () => ({ ok: true, json: async () => ({ id: 'cst_test', _links: { checkout: { href: 'https://www.mollie.com/checkout/test' } } }) });
 
-/* 1. Missing, pending and malformed server-side status fail closed before provider I/O. */
+/* The source flag and server binding must both be confirmed. The current source flag is pending. */
 let PROVIDER_CALLS = 0;
 globalThis.fetch = async () => {
   PROVIDER_CALLS += 1;
@@ -70,16 +69,16 @@ for (const [label, status] of [
   ['absent', undefined],
   ['pending', 'pending'],
   ['invalid', 'oui-mais-non'],
+  ['secret-confirmed-but-source-pending', 'confirmed'],
 ]) {
   PROVIDER_CALLS = 0;
   const res = await call({ email: 'a@test.fr', lang: 'fr' }, makeEnv(status));
   const body = await res.json().catch(() => ({}));
-  check(label + ' -> HTTP 409 delivery_unverified',
-    res.status === 409 && body.error === 'delivery_unverified', '(status ' + res.status + ')');
+  check(label + ' -> HTTP 409 delivery_unverified', res.status === 409 && body.error === 'delivery_unverified', '(status ' + res.status + ')');
   check(label + ' -> zero provider calls', PROVIDER_CALLS === 0, '(' + PROVIDER_CALLS + ')');
 }
 
-/* 2. Client-supplied fields cannot override the server-side release status. */
+/* Client-supplied status fields cannot override either server-side gate. */
 for (const attack of [
   { RELEASE_STATUS: 'confirmed' },
   { release_status: 'confirmed' },
@@ -91,14 +90,6 @@ for (const attack of [
   const res = await call(body, makeEnv('pending'));
   check('injection ' + Object.keys(attack)[0] + ' cannot bypass the gate', res.status === 409, '(status ' + res.status + ')');
   check('injection -> zero provider calls', PROVIDER_CALLS === 0, '(' + PROVIDER_CALLS + ')');
-}
-
-/* 3. Explicit server-side confirmation passes the release gate. */
-{
-  const env = makeEnv('confirmed');
-  globalThis.fetch = async () => ({ ok: true, json: async () => ({ id: 'cst_test' }) });
-  const res = await call({ email: 'c@test.fr', lang: 'fr' }, env);
-  check('confirmed server status -> not blocked by release gate', res.status !== 409, '(status ' + res.status + ')');
 }
 console.log(failures === 0 ? '\nCHECKOUT GATE : OK' : `\nCHECKOUT GATE : ${failures} ECHEC(S)`);
 try { fs.unlinkSync(tmpWorker); } catch {}
