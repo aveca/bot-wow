@@ -80,7 +80,7 @@ async function expectNoHorizontalOverflow(page) {
   ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
 }
 
-async function verifyPurchaseBlocked(page, testInfo, lang) {
+async function verifyBetaReservation(page, testInfo, lang) {
   const navStatus = page.locator('a[data-cta-id="nav-status"]');
   const heroStatus = page.locator('a[data-cta-id="buy-status-primary"]');
   await expect(navStatus).toBeAttached();
@@ -91,30 +91,32 @@ async function verifyPurchaseBlocked(page, testInfo, lang) {
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
 
   if (lang === 'fr') {
-    await expect(navStatus).toContainText('Achat indisponible');
-    await expect(heroStatus).toContainText('Achat indisponible');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
+    await expect(navStatus).toContainText('Réserver la bêta');
+    await expect(heroStatus).toContainText('Réserver la bêta');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de l’achat');
   } else {
-    await expect(navStatus).toContainText('Purchase unavailable');
-    await expect(heroStatus).toContainText('Purchase unavailable');
+    await expect(navStatus).toContainText('Reserve beta');
+    await expect(heroStatus).toContainText('Reserve beta');
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
-  const blocked = page.locator('#purchase-unavailable');
-  await expect(blocked).toBeVisible();
-  await expect(blocked).toHaveAttribute('role', 'status');
+  const offer = page.locator('.price-card--offer');
+  await expect(offer).toBeVisible();
+  await expect(offer.locator('a[data-cta-id="beta-reservation-stripe"]')).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+  await expect(offer).toContainText(/manual|manuelle/i);
+  await expect(offer).toContainText(/full refund|remboursement intégral/i);
   await expect(page.locator('#buyBtn')).toHaveCount(0);
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/serveurs privés|private servers/i);
 }
 
-test('homepage: demo and purchase-status paths remain visible and responsive', async ({ page }, testInfo) => {
+test('homepage: demo and beta-reservation paths remain visible and responsive', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('#purchase-unavailable')).toBeVisible();
+  await expect(page.locator('.price-card--offer')).toBeVisible();
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/private servers/i);
@@ -128,7 +130,7 @@ test('homepage: demo and purchase-status paths remain visible and responsive', a
 
 
 
-test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) => {
+test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ page }) => {
   const checkoutRequests = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
@@ -136,8 +138,8 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
   });
 
   for (const route of [
-    { path: '/', label: 'Purchase unavailable', bar: 'Purchase status' },
-    { path: '/fr/', label: 'Achat indisponible', bar: 'Statut de l’achat' },
+    { path: '/', label: 'Reserve beta', bar: 'Purchase status' },
+    { path: '/fr/', label: 'Réserver la bêta', bar: 'Statut de l’achat' },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -146,7 +148,7 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -185,7 +187,7 @@ test('comparison EN/FR: status CTAs navigate to the status page and never start 
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
     await expect(page).toHaveURL(route.target);
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
 
@@ -217,27 +219,27 @@ test('closed checkout: pressing Enter cannot submit the email form EN/FR', async
   expect(checkoutRequests).toEqual([]);
 });
 
-test('P0: purchase remains unavailable when delivery is not confirmed - EN buy page', async ({ page }, testInfo) => {
+test('P0: beta reservation explains manual delivery and refund - EN buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   // buy.html : statut indisponible, aucun formulaire ni bouton de paiement
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-  await verifyPurchaseBlocked(page, testInfo, 'en');
+  await verifyBetaReservation(page, testInfo, 'en');
 
-  await captureScreenshot(page, testInfo, 'purchase-blocked-en');
+  await captureScreenshot(page, testInfo, 'beta-reservation-en');
   expect(errors).toEqual([]);
 });
 
-test('P0: purchase remains unavailable when delivery is not confirmed - FR buy page', async ({ page }, testInfo) => {
+test('P0: beta reservation offer when delivery is not confirmed - FR buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   // fr/buy.html : statut indisponible, aucun formulaire ni bouton de paiement
   const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-  await verifyPurchaseBlocked(page, testInfo, 'fr');
+  await verifyBetaReservation(page, testInfo, 'fr');
 
-  await captureScreenshot(page, testInfo, 'purchase-blocked-fr');
+  await captureScreenshot(page, testInfo, 'beta-reservation-fr');
   expect(errors).toEqual([]);
 });
 
