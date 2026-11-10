@@ -7,7 +7,7 @@
  *  2. le radar interactif a une sortie vers la demonstration ;
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
- *  4. aucun faux formulaire de paiement n'est expose tant que les ventes sont fermees ;
+ *  4. aucun faux formulaire n'est expose ; le CTA Stripe est une reservation beta ;
  *  5. la liste d'attente reste proposee en repli ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
@@ -47,7 +47,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   const badHref = [...t.matchAll(/<a[^>]+class="[^"]*btn[^"]*"[^>]+href="([^"]+)"/g)]
     .map(([, h]) => h)
     .filter((h) => /^[a-z]+:\/\//i.test(h) && !/^(mailto:|https:\/\/bot-wow\.com)/.test(h));
-  check(`${label} : aucun CTA vers un domaine tiers`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
+  check(`${label} : CTA externe autorisé uniquement vers Stripe`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
 // 4. Parcours hero -> demonstration -> comparaison -> statut d'achat (accueil EN)
