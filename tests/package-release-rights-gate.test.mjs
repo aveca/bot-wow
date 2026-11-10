@@ -19,7 +19,7 @@ const check = (name, ok, detail = '') => {
 };
 
 function seedSource(dir) {
-  mkdirSync(join(dir, 'runtime-addon', 'Casinababe'), { recursive: true });
+  mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.toc'), '## Interface: 20506\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.lua'), '-- fixture\n');
