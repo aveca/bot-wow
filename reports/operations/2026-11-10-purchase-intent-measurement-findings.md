@@ -7,6 +7,12 @@ poursuivi et clôturé ici.
 
 **Mise à jour 2026-11-10T07:16Z :** le défaut vivant décrit dans ce bilan est corrigé dans la PR #176. Le script ne classe plus les boutons de statut comme une intention de checkout ; seul un élément portant explicitement `data-checkout-enabled="true"` et `data-cta-id` émet `checkout_requested`. Des tests comportementaux couvrent le bouton `nav-buy`, les anciens identifiants et le CTA activé. Aucun checkout public n'a été activé.
 
+**Mise à jour 2026-11-10T07:20Z :** le bouton de statut `nav-buy` est renommé
+`nav-status` dans les accueils EN/FR. Le clic reste un `cta_click`, mais ne correspond
+plus à l'identifiant de l'ancienne allowlist `checkout_requested`. Un test exécute
+le vrai script Analytics et vérifie le comportement ainsi que les deux HTML.
+Aucun checkout ni paiement n'a été activé.
+
 ---
 
 ## 1. Mission du 27/10/2026 — ce qui a été fait (VÉRIFIÉ DIRECTEMENT)
