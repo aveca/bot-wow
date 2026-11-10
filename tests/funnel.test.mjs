@@ -33,7 +33,11 @@ function check(name, ok, detail = '') {
 
 /* --------------------------------------------------------------- Worker */
 const tmpWorker = join(HERE, '.worker-under-test.mjs');
-writeFileSync(tmpWorker, readFileSync(join(REPO, 'worker', 'index.js'), 'utf8'));
+const workerSource = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+const confirmedSource = workerSource.replace('var RELEASE_STATUS = "pending";', 'var RELEASE_STATUS = "confirmed";');
+if (confirmedSource === workerSource) throw new Error('RELEASE_STATUS source flag fixture anchor missing');
+// Test-only authorized-release fixture; production source remains fail-closed.
+writeFileSync(tmpWorker, confirmedSource);
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
 /* ----------------------------------------------------------- fetch simule */
