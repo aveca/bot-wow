@@ -14,6 +14,10 @@ corrigé ici : le scope `checkout-flag-draft` est actif.** Détail, preuves et r
 proposée : `reports/operations/2026-11-10-purchase-intent-measurement-findings.md`.
 Prochaine action : le propriétaire du scope checkout tranche la définition d'une
 « intention d'achat » (§4 du rapport), puis corrige le sélecteur.
+**CI de `main` (VÉRIFIÉ DIRECTEMENT, 2026-11-10) :** `ui-quality` est rouge sur 38
+tests e2e (458 passés) qui portent sur le formulaire de paiement, le texte des pages
+d'achat et l'état « achat bloqué » : échecs reproductibles sur `origin/main` seul,
+donc antérieurs à toute PR de documentation — scope `checkout`/`storefront` actif.
 
 **Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
 

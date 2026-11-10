@@ -148,7 +148,28 @@ Le correctif, les deux tests, le stamp et les corrections de rapport du 27/10 re
 disponibles sur la branche `fix/buy-cta-measure-20261027` (commit `cb32333`) : rien
 n'est supprimé, ils ne sont simplement plus l'état publié de `main`.
 
-## 6. Prochaine action (une seule)
+## 6. CI de `main` — rouge AVANT cette PR (VÉRIFIÉ DIRECTEMENT)
+
+La PR de publication (#176) ne touche que `PROJECT_STATE.md`, `agents/tasks.md`,
+`.gitignore` et ce rapport. Son `ui-quality` échoue sur **38 tests** — mais ces 38
+échecs se reproduisent **à l'identique sur `origin/main` seul**, rejoués en local sur
+cette branche (`node scripts/build-site.mjs _site` puis `npx playwright test`) :
+
+| Spec | Échecs | Passés |
+|---|---|---|
+| `tests/e2e/responsive.spec.mjs` | 22 | 348 |
+| `tests/e2e/demo-quality.spec.mjs` | 10 | 56 |
+| `tests/e2e/i18n.spec.mjs` | 4 | 4 |
+| `tests/e2e/accessibility.spec.mjs` | 2 | 8 |
+| **Total** | **38** | **458** |
+
+Ces specs portent sur la présence du formulaire de paiement, le texte des pages
+d'achat et l'état « achat bloqué » — c'est-à-dire le scope `checkout`/`storefront`
+actif, pas la documentation. `validate`, `package-candidate` et GitGuardian sont
+verts. Ce n'est pas corrigé ici (même règle : pas de second chantier sur un scope
+actif).
+
+## 7. Prochaine action (une seule)
 
 **Au propriétaire du scope checkout :** trancher ce qu'est une « intention d'achat »
 aujourd'hui — clic sur un CTA de statut, ou clic sur un vrai parcours d'achat — puis
