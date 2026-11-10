@@ -177,14 +177,67 @@ git diff --check                            -> aucun probleme
 - **Non vérifié :** comportement de la CI sur `wasmoon-lua5.1` (nouvelle
   devDependency) — `npm ci` est bien présent dans le job `validate` de
   `validate.yml`, mais l'exécution réelle sur runner reste à constater.
+  **→ depuis vérifié : voir section 6.**
+
+## 6. Résultat CI sur la PR #182
+
+Commit `8315085ec60a4bb95b9359310594af5346615047`, PR <https://github.com/aveca/bot-wow/pull/182>.
+
+| Workflow | Run | Jobs | Statut |
+|---|---|---|---|
+| Validate Bot-Wow | `42852227058` | `validate`, `package-candidate` | **success** |
+| UI quality and visual evidence | `42852227049` | `ui-quality` | **failure** (échec e2e, diagnostic ci-dessous) |
+| GitGuardian Security Checks | — | — | pass |
+
+Le job `validate` a réellement exécuté `npm ci` (qui installe la nouvelle
+devDependency `wasmoon-lua5.1@1.18.10`) puis la suite de distribution du workflow,
+incluant `tests/package-addon-install.test.mjs` : `LIVRAISON ADDON : OK`. Le point
+« CI de la nouvelle devDependency » est donc **directement vérifié**.
+
+### L'échec `ui-quality` ne vient pas de cette PR
+
+L'échec porte sur 52 tests e2e, tous sur `buy.html` : `#purchase-unavailable`
+introuvable (ex. `checkout-flow.spec.mjs:25`, `accessibility.spec.mjs:59`).
+Diagnostic établi, avec preuves :
+
+1. Le workflow fait `actions/checkout` de **`refs/pull/182/merge`**, pas de la tête
+   de branche. La fusion testée est `6729fcc9c0f46378b0143efbff06e34719400087`.
+2. `5145b9d feat(storefront): open €20 manual beta reservation` (poussé sur `main`
+   à 15:04Z, **après** la base `5861b03` de cette branche) **est un ancêtre de cette
+   fusion** (`git merge-base --is-ancestor 5145b9d 6729fcc` → oui).
+3. Dans la fusion, `buy.html` ne contient plus `#purchase-unavailable`
+   (`git show 6729fcc:buy.html` → 0 occurrence), alors qu'il est présent dans le
+   `buy.html` de la tête de branche (`8315085`).
+4. `5145b9d` a modifié `buy.html`, `index.html`, `faq.html`, `legal/*` et des tests
+   unitaires (`action-bar`, `conversion-path`, `release-availability`,
+   `site-artifact`) mais **pas** `tests/e2e/*.spec.mjs`, qui continuent d'attendre
+   l'état « Purchase unavailable ».
+5. Preuve contraire : sur la tête de branche locale `8315085`,
+   `npx playwright test tests/e2e/checkout-flow.spec.mjs --project=desktop -g
+   "email collection (en)"` → **1 passed**.
+6. Contrôle comparatif : la fusion de la PR #179 (`02da1f6`, créée à 10:31Z) ne
+   contient pas `5145b9d`, son `buy.html` contient encore `#purchase-unavailable`, et
+   son `ui-quality` passe.
+
+Conclusion : l'échec est un **défaut préexistant de `main`** (le commit storefront a
+changé l'état de la page d'achat sans mettre à jour les specs e2e correspondantes),
+révélé parce que la fusion de cette PR est récente. Aucun fichier HTML, e2e ou asset
+n'est touché par cette PR. La correction (aligner
+`tests/e2e/{checkout-flow,accessibility,responsive,i18n,demo-quality}.spec.mjs` sur
+le nouvel état de la page d'achat, ou rétablir l'état fermé) sort du périmètre de
+cette mission et demande une décision produit.
+
+## 7. Recouvrement avec la PR #179 et prochaine action
+
 - **Recouvrement de fichiers avec la PR #179** (`feat/package-self-verification-20261110`,
   ouverte) : `scripts/build-package.cjs`, `distribution/INSTALL.md` et
   `package.json` sont touchés des deux côtés. Les périmètres ne se recouvrent pas
   (vérification d'intégrité côté client vs liste blanche/TOC/livraison réelle), mais
   une résolution de conflit sera nécessaire au merge — signalé dans la PR.
 
-## 6. Prochaine action
+## 8. Prochaine action
 
-Ouvrir la PR de cette branche, puis trancher le blocage de licence client
-(conditions destinées au client) — c'est le seul élément qui empêche encore de
-transformer un paquet QA en paquet distribuable.
+Trancher le blocage de licence client (conditions destinées au client) — c'est le
+seul élément qui empêche encore de transformer un paquet QA en paquet distribuable.
+Séparément, et hors périmètre de cette mission : aligner les specs e2e sur le nouvel
+état de la page d'achat issu de `main` (défaut préexistant, section 6).

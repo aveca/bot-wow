@@ -28,6 +28,18 @@ Recouvrement de fichiers signalé dans la PR : `scripts/build-package.cjs`,
 `distribution/INSTALL.md` et `package.json` sont aussi modifiés par la PR #179
 (`feat/package-self-verification-20261110`) — résolution de conflit nécessaire au merge.
 
+**Échec `ui-quality` sur la PR #182 : défaut préexistant de `main`, pas de cette PR.**
+Run `42852227049`, 52 tests e2e en échec, tous sur `buy.html`
+(`#purchase-unavailable` introuvable). Le workflow teste `refs/pull/182/merge`
+(fusion `6729fcc`), qui contient `5145b9d feat(storefront): open €20 manual beta
+reservation` (poussé sur `main` à 15:04Z, après la base `5861b03`). Ce commit a
+changé `buy.html`/`index.html` sans mettre à jour `tests/e2e/*.spec.mjs` : dans la
+fusion, `buy.html` n'a plus `#purchase-unavailable`, alors qu'il est présent sur la
+tête de branche `8315085` — où le test passe localement (constaté : 1 passed). La
+fusion de la PR #179 (`02da1f6`, antérieure à `5145b9d`) garde l'élément et son
+`ui-quality` passe. Aucun HTML/asset/e2e n'est touché par cette PR ; corriger les
+specs e2e demande une décision produit et sort de cette mission.
+
 # BOT-WOW — état partagé
 
 **Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut
