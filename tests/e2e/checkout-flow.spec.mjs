@@ -13,54 +13,61 @@ async function captureScreenshot(page, testInfo, name) {
   });
 }
 
-for (const [lang, route, unavailable] of [
-  ['en', '/buy.html', 'Purchase unavailable'],
-  ['fr', '/fr/buy.html', 'Achat indisponible'],
-  ['home-en', '/', 'Purchase unavailable'],
-  ['home-fr', '/fr/', 'Achat indisponible'],
+for (const [lang, route, reservationLabel] of [
+  ['en', '/buy.html', 'beta reservation'],
+  ['fr', '/fr/buy.html', 'réservation bêta'],
+  ['home-en', '/', 'beta reservation'],
+  ['home-fr', '/fr/', 'réservation bêta'],
 ]) {
-  test('purchase unavailable: no payment form or email collection (' + lang + ')', async ({ page }, testInfo) => {
+  test('beta reservation: Stripe offer is visible without local email collection (' + lang + ')', async ({ page }, testInfo) => {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
+    const stripeLink = page.locator('a[data-cta-id="beta-reservation-stripe"]');
+    await expect(stripeLink).toBeVisible();
+    await expect(stripeLink).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+    await expect(page.locator('.price-card--offer')).toContainText(reservationLabel);
+    await expect(page.locator('.price-card--offer')).toContainText(/manual|manuelle/i);
+    await expect(page.locator('.price-card--offer')).toContainText(/full refund|remboursement intégral/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
-    await expect(page.locator('#purchase-unavailable')).toContainText(unavailable);
-    await captureScreenshot(page, testInfo, 'purchase-unavailable-' + lang);
+    await captureScreenshot(page, testInfo, 'beta-reservation-' + lang);
   });
 }
 
-test('purchase status navigation never calls checkout', async ({ page }) => {
+test('reservation page navigation never calls internal checkout', async ({ page }) => {
   const checkoutRequests = [];
   page.on('request', request => {
     if (request.url().includes('/api/checkout')) checkoutRequests.push(request.url());
   });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-  await expect(page.locator('#purchase-unavailable')).toBeVisible();
+  await expect(page.locator('.price-card--offer')).toBeVisible();
   const statusLink = page.locator('a[data-cta-id="buy-status-primary"]');
   if (await statusLink.count()) await statusLink.click();
   expect(checkoutRequests).toEqual([]);
 });
 
-test('purchase status: mobile sticky bar stays visible without a payment CTA', async ({ page }, testInfo) => {
+test('reservation: mobile sticky bar remains visible with price and delivery terms', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const [lang, route, label] of [['en', '/buy.html', 'Purchase unavailable'], ['fr', '/fr/buy.html', 'Achat indisponible']]) {
+  for (const [lang, route, label] of [['en', '/buy.html', 'beta reservation'], ['fr', '/fr/buy.html', 'réservation bêta']]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
     const mbar = page.locator('.mbar');
     await expect(mbar).toBeVisible();
     await expect(mbar).toContainText(label);
+    await expect(mbar).toContainText(/manual|manuelle/i);
     await captureScreenshot(page, testInfo, 'mobile-status-' + lang);
   }
 });
 
-test('purchase status: desktop sticky bar remains attached', async ({ page }, testInfo) => {
+test('reservation: desktop sticky bar remains attached', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('.mbar')).toBeAttached();
-  await expect(page.locator('.mbar')).toContainText('Purchase unavailable');
+  await expect(page.locator('.mbar')).toContainText('beta reservation');
+  await expect(page.locator('.mbar')).toContainText('manual delivery');
   await captureScreenshot(page, testInfo, 'desktop-status');
 });
