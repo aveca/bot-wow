@@ -93,7 +93,7 @@ async function verifyBetaReservation(page, testInfo, lang) {
   if (lang === 'fr') {
     await expect(navStatus).toContainText('Réserver la bêta');
     await expect(heroStatus).toContainText('Réserver la bêta');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de l’achat');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
   } else {
     await expect(navStatus).toContainText('Reserve beta');
     await expect(heroStatus).toContainText('Reserve beta');
