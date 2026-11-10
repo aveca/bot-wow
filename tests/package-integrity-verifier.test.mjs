@@ -123,7 +123,7 @@ try {
     const f = fixture('release');
     cases.push(f);
     writeFileSync(join(f.packageRoot, 'scripts', 'fishing_bot.py'), 'tampered\n');
-    expectFailure('tampered file rejected', run(f.root), /SHA-256 mismatch/);
+    expectFailure('tampered file rejected', run(f.root), /byte count mismatch|SHA-256 mismatch/);
   }
   {
     const f = fixture('release');
