@@ -453,6 +453,12 @@ var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
 var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
 async function handleCheckout(request, env2) {
+  // Fail closed until package rights, installation, activation and delivery are confirmed.
+  // Missing, pending or malformed server-side status must never create a provider checkout.
+  const releaseStatus = env2.RELEASE_STATUS ?? RELEASE_STATUS;
+  if (releaseStatus !== "confirmed") {
+    return jsonResponse2({ ok: false, error: "delivery_unverified" }, 409);
+  }
   const ip = getClientIp2(request);
   const rl = await checkRateLimit2(env2.RATE_LIMIT, "checkout", ip, CHECKOUT_RATE_LIMIT);
   if (!rl.allowed) {
@@ -485,9 +491,7 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
-  // 2026-11-10 : le propriétaire confirme les droits de redistribution et
-  // les essais du produit. Le checkout n'est plus bloqué par RELEASE_STATUS.
-  // Le montant, la devise et le produit restent décidés ici, jamais par le corps.
+  // The release gate above is authoritative; the amount, currency and product remain server-controlled.
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {
