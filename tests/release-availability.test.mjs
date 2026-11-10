@@ -139,8 +139,8 @@ for (const [file, noOffer, sourceLink] of [
 }
 
 for (const [file, unavailable] of [
-  ['faq.html', /None are currently available for BOT-WOW/i],
-  ['fr/faq.html', /Aucun moyen de paiement n'est actuellement disponible pour BOT-WOW/i],
+  ['faq.html', /Stripe is the current payment method for the €20 beta reservation/i],
+  ['fr/faq.html', /Stripe est le moyen de paiement actuel pour la réservation bêta à 20 €/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
@@ -150,17 +150,17 @@ for (const [file, unavailable] of [
 
 // FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
 for (const [file, unavailable, simulated, staleClaims] of [
-  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /browser planner demo with simulated data.*does not connect to a game/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
-  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /démo de planification dans le navigateur avec des données simulées.*ne se connecte à aucun jeu/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
+  ['faq.html', /A €20 beta reservation is open/i, /browser planner demo uses simulated data only/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
+  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /démo navigateur utilise uniquement des données simulées/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : indisponibilité du produit annoncée dès la FAQ', unavailable.test(flat));
+  check(file + ' : réservation bêta et livraison manuelle annoncées dès la FAQ', unavailable.test(flat));
   check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
   check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
-  check(file + ' : aucune instruction de paiement historique', /Do not send payment|N'envoyez aucun paiement/i.test(flat));
+  check(file + ' : paiement Stripe décrit sans promesse de téléchargement immédiat', /Stripe/i.test(flat) && /manual|manuellement/i.test(flat));
   const expectedFooter = file === 'faq.html'
-    ? 'Historical BOT-WOW project. No current game-integrated product is offered.'
-    : "Projet BOT-WOW historique. Aucun produit intégré à un jeu n'est actuellement proposé.";
+    ? 'BOT-WOW beta reservation. Manual delivery after package validation.'
+    : "Réservation bêta BOT-WOW. Livraison manuelle après validation du paquet.";
   const archivedInstallLabel = file === 'faq.html'
     ? 'Archived installation notes (not current instructions)'
     : 'Notes d’installation archivées (instructions non actuelles)';
@@ -245,14 +245,14 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
-  ['faq.html', /No BOT-WOW product is currently offered for purchase/i, /Activation limits and terms are not confirmed/i,
+  ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms are not confirmed/i,
     /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
-  ['fr/faq.html', /Aucun produit BOT-WOW n'est actuellement proposé à l'achat/i, /limites et conditions d'activation ne sont pas confirmées/i,
+  ['fr/faq.html', /Une réservation bêta à 20 € est ouverte/i, /limites et conditions d'activation ne sont pas confirmées/i,
     /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : disponibilité commerciale explicitement fermée', availability.test(flat));
+  check(file + ' : réservation bêta explicitement annoncée', availability.test(flat));
   check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
   check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
 }
@@ -271,17 +271,17 @@ check('fr/index.html : la vente ne décrit pas une procédure d’installation',
 const homepagePurchaseStatusCases = [
   {
     file: 'index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Purchase unavailable<\/a>/i,
-    bar: /aria-label="Purchase status"[\s\S]*?data-cta-id="mbar-status">Status<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Reserve beta — €20<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?data-cta-id="mbar-status">Reserve beta — €20<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /status|unavailable/i,
+    allowedStatusLabel: /reserve|beta|€20/i,
   },
   {
     file: 'fr/index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Achat indisponible<\/a>/i,
-    bar: /aria-label="Statut de l’achat"[\s\S]*?data-cta-id="mbar-status">Statut<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    bar: /aria-label="Statut de disponibilité"[\s\S]*?data-cta-id="mbar-status">Réserver la bêta — 20 €<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /statut|indisponible/i,
+    allowedStatusLabel: /réserver|bêta|20 €/i,
   },
 ];
 for (const item of homepagePurchaseStatusCases) {
@@ -289,8 +289,8 @@ for (const item of homepagePurchaseStatusCases) {
   const statusLinks = [...html.matchAll(/<a\b[^>]*href="#buy"[^>]*>([\s\S]*?)<\/a>/gi)];
   const labels = statusLinks.map((match) => match[1].replace(/<[^>]*>/g, '').trim());
   check(item.file + ' : CTA principal de statut présent', item.hero.test(html));
-  check(item.file + ' : barre mobile annonce le statut, pas un achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement présenté comme cible', item.targetPrice.test(html));
+  check(item.file + ' : barre mobile propose la réservation bêta', item.bar.test(html));
+  check(item.file + ' : prix de réservation 20 € visible', item.targetPrice.test(html));
   check(item.file + ' : les liens vers l’achat sont uniquement des liens de statut',
     statusLinks.length >= 2 && labels.every((label) => item.allowedStatusLabel.test(label)));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
@@ -299,32 +299,32 @@ for (const item of homepagePurchaseStatusCases) {
     !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
 }
 
-// The standalone Buy routes are currently status pages, not purchasable offers.
+// The standalone Buy routes offer a beta reservation with manual delivery.
 const purchaseStatusPageCases = [
   {
     file: 'buy.html',
-    title: /<title>BOT-WOW — Purchase unavailable/i,
-    nav: /data-cta-id="nav-status"[^>]*>Purchase unavailable<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Purchase unavailable<\/a>/i,
-    bar: /aria-label="Purchase status"[\s\S]*?Purchase unavailable/i,
+    title: /<title>BOT-WOW — Fishing Assistant Beta Reservation/i,
+    nav: /data-cta-id="nav-status"[^>]*>Reserve beta — €20<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Reserve beta — €20<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?Reserve beta — €20/i,
     targetPrice: /20,00 €/i,
   },
   {
     file: 'fr/buy.html',
-    title: /<title>BOT-WOW — Achat indisponible/i,
-    nav: /data-cta-id="nav-status"[^>]*>Achat indisponible<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Achat indisponible<\/a>/i,
-    bar: /aria-label="Statut de disponibilité"[\s\S]*?Achat indisponible/i,
+    title: /<title>BOT-WOW — Réservation bêta de l’assistant de pêche/i,
+    nav: /data-cta-id="nav-status"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    bar: /aria-label="Statut de disponibilité"[\s\S]*?Réserver la bêta — 20 €/i,
     targetPrice: /20,00 €/i,
   },
 ];
 for (const item of purchaseStatusPageCases) {
   const html = read(item.file);
-  check(item.file + ' : titre SEO décrit un statut, pas un achat ouvert', item.title.test(html));
-  check(item.file + ' : CTA de navigation décrit la disponibilité', item.nav.test(html));
-  check(item.file + ' : CTA principal décrit la disponibilité', item.hero.test(html));
-  check(item.file + ' : barre persistante annonce le statut et le prix cible', item.bar.test(html));
-  check(item.file + ' : 20 € est présenté comme prix cible historique', item.targetPrice.test(html));
+  check(item.file + ' : titre SEO décrit la réservation bêta', item.title.test(html));
+  check(item.file + ' : CTA de navigation propose la réservation bêta', item.nav.test(html));
+  check(item.file + ' : CTA principal propose la réservation bêta', item.hero.test(html));
+  check(item.file + ' : barre persistante propose la réservation', item.bar.test(html));
+  check(item.file + ' : prix de réservation 20 € visible', item.targetPrice.test(html));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
     !/(?:nav-buy|buy-hero-primary)/i.test(html));
 }
@@ -374,9 +374,9 @@ for (const file of ['modules.html', 'fr/modules.html']) {
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const html = read(file);
   const head = html.slice(0, html.indexOf('</head>'));
-  check(file + ' : aperçu social décrit un statut, pas un prix ou une vente',
+  check(file + ' : aperçu social décrit correctement l’offre bêta',
     /<meta property="og:type" content="website">/.test(head) &&
-    !/<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros|\bone payment\b|\bun paiement\b|à vie|lifetime)/i.test(head));
+    /<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros)/i.test(head));
   check(file + ' : aucun prix ou offre dans les données structurées',
     !/"@type"\s*:\s*"Offer"|"offers"\s*:/i.test(head) &&
     !/"@type"\s*:\s*"Product"/i.test(head) &&
@@ -388,8 +388,8 @@ for (const [file, noPaymentClaim, noPriceQuestion] of [
 ]) {
   const html = read(file);
   check(file + ' : aucune promesse de livraison après paiement', !noPaymentClaim.test(html));
-  check(file + ' : aucune FAQ présentant une licence à 20 € comme disponible', !noPriceQuestion.test(html));
-  check(file + ' : statut « pas en vente » affiché dans le héros', /hero__price-value">(?:Not for sale|Pas en vente)</i.test(html));
+  check(file + ' : aucune FAQ ne promet une licence immédiate à 20 €', !noPriceQuestion.test(html));
+  check(file + ' : prix de réservation affiché dans le héros', /hero__price-value">20,00 €/i.test(html));
   check(file + ' : démo explicitement simulée', /simulated data|données simulées/i.test(html));
 }
 
@@ -426,8 +426,8 @@ for (const item of [
 ]) {
   const html = read(item.file);
   check(item.file + ' : titre principal annonce le statut du projet', item.hero.test(html));
-  check(item.file + ' : avis indique qu’aucun produit n’est disponible', item.notice.test(html));
-  check(item.file + ' : prix conservé comme cible historique', item.price.test(html));
+  check(item.file + ' : avis indique le périmètre serveurs privés', item.notice.test(html));
+  check(item.file + ' : prix de réservation 20 € affiché', item.price.test(html));
   check(item.file + ' : aucune instruction d’automatisation ni promesse de remboursement', !item.forbidden.test(html));
   check(item.file + ' : CTA démo et statut présents', /data-cta-id="hero-demo"/i.test(html) && /data-cta-id="hero-status"/i.test(html));
 }
