@@ -88,6 +88,7 @@ jobs:
           node "$BOT_WOW_DIR/scripts/verify-package-archive.cjs" \
             "$OUT_FIRST/$ZIP_NAME" \
             1.2.2-rc.1 "$SOURCE_SHA"
+          python3 "$OUT_FIRST/casinababe-fishing-1.2.2-rc.1/package/verify-package.py" --allow-qa
 
           node - "$OUT_FIRST/casinobabe-fishing-1.2.2-rc.1/MANIFEST.json" <<'NODE'
           const fs = require('node:fs');
