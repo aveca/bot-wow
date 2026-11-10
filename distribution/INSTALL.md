@@ -49,8 +49,13 @@ Classic specific (couleurs d'eau, taille de la minicarte).
    `C:\Program Files (x86)\World of Warcraft\_anniversary_`).
 4. Copiez `package\config.example.json` vers
    `<dossier du bot>\state\fishing-bot-config.json` et ajustez les valeurs.
-5. Vérifiez l'intégrité du paquet avec `MANIFEST.json` (SHA-256) avant de
-   lancer : un fichier modifié doit être réinstallé.
+5. Depuis la racine du dossier extrait, vérifiez l'intégrité avant toute
+   installation ou exécution : `py -3 package\\verify-package.py`.
+   Le vérificateur contrôle chaque SHA-256 et taille, refuse les liens symboliques,
+   les fichiers absents et les fichiers supplémentaires. Il exige aussi un manifeste
+   de release autorisé : un candidat QA est refusé par défaut. Ne contournez jamais
+   ce refus avec `--allow-qa` pour une installation client. Si la vérification
+   échoue, n'exécutez aucun fichier du paquet et récupérez une archive intacte.
 
 ## 4. Configuration initiale
 
