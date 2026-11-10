@@ -238,10 +238,9 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
 
-// 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
-// le traitement visuel réservé à un achat immédiat.
+// 11. Les CTA dorés doivent rester limités aux actions de réservation/achat.
 {
-  const PURCHASE = ['hero-status', 'nav-buy', 'final-status', 'mbar-status', 'offer-status'];
+  const PURCHASE = ['hero-status', 'nav-buy', 'final-status', 'mbar-status', 'offer-status', 'beta-reservation-stripe'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
@@ -280,7 +279,7 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
-// 13. Le checkout fermé ne doit pas exposer un champ e-mail inutilisable.
+// 13. La réservation Stripe ne collecte pas de champ e-mail local inutilisable.
 // Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
