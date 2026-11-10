@@ -46,7 +46,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   // 3. Cibles des CTA : uniquement des pages du site
   const badHref = [...t.matchAll(/<a[^>]+class="[^"]*btn[^"]*"[^>]+href="([^"]+)"/g)]
     .map(([, h]) => h)
-    .filter((h) => /^[a-z]+:\/\//i.test(h) && !/^(mailto:|https:\/\/bot-wow\.com)/.test(h));
+    .filter((h) => /^[a-z]+:\/\//i.test(h) && !/^(mailto:|https:\/\/bot-wow\.com|https:\/\/buy\.stripe\.com)/.test(h));
   check(`${label} : CTA externe autorisé uniquement vers Stripe`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
