@@ -81,38 +81,31 @@ async function expectNoHorizontalOverflow(page) {
 }
 
 async function verifyPurchaseBlocked(page, testInfo, lang) {
-
-  // Les liens de navigation et le CTA principal annoncent le statut,
-  // jamais un achat disponible.
   const navStatus = page.locator('a[data-cta-id="nav-status"]');
   const heroStatus = page.locator('a[data-cta-id="buy-status-primary"]');
   await expect(navStatus).toBeAttached();
-  // The compact header intentionally hides its nav-right button at <=520px;
-  // the visible hero status CTA remains the mobile purchase-status entry point.
   const viewportWidth = page.viewportSize()?.width ?? 1280;
-  if (viewportWidth <= 520) {
-    await expect(navStatus).toBeHidden();
-  } else {
-    await expect(navStatus).toBeVisible();
-  }
+  if (viewportWidth <= 520) await expect(navStatus).toBeHidden();
+  else await expect(navStatus).toBeVisible();
   await expect(heroStatus).toBeVisible();
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
+
   if (lang === 'fr') {
-    await expect(navStatus).toContainText('Acheter');
-    await expect(heroStatus).toContainText('Payer 20,00 €');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Acheter');
+    await expect(navStatus).toContainText('Achat indisponible');
+    await expect(heroStatus).toContainText('Achat indisponible');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
   } else {
-    await expect(navStatus).toContainText('Buy');
-    await expect(heroStatus).toContainText('Pay 20,00 €');
-    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Buy');
+    await expect(navStatus).toContainText('Purchase unavailable');
+    await expect(heroStatus).toContainText('Purchase unavailable');
+    await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
-  await expect(page.locator('#buyBtn')).toBeEnabled();
-  await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('input[type="email"]')).toBeVisible();
-  await expect(page.locator('.pay-note')).toContainText(
-    lang === 'fr' ? 'fixé côté serveur' : 'fixed on the server'
-  );
+  const blocked = page.locator('#purchase-unavailable');
+  await expect(blocked).toBeVisible();
+  await expect(blocked).toHaveAttribute('role', 'status');
+  await expect(page.locator('#buyBtn')).toHaveCount(0);
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/serveurs privés|private servers/i);
 }
 
@@ -121,7 +114,9 @@ test('homepage: demo and purchase-status paths remain visible and responsive', a
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('#purchase-unavailable')).toBeVisible();
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/private servers/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
@@ -141,8 +136,8 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
   });
 
   for (const route of [
-    { path: '/', label: 'Buy the lifetime licence', bar: 'Buy the licence' },
-    { path: '/fr/', label: 'Acheter la licence à vie', bar: 'Acheter la licence' },
+    { path: '/', label: 'Purchase unavailable', bar: 'Purchase status' },
+    { path: '/fr/', label: 'Achat indisponible', bar: 'Statut de l’achat' },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -151,8 +146,10 @@ test('homepage EN/FR: availability CTAs never start checkout', async ({ page }) 
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('#buyForm')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeEnabled();
+    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('#buyForm')).toHaveCount(0);
+    await expect(page.locator('#buyBtn')).toHaveCount(0);
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
     await expect(page.locator('[data-cta-id="hero-offer"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="final-buy"], [data-cta-id="mbar-buy"]')).toHaveCount(0);
     await statusCta.click();
     await expect(page.locator('#buy')).toBeInViewport();
@@ -188,7 +185,7 @@ test('comparison EN/FR: status CTAs navigate to the status page and never start 
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
     await expect(page).toHaveURL(route.target);
-    await expect(page.locator('#release-availability-notice')).toBeVisible();
+    await expect(page.locator('#purchase-unavailable')).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
 
@@ -220,10 +217,10 @@ test('closed checkout: pressing Enter cannot submit the email form EN/FR', async
   expect(checkoutRequests).toEqual([]);
 });
 
-test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ page }, testInfo) => {
+test('P0: purchase remains unavailable when delivery is not confirmed - EN buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
-  // buy.html : bouton de paiement desactive, message de blocage visible
+  // buy.html : statut indisponible, aucun formulaire ni bouton de paiement
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await verifyPurchaseBlocked(page, testInfo, 'en');
@@ -232,10 +229,10 @@ test('P0: purchase blocked when delivery not confirmed - EN buy page', async ({ 
   expect(errors).toEqual([]);
 });
 
-test('P0: purchase blocked when delivery not confirmed - FR buy page', async ({ page }, testInfo) => {
+test('P0: purchase remains unavailable when delivery is not confirmed - FR buy page', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
-  // fr/buy.html : bouton de paiement desactive, message de blocage visible
+  // fr/buy.html : statut indisponible, aucun formulaire ni bouton de paiement
   const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await verifyPurchaseBlocked(page, testInfo, 'fr');
