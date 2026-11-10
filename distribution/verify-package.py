@@ -125,10 +125,18 @@ def main() -> int:
             raise VerificationError("source commit provenance is not verified")
 
         if mode == "release":
-            if eligible is not True or unresolved != 0:
+            if (
+                eligible is not True
+                or type(unresolved) is not int
+                or unresolved != 0
+            ):
                 raise VerificationError("release manifest is not eligible")
         elif mode == "qa":
-            if eligible is not False or not isinstance(unresolved, int) or unresolved <= 0:
+            if (
+                eligible is not False
+                or type(unresolved) is not int
+                or unresolved <= 0
+            ):
                 raise VerificationError("QA manifest has inconsistent rights status")
             if not args.allow_qa:
                 raise VerificationError("QA-only package; refusing installation without --allow-qa")
