@@ -1,6 +1,6 @@
 # BOT-WOW — état partagé
 
-**Ajout 2026-11-09 — redesign visuel arcade.** Branche `cursor/pixel-visual-redesign-0da7`, commit `2900e30`, PR https://github.com/aveca/bot-wow/pull/172. Peau `assets/pixel-skin.css` (estampille `4b2caa7f`), mascotte provisoire PNG/GIF, film de démo déjà présent réaffiché sur l’accueil, l’achat et la fiche. Le checkout reste fermé : pas de formulaire, pas de `btn-gold` sur les CTA de statut de l’accueil, pas d’avis client inventé. Textes juridiques : seule la query `?v=` a bougé, pas la prose. Prochaine action pour le propriétaire : fournir la vraie mascotte et des visuels produit, et décider si des citations clients réelles peuvent un jour être publiées. Sans droits de redistribution (`B-licence`), aucune vente.
+**Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 

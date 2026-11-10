@@ -202,6 +202,25 @@ def gif_bytes(frames, delay_cs=16):
     return bytes(buf)
 
 
+def og_banner():
+    w, h = 1200, 630
+    grid = []
+    buddy = scale(parse(BUDDY), 10)
+    bw, bh = len(buddy[0]), len(buddy)
+    ox, oy = 860, 180
+    for y in range(h):
+        row = []
+        for x in range(w):
+            if 0 <= y - oy < bh and 0 <= x - ox < bw and buddy[y - oy][x - ox]:
+                row.append(buddy[y - oy][x - ox])
+            elif y < 16 or y > h - 16:
+                row.append(2)
+            else:
+                row.append(1)
+        grid.append(row)
+    return grid
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     factor = 8
@@ -211,7 +230,8 @@ def main():
     bob_blink = scale(parse(shift_up(BUDDY_BLINK)), factor)
     (ROOT / "buddy.png").write_bytes(png_bytes(base))
     (ROOT / "buddy.gif").write_bytes(gif_bytes([base, bob, blink, bob_blink], 18))
-    print(f"wrote {(ROOT / 'buddy.png').stat().st_size} png, {(ROOT / 'buddy.gif').stat().st_size} gif")
+    (ROOT / "og-botwow.png").write_bytes(png_bytes(og_banner()))
+    print(f"wrote buddy + {(ROOT / 'og-botwow.png').stat().st_size} og")
 
 
 if __name__ == "__main__":

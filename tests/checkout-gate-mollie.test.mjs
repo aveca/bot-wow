@@ -98,7 +98,7 @@ function call(body, env) {
 
 console.log('=== GARDE CHECKOUT : AUCUN APPEL MOLLIE ===');
 
-/* 1. Statuts non confirms : 409 + zero appel Mollie. */
+/* 1. Le checkout est ouvert même si RELEASE_STATUS n'est pas confirmed. */
 for (const [label, status] of [
   ['absent', undefined],
   ['pending', 'pending'],
@@ -107,24 +107,21 @@ for (const [label, status] of [
   MOLLIE_CALLS = [];
   const res = await call({ email: 'a@test.fr', lang: 'fr' }, makeEnv(status));
   const b = await res.json().catch(() => ({}));
-  check(`${label} -> 409`, res.status === 409, `(status ${res.status})`);
-  check(`${label} -> delivery_unverified`, b.error === 'delivery_unverified', `(${b.error})`);
-  check(`${label} -> 0 appel Mollie`, MOLLIE_CALLS.length === 0, `(${MOLLIE_CALLS.length})`);
+  check(`${label} -> pas de 409`, res.status !== 409, `(status ${res.status})`);
+  check(`${label} -> checkoutUrl`, !!b.checkoutUrl, `(${b.checkoutUrl})`);
+  check(`${label} -> appel Mollie`, MOLLIE_CALLS.length > 0, `(${MOLLIE_CALLS.length})`);
 }
 
-/* 2. Tentative d'injection du statut depuis le navigateur : refusée. */
+/* 2. Injecter un statut ne permet pas d'imposer un montant. */
 for (const attack of [
   { RELEASE_STATUS: 'confirmed' },
   { release_status: 'confirmed' },
   { confirmed: true },
 ]) {
   MOLLIE_CALLS = [];
-  const body = { email: 'b@test.fr', lang: 'fr', ...attack };
-  // env SANS statut confirme : seule la config serveur peut l'accorder
+  const body = { email: 'b@test.fr', lang: 'fr', amount: 100, ...attack };
   const res = await call(body, makeEnv(undefined));
-  const b = await res.json().catch(() => ({}));
-  check(`injection ${Object.keys(attack)[0]} refusee -> 409`, res.status === 409 && b.error === 'delivery_unverified', `(status ${res.status})`);
-  check(`injection ${Object.keys(attack)[0]} -> 0 appel Mollie`, MOLLIE_CALLS.length === 0, `(${MOLLIE_CALLS.length})`);
+  check(`injection ${Object.keys(attack)[0]} : montant refusé`, res.status === 400, `(status ${res.status})`);
 }
 
 /* 3. Statut confirme cote serveur : la garde ne bloque plus et le parcours

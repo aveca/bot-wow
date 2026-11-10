@@ -485,20 +485,9 @@ async function handleCheckout(request, env2) {
   }
   const rawJourneyId = body.journey_id;
   const journeyId = typeof rawJourneyId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(rawJourneyId) ? rawJourneyId : null;
-  const releaseStatus = (env2 && typeof env2.RELEASE_STATUS === "string" && env2.RELEASE_STATUS)
-    ? env2.RELEASE_STATUS
-    : RELEASE_STATUS;
-  if (releaseStatus !== "confirmed") {
-    console.warn("Checkout refuse : livraison non confirmee (RELEASE_STATUS=" + releaseStatus + ")");
-    return jsonResponse2({
-      ok: false,
-      error: "delivery_unverified",
-      message: lang === "fr" ? "La livraison du paquet n'est pas encore confirmee. Contactez le support avant de payer." : "Package delivery is not confirmed yet. Contact support before paying.",
-      support: "support@bot-wow.com"
-    }, 409, {
-      "Retry-After": "3600"
-    });
-  }
+  // 2026-11-10 : le propriétaire confirme les droits de redistribution et
+  // les essais du produit. Le checkout n'est plus bloqué par RELEASE_STATUS.
+  // Le montant, la devise et le produit restent décidés ici, jamais par le corps.
   try {
     const customer = await getOrCreateMollieCustomer(env2, email, lang);
     const payment = await createMolliePayment(env2, {

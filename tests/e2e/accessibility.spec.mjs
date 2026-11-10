@@ -50,21 +50,16 @@ test('accessibility: skip link present and focusable on buy pages (EN + FR)', as
    ACCESSIBILITÉ — checkout fermé
    ───────────────────────────── */
 
-test('accessibility: closed checkout exposes no email field or purchase form', async ({ page }, testInfo) => {
+test('accessibility: checkout form has a labelled email field', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   for (const path of ['/buy.html', '/fr/buy.html', '/index.html', '/fr/']) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
-
-    await expect(page.locator('#buyForm')).toHaveCount(0);
-    await expect(page.locator('#buyBtn')).toHaveCount(0);
-    await expect(page.locator('#email')).toHaveCount(0);
-    await expect(page.locator('input[type="email"]')).toHaveCount(0);
-    await expect(page.locator('.pay-note')).toContainText(
-      path.startsWith('/fr') ? 'Aucun formulaire de paiement' : 'No payment form is available'
-    );
-
-    await captureScreenshot(page, testInfo, `closed-checkout-accessibility-${path.replaceAll('/', '-')}`);
+    await expect(page.locator('#buyForm')).toBeVisible();
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('label[for="email"]')).toBeVisible();
+    await expect(page.locator('#buyBtn')).toBeEnabled();
+    await captureScreenshot(page, testInfo, `open-checkout-accessibility-${path.replaceAll('/', '-')}`);
   }
   expect(errors).toEqual([]);
 });
