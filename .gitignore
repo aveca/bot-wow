@@ -13,8 +13,9 @@ _site/
 # Sauvegardes locales.
 backups/
 
-# Copie temporaire du Worker utilisee par le harness de test.
+# Copies temporaires du Worker utilisees par les harness de test.
 tests/.worker-under-test.mjs
+tests/.worker-download-delivery.mjs
 
 # Captures d'ecran de verification (audit-viewports) : ne pas versionner.
 captures/

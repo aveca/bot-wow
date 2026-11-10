@@ -202,13 +202,22 @@
   }, { passive: true });
 
   /* 4. Clics sur les CTA d'achat (checkout_requested). */
-  // Écouteur élargi : couvre maintenant 7 IDs CTA buy-réels (contre 4 auparavant),
+  // Écouteur élargi : couvre maintenant 11 IDs CTA buy-réels (4 à l'origine,
+  // 8 après le premier élargissement, 11 après l'ajout du 27/10/2026),
   // tout en excluant les boutons de démonstration/navigation qui n'ouvrent pas
   // le checkout (hero-demo, final-demo, telemetry-*, radar-, journey-*, steps-demo,
-  // compare-cta). Le serveur conserve le contrôle : seul payment_confirmed →
-  // license_created → delivery_sent crée une conversion réelle.
+  // compare-cta). AJOUT 2026-10-27 : `demo-offer`, `buy-hero-primary` et
+  // `formula-ours-buy` étaient absents de la liste alors que ce sont des CTA
+  // d achat réels (href -> #buy) : les clics issus de la demo — le point
+  // d entrée d acquisition naturel — de la page d achat dédiée et de la
+  // comparaison n étaient donc JAMAIS comptés comme une intention d achat.
+  // Le sélecteur est déduit du HTML des pages réelles, et
+  // tests/buy-cta-coverage.test.mjs empêche tout nouveau CTA d'achat de
+  // repasser à côté de la mesure. Le serveur conserve le contrôle : seul
+  // payment_confirmed → license_created → delivery_sent crée une conversion
+  // réelle.
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
+    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="demo-offer"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="formula-ours-buy"], [data-cta-id="buy-hero-primary"]') : null;
     if (!el) return;
     track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
   }, { passive: true });

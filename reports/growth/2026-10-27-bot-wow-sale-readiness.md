@@ -15,7 +15,7 @@
 Les pages de vente en production affichaient :
 
 - un encadré « Release availability notice » annonçant que la disponibilité du paquet v1.2.0 ne pouvait **pas** être confirmée ;
-- la consigne explicite « **do not purchase until delivery is confirmed**** / « n'achetez pas tant que la livraison n'est pas confirmée » ;
+- la consigne explicite « **do not purchase until delivery is confirmed** » / « n'achetez pas tant que la livraison n'est pas confirmée » ;
 - une barre supérieure « v1.2.0 delivery status under verification » / « livraison à confirmer » ;
 - **et simultanément** un formulaire de paiement à 20,00 € ouvert et fonctionnel.
 
@@ -148,6 +148,31 @@ Le nouveau texte est **véridique et précis** :
 |---|---|
 | `tests/e2e/sale-readiness.spec.mjs` | 6 tests navigateur réels (EN + FR × desktop 1440×900 / tablette 768×1024 / mobile 375×812) : avis véridique avant le formulaire, CTA hero doré pointant vers `#buy`, CTA démo resté secondaire, clic → section d'achat, champ email et bouton visibles, prix 20,00 €, aucun débordement horizontal, aucune erreur JS |
 
+### Défaut de mesure trouvé et corrigé (27/10/2026)
+
+**Défaut :** trois CTA d'achat réels n'étaient **jamais** comptés comme des intentions d'achat. Ils émettaient un `cta_click` générique, mais pas de `checkout_requested`, car leur identifiant manquait dans le sélecteur de `assets/analytics.js`.
+
+| CTA | Page | Intitulé | Impact |
+|---|---|---|---|
+| `demo-offer` | `demo.html` (EN + FR) | "Get the lifetime licence — €20" | Le point d'entrée d'acquisition naturel ne mesurait aucune intention |
+| `buy-hero-primary` | `buy.html` (EN + FR) | "Buy the licence — €20.00" | Page d'achat dédiée non mesurée |
+| `formula-ours-buy` | `compare.html` (EN + FR) | "Buy — €20.00" | Page de comparaison non mesurée |
+
+**Preuve par les données de production (D1, lecture seule) :** les événements `checkout_requested` ne portaient que les pas `hero-offer` (25), `final-buy` (2) et `nav-buy` (1). Aucun `demo-offer`, aucun `buy-hero-primary`, aucun `formula-ours-buy`.
+
+**Correctif :** ajout des trois identifiants au sélecteur `checkout_requested` de `assets/analytics.js`. Le sélecteur passe de 8 à **11 CTA mesurés**. C'est le même type de défaut que le CTA hero corrigé plus tôt, appliqué aux pages d'entrée.
+
+**Pourquoi c'est le premier défaut à corriger pour vendre :** sans cette mesure, toute campagne d'acquisition pointant vers la démo (le parcours naturel : voir puis acheter) n'aurait produit **aucun chiffre de conversion mesurable**. On aurait piloté à l'aveugle.
+
+**Garde-fous ajoutés (régression) :**
+
+| Fichier | Rôle |
+|---|---|
+| `tests/buy-cta-coverage.test.mjs` | Déduit les CTA d'achat réels depuis le HTML servi (lien dont le `href` mène à `#buy`) et vérifie que **chacun** figure dans le sélecteur `checkout_requested` de `assets/analytics.js`. Un nouveau CTA d'achat non mesuré fait échouer `npm test`. Vérifie aussi qu'aucun CTA de démo/navigation n'est compté comme intention d'achat. Exécuté : 10 CTA réels, 11 mesurés, OK. |
+| `tests/e2e/buy-cta-measure.spec.mjs` | Preuve **navigateur** : les trois CTA corrigés émettent réellement `checkout_requested` (JSON capturé au vol), et un CTA de démo (`hero-demo`) ne l'émet pas mais reste mesuré en `cta_click`. Exécuté : 8 tests (desktop + mobile), tous verts. |
+
+**Stamp de cache :** `assets/analytics.js` ayant changé, l'empreinte des assets a été recalculée et ré-appliquée sur les 51 fichiers HTML/JS concernés (`node scripts/versionne-assets.mjs`, stamp `f5e17402`). Sans cela, navigateurs et cache edge auraient continué à servir l'ancien `analytics.js` — défaut déjà observé en production (voir en-tête du script).
+
 ---
 
 ## 5. CONTRÔLES EN/FR ET NAVIGATEUR
@@ -199,11 +224,13 @@ Source : bases D1 de production, lecture seule (`botwow-analytics` et `botwow-pr
 
 | Étape | Événement | Compte | Taux (étape précédente) | Taux (visite) |
 |---|---|---|---|---|
-| 1 | Visite (`page_view`) | 980 | — | 100 % |
-| 2 | Clic CTA (`cta_click`) | 45 | 4,59 % | 4,59 % |
-| 3 | Intention d'achat (`checkout_requested`) | 27 | 60,0 % | 2,76 % |
-| 4 | Checkout créé (`checkout_created`) | 4 | 14,8 % | 0,41 % |
+| 1 | Visite (`page_view`) | 989 | — | 100 % |
+| 2 | Clic CTA (`cta_click`) | 41 | 4,15 % | 4,15 % |
+| 3 | Intention d'achat (`checkout_requested`) | 26 | 63,4 % | 2,63 % |
+| 4 | Checkout créé (`checkout_created`) | 6 | 23,1 % | 0,61 % |
 | 5 | **Paiement confirmé** (`orders.paid`) | **5** | — | **0,51 %** |
+
+*Chiffres `test = 0` uniquement (événements de test exclus), relevés le 27/10/2026 en lecture seule.*
 
 ### Détail des clics CTA
 
@@ -212,13 +239,15 @@ Source : bases D1 de production, lecture seule (`botwow-analytics` et `botwow-pr
 | `hero-offer` | 26 | 57,8 % |
 | `nav-buy` | 9 | 20,0 % |
 | `final-buy` | 2 | 4,4 % |
-| `compare-buy`, `journey-fish-buy`, `journey-licence-buy`, `steps-buy`, `mbar-buy` | 0 | 0 % |
+| `compare-buy`, `journey-fish-buy`, `journey-licence-buy`, `steps-buy`, `mbar-buy`, `buy-hero-primary`, `demo-offer`, `formula-ours-buy` | 0 | 0 % |
+
+*Les CTA `demo-offer`, `buy-hero-primary` et `formula-ours-buy` affichent 0 non par absence de clics mais parce qu’ils n’étaient pas mesurés avant le correctif du 27/10/2026. Leurs clics réels sont désormais comptés.*
 | Autres (démo, comparaison, navigation) | 8 | 17,8 % |
 
 ### Lectures à en tirre (hypothèses, non démontrées)
 
 1. **Le CTA hero concentre 57,8 % des clics d'achat** — le corriger (fait en P0.46/P0.48) agissait sur le bon levier.
-2. **La chute étape 3 → 4 est de 85,2 %.** C'est le plus gros point de friction mesurable.
+2. **La chute de l'étape 3 → 4 est de 76,9 %** (26 intentions → 6 checkouts). C’est le plus gros point de friction mesurable.
 3. **`checkout_created` (4) < paiements confirmés (5)** : certains paiements n'ont pas laissé de trace de télémétrie client (visiteurs sans Do Not Track désactivé, ouverture directe, reprise d'un paiement).
 
 ### Limites de la mesure
@@ -246,15 +275,16 @@ Source : bases D1 de production, lecture seule (`botwow-analytics` et `botwow-pr
 | La livraison fonctionne | Téléchargement réel HTTP 200, ZIP conforme |
 | Le parcours est éprouvé | 5 ventes payées, 5 licences, 5 jetons délivrés |
 | L'idempotence est protégée | Suite `payment-flow` PASS |
-| Les pages sont correctes et responsives | 66 tests navigateur PASS, EN + FR, 3 viewports |
+| Les pages sont correctes et responsives | 74 tests navigateur PASS, EN + FR, 3 viewports |
+| La mesure d'intention d'achat est complète | 11 CTA mesurés, prouvé au navigateur |
 
 ## CE QUI RESTE À FAIRE POUR VENDRE
 
-1. **Déployer** ce correctif d'avertissement (blocage n° 1).
+1. **Déployer** le correctif d'avertissement et la mesure des CTA (blocage n° 1, PR #53).
 2. **Fusionner la PR #44** pour que l'acheteur reçoive un fichier nommé correctement.
 3. **Ajouter `requirements.txt` + guide d'installation dans le paquet** pour supprimer le frein support.
-4. **Se donner un canal d'acquisition mesuré** (Search Console) avant d'optimiser la conversion.
-5. **Investiguer la chute de 85,2 %** entre `checkout_requested` et `checkout_created`.
+4. **Ouvrir un canal d'acquisition mesuré** (Search Console) — sans canal, toute optimisation est aveugle.
+5. **Investiguer la chute entre `checkout_requested` et `checkout_created`** (voir §7 : 26 → 6).
 
 ---
 
