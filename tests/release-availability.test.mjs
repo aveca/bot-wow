@@ -266,8 +266,7 @@ check('fr/index.html : la vente ne décrit pas une procédure d’installation',
 // the standalone licence documentation.
 
 
-// Homepage purchase CTAs must report availability, never imply that checkout
-// is currently open. The target price remains visible as a target, not a buy-now offer.
+// Homepage purchase CTAs offer a beta reservation with manual delivery.
 const homepagePurchaseStatusCases = [
   {
     file: 'index.html',
@@ -370,13 +369,13 @@ for (const file of ['modules.html', 'fr/modules.html']) {
 
 
 
-// Search previews and structured data must not turn a historical target into a live offer.
+// Search previews and structured data must describe the beta reservation accurately.
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const html = read(file);
   const head = html.slice(0, html.indexOf('</head>'));
   check(file + ' : aperçu social décrit correctement l’offre bêta',
     /<meta property="og:type" content="website">/.test(head) &&
-    /<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|20 euros)/i.test(head));
+    /<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|€20|20 euros)/i.test(head));
   check(file + ' : aucun prix ou offre dans les données structurées',
     !/"@type"\s*:\s*"Offer"|"offers"\s*:/i.test(head) &&
     !/"@type"\s*:\s*"Product"/i.test(head) &&
@@ -403,7 +402,8 @@ for (const file of ['compare.html', 'fr/compare.html']) {
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const html = read(file);
   check(file + ' : aucun formulaire de paiement ni collecte d’e-mail',
-    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html) && /id="purchase-unavailable"/.test(html));
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html) &&
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html));
 }
 
 
