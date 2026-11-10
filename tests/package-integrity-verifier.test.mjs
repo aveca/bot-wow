@@ -169,8 +169,9 @@ try {
     cases.push(f);
     const manifestPath = join(f.root, 'MANIFEST.json');
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    manifest.distribution.unresolvedRights = 0.0;
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    manifest.distribution.unresolvedRights = 0;
+    const serialized = JSON.stringify(manifest, null, 2).replace('"unresolvedRights": 0,', '"unresolvedRights": 0.0,');
+    writeFileSync(manifestPath, serialized);
     expectFailure('float release rights count rejected', run(f.root), /release manifest is not eligible/);
   }
   {
