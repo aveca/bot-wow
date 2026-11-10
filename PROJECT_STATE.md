@@ -1,14 +1,13 @@
 # BOT-WOW — état partagé
 
-**Ajout 2026-11-10 — mesure de l'intention d'achat.** Le bilan historique du travail
-du 27/10/2026 et ses limites sont conservés dans
+**Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut
+`nav-buy` était encore inclus dans le sélecteur `checkout_requested`, alors qu'il
+affiche « Purchase unavailable ». Les deux pages d'accueil EN/FR utilisent désormais
+l'identifiant neutre `nav-status` : le clic reste mesuré comme `cta_click`, sans
+être compté comme intention de checkout. Le test exécute le vrai script Analytics
+et vérifie le HTML des deux langues. Aucun script d'analytics, checkout, paiement,
+Worker ou prix n'a été modifié. Le rapport historique est conservé dans
 `reports/operations/2026-11-10-purchase-intent-measurement-findings.md`.
-Le défaut vivant relevé sur `nav-buy` est corrigé dans la PR #176 : `checkout_requested`
-n'est désormais émis que par un élément explicitement marqué
-`data-checkout-enabled="true"` et portant un `data-cta-id`. Les boutons de statut
-« Purchase unavailable » restent de simples clics de navigation ; aucun élément
-public actuel n'active l'événement de checkout. Tests comportementaux ajoutés sur
-le vrai script Analytics. Aucun checkout, paiement ou Worker modifié.
 
 **Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
 
