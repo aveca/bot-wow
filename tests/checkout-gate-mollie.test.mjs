@@ -3,9 +3,9 @@
  * checkout-gate-mollie.test.mjs - preuve que la garde de livraison coupe
  * AVANT tout appel a Mollie.
  *
- * Le test intercepte globalThis.fetch (seule sortie reseau du Worker) et
- * compte les appels vers api.mollie.com. Statut absent / invalide /
- * injection depuis le navigateur -> attendu : 409 + ZERO appel Mollie.
+ * Le test intercepte globalThis.fetch (sortie reseau du Worker) et compte
+ * les appels vers api.mollie.com. Statut absent / pending / invalide ou
+ * tentative d'injection navigateur -> HTTP 409 + ZERO appel Mollie.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -98,34 +98,36 @@ function call(body, env) {
 
 console.log('=== GARDE CHECKOUT : AUCUN APPEL MOLLIE ===');
 
-/* 1. Le checkout est ouvert même si RELEASE_STATUS n'est pas confirmed. */
+/* 1. Missing, pending and malformed status must block before Mollie. */
 for (const [label, status] of [
   ['absent', undefined],
   ['pending', 'pending'],
-  ['invalide', 'oui-mais-non'],
+  ['invalid', 'oui-mais-non'],
+  ['case-mismatch', 'CONFIRMED'],
+  ['whitespace', ' confirmed '],
 ]) {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'a@test.fr', lang: 'fr' }, makeEnv(status));
-  const b = await res.json().catch(() => ({}));
-  check(`${label} -> pas de 409`, res.status !== 409, `(status ${res.status})`);
-  check(`${label} -> checkoutUrl`, !!b.checkoutUrl, `(${b.checkoutUrl})`);
-  check(`${label} -> appel Mollie`, MOLLIE_CALLS.length > 0, `(${MOLLIE_CALLS.length})`);
+  const body = await res.json().catch(() => ({}));
+  check(label + ' -> HTTP 409 delivery_unverified', res.status === 409 && body.error === 'delivery_unverified', '(status ' + res.status + ')');
+  check(label + ' -> no checkoutUrl', !body.checkoutUrl, '(' + body.checkoutUrl + ')');
+  check(label + ' -> zero Mollie calls', MOLLIE_CALLS.length === 0, '(' + MOLLIE_CALLS.length + ')');
 }
 
-/* 2. Injecter un statut ne permet pas d'imposer un montant. */
+/* 2. Client-supplied status fields cannot override the server binding. */
 for (const attack of [
   { RELEASE_STATUS: 'confirmed' },
   { release_status: 'confirmed' },
   { confirmed: true },
 ]) {
   MOLLIE_CALLS = [];
-  const body = { email: 'b@test.fr', lang: 'fr', amount: 100, ...attack };
-  const res = await call(body, makeEnv(undefined));
-  check(`injection ${Object.keys(attack)[0]} : montant refusé`, res.status === 400, `(status ${res.status})`);
+  const body = { email: 'b@test.fr', lang: 'fr', ...attack };
+  const res = await call(body, makeEnv('pending'));
+  check('injection ' + Object.keys(attack)[0] + ' cannot bypass gate', res.status === 409, '(status ' + res.status + ')');
+  check('injection -> zero Mollie calls', MOLLIE_CALLS.length === 0, '(' + MOLLIE_CALLS.length + ')');
 }
 
-/* 3. Statut confirme cote serveur : la garde ne bloque plus et le parcours
-      va bien jusqu'a la creation du paiement Mollie (reseau simule). */
+/* 3. Explicit server-side confirmation permits the mocked Mollie path. */
 {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'c@test.fr', lang: 'fr' }, makeEnv('confirmed'));
@@ -141,9 +143,7 @@ for (const attack of [
   check('confirmed -> un paiement Mollie est cree', paymentCalls.length === 1, `(${paymentCalls.length})`);
 }
 
-/* 4. Le tarif envoye a Mollie est exactement celui de PRICE_TABLE :
-      la garde ne modifie ni le montant ni la devise. Verification REELLE
-      du corps de la requete de paiement (plus d assertion vacument vraie). */
+/* 4. The mocked provider receives the exact server-controlled PRICE_TABLE amount and currency. */
 {
   MOLLIE_CALLS = [];
   const res = await call({ email: 'd@test.fr', lang: 'fr' }, makeEnv('confirmed'));
