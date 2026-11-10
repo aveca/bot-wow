@@ -34,8 +34,8 @@ for (const [page, file, claimRe] of [
   // Les retours a la ligne du HTML ne sont pas significatifs : on compare
   // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
-  check(`${page} : avis de disponibilite present`,
-    /id="release-availability-notice"/.test(html) && /role="status"/.test(html));
+  check(`${page} : statut d’achat indisponible présent`,
+    /id="purchase-unavailable"/.test(html) && /role="status"/.test(html));
   check(`${page} : mention « Avant d'acheter » des serveurs privés`,
     /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
   check(`${page} : indisponibilité explicite, sans formulaire ni e-mail`,
