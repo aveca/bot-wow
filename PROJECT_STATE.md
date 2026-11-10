@@ -1,5 +1,20 @@
 # BOT-WOW — état partagé
 
+**Ajout 2026-11-10 — mesure de l'intention d'achat : bilan + défaut vivant.** Le
+travail de l'agent Grok Bot du 27/10/2026 (trois CTA d'achat invisibles dans
+`checkout_requested`) est terminé et prouvé localement — 18 suites `npm test` OK,
+74 tests navigateur OK, stamp recalculé et vérifié — mais **non fusionnable** : la PR
+#175 était basée sur un commit local jamais poussé (`d041665`, 150 commits derrière
+`main`, `CONFLICTING`) et sa prémisse a disparu avec PR #172 (fusionnée
+2026-11-10T00:18:55Z, achat toujours fermé). **Défaut vivant vérifié sur `main` :**
+`nav-buy` — bouton doré « Purchase unavailable » de `index.html` / `fr/index.html` —
+est encore mesuré comme `checkout_requested` alors que aucune boutique n'est ouverte,
+et sept identifiants du sélecteur ne correspondent plus à aucun élément servi. **Non
+corrigé ici : le scope `checkout-flag-draft` est actif.** Détail, preuves et règle
+proposée : `reports/operations/2026-11-10-purchase-intent-measurement-findings.md`.
+Prochaine action : le propriétaire du scope checkout tranche la définition d'une
+« intention d'achat » (§4 du rapport), puis corrige le sélecteur.
+
 **Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
