@@ -495,7 +495,7 @@ function main() {
     process.exit(1);
   }
   // Préflight juridique et provenance avant toute suppression ou écriture d'un artefact existant.
-  const addonDir = path.join(SOURCE, 'runtime-addon', 'Casinababe');
+  const addonDir = path.join(SOURCE, 'runtime-addon', 'Casinobabe');
   const addonFiles = fs.existsSync(addonDir) ? walk(addonDir) : [];
   assertNoUnverifiedAddonComponents(addonFiles);
 
