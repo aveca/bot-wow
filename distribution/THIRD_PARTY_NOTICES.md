@@ -148,7 +148,7 @@ validation de l'artefact réel.
 
 ## État des droits du paquet candidat
 
-**Dépôt source de référence :** `aveca/Casinababe`
+**Dépôt source de référence :** `aveca/Casinobabe`
 **Commit source de référence :** `b625ccec5fd61225dd92c5c54fa8721da76c3876`
 
 Le builder compare ces valeurs au dépôt et au HEAD réellement lus dans le checkout
