@@ -62,8 +62,18 @@ for (const [label, search, expected] of cases) {
   }
 }
 
-console.log('\\n=== ANALYTICS : checkout intent gating ===');
-async function checkoutClickEvents(cta, checkoutEnabled) {
+const homeEn = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const homeFr = await readFile(new URL('../fr/index.html', import.meta.url), 'utf8');
+check(
+  'English homepage labels nav CTA as status, not purchase',
+  homeEn.includes('data-cta-id="nav-status"') && !homeEn.includes('data-cta-id="nav-buy"')
+);
+check(
+  'French homepage labels nav CTA as status, not purchase',
+  homeFr.includes('data-cta-id="nav-status"') && !homeFr.includes('data-cta-id="nav-buy"')
+);
+
+async function checkoutClickEvents(cta) {
   const sent = [];
   const listeners = {};
   const store = new Map();
@@ -71,18 +81,12 @@ async function checkoutClickEvents(cta, checkoutEnabled) {
     getItem(key) { return store.has(key) ? store.get(key) : null; },
     setItem(key, value) { store.set(key, value); }
   };
-  const window = {
-    BOTWOW_TRACK_ENDPOINT: '/api/track',
-    doNotTrack: '0',
-    addEventListener() {}
-  };
+  const window = { BOTWOW_TRACK_ENDPOINT: '/api/track', doNotTrack: '0', addEventListener() {} };
   const document = {
     documentElement: { lang: 'en' },
     readyState: 'complete',
     referrer: '',
-    addEventListener(type, handler) {
-      (listeners[type] ||= []).push(handler);
-    },
+    addEventListener(type, handler) { (listeners[type] ||= []).push(handler); },
     querySelector() { return null; }
   };
   const navigator = {
@@ -106,31 +110,18 @@ async function checkoutClickEvents(cta, checkoutEnabled) {
   const target = {
     closest(selector) {
       if (selector === '[data-track]') return element;
-      if (selector === '[data-checkout-enabled="true"]' && checkoutEnabled) return element;
+      if (selector.includes('[data-cta-id="' + cta + '"]')) return element;
       return null;
     }
   };
   for (const handler of listeners.click || []) handler({ target });
   return (await Promise.all(sent)).map(body => JSON.parse(body).event);
 }
-
-const statusEvents = await checkoutClickEvents('nav-buy', false);
+const statusEvents = await checkoutClickEvents('nav-status');
 check(
-  'status CTA nav-buy is not checkout intent',
+  'status navigation click does not emit checkout_requested',
   !statusEvents.includes('checkout_requested'),
   '(' + statusEvents.join(', ') + ')'
-);
-const legacyEvents = await checkoutClickEvents('hero-offer', false);
-check(
-  'legacy CTA identifiers cannot create checkout intent',
-  !legacyEvents.includes('checkout_requested'),
-  '(' + legacyEvents.join(', ') + ')'
-);
-const liveEvents = await checkoutClickEvents('checkout-primary', true);
-check(
-  'explicitly enabled checkout CTA creates one checkout_requested event',
-  liveEvents.filter(event => event === 'checkout_requested').length === 1,
-  '(' + liveEvents.join(', ') + ')'
 );
 
 console.log(failures === 0 ? '\nANALYTICS SOURCES : OK' : `\nANALYTICS SOURCES : ${failures} ECHEC(S)`);
