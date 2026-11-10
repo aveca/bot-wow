@@ -59,9 +59,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check("accueil : achat indisponible sans formulaire, e-mail ni bouton", 
-    /id="purchase-unavailable"/.test(t) &&
-    !/<form id="buyForm"|id="email"[^>]*type="email"|id="buyBtn"/i.test(t));
+  check("accueil : réservation Stripe avec livraison manuelle clairement annoncée",
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(t) &&
+    /manual/i.test(t) && /full refund/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
