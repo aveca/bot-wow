@@ -81,8 +81,9 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 ]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(page + ' : achat indisponible sans formulaire ni e-mail',
-    /id="purchase-unavailable"/.test(html) && /Purchase unavailable|Achat indisponible/i.test(flat) &&
+  check(page + ' : réservation Stripe active sans formulaire local ni collecte d’e-mail',
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) &&
+    /manual|manuelle/i.test(flat) &&
     !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
     !forbiddenClaim.test(flat));
