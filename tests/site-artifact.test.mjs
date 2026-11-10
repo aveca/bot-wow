@@ -58,12 +58,12 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : la homepage vend la licence et garde le périmètre serveurs privés',
-  /id="buyForm"/.test(enHome) && /private servers/i.test(enHome));
-check('FR : la homepage vend la licence et garde le périmètre serveurs privés',
-  /id="buyForm"/.test(frHome) && /serveurs privés/i.test(frHome));
-check('EN : formulaire d’achat présent', /id="buyBtn"/.test(enHome) && /id="email"/.test(enHome));
-check('FR : formulaire d’achat présent', /id="buyBtn"/.test(frHome) && /id="email"/.test(frHome));
+check('EN : achat indisponible, sans formulaire ni e-mail',
+  /id="purchase-unavailable"/.test(enHome) && /Purchase unavailable/i.test(enHome) &&
+  !/id="buyForm"|id="buyBtn"|type="email"/i.test(enHome));
+check('FR : achat indisponible, sans formulaire ni e-mail',
+  /id="purchase-unavailable"/.test(frHome) && /Achat indisponible/i.test(frHome) &&
+  !/id="buyForm"|id="buyBtn"|type="email"/i.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));
 check('FR : aucune promesse de livraison immédiate par e-mail',
@@ -76,10 +76,12 @@ check('FR : serveurs privés dans le bandeau ou le corps',
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
-check('EN buy : licence et serveurs privés',
-  /id="buyForm"/.test(enBuy) && /private servers/i.test(enBuy));
-check('FR buy : licence et serveurs privés',
-  /id="buyForm"/.test(frBuy) && /serveurs privés/i.test(frBuy));
+check('EN buy : statut indisponible sans formulaire ni e-mail',
+  /id="purchase-unavailable"/.test(enBuy) && /Purchase unavailable/i.test(enBuy) &&
+  !/id="buyForm"|id="buyBtn"|type="email"/i.test(enBuy));
+check('FR buy : statut indisponible sans formulaire ni e-mail',
+  /id="purchase-unavailable"/.test(frBuy) && /Achat indisponible/i.test(frBuy) &&
+  !/id="buyForm"|id="buyBtn"|type="email"/i.test(frBuy));
 check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 
