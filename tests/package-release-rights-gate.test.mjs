@@ -25,6 +25,7 @@ function seedSource(dir) {
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- fixture\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fixture\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Unexpected.lua'), '-- unknown upstream file\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\n');
 }
 
