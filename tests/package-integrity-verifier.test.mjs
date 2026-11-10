@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import {
-  copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
+  copyFileSync, mkdirSync, mkdtempSync, readFileSync,
   rmSync, symlinkSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
