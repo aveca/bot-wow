@@ -31,22 +31,6 @@ Le paquet candidat doit être reconstruit et inspecté avant toute distribution.
 Les archives R2 1.2.0 et 1.2.1 sont des artefacts historiques non validés ; elles ne
 doivent pas être utilisées comme paquet de vente.
 
-## État des droits du paquet candidat
-
-**Dépôt source de référence :** `aveca/Casinababe`
-**Commit source de référence :** `b625ccec5fd61225dd92c5c54fa8721da76c3876`
-
-Le builder compare ces valeurs au dépôt et au HEAD réellement lus dans le checkout
-source. Les tables historiques ci-dessous ne servent pas à décider des droits du
-candidat courant.
-
-| Composant | Présence | Fondement de la décision | Statut |
-|---|---|---|---|
-| Code original Casinobabe | oui | Déclaration du titulaire enregistrée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md`. Les modalités contractuelles destinées au client ne sont pas encore publiées. | **À CONFIRMER** — la titularité est déclarée, mais les conditions de licence client doivent être finalisées avant distribution |
-| Police DejaVu Sans | oui | Licence Bitstream Vera + Arev embarquée dans le TTF ; avis et permissions joints dans cette notice livrée avec le paquet. | **ÉTABLI** — redistribution autorisée avec les avis de licence |
-| LibStub / LibDBIcon-1.0 / background.tga | non | Absents du commit source exact ci-dessus ; le bouton minimap est natif et le fond est dessiné avec `SetColorTexture`. | **EXCLU** — ces fichiers ne font pas partie du candidat courant |
-| wasmoon-lua5.1 / lodash | non | Dépendances déclarées mais non embarquées dans le ZIP candidat. | **NON EMBARQUÉ** — aucun binaire de ces dépendances n'est distribué dans le paquet |
-
 ## Inventaire vérifié
 
 | # | Composant | Fichier livré | Origine vérifiée | Licence | Obligations | Statut |
@@ -161,3 +145,19 @@ validation de l'artefact réel.
 | 2026-11-08 | LibDBIcon-1.0 : `license: null` sur 5 miroirs GitHub publics | API GitHub `search/repositories` |
 | 2026-11-08 | texture : aucune identification | en-tête TGA (`idLength = 0`), aucune mention dans le dépôt |
 | 2026-11-08 | aucun `LICENSE` dans le projet, jamais | `git log --all --diff-filter=D` + `git ls-files` |
+
+## État des droits du paquet candidat
+
+**Dépôt source de référence :** `aveca/Casinababe`
+**Commit source de référence :** `b625ccec5fd61225dd92c5c54fa8721da76c3876`
+
+Le builder compare ces valeurs au dépôt et au HEAD réellement lus dans le checkout
+source. Les tables historiques ci-dessous ne servent pas à décider des droits du
+candidat courant.
+
+| Composant | Présence | Fondement de la décision | Statut |
+|---|---|---|---|
+| Code original Casinobabe | oui | Déclaration du titulaire enregistrée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md`. Les modalités contractuelles destinées au client ne sont pas encore publiées. | **À CONFIRMER** — la titularité est déclarée, mais les conditions de licence client doivent être finalisées avant distribution |
+| Police DejaVu Sans | oui | Licence Bitstream Vera + Arev embarquée dans le TTF ; avis et permissions joints dans cette notice livrée avec le paquet. | **ÉTABLI** — redistribution autorisée avec les avis de licence |
+| LibStub / LibDBIcon-1.0 / background.tga | non | Absents du commit source exact ci-dessus ; le bouton minimap est natif et le fond est dessiné avec `SetColorTexture`. | **EXCLU** — ces fichiers ne font pas partie du candidat courant |
+| wasmoon-lua5.1 / lodash | non | Dépendances déclarées mais non embarquées dans le ZIP candidat. | **NON EMBARQUÉ** — aucun binaire de ces dépendances n'est distribué dans le paquet |
