@@ -34,12 +34,12 @@ for (const [page, file, claimRe] of [
   // Les retours a la ligne du HTML ne sont pas significatifs : on compare
   // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
-  check(`${page} : statut d’achat indisponible présent`,
-    /id="purchase-unavailable"/.test(html) && /role="status"/.test(html));
+  check(`${page} : réservation Stripe à 20 € avec livraison manuelle`,
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) && /manual|manuelle/i.test(flat) && /full refund|intégralement remboursé/i.test(flat));
   check(`${page} : mention « Avant d'acheter » des serveurs privés`,
     /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
-  check(`${page} : indisponibilité explicite, sans formulaire ni e-mail`,
-    /id="purchase-unavailable"/.test(html) && /Purchase unavailable|Achat indisponible/i.test(flat) &&
+  check(`${page} : réservation sans formulaire local ni collecte d’e-mail`,
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) &&
     !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
@@ -159,8 +159,8 @@ for (const [file, unavailable, simulated, staleClaims] of [
   check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
   check(file + ' : paiement Stripe décrit sans promesse de téléchargement immédiat', /Stripe/i.test(flat) && /manual|manuellement/i.test(flat));
   const expectedFooter = file === 'faq.html'
-    ? 'BOT-WOW beta reservation. Manual delivery after package validation.'
-    : "Réservation bêta BOT-WOW. Livraison manuelle après validation du paquet.";
+    ? 'Historical BOT-WOW project. No current game-integrated product is offered.'
+    : "Projet BOT-WOW historique. Aucun produit intégré à un jeu n'est actuellement proposé.";
   const archivedInstallLabel = file === 'faq.html'
     ? 'Archived installation notes (not current instructions)'
     : 'Notes d’installation archivées (instructions non actuelles)';
