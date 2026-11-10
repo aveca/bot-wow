@@ -38,7 +38,11 @@ fusion, `buy.html` n'a plus `#purchase-unavailable`, alors qu'il est présent su
 tête de branche `8315085` — où le test passe localement (constaté : 1 passed). La
 fusion de la PR #179 (`02da1f6`, antérieure à `5145b9d`) garde l'élément et son
 `ui-quality` passe. Aucun HTML/asset/e2e n'est touché par cette PR ; corriger les
-specs e2e demande une décision produit et sort de cette mission.
+specs e2e demande une décision produit et sort de cette mission. Reproductibilité
+constatée : sur le commit documentaire `dc7933a`, `validate` et `package-candidate`
+repassent en success et `ui-quality` échoue avec le même profil (444 passed, mêmes
+erreurs). Diagnostic publié en commentaire :
+<https://github.com/aveca/bot-wow/pull/182#issuecomment-6774146940>.
 
 # BOT-WOW — état partagé
 

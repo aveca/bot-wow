@@ -185,9 +185,16 @@ Commit `8315085ec60a4bb95b9359310594af5346615047`, PR <https://github.com/aveca/
 
 | Workflow | Run | Jobs | Statut |
 |---|---|---|---|
-| Validate Bot-Wow | `42852227058` | `validate`, `package-candidate` | **success** |
-| UI quality and visual evidence | `42852227049` | `ui-quality` | **failure** (échec e2e, diagnostic ci-dessous) |
+| Validate Bot-Wow | `42852227058` (code) / `42861878905` (docs) | `validate`, `package-candidate` | **success** (les deux) |
+| UI quality and visual evidence | `42852227049` / `42861878985` | `ui-quality` | **failure** (échec e2e, diagnostic ci-dessous, reproductible à l'identique) |
 | GitGuardian Security Checks | — | — | pass |
+
+Reproductibilité constatée : sur le commit documentaire `dc7933a`, `validate` et
+`package-candidate` repassent en success et `ui-quality` échoue avec **exactement le
+même profil** (444 passed, mêmes erreurs `element(s) not found` sur
+`#purchase-unavailable`). L'échec est donc déterministe et indépendant du contenu de
+cette PR. Diagnostic publié en commentaire sur la PR :
+<https://github.com/aveca/bot-wow/pull/182#issuecomment-6774146940>.
 
 Le job `validate` a réellement exécuté `npm ci` (qui installe la nouvelle
 devDependency `wasmoon-lua5.1@1.18.10`) puis la suite de distribution du workflow,
