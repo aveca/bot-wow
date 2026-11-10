@@ -285,7 +285,7 @@ for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
   check(`${file} : aucun formulaire ni champ e-mail de paiement`,
     !/id="buyForm"|id="email"|id="buyBtn"|type="email"/i.test(html) &&
-    /id="purchase-unavailable"/.test(html));
+    /id="beta-reservation"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));
