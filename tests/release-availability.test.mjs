@@ -38,16 +38,16 @@ for (const [page, file, claimRe] of [
     /id="release-availability-notice"/.test(html) && /role="status"/.test(html));
   check(`${page} : mention « Avant d'acheter » des serveurs privés`,
     /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
-  check(`${page} : avis de disponibilité présent et formulaire de paiement exposé`,
-    html.includes('id="release-availability-notice"') &&
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /type="email"/i.test(html));
+  check(`${page} : indisponibilité explicite, sans formulaire ni e-mail`,
+    /id="purchase-unavailable"/.test(html) && /Purchase unavailable|Achat indisponible/i.test(flat) &&
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
     !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
   check(`${page} : périmètre serveurs privés`,
     /Intended for private servers|Destiné aux serveurs privés/i.test(flat));
-  check(`${page} : formulaire d'achat exposé`,
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html));
+  check(`${page} : aucun formulaire ni champ e-mail`,
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
     /20,00\s*€/.test(html));
   check(`${page} : CTAs instrumentes pour la mesure`,
@@ -81,10 +81,9 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 ]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(page + ' : formulaire d’achat présent',
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html));
-  check(page + ' : le paiement est proposé',
-    /Pay 20,00 €|Payer 20,00 €/.test(html));
+  check(page + ' : achat indisponible sans formulaire ni e-mail',
+    /id="purchase-unavailable"/.test(html) && /Purchase unavailable|Achat indisponible/i.test(flat) &&
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
     !forbiddenClaim.test(flat));
 }
@@ -212,8 +211,8 @@ for (const [file, lang] of [['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const flat = read(file).replace(/\s+/g, ' ');
   check(file + ' : l’offre concerne la pêche sur serveurs privés',
     /fishing assistant|assistant de pêche/i.test(flat) && /private servers|serveurs privés/i.test(flat));
-  check(file + ' : le formulaire d’achat est présent',
-    /id="buyForm"/.test(read(file)));
+  check(file + ' : aucun formulaire ou champ e-mail public',
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(read(file)));
   check(file + ' : aucune promesse de machine ou de livraison',
     !/Activation on one machine|Activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
@@ -272,17 +271,17 @@ check('fr/index.html : la vente ne décrit pas une procédure d’installation',
 const homepagePurchaseStatusCases = [
   {
     file: 'index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Buy the lifetime licence<\/a>/i,
-    bar: /aria-label="Buy the licence"[\s\S]*?data-cta-id="mbar-status">Buy<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Purchase unavailable<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?data-cta-id="mbar-status">Status<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /buy|20,00/i,
+    allowedStatusLabel: /status|unavailable/i,
   },
   {
     file: 'fr/index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Acheter la licence à vie<\/a>/i,
-    bar: /aria-label="Acheter la licence"[\s\S]*?data-cta-id="mbar-status">Acheter<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Achat indisponible<\/a>/i,
+    bar: /aria-label="Statut de l’achat"[\s\S]*?data-cta-id="mbar-status">Statut<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /acheter|20,00/i,
+    allowedStatusLabel: /statut|indisponible/i,
   },
 ];
 for (const item of homepagePurchaseStatusCases) {
@@ -304,18 +303,18 @@ for (const item of homepagePurchaseStatusCases) {
 const purchaseStatusPageCases = [
   {
     file: 'buy.html',
-    title: /<title>Buy BOT-WOW/i,
-    nav: /data-cta-id="nav-status"[^>]*>Buy · 20,00 €<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Pay 20,00 €<\/a>/i,
-    bar: /aria-label="Buy"[\s\S]*?20,00 €/i,
+    title: /<title>BOT-WOW — Purchase unavailable/i,
+    nav: /data-cta-id="nav-status"[^>]*>Purchase unavailable<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Purchase unavailable<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?Purchase unavailable/i,
     targetPrice: /20,00 €/i,
   },
   {
     file: 'fr/buy.html',
-    title: /<title>Acheter BOT-WOW/i,
-    nav: /data-cta-id="nav-status"[^>]*>Acheter · 20,00 €<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Payer 20,00 €<\/a>/i,
-    bar: /aria-label="Acheter"[\s\S]*?20,00 €/i,
+    title: /<title>BOT-WOW — Achat indisponible/i,
+    nav: /data-cta-id="nav-status"[^>]*>Achat indisponible<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Achat indisponible<\/a>/i,
+    bar: /aria-label="Statut de disponibilité"[\s\S]*?Achat indisponible/i,
     targetPrice: /20,00 €/i,
   },
 ];
@@ -380,8 +379,8 @@ for (const file of ['compare.html', 'fr/compare.html']) {
 }
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const html = read(file);
-  check(file + ' : le formulaire de paiement est exposé',
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /type="email"/i.test(html));
+  check(file + ' : aucun formulaire de paiement ni collecte d’e-mail',
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html) && /id="purchase-unavailable"/.test(html));
 }
 
 
