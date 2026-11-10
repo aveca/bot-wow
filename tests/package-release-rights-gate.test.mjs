@@ -21,9 +21,9 @@ const check = (name, ok, detail = '') => {
 function seedSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinababe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
-  writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.toc'), '## Interface: 20506\\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.lua'), '-- fixture\\n');
-  writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.toc'), '## Interface: 20506\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinababe', 'Casinababe.lua'), '-- fixture\n');
+  writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\n');
 }
 
 function run(args) {
@@ -61,17 +61,17 @@ try {
   const releasePackageDir = join(releaseOut, 'casinababe-fishing-0.0.1');
   const releaseZip = join(releaseOut, 'casinababe-fishing-0.0.1.zip');
   mkdirSync(releasePackageDir, { recursive: true });
-  writeFileSync(join(releasePackageDir, 'sentinel.txt'), 'KEEP PACKAGE\\n');
-  writeFileSync(releaseZip, 'KEEP ZIP\\n');
+  writeFileSync(join(releasePackageDir, 'sentinel.txt'), 'KEEP PACKAGE\n');
+  writeFileSync(releaseZip, 'KEEP ZIP\n');
 
   const release = run(['--source', source, '--version', '0.0.1', '--out', releaseOut, '--release']);
-  const output = release.stdout + '\\n' + release.stderr;
+  const output = release.stdout + '\n' + release.stderr;
   check('le build release échoue sur les droits client non finalisés',
     release.status !== 0 && /release refusée/.test(output) && /Code original Casinobabe/.test(output),
     output.slice(-500));
   check('le refus de release ne supprime ni ne remplace un artefact existant',
-    readFileSync(join(releasePackageDir, 'sentinel.txt'), 'utf8') === 'KEEP PACKAGE\\n'
-      && readFileSync(releaseZip, 'utf8') === 'KEEP ZIP\\n');
+    readFileSync(join(releasePackageDir, 'sentinel.txt'), 'utf8') === 'KEEP PACKAGE\n'
+      && readFileSync(releaseZip, 'utf8') === 'KEEP ZIP\n');
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
