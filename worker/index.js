@@ -455,8 +455,8 @@ var CANONICAL_WEBHOOK_URL = "https://api.bot-wow.com/api/mollie-webhook";
 async function handleCheckout(request, env2) {
   // Fail closed until package rights, installation, activation and delivery are confirmed.
   // Missing, pending or malformed server-side status must never create a provider checkout.
-  const releaseStatus = env2.RELEASE_STATUS ?? RELEASE_STATUS;
-  if (releaseStatus !== "confirmed") {
+  // A server secret alone cannot reopen sales: source release approval and binding must both be exact.
+  if (RELEASE_STATUS !== "confirmed" || env2.RELEASE_STATUS !== "confirmed") {
     return jsonResponse2({ ok: false, error: "delivery_unverified" }, 409);
   }
   const ip = getClientIp2(request);
