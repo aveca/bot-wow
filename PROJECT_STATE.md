@@ -1,5 +1,14 @@
 # BOT-WOW — état partagé
 
+**Ajout 2026-11-10 — issue factory-control#82 : candidat Fishing Assistant minimal (liste blanche + tests installation/activation).**
+Branche `factory/issue82-mwaoy17i`, PR https://github.com/aveca/bot-wow/pull/184 (**revue uniquement — aucune fusion, aucun déploiement**).
+Source runtime lue SEULE sur le commit épinglé `aveca/Casinababe@b625ccec5fd61225dd92c5c54fa8721da76c3876` (lecture seule, jamais modifiée).
+Fermeture vérifiée sur ces octets : Lua — 20 appels `G()` du module pêche = API WoW uniquement, aucun symbole du core casino, ordre TOC `[LiveErrorCapture.lua, CasinobabeFishing.lua]` nécessaire (chaînage des gestionnaires d'erreurs) ; Python — fermeture BFS = 16 modules = `BOT_FILES` exactement.
+Builder : liste blanche addon + TOC BOT-WOW générée (Interface 20506, SavedVariables `CasinobabeDB, CasinobabeErrorBus`), exclusions déclarées au manifeste, fail-closed sur fichier non inventorié ; correction d'un bug TDZ (`unresolvedRights` poussé avant déclaration) exposé par les nouveaux tests.
+Tests nouveaux : contrat d'installation (19 contrôles), activation Lua 5.1 réelle (wasmoon + mock WoW ; octets réels via `BOTWOW_PACKAGE_FIXTURE`, sinon SKIP visible jamais compté), script `verify-bot-files-closure.mjs` câblé CI (MANIFEST == fermeture BFS, 16=16 sur la source épinglée).
+Preuves locales : double-build byte-identique `48818cebdde8518d5f056d441d2704dd60a809685a362b9976e88998273d0c89` (176 892 octets), `verify-package-archive` PASS, `--release` REFUSÉ (sentinelles préservées), fulfillment réel (delivery-replay) SHA-256 livré exact, `npm run validate` PASS, `npm test` PASS.
+La vente reste fermée : aucun paiement/prix/checkout/Worker/secret/R2 modifié. Rapport : `reports/operations/2026-11-10-issue82-minimal-package.md`.
+
 **Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut
 `nav-buy` était encore inclus dans le sélecteur `checkout_requested`, alors qu'il
 affiche « Purchase unavailable ». Les deux pages d'accueil EN/FR utilisent désormais
