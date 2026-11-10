@@ -126,6 +126,83 @@ const OUT = path.resolve(arg('out', path.join(process.cwd(), 'dist')));
 const NOTES = arg('notes', null);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
+const RELEASE_BUILD = process.argv.includes('--release');
+const NOTICE_FILE = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
+
+/**
+ * Le tableau « Inventaire vérifié » conserve aussi des composants historiques
+ * des anciennes archives R2. Seule la section dédiée au candidat courant est
+ * une source de décision pour le mode --release.
+ */
+function sameRepository(actual, expected) {
+  const normalize = (value) => String(value || '')
+    .replace(/^https?:\/\/github\.com\//i, '')
+    .replace(/^git@github\.com:/i, '')
+    .replace(/\.git$/i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+  return !!expected && normalize(actual) === normalize(expected);
+}
+
+function inspectDistributionRights(document) {
+  const heading = /^## État des droits du paquet candidat\s*$/mi;
+  const match = heading.exec(document);
+  if (!match) {
+    return {
+      expectedRepository: null,
+      expectedSourceCommit: null,
+      unresolved: [{ component: 'section des droits du candidat absente', status: 'NON ÉTABLI' }],
+    };
+  }
+
+  const bodyStart = match.index + match[0].length;
+  const tail = document.slice(bodyStart);
+  const nextHeading = /^## /m.exec(tail);
+  const section = nextHeading ? tail.slice(0, nextHeading.index) : tail;
+  const repositoryMatch = /^\*\*Dépôt source de référence :\*\*\s*\x60([^\x60]+)\x60/mi.exec(section);
+  const commitMatch = /^\*\*Commit source de référence :\*\*\s*\x60([0-9a-f]{40})\x60/mi.exec(section);
+  const tableLines = section.split(/\r?\n/).filter((line) => /^\|/.test(line));
+  const headerIndex = tableLines.findIndex((line) =>
+    line.includes('Composant') && line.includes('Présence') && line.includes('Statut'));
+  const unresolved = [];
+  const seen = new Set();
+
+  if (!repositoryMatch || !commitMatch) unresolved.push({ component: 'métadonnées de provenance du candidat', status: 'NON ÉTABLI' });
+  if (headerIndex < 0) {
+    unresolved.push({ component: 'table des droits du candidat absente', status: 'NON ÉTABLI' });
+  } else {
+    const rows = tableLines.slice(headerIndex + 2);
+    for (const line of rows) {
+      const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+      if (cells.length !== 4) {
+        unresolved.push({ component: 'ligne de droits candidate invalide', status: 'NON ÉTABLI' });
+        continue;
+      }
+      const [component, presence, , status] = cells;
+      seen.add(component);
+      const established = presence === 'oui' && /^\*\*ÉTABLI\*\*/u.test(status);
+      const excluded = presence === 'non'
+        && (/^\*\*EXCLU\*\*/u.test(status) || /^\*\*NON EMBARQUÉ\*\*/u.test(status));
+      if (!established && !excluded) unresolved.push({ component, status: status || 'STATUT MANQUANT' });
+    }
+    if (!rows.length) unresolved.push({ component: 'inventaire du candidat vide', status: 'NON ÉTABLI' });
+  }
+
+  for (const required of [
+    'Code original Casinobabe',
+    'Police DejaVu Sans',
+    'LibStub / LibDBIcon-1.0 / background.tga',
+    'wasmoon-lua5.1 / lodash',
+  ]) if (!seen.has(required)) unresolved.push({ component: required, status: 'LIGNE ABSENTE' });
+
+  return {
+    expectedRepository: repositoryMatch ? repositoryMatch[1].trim() : null,
+    expectedSourceCommit: commitMatch ? commitMatch[1].toLowerCase() : null,
+    unresolved,
+  };
+}
+
+
 /** Fichiers du bot Python livre au client. */
 const BOT_FILES = [
   // Entry point + every local module imported by the runtime (directly or
@@ -417,17 +494,47 @@ function main() {
     console.error(`Source introuvable : ${SOURCE}`);
     process.exit(1);
   }
-  // Préflight juridique avant toute suppression ou écriture d'un artefact existant.
+  // Préflight juridique et provenance avant toute suppression ou écriture d'un artefact existant.
   const addonDir = path.join(SOURCE, 'runtime-addon', 'Casinobabe');
   const addonFiles = fs.existsSync(addonDir) ? walk(addonDir) : [];
   assertNoUnverifiedAddonComponents(addonFiles);
 
-  const pkgDir = path.join(OUT, `casinobabe-fishing-${VERSION}`);
+  if (!fs.existsSync(NOTICE_FILE)) throw new IntegrityError('distribution/THIRD_PARTY_NOTICES.md absent : droits non vérifiables');
+  const noticeDocument = fs.readFileSync(NOTICE_FILE, 'utf8');
+  const rightsReview = inspectDistributionRights(noticeDocument);
+  const git = gitInfo(SOURCE);
+  const unresolvedRights = rightsReview.unresolved.slice();
+  const sourceRepositoryMatches = !!git && sameRepository(git.repository, rightsReview.expectedRepository);
+  const sourceCommitMatches = !!git && !!rightsReview.expectedSourceCommit
+    && String(git.commit).toLowerCase() === rightsReview.expectedSourceCommit;
+  if (!sourceRepositoryMatches || !sourceCommitMatches) {
+    unresolvedRights.push({ component: 'provenance source', status: 'NON ÉTABLI' });
+  }
+  if (RELEASE_BUILD && unresolvedRights.length) {
+    const components = unresolvedRights.map((item) => item.component).join(', ');
+    throw new IntegrityError(
+      'release refusée : ' + unresolvedRights.length
+      + ' exigence(s) non satisfaite(s) (' + components
+      + ') ; aucun artefact existant ne sera supprimé et aucune archive ne sera produite',
+    );
+  }
+
+  const pkgDir = path.join(OUT, 'casinobabe-fishing-' + VERSION);
   const stage = path.join(pkgDir, 'package');
   fs.rmSync(pkgDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(stage, 'scripts'), { recursive: true });
 
   const manifest = { name: 'casinobabe-fishing', version: VERSION, builtAt: null, source: null, files: {} };
+  manifest.distribution = {
+    mode: RELEASE_BUILD ? 'release' : 'qa',
+    eligible: unresolvedRights.length === 0,
+    unresolvedRights: unresolvedRights.length,
+    unresolvedComponents: unresolvedRights.map((item) => item.component).sort(),
+    expectedSourceRepository: rightsReview.expectedRepository,
+    expectedSourceCommit: rightsReview.expectedSourceCommit,
+    sourceRepositoryMatches,
+    sourceCommitMatches,
+  };
 
   // Provenance de la source.
   //
@@ -436,7 +543,6 @@ function main() {
   // resolue, HEAD). Si elle ne peut pas etre prouvee, le build ECHOUE : un
   // manifeste portant une provenance falsifiee ferait croire a un artefact
   // auto-documentant alors qu'il ne demontre rien.
-  const git = gitInfo(SOURCE);
   const provenanceVerified = !!git;
   const provenance = {
     repository: git ? git.repository : null,
@@ -592,16 +698,9 @@ function main() {
      archives R2 restent historiques et ne sont pas une source de build.
      Le document d'attribution est livré et déclaré au manifeste. Sans notice,
      le build échoue plutôt que de produire un paquet non conforme. */
-  const noticeSrc = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
-  if (!fs.existsSync(noticeSrc)) {
-    console.error(
-      'distribution/THIRD_PARTY_NOTICES.md est absent : la police DejaVu Sans '
-      + 'embarquée exige ses avis de licence. Paquet NON construit.',
-    );
-    process.exit(1);
-  }
+  const noticeSrc = NOTICE_FILE;
   {
-    const res = normalizeText(fs.readFileSync(noticeSrc));
+    const res = normalizeText(Buffer.from(noticeDocument, 'utf8'));
     const buf = res.buf;
     fs.writeFileSync(path.join(stage, 'THIRD_PARTY_NOTICES.md'), buf);
     manifest.files['THIRD_PARTY_NOTICES.md'] = {

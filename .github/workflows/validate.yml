@@ -89,6 +89,25 @@ jobs:
             "$OUT_FIRST/$ZIP_NAME" \
             1.2.2-rc.1 "$SOURCE_SHA"
 
+          node - "$OUT_FIRST/casinobabe-fishing-1.2.2-rc.1/MANIFEST.json" <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const rights = manifest.distribution || {};
+          const unresolved = rights.unresolvedComponents || [];
+          const expectedCommit = 'b625ccec5fd61225dd92c5c54fa8721da76c3876';
+          if (rights.mode !== 'qa'
+            || rights.eligible !== false
+            || rights.sourceRepositoryMatches !== true
+            || rights.sourceCommitMatches !== true
+            || rights.expectedSourceCommit !== expectedCommit
+            || !unresolved.includes('Code original Casinobabe')) {
+            console.error('::error::Candidate rights manifest is not pinned and fail-closed.');
+            console.error(JSON.stringify(rights, null, 2));
+            process.exit(1);
+          }
+          console.log('RELEASE RIGHTS: BLOCKED AS EXPECTED; source provenance exact; client terms pending.');
+          NODE
+
           node "$BOT_WOW_DIR/scripts/build-package.cjs" \
             --source "$SOURCE_DIR" \
             --version 1.2.2-rc.1 \

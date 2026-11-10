@@ -41,7 +41,7 @@ doivent pas être utilisées comme paquet de vente.
 | 4 | **LibStub** | `<racine-archive>/runtime-addon/Casinobabe/Libs/LibStub/LibStub.lua` (1 183 o) | en-tête : « LibStub is a simple versioning stub meant for use in Libraries. https://www.curseforge.com/wow/addons/libstub **(public domain)** » | **revendication « domaine public »** dans le fichier | Aucune attribution formellement exigée par cette revendication | **À CONFIRMER** — une mise dans le domaine public n'a pas le même effet selon les juridictions (notamment en droit français/européen). Le fichier cite son origine et sa position ; l'absence de texte de licence explicite est un risque résiduel, pas une interdiction |
 | 5 | **LibDBIcon-1.0** (adaptation) | `<racine-archive>/runtime-addon/Casinobabe/Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua` (7 600 o) | en-tête : « Based on the standard LibDBIcon-1.0 API, **adapted** to use `self` (TBC 2.5.5, not the Vanilla `this`/`arg1` globals) … Bundled with Casinobabe » | **AUCUNE** — le fichier ne porte aucune licence, et les dépôts GitHub publics de LibDBIcon-1.0 (wowace-clone, zerosnake0, Wrath-AddOns, WoWAddonMirrors, kaldown) déclarent tous `license: null` | Inconnues | **NON ÉTABLI** — œuvre dérivée d'une bibliothèque tierce dont la licence n'est publiée nulle part. **Ne pas redistribuer avant permission de l'auteur d'origine ou remplacement par une implémentation locale** |
 | 6 | **Texture `background.tga`** | `<racine-archive>/runtime-addon/Casinobabe/media/background.tga` (1 572 908 o) | 512 × 1024, 24 bits, non compressée ; en-tête TGA `idLength = 0`, **aucun champ d'identification** ; aucune mention dans le dépôt | **AUCUNE** — aucune attribution, aucun crédit, aucune origine | Inconnues | **NON ÉTABLI** — origine et titulaire indisponibles. **Ne pas redistribuer avant identification de l'auteur et de la licence** |
-| 7 | **Casinobabe (le projet lui-même)** | `<racine-archive>/runtime-addon/Casinobabe/*.lua`, `package/scripts/fishing_*.py` | `## Author: Casinobabe` dans le `.toc` ; seul auteur Git humain : `Coco <yacovassaraf@gmail.com>` | **AUCUNE** — aucun `LICENSE`/`COPYING`/`NOTICE`, ni dans `HEAD` ni dans tout l'historique Git | Inconnues | **NON ÉTABLI** — le propriétaire doit choisir et publier la licence de son propre code |
+| 7 | **Casinobabe (le projet lui-même)** | `<racine-archive>/runtime-addon/Casinababe/*.lua`, `package/scripts/fishing_*.py` | `## Author: Casinababe` dans le `.toc` ; déclaration du titulaire consignée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md` pour le code original uniquement | **Régime propriétaire BOT-WOW** — aucun droit open source n'est accordé | Conditions de licence client distinctes à publier et faire accepter avant paiement | **DÉCLARÉ PAR LE TITULAIRE — CONDITIONS CLIENT À FINALISER** — la déclaration ne couvre pas les composants tiers ni les modalités contractuelles de distribution au client |
 
 ## Textes de licence à joindre au paquet
 
@@ -115,9 +115,11 @@ La police `casino_uni.ttf` porte le texte complet Bitstream Vera + Arev dans sa 
    LibStub et background.tga. Leur présence dans R2 ne les rend pas redistribuables.
    Le code Worker référence actuellement la clé 1.2.0 ; elle ne doit pas être servie
    comme release validée.
-2. **Le code Casinobabe lui-même** n'a pas de licence publique. Le propriétaire doit
-   confirmer les droits d'auteur et les conditions commerciales/propriétaires qui
-   encadrent le produit avant toute vente. Ce document ne choisit pas ces conditions.
+2. **Le code original** est couvert par la déclaration de titularité du propriétaire,
+   consignée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md` et limitée au code original.
+   Les conditions de licence client (durée, postes, support, mises à jour, garanties
+   et modalités de résiliation) ne sont pas encore finalisées ni publiées : le candidat
+   reste donc bloqué pour la distribution.
 3. **La police DejaVu Sans** est redistribuable avec ses avis Bitstream Vera + Arev,
    qui sont inclus dans le fichier TTF ; la notice séparée reste jointe au paquet.
 
@@ -143,3 +145,19 @@ validation de l'artefact réel.
 | 2026-11-08 | LibDBIcon-1.0 : `license: null` sur 5 miroirs GitHub publics | API GitHub `search/repositories` |
 | 2026-11-08 | texture : aucune identification | en-tête TGA (`idLength = 0`), aucune mention dans le dépôt |
 | 2026-11-08 | aucun `LICENSE` dans le projet, jamais | `git log --all --diff-filter=D` + `git ls-files` |
+
+## État des droits du paquet candidat
+
+**Dépôt source de référence :** `aveca/Casinobabe`
+**Commit source de référence :** `b625ccec5fd61225dd92c5c54fa8721da76c3876`
+
+Le builder compare ces valeurs au dépôt et au HEAD réellement lus dans le checkout
+source. Les tables historiques ci-dessous ne servent pas à décider des droits du
+candidat courant.
+
+| Composant | Présence | Fondement de la décision | Statut |
+|---|---|---|---|
+| Code original Casinobabe | oui | Déclaration du titulaire enregistrée dans `legal/PROPRIETARY-RIGHTS-DECLARATION.md`. Les modalités contractuelles destinées au client ne sont pas encore publiées. | **À CONFIRMER** — la titularité est déclarée, mais les conditions de licence client doivent être finalisées avant distribution |
+| Police DejaVu Sans | oui | Licence Bitstream Vera + Arev embarquée dans le TTF ; avis et permissions joints dans cette notice livrée avec le paquet. | **ÉTABLI** — redistribution autorisée avec les avis de licence |
+| LibStub / LibDBIcon-1.0 / background.tga | non | Absents du commit source exact ci-dessus ; le bouton minimap est natif et le fond est dessiné avec `SetColorTexture`. | **EXCLU** — ces fichiers ne font pas partie du candidat courant |
+| wasmoon-lua5.1 / lodash | non | Dépendances déclarées mais non embarquées dans le ZIP candidat. | **NON EMBARQUÉ** — aucun binaire de ces dépendances n'est distribué dans le paquet |
