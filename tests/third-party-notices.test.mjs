@@ -46,7 +46,12 @@ for (const [name, sha] of COMPONENTS) {
   check(`composant et empreinte documentés : ${name}`, doc.includes(name) && doc.includes(sha));
 }
 
-const rows = doc.split(/\r?\n/).filter(line => /^\|/.test(line));
+const inventoryStart = doc.indexOf('## Inventaire vérifié');
+const inventoryEnd = doc.indexOf('## Textes de licence à joindre au paquet', inventoryStart);
+const inventorySection = inventoryStart >= 0
+  ? doc.slice(inventoryStart, inventoryEnd >= 0 ? inventoryEnd : doc.length)
+  : '';
+const rows = inventorySection.split(/\r?\n/).filter(line => /^\|/.test(line));
 const rowFor = label => rows.find(line => line.includes(label));
 const licenseCell = row => row ? row.split('|').map(cell => cell.trim()).filter(Boolean)[4] || '' : '';
 
@@ -60,15 +65,14 @@ for (const label of ['DejaVu Sans', 'wasmoon-lua5.1', 'lodash']) {
   }
 }
 
-const blockers = [
-  'LibDBIcon-1.0',
-  'background.tga',
-  'Casinobabe (le projet lui-même)',
-];
-for (const label of blockers) {
+for (const label of ['LibDBIcon-1.0', 'background.tga']) {
   const row = rowFor(label);
-  check(`blocage conservé comme NON ÉTABLI : ${label}`, Boolean(row && /NON ÉTABLI/.test(row)));
+  check(`blocage historique conservé comme NON ÉTABLI : ${label}`, Boolean(row && /NON ÉTABLI/.test(row)));
 }
+const ownerCodeRow = rowFor('Casinobabe (le projet lui-même)');
+check('le code original porte la déclaration du titulaire mais reste bloqué par les conditions client',
+  Boolean(ownerCodeRow && /DÉCLARÉ PAR LE TITULAIRE/.test(ownerCodeRow)
+    && /CONDITIONS CLIENT À FINALISER/.test(ownerCodeRow)));
 
 const libStub = rowFor('LibStub');
 check('LibStub reste À CONFIRMER (pas promu à tort)', Boolean(libStub && /À CONFIRMER/.test(libStub)));
