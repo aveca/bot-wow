@@ -29,9 +29,10 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.locator('h1')).toContainText('Lifetime licence');
-  await expect(page.locator('.pay-note')).toContainText('fixed on the server');
-  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('h1')).toContainText('Purchase unavailable');
+  await expect(page.locator('#purchase-unavailable')).toBeVisible();
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/private servers/i);
 
   // Les liens legaux pointent vers /legal/ (pas /legal/fr/)
@@ -49,9 +50,10 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(page.locator('h1')).toContainText('Licence à vie');
-  await expect(page.locator('.pay-note')).toContainText('fixé côté serveur');
-  await expect(page.locator('#buyForm')).toBeVisible();
+  await expect(page.locator('h1')).toContainText('Achat indisponible');
+  await expect(page.locator('#purchase-unavailable')).toBeVisible();
+  await expect(page.locator('#buyForm')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/serveurs privés/i);
 
   // Les liens legaux FR pointent vers /legal/fr/ (pas /legal/)
@@ -88,14 +90,18 @@ test('i18n: language switcher links are correct on buy pages', async ({ page }, 
    I18N — price consistency
    ───────────────────────────── */
 
-test('i18n: price is 20,00 EUR on both EN and FR', async ({ page }, testInfo) => {
+test('i18n: historical target is explicitly not a current price on EN and FR', async ({ page }) => {
   const errors = collectPageErrors(page);
 
-  for (const path of ['/buy.html', '/fr/buy.html']) {
+  for (const [path, expectedLabel] of [
+    ['/buy.html', 'historical target'],
+    ['/fr/buy.html', 'cible historique'],
+  ]) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-
     await expect(page.locator('.price-card .amt b')).toContainText('20,00 €');
+    await expect(page.locator('.price-card .amt small')).toContainText(expectedLabel);
+    await expect(page.locator('#purchase-unavailable')).toBeVisible();
   }
   expect(errors).toEqual([]);
 });
