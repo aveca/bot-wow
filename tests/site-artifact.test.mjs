@@ -96,7 +96,7 @@ check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle
 check('EN comparaison : offre bêta Stripe visible', /€20 beta reservation/.test(enCompare) && /Reserve beta/.test(enCompare) && /Stripe/.test(enCompare));
 check('FR comparaison : offre bêta Stripe visible', /réservation bêta/.test(frCompare) && /Réserver la bêta/.test(frCompare) && /Stripe/.test(frCompare));
 check('EN comparaison : aucun checkout fermé ou ancien prix cible', !/Checkout closed|No payment form is available|historical target only|No current sale/i.test(enCompare));
-check('FR comparaison : aucun paiement fermé ou ancien prix cible', !/Paiement fermé|Aucun formulaire de paiement n’est disponible|ancien prix cible|Aucune vente actuelle/i.test(frCompare));
+check('FR comparaison : aucun paiement fermé ou ancien prix cible', !/Paiement fermé|Aucun formulaire de paiement n'est disponible|ancien prix cible|Aucune vente actuelle/i.test(frCompare));
 
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {
