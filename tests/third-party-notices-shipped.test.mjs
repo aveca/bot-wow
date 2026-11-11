@@ -41,8 +41,9 @@ function makeSource(dir) {
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- addon\n');
+  // Liste blanche BOT-WOW : les deux seuls fichiers addon livres.
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- addon\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- addon\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("bot")\n');
   writeFileSync(join(dir, 'scripts', 'fishing_observer.py'), 'print("obs")\n');
 }

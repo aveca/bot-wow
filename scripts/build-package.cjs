@@ -242,9 +242,8 @@ const FORBIDDEN = [
  * regle : seuls les fichiers NECESSAIRES entrent dans le paquet, tout le reste
  * est exclu et DECLARE au manifeste (aucune suppression silencieuse).
  *
- * Dependances verifiees sur le commit source de reference
- * `b625ccec5fd61225dd92c5c54fa8721da76c3876` (branche
- * `feat/fishing-route-intelligence-v2`, checkout lu seul) :
+ * Dependances verifiees sur le commit source `257418c9a0c2c489a01226e8065ac9c8eaded954`
+ * (checkout `C:\factory\worktrees\casinobabe-v2`, lecture seule) :
  *   - `Casinobabe.lua` : 0 reference au module peche (ni `CasinobabeFishing`,
  *     ni `Fishing`, ni `fishing`) et 0 symbole exporte susceptible d'etre
  *     appele par lui. Il n'est PAS indispensable au module de peche.
@@ -611,9 +610,15 @@ function main() {
     excludedAddon.push({ file: rel, reason });
     if (!ADDON_EXCLUDED[rel]) unlistedAddon.push(rel);
   }
-  for (const rel of unlistedAddon) {
-    unresolvedRights.push({ component: `fichier addon non inventoríe : ${rel}`, status: 'NON ETABLI' });
-  }
+  /* Les droits Non etablis des fichiers non inventories sont collectés ICI
+     mais poussés dans unresolvedRights seulement apres sa declaration
+     (plus bas) : pousser avant levait une ReferenceError TDZ des qu'une
+     source contenait un fichier non inventorie (expose par
+     tests/package-addon-install.test.mjs, 2026-11-10). */
+  const unlistedRights = unlistedAddon.map((rel) => ({
+    component: `fichier addon non inventorié : ${rel}`,
+    status: 'NON ÉTABLI',
+  }));
 
 
   if (!fs.existsSync(NOTICE_FILE)) throw new IntegrityError('distribution/THIRD_PARTY_NOTICES.md absent : droits non vérifiables');
@@ -621,6 +626,7 @@ function main() {
   const rightsReview = inspectDistributionRights(noticeDocument);
   const git = gitInfo(SOURCE);
   const unresolvedRights = rightsReview.unresolved.slice();
+  unresolvedRights.push(...unlistedRights);
   const sourceRepositoryMatches = !!git && sameRepository(git.repository, rightsReview.expectedRepository);
   const sourceCommitMatches = !!git && !!rightsReview.expectedSourceCommit
     && String(git.commit).toLowerCase() === rightsReview.expectedSourceCommit;
@@ -794,7 +800,7 @@ function main() {
   };
   /* Auto-controle : la TOC generee ne doit declarer que des fichiers
      reellement livres dans le paquet. Un decalage rendrait l'addon
-     non chargeable chez le client. */
+     inchageable chez le client. */
   for (const declared of ADDON_WHITELIST) {
     const key = path.posix.join(addonOut.replace(/\\/g, '/'), declared);
     if (!manifest.files[key]) {

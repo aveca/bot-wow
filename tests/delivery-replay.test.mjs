@@ -260,7 +260,11 @@ function newState() {
 
 /* --------------------------------------------------------------- Worker */
 const tmpWorker = join(HERE, '.worker-replay-under-test.mjs');
-writeFileSync(tmpWorker, readFileSync(join(REPO, 'worker', 'index.js'), 'utf8'));
+const workerSource = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+const confirmedSource = workerSource.replace('var RELEASE_STATUS = "pending";', 'var RELEASE_STATUS = "confirmed";');
+if (confirmedSource === workerSource) throw new Error('RELEASE_STATUS source flag fixture anchor missing');
+// Test-only authorized-release fixture; production source remains fail-closed.
+writeFileSync(tmpWorker, confirmedSource);
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
 /* ------------------------------------------------------- fetch simule */
@@ -481,12 +485,12 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   globalThis.fetch = realFetchRef;
   const body = await res.json();
 
-  check('checkout ouvert : pas de 409 quand RELEASE_STATUS est pending',
-    res.status !== 409, `(status=${res.status})`);
-  check('checkout ouvert : une URL de paiement est renvoyée',
-    !!body.checkoutUrl, `(${JSON.stringify(body).slice(0, 80)})`);
-  check('checkout ouvert : Mollie est appelé',
-    mollieCalls > 0, `(${mollieCalls} appels)`);
+  check('checkout pending -> HTTP 409 delivery_unverified',
+    res.status === 409 && body.error === 'delivery_unverified', `(status=${res.status})`);
+  check('checkout pending -> aucune URL de paiement',
+    !body.checkoutUrl, `(${JSON.stringify(body).slice(0, 80)})`);
+  check('checkout pending -> aucun appel Mollie',
+    mollieCalls === 0, `(${mollieCalls} appels)`);
 }
 
 /* --- 8. Le renvoi demande par le client ENVOIE un vrai e-mail --- */

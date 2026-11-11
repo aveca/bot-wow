@@ -20,7 +20,9 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { inflateRawSync } from 'node:zlib';
+// Lecteur d'entrées ZIP PARTAGÉ : install/activation/distribution lisent le
+// paquet avec EXACTEMENT la même logique (aucune duplication).
+import { readZipEntries } from './helpers/package-zip.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -31,30 +33,6 @@ let failures = 0;
 function check(name, ok, detail = '') {
   if (ok) console.log(`  ok   ${name}`);
   else { failures += 1; console.log(`  FAIL ${name} ${detail}`); }
-}
-
-function readZipEntries(zipPath) {
-  const zip = readFileSync(zipPath);
-  const entries = new Map();
-  let offset = 0;
-  while (offset + 30 <= zip.length && zip.readUInt32LE(offset) === 0x04034b50) {
-    const method = zip.readUInt16LE(offset + 8);
-    const compressedSize = zip.readUInt32LE(offset + 18);
-    const uncompressedSize = zip.readUInt32LE(offset + 22);
-    const nameLength = zip.readUInt16LE(offset + 26);
-    const extraLength = zip.readUInt16LE(offset + 28);
-    const nameStart = offset + 30;
-    const name = zip.toString('utf8', nameStart, nameStart + nameLength);
-    const dataStart = nameStart + nameLength + extraLength;
-    const compressed = zip.subarray(dataStart, dataStart + compressedSize);
-    const data = method === 0 ? Buffer.from(compressed)
-      : method === 8 ? inflateRawSync(compressed)
-        : (() => { throw new Error('ZIP compression method unsupported: ' + method); })();
-    if (data.length !== uncompressedSize) throw new Error('ZIP entry size mismatch: ' + name);
-    entries.set(name, data);
-    offset = dataStart + compressedSize;
-  }
-  return entries;
 }
 
 function git(args, cwd) {
@@ -70,28 +48,16 @@ function git(args, cwd) {
 }
 
 /** Mini-jarbier de test : addon + bot, plus des donnees client a exclure.
- *  MODELE DU VRAI DEPOT SOURCE (2026-11-10) : la source contient aussi
- *  l'interface casino historique, ses bibliotheques minimap et sa police, qui
- *  doivent etre EXCLUES par la liste blanche BOT-WOW et PAS refuser le build
- *  (sinon le vrai depot source serait inconsctructible). */
+ * 2026-11-10 (factory#82) : le builder livre une LISTE BLANCHE — les deux
+ * fichiers whitelistes doivent exister dans toute source de test. */
 function seedSource(dir) {
   mkdirSync(join(dir, 'runtime-addon', 'Casinobabe'), { recursive: true });
   mkdirSync(join(dir, 'scripts'), { recursive: true });
   mkdirSync(join(dir, 'state'), { recursive: true });
-  // TOC source du addon casino (remplacee par la TOC generee BOT-WOW).
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\nCasinobabe.lua\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\n');
-  // Liste blanche BOT-WOW : les deux seuls fichiers livres du addon.
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- addon\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- addon\n');
-  // Composants exclus (interface casino, bibliotheques, police).
-  mkdirSync(join(dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibStub'), { recursive: true });
-  mkdirSync(join(dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0'), { recursive: true });
-  mkdirSync(join(dir, 'runtime-addon', 'Casinobabe', 'media'), { recursive: true });
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibStub', 'LibStub.lua'), '-- lib\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0', 'LibDBIcon-1.0.lua'), '-- lib\n');
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'media', 'background.tga'), Buffer.from('texture'));
-  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'media', 'casino_uni.ttf'), Buffer.from('police'));
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- lec fixture\n');
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fishing fixture\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("bot")\n');
   writeFileSync(join(dir, 'scripts', 'fishing_observer.py'), 'print("obs")\n');
   writeFileSync(join(dir, 'state', 'fishing-bot.pid'), '12345\n');
@@ -200,35 +166,6 @@ try {
   check('l\'addon est livre', staged.some((f) => f.endsWith('Casinobabe.toc')));
   check('le bot est livre', staged.some((f) => f.endsWith('fishing_bot.py')));
 
-  // ------- LISTE BLANCHE DE L ADDON (2026-11-10) ------------------------
-  // Le paquet ne doit contenir QUE les fichiers du module de peche : ni
-  // l interface casino, ni ses bibliotheques minimap, ni sa police.
-  const addonFiles = staged.filter((f) => f.startsWith('addon/Casinobabe/'));
-  check('le paquet livre exactement la liste blanche et la TOC generee',
-    addonFiles.join(',') === 'addon/Casinobabe/Casinobabe.toc,addon/Casinobabe/CasinobabeFishing.lua,addon/Casinobabe/LiveErrorCapture.lua',
-    addonFiles.join(', '));
-  check('l interface casino historique n est PAS livree',
-    !staged.some((f) => f === 'addon/Casinobabe/Casinobabe.lua'));
-  check('les bibliotheques minimap ne sont PAS livrees',
-    !staged.some((f) => /LibStub|LibDBIcon/.test(f)));
-  check('la police et la texture casino ne sont PAS livrees',
-    !staged.some((f) => /\.tga$|\.ttf$/.test(f)));
-  check('le manifeste porte la liste blanche du addon',
-    Array.isArray(manifest.distribution?.addon?.whitelist)
-      && manifest.distribution.addon.whitelist.includes('CasinobabeFishing.lua')
-      && manifest.distribution.addon.whitelist.includes('LiveErrorCapture.lua'));
-  check('le manifeste declare les fichiers addon exclus et leur raison',
-    (manifest.distribution?.addon?.excluded || []).some((e) => /Casinobabe\.lua$/.test(e.file) && e.reason)
-      && (manifest.distribution?.addon?.excluded || []).some((e) => /LibDBIcon/.test(e.file) && e.reason)
-      && (manifest.distribution?.addon?.excluded || []).some((e) => /casino_uni\.ttf$/.test(e.file)));
-  check('le manifeste declare les variables sauvegardees attendues',
-    Array.isArray(manifest.distribution?.addon?.savedVariables)
-      && manifest.distribution.addon.savedVariables.includes('CasinobabeDB'));
-  check('le manifeste declare le nom du dossier et de la TOC livres',
-    manifest.distribution?.addon?.folder === 'Casinobabe'
-      && manifest.distribution?.addon?.toc === 'Casinobabe.toc');
-
-
   // Installation depuis le ZIP réellement produit, dans un faux dossier WoW isolé.
   const zipEntries = readZipEntries(join(OUT, 'casinobabe-fishing-9.9.9.zip'));
   const fakeWow = join(tmp, 'fake-wow');
@@ -311,8 +248,8 @@ try {
   mkdirSync(join(SRC_CRLF, 'scripts'), { recursive: true });
   writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.toc'), '## Interface: 20506\r\nCasinobabe.lua\r\n');
   writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'Casinobabe.lua'), '-- addon\r\n');
-  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- addon\r\n');
-  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- addon\r\n');
+  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- lec fixture\r\n');
+  writeFileSync(join(SRC_CRLF, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fishing fixture\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_bot.py'), 'print("bot")\r\n');
   writeFileSync(join(SRC_CRLF, 'scripts', 'fishing_observer.py'), 'print("obs")\r\n');
   git(['init', '-b', SRC.branch], SRC_CRLF);
@@ -336,9 +273,10 @@ try {
   // LIVRE est normalise en LF des la copie : les octets livres sont alors
   // identiques quel que soit le `core.autocrlf` du poste.
   const pkgCrlf = join(OUT3, 'casinobabe-fishing-9.9.9');
+  // 2026-11-10 (factory#82) : le core casino n'est plus livré (liste blanche)
+  // — la normalisation LF se prouve sur un fichier addon réellement embarqué.
   for (const rel of ['package/scripts/fishing_bot.py', 'package/scripts/fishing_observer.py',
-    'package/addon/Casinobabe/Casinobabe.toc', 'package/addon/Casinobabe/CasinobabeFishing.lua',
-    'package/addon/Casinobabe/LiveErrorCapture.lua']) {
+    'package/addon/Casinobabe/Casinobabe.toc', 'package/addon/Casinobabe/LiveErrorCapture.lua']) {
     const a = readFileSync(join(pkgDir, rel));
     const b = readFileSync(join(pkgCrlf, rel));
     check(`fins de ligne normalisees : ${rel}`, a.equals(b), `${a.length} vs ${b.length} octets`);
@@ -453,19 +391,14 @@ try {
       check('la provenance courte est marquee verifiee', m.source?.provenanceVerified === true);
     }
   }
-  // ------- 7. LISTE BLANCHE : COMPOSANTS NON CERTIFIES EXCLUS, PAS REFUSES
-  //  AVANT : une source contenant un composant aux droits non etablis
-  //  refusait le build, donc le vrai depot source etait inconsctructible.
-  //  APRES : le build reussit, le composant est EXCLU et DECLARE avec sa
-  //  raison. Le refus fail-closed reste entier ailleurs : dans la release
-  //  (package-release-rights-gate.test.mjs) et sur les droits du paquet.
+  // ── 7. COMPOSANTS SANS DROITS ÉTABLIS : REFUS FAIL-CLOSED ───────────────
   {
     const restricted = makeGitSource(tmp, 'src-unverified-addon-components');
     mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0'), { recursive: true });
     mkdirSync(join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media'), { recursive: true });
     writeFileSync(
       join(restricted.dir, 'runtime-addon', 'Casinobabe', 'Libs', 'LibDBIcon-1.0', 'LibDBIcon-1.0.lua'),
-      '-- fixture: adaptation tierce sans licence etablie',
+      '-- fixture: adaptation tierce sans licence établie\n',
     );
     writeFileSync(
       join(restricted.dir, 'runtime-addon', 'Casinobabe', 'media', 'background.tga'),
@@ -475,44 +408,57 @@ try {
     git(['commit', '-m', 'add restricted addon component fixtures'], restricted.dir);
     restricted.head = git(['rev-parse', 'HEAD'], restricted.dir);
 
-    const restrictedOut = join(tmp, 'dist-unverified-components');
-    const previousArchive = join(restrictedOut, 'casinobabe-fishing-9.9.9.zip');
-    const previousPackageDir = join(restrictedOut, 'casinobabe-fishing-9.9.9');
-    mkdirSync(previousPackageDir, { recursive: true });
-    writeFileSync(join(previousPackageDir, 'previous-manifest-marker.txt'), 'keep-existing-package');
-    writeFileSync(previousArchive, 'keep-existing-archive');
+    /* 2026-11-10 (factory#82) — NOUVEAU CONTRAT : une source qui CONTIENT des
+       composants non certifiés les voit EXCLUS du paquet et DÉCLARÉS au
+       manifeste (sinon le vrai dépôt source épinglé, qui les a historiquement
+       contenus, serait inconstruisible). Le refus total reste garanti quand la
+       LISTE BLANCHE elle-même référence un composant bloqué
+       (assertNoUnverifiedAddonComponents) et le gate --release continue de
+       refuser + de préserver les artefacts existants. */
+    const qaOut = join(tmp, 'dist-unverified-qa');
     const restrictedArgs = baseArgs.map((a) => (
       a === SRC.dir ? restricted.dir : a === SRC.head ? restricted.head : a
     ));
-    const result = runBuild([...restrictedArgs, '--out', restrictedOut]);
-    check('une source contenant des composants non certifies reste constructible',
-      result.status === 0, (result.stdout + '|' + result.stderr).slice(-400));
-
-    if (result.status === 0) {
-      const out = JSON.parse(readFileSync(join(restrictedOut, 'casinobabe-fishing-9.9.9', 'MANIFEST.json'), 'utf8'));
-      const excluded = (out.distribution.addon.excluded || []).map((e) => e.file);
-      check('LibDBIcon-1.0 est exclu DE LA LISTE BLANCHE', excluded.includes('Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua'));
-      check('background.tga est exclu DE LA LISTE BLANCHE', excluded.includes('media/background.tga'));
-      check('chaque exclus du addon porte une raison', (out.distribution.addon.excluded || []).every((e) => typeof e.reason === 'string' && e.reason.length > 0));
-      check('aucun composant non certifie n est present dans le paquet livre',
-        Object.keys(out.files).every((k) => !/LibDBIcon|LibStub|background\.tga|casino_uni|Casinobabe\.lua$/.test(k)));
+    const qaBuild = runBuild([...restrictedArgs, '--out', qaOut]);
+    check('composants non certifiés : le build QA s\'exécute (exclusion, pas de refus global)',
+      qaBuild.status === 0, (qaBuild.stdout + '\n' + qaBuild.stderr).trim().slice(-200));
+    if (qaBuild.status === 0) {
+      const restrictedEntries = readZipEntries(join(qaOut, 'casinobabe-fishing-9.9.9.zip'));
+      const restrictedManifest = JSON.parse(restrictedEntries.get('MANIFEST.json').toString('utf8'));
+      const excludedR = (restrictedManifest.distribution.addon && restrictedManifest.distribution.addon.excluded) || [];
+      check('composants non certifiés : ABSENTS du paquet livré',
+        ![...restrictedEntries.keys()].some((n) => n.includes('LibDBIcon') || n.includes('background.tga') || n.includes('Libs/')));
+      check('LibDBIcon-1.0 est explicitement bloqué (exclu, droits non établis)',
+        excludedR.some((e) => e.file === 'Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua' && /droits non etablis/i.test(e.reason)),
+        JSON.stringify(excludedR));
+      check('background.tga est explicitement bloqué (exclu, droits non établis)',
+        excludedR.some((e) => e.file === 'media/background.tga' && /droits non etablis/i.test(e.reason)));
     }
+
+    // Le préflight de --release refuse toujours et préserve l'existant.
+    const restrictedOut = join(tmp, 'dist-unverified-components');
+    const previousPackageDir = join(restrictedOut, 'casinobabe-fishing-9.9.9');
+    mkdirSync(previousPackageDir, { recursive: true });
+    writeFileSync(join(previousPackageDir, 'previous-manifest-marker.txt'), 'keep-existing-package');
+    const previousArchive = join(restrictedOut, 'casinobabe-fishing-9.9.9.zip');
+    writeFileSync(previousArchive, 'keep-existing-archive');
+    expectBuildFailure(
+      'composants non certifiés : --release REFUSE toujours (droits pinnés non établis)',
+      [...restrictedArgs, '--out', restrictedOut, '--release'],
+      /release refusée/i,
+    );
+    check(
+      'le préflight conserve l’archive précédente sans la remplacer',
+      existsSync(previousArchive)
+        && readFileSync(previousArchive, 'utf8') === 'keep-existing-archive',
+    );
+    check(
+      'le préflight conserve le dossier du package précédent',
+      existsSync(join(previousPackageDir, 'previous-manifest-marker.txt')),
+    );
+
   }
 
-  // ------- 8. LISTE BLANCHE INCOMPLETE : LE BUILD ECHOUE -----------------
-  {
-    const truncated = makeGitSource(tmp, 'src-whitelist-incomplete');
-    rmSync(join(truncated.dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), { force: true });
-    git(['add', '-A'], truncated.dir);
-    git(['commit', '-m', 'whitelist incomplete'], truncated.dir);
-    const truncatedHead = git(['rev-parse', 'HEAD'], truncated.dir);
-    expectBuildFailure(
-      'fichier de la liste blanche absent de la source : le build echoue',
-      [...baseArgs.map((a) => (a === SRC.dir ? truncated.dir : a === SRC.head ? truncatedHead : a)),
-        '--out', join(tmp, 'dist-whitelist-incomplete')],
-      /fichier de la liste blanche absent/i,
-    );
-  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

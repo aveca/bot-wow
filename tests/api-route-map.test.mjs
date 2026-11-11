@@ -13,7 +13,11 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const tmpWorker = join(HERE, '.worker-route-map-under-test.mjs');
-writeFileSync(tmpWorker, readFileSync(join(HERE, '..', 'worker', 'index.js'), 'utf8'));
+const workerSource = readFileSync(join(HERE, '..', 'worker', 'index.js'), 'utf8');
+const confirmedSource = workerSource.replace('var RELEASE_STATUS = "pending";', 'var RELEASE_STATUS = "confirmed";');
+if (confirmedSource === workerSource) throw new Error('RELEASE_STATUS source flag fixture anchor missing');
+// Route-map validation uses a test-only confirmed fixture so input validation remains independently testable.
+writeFileSync(tmpWorker, confirmedSource);
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
 let failures = 0;
@@ -34,7 +38,7 @@ globalThis.fetch = async (url, opts) => {
 
 const env = {
   CONTACT_EMAIL: 'support@bot-wow.com',
-  RELEASE_STATUS: 'pending',
+  RELEASE_STATUS: 'confirmed',
   DB: { prepare() { throw new Error('DB ne doit pas etre touchee par la carte de routes'); } },
   RATE_LIMIT: { get: async () => null, put: async () => {} },
 };

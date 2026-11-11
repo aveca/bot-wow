@@ -117,6 +117,13 @@ jobs:
           console.log('RELEASE RIGHTS: BLOCKED AS EXPECTED; source provenance exact; client terms pending.');
           NODE
 
+          # factory#82 : la liste scripts du MANIFEST doit être EXACTEMENT la
+          # fermeture BFS des imports locaux de scripts/fishing_bot.py du
+          # checkout source épinglé — aucun module manquant, aucun module mort.
+          node "$BOT_WOW_DIR/scripts/verify-bot-files-closure.mjs" \
+            --manifest "$OUT_FIRST/casinobabe-fishing-1.2.2-rc.1/MANIFEST.json" \
+            --scripts-dir "$SOURCE_DIR/scripts"
+
 
           # Exercise the release gate against the REAL pinned source checkout,
           # not only the unit-test fixture. Existing artifacts must survive refusal.

@@ -66,12 +66,39 @@ function CreateFrame(frameType, name, parent, template)
       if __WoWMock.events[i].frame == f then table.remove(__WoWMock.events, i) end
     end
   end
+  -- Contrats WoW : les frames créent des SOUS-OBJETS réels (FontString,
+  -- Texture, AnimationGroup) — jamais nil. Sans eux, le code livré qui indexe
+  -- le résultat (ex : CasinobabeFishing.lua:1180, title:SetPoint) échoue au
+  -- chargement alors que le client le charge.
+  f.CreateFontString = function(self, fname, layer, inheritsFrom)
+    local fs = permissive(fname or '<fontstring>')
+    fs.__type = 'FontString'
+    return fs
+  end
+  f.CreateTexture = function(self, tname, layer, ...)
+    local t = permissive(tname or '<texture>')
+    t.__type = 'Texture'
+    return t
+  end
+  f.CreateAnimationGroup = function(self, gname)
+    local g = permissive(gname or '<animationgroup>')
+    g.__type = 'AnimationGroup'
+    return g
+  end
   if name then __WoWMock.frames[name] = f end
   return f
 end
 
 DEFAULT_CHAT_FRAME = permissive('DEFAULT_CHAT_FRAME')
 ChatFrame1 = DEFAULT_CHAT_FRAME
+-- Canal AddMessage RÉEL : le code livré journalise via Log() ->
+-- DEFAULT_CHAT_FRAME:AddMessage. Le test lit __WoWMock.chatLog pour
+-- diagnostiquer (ex : message d'erreur d'init de CasinobabeFishing.lua).
+__WoWMock.chatLog = {}
+DEFAULT_CHAT_FRAME.AddMessage = function(self, msg)
+  table.insert(__WoWMock.chatLog, tostring(msg))
+  return nil
+end
 
 -- WoW fournit ces tables ; sans elles, indexer `nil` fait echouer le chargement.
 SlashCmdList = {}
@@ -98,6 +125,12 @@ end
 function GetTime() return time() end
 function IsAddOnLoaded() return true end
 function wipe(t) for k in pairs(t) do t[k] = nil end return t end
+
+-- WoW expose time()/date() en global ; en Lua 5.1 standard elles vivent dans
+-- os.* : on les publie comme le client. Le code livre les appelle sans garde
+-- (LiveErrorCapture.lua : tostring(time()) dans Capture).
+time = os and os.time or function() return 0 end
+date = os and os.date or function() return '' end
 
 -- Chaine de gestionnaires d'erreurs, comme le client.
 function geterrorhandler()

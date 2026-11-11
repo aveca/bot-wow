@@ -47,23 +47,26 @@ test('accessibility: skip link present and focusable on buy pages (EN + FR)', as
 });
 
 /* ─────────────────────────────
-   ACCESSIBILITÉ — checkout fermé
+   ACCESSIBILITÉ — réservation bêta
    ───────────────────────────── */
 
-test('accessibility: purchase-unavailable status is announced and no email is collected', async ({ page }, testInfo) => {
+test('accessibility: beta reservation is announced and Stripe handoff is explicit', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
   for (const path of ['/buy.html', '/fr/buy.html', '/index.html', '/fr/']) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
-    const status = page.locator('#purchase-unavailable');
-    await expect(status).toBeVisible();
-    await expect(status).toHaveAttribute('role', 'status');
-    await expect(status).toHaveAttribute('aria-live', 'polite');
+    const offer = page.locator('.price-card--offer');
+    await expect(offer).toBeVisible();
+    const stripe = offer.locator('a[data-cta-id="beta-reservation-stripe"]');
+    await expect(stripe).toBeVisible();
+    await expect(stripe).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+    await expect(offer).toContainText(/manual|manuelle/i);
+    await expect(offer).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#email')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
-    await captureScreenshot(page, testInfo, `purchase-unavailable-accessibility-${path.replaceAll('/', '-')}`);
+    await captureScreenshot(page, testInfo, `beta-reservation-accessibility-${path.replaceAll('/', '-')}`);
   }
   expect(errors).toEqual([]);
 });

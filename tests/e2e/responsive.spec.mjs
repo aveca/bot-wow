@@ -47,7 +47,7 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
@@ -63,7 +63,7 @@ for (const vp of viewports) {
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
@@ -111,7 +111,7 @@ test('responsive: mobile nav hides nav-links and shows lang switcher', async ({ 
    RESPONSIVE — price card
    ───────────────────────────── */
 
-test('responsive: price card shows blocked state on all viewports', async ({ page }, testInfo) => {
+test('responsive: beta reservation price card is visible on all viewports', async ({ page }, testInfo) => {
   const errors = collectPageErrors(page);
 
   for (const vp of viewports.slice(0, 3)) { // mobile, iphone-se, ipad
@@ -119,8 +119,10 @@ test('responsive: price card shows blocked state on all viewports', async ({ pag
     const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
 
-    await expect(page.locator('#purchase-unavailable')).toBeVisible();
-    await expect(page.locator('#purchase-unavailable')).toHaveAttribute('role', 'status');
+    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card--offer a[data-cta-id="beta-reservation-stripe"]')).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+    await expect(page.locator('.price-card--offer')).toContainText(/manual|manuelle/i);
+    await expect(page.locator('.price-card--offer')).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
