@@ -163,7 +163,7 @@ test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ 
 
 
 
-test('comparison EN/FR: status CTAs navigate to the status page and never start checkout', async ({ page }) => {
+test('comparison EN/FR: beta reservation CTAs navigate to the reservation page and never start internal checkout', async ({ page }) => {
   const checkoutRequests = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
@@ -171,12 +171,12 @@ test('comparison EN/FR: status CTAs navigate to the status page and never start 
   });
 
   for (const route of [
-    { path: '/compare.html', label: 'Purchase status', bar: 'Purchase status', target: /\/buy\.html$/ },
-    { path: '/fr/compare.html', label: "Statut d'achat", bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
+    { path: '/compare.html', label: 'Reserve beta — €20', bar: 'Purchase status', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: 'Réserver la bêta — 20 €', bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-    const statusCta = page.locator('a[data-cta-id="compare-status"]');
+    const statusCta = page.locator('a[data-cta-id="compare-reserve"]');
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
