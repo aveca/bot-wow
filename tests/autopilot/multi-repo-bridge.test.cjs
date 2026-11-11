@@ -578,6 +578,238 @@ console.log('=== 7. detectLocalRepo ===');
     else process.env.AUTOPILOT_LOCAL_REPO = previous;
   }
 }
+// ── 7b. Consommation de la queue (claim / ACK / retry / quarantaine / orphelin) ──
+{
+  const nowIso = () => new Date().toISOString();
+
+  // 7b1. claimNext réclame une opportunité 'new' avec un verrou.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-C1',
+          repository_full_name: LOCAL,
+          issue_number: 9001,
+          status: 'new',
+          createdAt: nowIso(),
+          maxRetries: 3,
+          retryCount: 0,
+        },
+      ],
+    };
+    const log = [];
+    const claimed = bridge.claimNext(queue, { runnerId: 'runner-1', log: (m) => log.push(m) });
+    check('une opportunité réclamée', claimed !== null);
+    if (claimed) {
+      check('statut passé à claimed', queue.opportunities[0].status === 'claimed');
+      check('claimé par le runner', queue.opportunities[0].claimedBy === 'runner-1');
+      check('lockId présent', typeof claimed.lockId === 'string' && claimed.lockId.startsWith('lock_'));
+      check('claimedAt renseigné', typeof queue.opportunities[0].claimedAt === 'string');
+      check('journalisé', log.some((l) => l.includes('CLAIM T-C1')));
+    }
+  }
+
+  // 7b2. claimNext ne réclame pas une opportunité déjà 'claimed'.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-C2',
+          repository_full_name: LOCAL,
+          issue_number: 9002,
+          status: 'claimed',
+          claimedBy: 'runner-X',
+          lockId: 'lock_old',
+          claimedAt: nowIso(),
+        },
+      ],
+    };
+    const claimed = bridge.claimNext(queue, { runnerId: 'runner-2', log: () => {} });
+    check('aucune réclamation sur claimed', claimed === null);
+    check('verrou inchangé', queue.opportunities[0].lockId === 'lock_old');
+  }
+
+  // 7b3. claimNext réclame une 'failed' dont le retry est dû (nextRetryAt <= maintenant).
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-C3',
+          repository_full_name: LOCAL,
+          issue_number: 9003,
+          status: 'failed',
+          retryCount: 1,
+          maxRetries: 3,
+          nextRetryAt: new Date(Date.now() - 1000).toISOString(), // dû il y a 1 s
+        },
+      ],
+    };
+    const claimed = bridge.claimNext(queue, { runnerId: 'runner-3', log: () => {} });
+    check('réclamation d\'un retry dû', claimed !== null);
+    if (claimed) check('statut repasse à claimed', queue.opportunities[0].status === 'claimed');
+  }
+
+  // 7b4. claimNext ne réclame pas une 'failed' dont le retry n'est pas encore dû.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-C4',
+          repository_full_name: LOCAL,
+          issue_number: 9004,
+          status: 'failed',
+          retryCount: 1,
+          maxRetries: 3,
+          nextRetryAt: new Date(Date.now() + 3600000).toISOString(), // dans 1 h
+        },
+      ],
+    };
+    const claimed = bridge.claimNext(queue, { runnerId: 'runner-4', log: () => {} });
+    check('pas de réclamation avant l\'échéance du retry', claimed === null);
+  }
+
+  // 7b5. acknowledge 'completed' passe en 'completed' et publie le statut.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-A1',
+          repository_full_name: LOCAL,
+          issue_number: 9101,
+          status: 'claimed',
+          claimedBy: 'runner-1',
+          lockId: 'lock_x',
+        },
+      ],
+    };
+    const published = [];
+    const result = bridge.acknowledge(queue, 'T-A1', 'completed', 'tout est bon', {
+      runnerId: 'runner-1',
+      log: () => {},
+      publishStatus: (repo, issue, status, detail, opts) => {
+        published.push({ repo, issue, status, taskId: opts && opts.taskId });
+        return true;
+      },
+    });
+    check('ack ok', result.ok === true);
+    check('statut completed', queue.opportunities[0].status === 'completed');
+    check('ackDetail renseigné', queue.opportunities[0].ackDetail === 'tout est bon');
+    check('statut publié', published.length === 1 && published[0].status === 'completed' && published[0].taskId === 'T-A1');
+  }
+
+  // 7b6. acknowledge 'failed' (1er échec) passe en 'failed' avec retryCount incrémenté.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-A2',
+          repository_full_name: LOCAL,
+          issue_number: 9102,
+          status: 'claimed',
+          retryCount: 0,
+          maxRetries: 3,
+        },
+      ],
+    };
+    const result = bridge.acknowledge(queue, 'T-A2', 'failed', 'erreur temporaire', {
+      runnerId: 'runner-1',
+      log: () => {},
+      publishStatus: () => true,
+    });
+    check('ack failed ok', result.ok === true);
+    check('statut failed', queue.opportunities[0].status === 'failed');
+    check('retryCount incrémenté', queue.opportunities[0].retryCount === 1);
+    check('nextRetryAt dans le futur', new Date(queue.opportunities[0].nextRetryAt).getTime() > Date.now());
+    check('backoff = 5s pour retry 1', queue.opportunities[0].backoffMs === 5000);
+  }
+
+  // 7b7. acknowledge 'failed' jusqu'à maxRetries => quarantaine définitive.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-A3',
+          repository_full_name: LOCAL,
+          issue_number: 9103,
+          status: 'claimed',
+          retryCount: 2,
+          maxRetries: 3,
+        },
+      ],
+    };
+    const result = bridge.acknowledge(queue, 'T-A3', 'failed', 'échec définitif', { runnerId: 'runner-1', log: () => {}, publishStatus: () => true });
+    check('statut quarantined', queue.opportunities[0].status === 'quarantined');
+    check('quarantineReason renseigné', queue.opportunities[0].quarantineReason === 'échec définitif');
+    check('plus de nextRetryAt', queue.opportunities[0].nextRetryAt === undefined);
+    check('retryCount à 3', queue.opportunities[0].retryCount === 3);
+  }
+
+  // 7b8. acknowledge refuse une tâche non réclamée.
+  {
+    const queue = { opportunities: [{ id: 'T-A4', repository_full_name: LOCAL, issue_number: 9104, status: 'new' }] };
+    const result = bridge.acknowledge(queue, 'T-A4', 'completed', '', { runnerId: 'runner-1', log: () => {}, publishStatus: () => true });
+    check('ack rejeté sur tâche non claimée', result.ok === false && /n\'est pas réclamée/.test(result.error));
+  }
+
+  // 7b9. acknowledge refuse un outcome invalide.
+  {
+    const queue = { opportunities: [{ id: 'T-A5', repository_full_name: LOCAL, issue_number: 9105, status: 'claimed' }] };
+    const result = bridge.acknowledge(queue, 'T-A5', 'toto', '', { runnerId: 'runner-1', log: () => {}, publishStatus: () => true });
+    check('outcome invalide rejeté', result.ok === false && /invalide/.test(result.error));
+  }
+
+  // 7b10. recoverOrphanedLocks réinitialise un verrou claimé depuis trop longtemps.
+  {
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-O1',
+          repository_full_name: LOCAL,
+          issue_number: 9201,
+          status: 'claimed',
+          claimedBy: 'runner-mort',
+          lockId: 'lock_mort',
+          claimedAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(), // il y a 40 min
+        },
+        {
+          id: 'T-O2',
+          repository_full_name: LOCAL,
+          issue_number: 9202,
+          status: 'claimed',
+          claimedBy: 'runner-vivant',
+          lockId: 'lock_vie',
+          claimedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // il y a 5 min (récent)
+        },
+      ],
+    };
+    const recovered = bridge.recoverOrphanedLocks(queue, { orphanTimeoutMs: 30 * 60 * 1000, log: () => {} });
+    check('1 verrou orphelin récupéré', recovered === 1);
+    check('orphelin repasse à new', queue.opportunities[0].status === 'new');
+    check('orphelin sans lockId', queue.opportunities[0].lockId === undefined);
+    check('verrou récent inchangé', queue.opportunities[1].status === 'claimed');
+  }
+
+  // 7b11. quarantineOpportunity met une tâche en quarantaine manuellement.
+  {
+    const queue = {
+      opportunities: [
+        { id: 'T-Q1', repository_full_name: LOCAL, issue_number: 9301, status: 'new' },
+      ],
+    };
+    const result = bridge.quarantineOpportunity(queue, 'T-Q1', 'mission annulée', { log: () => {}, publishStatus: () => true });
+    check('quarantine ok', result.ok === true);
+    check('statut quarantined', queue.opportunities[0].status === 'quarantined');
+    check('raison enregistrée', queue.opportunities[0].quarantineReason === 'mission annulée');
+  }
+
+  // 7b12. runConsumeCycle retourne claimed: false quand la queue est vide.
+  {
+    const queue = { opportunities: [] };
+    const cycle = bridge.runConsumeCycle(queue, { runnerId: 'runner-1', log: () => {} });
+    check('queue vide => claimed false', cycle.claimed === false && /aucune opportunité/.test(cycle.reason));
+  }
+}
+
 // ── 8. parseArgs ─────────────────────────────────────────────────────────────
 
 console.log('=== 8. parseArgs ===');

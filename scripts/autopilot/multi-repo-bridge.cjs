@@ -56,6 +56,7 @@
 
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const C = require('./lib/common.cjs');
@@ -77,6 +78,7 @@ const PRIORITY = { critical: 'critical', high: 'high', medium: 'medium', low: 'l
 const CONFIDENCE = new Set(['proven', 'observed', 'inferred']);
 
 const STATUSES = ['imported', 'started', 'heartbeat', 'blocked', 'completed', 'failed'];
+const CONSUMPTION_STATUSES = ['new', 'claimed', 'completed', 'failed', 'quarantined'];
 const STATUS_EMOJI = {
   imported: '📥',
   started: '🔄',
@@ -84,7 +86,23 @@ const STATUS_EMOJI = {
   blocked: '🚫',
   completed: '✅',
   failed: '❌',
+  new: '🆕',
+  claimed: '🔒',
+  quarantined: '🗄️',
 };
+
+/** Consommation de la queue : paramètres par défaut. */
+const DEFAULT_MAX_RETRIES = 3;
+const BASE_BACKOFF_MS = 5000;      // 5 s
+const BACKOFF_MULTIPLIER = 3;      // ×3 à chaque échec (5s, 15s, 45s…)
+const DEFAULT_ORPHAN_TIMEOUT_MS = 30 * 60 * 1000; // 30 min : verrou orphelin si pas de heartbeat
+
+/** Champs ajoutés au schéma d'opportunité par la consommation. */
+const CONSUMPTION_FIELDS = [
+  'status', 'claimedAt', 'claimedBy', 'lockId', 'retryCount', 'maxRetries',
+  'backoffMs', 'nextRetryAt', 'quarantinedAt', 'quarantineReason',
+  'completedAt', 'failedAt', 'error', 'ackDetail',
+];
 
 /** Champs exigés par le contrat de mission. */
 const REQUIRED_CONTRACT = [
@@ -384,7 +402,7 @@ function toOpportunity(task, issue, repoFullName) {
     repository_full_name: repoFullName,
   };
 
-  return {
+  const result = {
     id: taskId,
     fingerprint: fingerprint(repoFullName, issueNumber, taskId),
     legacyFingerprint: legacyFingerprint(issueNumber, taskId),
@@ -414,6 +432,10 @@ function toOpportunity(task, issue, repoFullName) {
       humanGate,
     },
   };
+
+  // Initialiser les champs de consommation (état 'new', sans verrou).
+  initConsumptionFields(result);
+  return result;
 }
 
 // ── Statuts GitHub ───────────────────────────────────────────────────────────
@@ -637,6 +659,274 @@ function ingestMultiRepo(options = {}) {
   };
 }
 
+// ── Initialisation des champs de consommation ────────────────────────────────
+
+/**
+ * Ajoute les champs de consommation à une opportunité fraîchement importée.
+ * Les champs sont initialisés à l'état 'new' : non réclamée, sans verrou,
+ * sans tentative de retry.
+ */
+function initConsumptionFields(opp) {
+  opp.status = 'new';
+  opp.maxRetries = opp.maxRetries || DEFAULT_MAX_RETRIES;
+  opp.retryCount = 0;
+  for (const f of CONSUMPTION_FIELDS) {
+    if (opp[f] === undefined) opp[f] = null;
+  }
+  return opp;
+}
+
+// ── Consommation de la queue ───────────────────────────────────────────────
+
+/**
+ * Génère un identifiant de verrou unique pour une réclamation.
+ */
+function makeLockId() {
+  return `lock_${Date.now()}_${Math.random().toString(36).slice(2, 14)}`;
+}
+
+/**
+ * Calcule le backoff exponentiel pour une tentative de retry.
+ * retryCount 1 → 5s, 2 → 15s, 3 → 45s, ...
+ */
+function computeBackoffMs(retryCount) {
+  return BASE_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, retryCount - 1);
+}
+
+/**
+ * Réclame atomiquement la prochaine opportunité exécutable.
+ *
+ * Règles de sélection (par ordre dans le tableau) :
+ *   1. status === 'new' (jamais réclamée) ;
+ *   2. status === 'failed' avec retryCount < maxRetries et nextRetryAt <= maintenant (retry dû).
+ *
+ * Marque l'opportunité comme 'claimed' avec un verrou, un timestamp et un
+ * identifiant de runner. Retourne { opp, lockId } ou null si rien à réclamer.
+ *
+ * @param {object} queue           queue en mémoire (mutée)
+ * @param {object} deps            dépendances injectables (runnerId, orphanTimeoutMs, logPath)
+ * @returns {object|null}
+ */
+function claimNext(queue, deps = {}) {
+  const opportunities = queue.opportunities || [];
+  const now = Date.now();
+  const runnerId = deps.runnerId || `runner-${process.pid}`;
+
+  // 1. Récupération des verrous orphelins (claimés mais jamais ACK depuis trop longtemps)
+  recoverOrphanedLocks(queue, deps);
+
+  // 2. Sélection de la prochaine opportunité réclamable
+  for (const opp of opportunities) {
+    if (opp.status === 'new') {
+      return doClaim(opp, runnerId, deps);
+    }
+    if (
+      opp.status === 'failed'
+      && (opp.retryCount || 0) < (opp.maxRetries || DEFAULT_MAX_RETRIES)
+      && opp.nextRetryAt
+      && new Date(opp.nextRetryAt).getTime() <= now
+    ) {
+      return doClaim(opp, runnerId, deps);
+    }
+  }
+
+  return null;
+}
+
+function doClaim(opp, runnerId, deps) {
+  const lockId = makeLockId();
+  const nowIso = new Date().toISOString();
+
+  opp.status = 'claimed';
+  opp.claimedAt = nowIso;
+  opp.claimedBy = runnerId;
+  opp.lockId = lockId;
+
+  appendRunLog(deps, `CLAIM ${opp.id} lock=${lockId} by=${runnerId}`);
+  return { opp, lockId };
+}
+
+/**
+ * Accuse réception de l'exécution d'une opportunité.
+ *
+ * @param {object} queue        queue en mémoire (mutée)
+ * @param {string} taskId       ID de la tâche
+ * @param {'completed'|'failed'} outcome  résultat de l'exécution
+ * @param {string} details      détail du résultat (message d'erreur si failed)
+ * @param {object} deps         dépendances injectables
+ * @returns {object} { ok, opp?, error? }
+ */
+function acknowledge(queue, taskId, outcome, details, deps = {}) {
+  if (outcome !== 'completed' && outcome !== 'failed') {
+    return { ok: false, error: `outcome invalide: ${outcome} (attendu: completed|failed)` };
+  }
+
+  const opportunities = queue.opportunities || [];
+  const idx = opportunities.findIndex((o) => o.id === taskId);
+  if (idx < 0) {
+    return { ok: false, error: `tâche ${taskId} introuvable en queue` };
+  }
+
+  const opp = opportunities[idx];
+  if (opp.status !== 'claimed') {
+    return { ok: false, error: `tâche ${taskId} n'est pas réclamée (statut: ${opp.status})` };
+  }
+
+  const nowIso = new Date().toISOString();
+  const maxRetries = opp.maxRetries || DEFAULT_MAX_RETRIES;
+
+  if (outcome === 'completed') {
+    opp.status = 'completed';
+    opp.completedAt = nowIso;
+    opp.ackDetail = details || '';
+    delete opp.error;
+    delete opp.nextRetryAt;
+    appendRunLog(deps, `ACK ${taskId} completed detail=${details || '(aucun)'}`);
+    (deps.publishStatus || publishStatus)(
+      opp.repository_full_name,
+      opp.issue_number,
+      'completed',
+      details || 'tâche complétée',
+      { taskId: opp.id, fingerprint: opp.fingerprint },
+    );
+  } else {
+    // Échec : incrémenter le compteur de retry
+    opp.retryCount = (opp.retryCount || 0) + 1;
+    opp.failedAt = nowIso;
+    opp.error = details || '';
+
+    if (opp.retryCount >= maxRetries) {
+      // Quarantaine définitive
+      opp.status = 'quarantined';
+      opp.quarantinedAt = nowIso;
+      opp.quarantineReason = details || `échec après ${maxRetries} tentatives`;
+      delete opp.nextRetryAt;
+      appendRunLog(
+        deps,
+        `QUARANTINE ${taskId} après ${opp.retryCount} échecs: ${details || '(aucun)'}`,
+      );
+      (deps.publishStatus || publishStatus)(
+        opp.repository_full_name,
+        opp.issue_number,
+        'failed',
+        `quaranténé après ${opp.retryCount} échecs: ${details || '(aucun)'}`,
+        { taskId: opp.id, fingerprint: opp.fingerprint },
+      );
+    } else {
+      // Réessai avec backoff exponentiel
+      opp.status = 'failed';
+      opp.backoffMs = computeBackoffMs(opp.retryCount);
+      opp.nextRetryAt = new Date(Date.now() + opp.backoffMs).toISOString();
+      appendRunLog(
+        deps,
+        `RETRY ${taskId} tentative ${opp.retryCount}/${maxRetries} backoff=${opp.backoffMs}ms next=${opp.nextRetryAt}`,
+      );
+      (deps.publishStatus || publishStatus)(
+        opp.repository_full_name,
+        opp.issue_number,
+        'failed',
+        `échec tentative ${opp.retryCount}/${maxRetries}, prochain essai dans ${opp.backoffMs}ms`,
+        { taskId: opp.id, fingerprint: opp.fingerprint },
+      );
+    }
+  }
+
+  return { ok: true, opp };
+}
+
+/**
+ * Récupère les verrous orphelins : toute opportunité 'claimed' dont le
+ * timestamp de réclamation dépasse orphanTimeoutMs est réinitialisée à 'new',
+ * afin qu'elle puisse être réclamée à nouveau après un redémarrage du runner.
+ *
+ * Retourne le nombre de verrous récupérés.
+ */
+function recoverOrphanedLocks(queue, deps = {}) {
+  const opportunities = queue.opportunities || [];
+  const orphanTimeoutMs = deps.orphanTimeoutMs || DEFAULT_ORPHAN_TIMEOUT_MS;
+  const now = Date.now();
+  let recovered = 0;
+
+  for (const opp of opportunities) {
+    if (opp.status === 'claimed' && opp.claimedAt) {
+      const claimedTime = new Date(opp.claimedAt).getTime();
+      if (!isNaN(claimedTime) && now - claimedTime > orphanTimeoutMs) {
+        opp.status = 'new';
+        delete opp.claimedAt;
+        delete opp.claimedBy;
+        delete opp.lockId;
+        recovered += 1;
+        appendRunLog(deps, `RECOVER ${opp.id} verrou orphelin réinitialisé (claimé il y a ${Math.round((now - claimedTime) / 1000)}s)`);
+      }
+    }
+  }
+
+  return recovered;
+}
+
+/**
+ * Met une opportunité en quarantaine manuellement (hors cycle de retry normal).
+ */
+function quarantineOpportunity(queue, taskId, reason, deps = {}) {
+  const opportunities = queue.opportunities || [];
+  const opp = opportunities.find((o) => o.id === taskId);
+  if (!opp) {
+    return { ok: false, error: `tâche ${taskId} introuvable en queue` };
+  }
+
+  opp.status = 'quarantined';
+  opp.quarantinedAt = new Date().toISOString();
+  opp.quarantineReason = reason || 'quaranténée manuellement';
+  delete opp.nextRetryAt;
+  appendRunLog(deps, `QUARANTINE (manuel) ${taskId}: ${reason || '(sans raison)'}`);
+  (deps.publishStatus || publishStatus)(
+    opp.repository_full_name,
+    opp.issue_number,
+    'failed',
+    `quaranténé manuellement: ${reason || '(sans raison)'}`,
+    { taskId: opp.id, fingerprint: opp.fingerprint },
+  );
+  return { ok: true, opp };
+}
+
+/**
+ * Ajoute une ligne horodatée au journal de run.
+ * Si `deps.log` est une fonction (tests), elle reçoit la ligne et rien n'est
+ * écrit sur le disque. Sinon, écrit dans `.ai/autopilot/runs/runner.log`.
+ * Échec silencieux : le journal est une aide au diagnostic, jamais bloquant.
+ */
+function appendRunLog(deps, message) {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${message}\n`;
+  if (typeof deps.log === 'function') {
+    deps.log(line);
+    return;
+  }
+  const logPath = deps.logPath || C.paths.runnerLog;
+  try {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.appendFileSync(logPath, line, 'utf8');
+  } catch (e) {
+    console.log(`[bridge] journalisation impossible: ${e.message}`);
+  }
+}
+
+/**
+ * Cycle de consommation complet : récupère les orphelins, réclame la prochaine
+ * opportunité, et l'affiche sur stdout au format JSON pour que le runner
+ * (session OpenCode) puisse l'exécuter. Retourne { claimed: true, opp, lockId }
+ * ou { claimed: false, reason: 'aucune opportunité disponible' }.
+ */
+function runConsumeCycle(queue, deps = {}) {
+  const claimed = claimNext(queue, deps);
+  if (!claimed) {
+    appendRunLog(deps, 'CONSUME aucune opportunité réclamable');
+    return { claimed: false, reason: 'aucune opportunité réclamable' };
+  }
+  appendRunLog(deps, `CONSUME ${claimed.opp.id} prête à exécuter (lock=${claimed.lockId})`);
+  return { claimed: true, opp: claimed.opp, lockId: claimed.lockId };
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
@@ -687,6 +977,42 @@ function resolveRelayStatus(args = {}) {
 
 function runCli(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
+
+  // ── Consommation : réclamer la prochaine opportunité ─────────────────────
+  if (args.consume) {
+    const queue = mem.loadQueue();
+    const deps = {
+      runnerId: args.runner || `runner-${process.pid}`,
+      orphanTimeoutMs: args['orphan-timeout'] ? Number(args['orphan-timeout']) : undefined,
+      logPath: undefined,
+    };
+    const result = runConsumeCycle(queue, deps);
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  // ── Consommation : accuser réception d'une exécution ─────────────────────
+  if (args.ack) {
+    const taskId = String(args.ack);
+    const outcome = String(args.outcome || '').toLowerCase();
+    const detail = args.detail || '';
+    if (outcome !== 'completed' && outcome !== 'failed') {
+      console.error(`MULTI-REPO-BRIDGE ERROR: --outcome doit être 'completed' ou 'failed' (reçu: ${outcome})`);
+      process.exit(1);
+    }
+    const queue = mem.loadQueue();
+    const ackResult = acknowledge(queue, taskId, outcome, detail, {
+      runnerId: args.runner || `runner-${process.pid}`,
+      logPath: undefined,
+    });
+    if (!ackResult.ok) {
+      console.error(`MULTI-REPO-BRIDGE ERROR: ${ackResult.error}`);
+      process.exit(1);
+    }
+    mem.saveQueue(queue);
+    console.log(JSON.stringify({ ok: true, taskId, status: ackResult.opp.status, ackDetail: ackResult.opp.ackDetail || '', error: ackResult.opp.error || '', retryCount: ackResult.opp.retryCount || 0 }, null, 2));
+    return;
+  }
 
   // ── Publication d'un statut de cycle de vie ──────────────────────────────
   if (args.status) {
@@ -745,6 +1071,8 @@ module.exports = {
   DEFAULT_LOCAL_REPO,
   REQUIRED_CONTRACT,
   STATUSES,
+  CONSUMPTION_STATUSES,
+  DEFAULT_MAX_RETRIES,
   detectLocalRepo,
   requiredContract,
   isAllowedRepo,
@@ -762,5 +1090,11 @@ module.exports = {
   ingestMultiRepo,
   parseArgs,
   resolveRelayStatus,
+  initConsumptionFields,
+  claimNext,
+  acknowledge,
+  recoverOrphanedLocks,
+  quarantineOpportunity,
+  runConsumeCycle,
   runCli,
 };
