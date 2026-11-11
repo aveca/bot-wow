@@ -2,6 +2,8 @@
 
 **Ajout 2026-11-11 — décision propriétaire de réservation bêta :** le Payment Link Stripe LIVE existant est autorisé pour une réservation unique de 20 €, remboursable intégralement si BOT-WOW ne peut pas être livré. Ce n'est ni une licence activée ni un téléchargement immédiat ; livraison manuelle uniquement après validation finale. PR #188 fusionnée, déploiement Cloudflare Pages production confirmé sur `bot-wow.com` et `www.bot-wow.com` (commit `77e354b`). Au contrôle Stripe du 11/11 : 0 paiement confirmé, 6 sessions Checkout ouvertes et non payées, sans e-mail client. Les événements D1 sur 24 h : 49 vues accueil, 49 démos, 11 vues des pages d'achat, 0 clic CTA enregistré. Le profil fiscal Stripe est `pending` et la description de l'activité reste à aligner ; ne pas inventer l'identité légale du vendeur.
 
+**Ajout 2026-11-11 — libération des 6 verrous expirés + PR #195 :** Les 6 verrous `agents/locks.md` dont `expires` = 2026-11-10T00:00:00Z sont passés en `done` (legal-draft, r2-provenance, mollie-prep, checkout-flag, homepage-copy, package-reproducibility). Même mise à jour dans `agents/tasks.md`. Commit `41516ae` sur branche `factory/corrections-20261111` (base `origin/main` `2cc3d58`), poussé sur origin. PR #195 ouverte (`factory/corrections-20261111` → `main`), état OPEN, mergeable : https://github.com/aveca/bot-wow/pull/195. Aucun scope actif n'est repris. Aucun code, secret, binding ou déploiement modifié. `node scripts/check-agent-state.mjs` → AGENT STATE : OK.
+
 **Ajout 2026-11-11 — mission P0 « packaging BOT-WOW livrable » : les trois PR du paquet sont fusionnées, `main` est cohérent, couverture de livraison restituée, nouveau paquet réel mesuré.**
 Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérificateur client) AVANT #185 (guide)**, car le guide documente `package/verify-package.py` qui n'existait pas avant #179.
 
@@ -29,6 +31,10 @@ Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérific
 - **Non vérifié** : exécution dans un véritable client WoW autorisé. Les tests Lua 5.1 + mock WoW prouvent le chargement réel des octets, pas l'activation côté client Blizzard.
 
 Rapport détaillé : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
+
+**Ajout 2026-11-11 — audit sessions sargagame :** Heartbeat `scripts/automation/data/factory-heartbeat-watch-seen.json` périmé (`sig: stale|2026-08-05`, `at: 2026-08-05T02:41:41.633Z`). Événement autopilot P1 `.autopilot/events/AUTOPILOT_FACTORY_EVENT-agent-handoff-claim-status-line-not-found.json` (2026-10-07T11:50:34Z) : claim task échouée, exécution/PR sautée. 4 autres événements P1 en octobre 2026 (automerge-default-assertion 2026-10-03, paid-funnel-e2e 2026-10-05, smoke-token-verification 2026-10-07, support-inbox-imap-auth 2026-10-07 avec human_gate=true). NEXT_SESSION.md sargagame-main daté 2026-07-30 (périmé) ; NEXT_SESSION.md sargagame-seo1408 daté 2026-11-11 (à jour). Aucun fichier de registre/heartbeat/claim OpenCode dans les deux worktrees sargagame. `.ai/current_state.md` dernière mise à jour 2026-11-04 (SLA satellite 900 min).
+
+**Ajout 2026-11-11 — priorisation travail revenus (évaluation en lecture seule, aucune modification autorisée) :** BOT-WOW : 0 paiement confirmé au contrôle Stripe LIVE 2026-11-11, 6 sessions Checkout ouvertes/non payées sans e-mail client, 0 clic CTA sur 24h (B-revenue). Sargagame : money-path Mollie active (caisse EUR MQ/GP + USD florida/puntacana/rivieramaya), Stripe legacy lecture seule ; P0-001 `webhook_secret` commenté dans `mollie-config.php` (fail-open) ; P2-001/002/03 in_progress ; 6 régions (MQ, GP, florida, puntacana, rivieramaya live ; barbados préparé non live avec résidus Stripe à purger). Verrou `p0-payment-prep` active jusqu'au 2026-11-12 — ce scope n'est pas repris.
 
 **Ajout 2026-11-10 — issue factory-control#82 : candidat Fishing Assistant minimal (liste blanche + tests installation/activation).**
 Branche `factory/issue82-mwaoy17i`, PR https://github.com/aveca/bot-wow/pull/184 (**revue uniquement — aucune fusion, aucun déploiement**).
@@ -222,13 +228,11 @@ remplacement de l'artefact R2 live par le paquet reproductible `F8138F3C…`
 (`B-r2-live`). Sans réponse écrite, aucune vente du runtime ne peut être
 justifiée et le checkout reste fermé.
 
-**Prochaine action (cycle 2026-11-11) :** le paquet est construit, reproductible
-et vérifiable de bout en bout ; il ne manque plus que la **décision propriétaire
-sur les droits de redistribution et les conditions de licence client**. Ce sont
-elles — et seulement elles — qui ouvrent `--release` (échoue aujourd'hui sur
-« Code original Casinobabe » et « Police DejaVu Sans »). Aucune action technique
-supplémentaire n'est requise pour rendre le paquet livrable ; l'inventaire des
-documents commerciaux encore à écrire est dans
-`reports/operations/2026-11-11-package-merge-and-delivery-restitution.md` §6.
-Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce
-dépôt.
+**Prochaine action (cycle 2026-11-11) :**
+
+1. **PR #195** : attendre/revoir la PR `factory/corrections-20261111` → `main` (OPEN, mergeable, commit `41516ae`). Ne pas merger sans décision propriétaire explicite.
+2. **Sargagame sessions** : heartbeat périmé depuis 2026-08-05, événement autopilot P1 claim-status-line-not-found (2026-10-07), NEXT_SESSION.md sargagame-main périmé (2026-07-30). Aucune modification de secret/binding/déploiement sans autorisation.
+3. **Revenus (évaluation seule)** : BOT-WOW 0 paiement confirmé + 6 sessions Stripe ouvertes (B-revenue) ; Sargagame P0-001 webhook_secret fail-open, P2-001/002/03 in_progress, 6 régions. Verrou `p0-payment-prep` active jusqu'au 2026-11-12 — ce scope n'est pas repris.
+4. **Décision propriétaire bloquante** : droits de redistribution `aveca/Casinobabe` et conditions de licence client (B-licence, B-release-terms). `--release` refusé tant que ces deux exigences ne sont pas satisfaites.
+
+Le paquet est construit, reproductible et vérifiable ; il ne manque plus que la décision propriétaire sur les droits de redistribution et les conditions de licence client. Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce dépôt.
