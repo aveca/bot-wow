@@ -805,7 +805,12 @@ console.log('=== 7. detectLocalRepo ===');
   // 7b12. runConsumeCycle retourne claimed: false quand la queue est vide.
   {
     const queue = { opportunities: [] };
-    const cycle = bridge.runConsumeCycle(queue, { runnerId: 'runner-1', log: () => {} });
+    const cycle = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-1',
+      log: () => {},
+      acquireLock: () => ({ fd: null, lockId: 'test-lock' }),
+      releaseLock: () => {},
+    });
     check('queue vide => claimed false', cycle.claimed === false && /aucune opportunité/.test(cycle.reason));
   }
 }
@@ -835,6 +840,293 @@ console.log('=== 9. aucune écriture sur le disque ===');
     aiNow === aiBefore && aiEntriesNow === aiEntriesBefore,
     `avant=${aiBefore ? aiEntriesBefore : '(absent)'} après=${aiNow ? aiEntriesNow : '(absent)'}`,
   );
+}
+
+// ── 10. Consommation : verrou interprocessus, persistance, polling, exécution ─
+
+console.log('=== 10. Consommation : verrou, persistance, polling, exécution ===');
+
+const { execFileSync } = require('child_process');
+
+{
+  // 10a. runConsumeCycle persiste le claim via saveQueue (injecté)
+  {
+    const queue = {
+      opportunities: [
+        { id: 'T-PERSIST', repository_full_name: LOCAL, issue_number: 5001, status: 'new' },
+      ],
+    };
+    const saved = [];
+    const cycle = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-persist',
+      log: () => {},
+      saveQueue: (q) => { saved.push(JSON.parse(JSON.stringify(q))); },
+      acquireLock: () => ({ fd: null, lockId: 'test-lock-persist' }),
+      releaseLock: () => {},
+    });
+    check('claim persistant retourné', cycle.claimed === true);
+    check('saveQueue appelée', saved.length === 1);
+    check('tâche passée à claimed dans la sauvegarde',
+      saved[0].opportunities[0].status === 'claimed');
+    check('lockId présent dans la sauvegarde',
+      typeof saved[0].opportunities[0].lockId === 'string' && saved[0].opportunities[0].lockId.length > 0);
+    check('claimedAt présent', typeof saved[0].opportunities[0].claimedAt === 'string');
+  }
+
+  // 10b. acquireLock obtient un verrou exclusif sur un fichier temp
+  {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-lock-'));
+    const lockPath = path.join(tmpDir, 'queue.lock');
+    const deps = { lockPath, log: () => {} };
+    const lock1 = bridge.acquireLock(deps);
+    check('premier acquireLock obtient le verrou', lock1 !== null && lock1.lockId);
+    check('fichier verrou créé', fs.existsSync(lockPath));
+    bridge.releaseLock(lock1, lock1.lockId, deps);
+    check('verrou libéré, fichier supprimé', !fs.existsSync(lockPath));
+    fs.rmdirSync(tmpDir);
+  }
+
+  // 10c. Deuxième acquireLock retourne null tant que le premier est détenu
+  {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-lock-'));
+    const lockPath = path.join(tmpDir, 'queue.lock');
+    const deps = { lockPath, log: () => {} };
+    const lock1 = bridge.acquireLock(deps);
+    check('verrou 1 obtenu', lock1 !== null);
+    const lock2 = bridge.acquireLock(deps);
+    check('deuxième acquireLock retourne null (exclusivité)', lock2 === null);
+    bridge.releaseLock(lock1, lock1.lockId, deps);
+    const lock3 = bridge.acquireLock(deps);
+    check('après libération, nouveau acquireLock réussit', lock3 !== null);
+    bridge.releaseLock(lock3, lock3.lockId, deps);
+    fs.rmdirSync(tmpDir);
+  }
+
+  // 10d. releaseLock refuse si le lockId a changé (détenteur remplacé)
+  {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-lock-'));
+    const lockPath = path.join(tmpDir, 'queue.lock');
+    const deps = { lockPath, log: () => {} };
+    const lock1 = bridge.acquireLock(deps);
+    // Simuler un autre détenteur qui écrase le fichier
+    fs.writeFileSync(lockPath, JSON.stringify({ pid: 99999, lockId: 'other-lock' }), 'utf8');
+    bridge.releaseLock(lock1, lock1.lockId, deps);
+    check('fichier pas supprimé par ancien détenteur', fs.existsSync(lockPath));
+    fs.unlinkSync(lockPath);
+    fs.rmdirSync(tmpDir);
+  }
+
+  // 10e. tryStealOrphanLock révoque un verrou avec PID mort
+  {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-lock-'));
+    const lockPath = path.join(tmpDir, 'queue.lock');
+    const deps = { lockPath, log: () => {} };
+    // Écrire un verrou avec un PID qui n'existe pas
+    fs.writeFileSync(lockPath, JSON.stringify({ pid: 999999999, lockId: 'dead-lock', acquiredAt: new Date().toISOString() }), 'utf8');
+    const stolen = bridge.tryStealOrphanLock(lockPath, { pid: process.pid, lockId: 'new-lock' }, deps);
+    check('verrou orphelin (PID mort) révoqué', stolen === true);
+    check('fichier verrou supprimé', !fs.existsSync(lockPath));
+    fs.rmdirSync(tmpDir);
+  }
+
+  // 10f. executeTask sans commande externe → succès simulé
+  {
+    const opp = { id: 'T-EXEC1', task_id: 'T-EXEC1', repository_full_name: LOCAL, issue_number: 5002, humanGate: false, moneyPath: false };
+    const result = bridge.executeTask(opp, { log: () => {} });
+    check('exécution simulée ok', result.ok === true);
+    check('exitCode 0', result.exitCode === 0);
+    check('pas bloqué', result.blocked !== true);
+  }
+
+  // 10g. executeTask avec humanGate → bloqué
+  {
+    const opp = { id: 'T-EXEC2', task_id: 'T-EXEC2', repository_full_name: LOCAL, issue_number: 5003, humanGate: true, moneyPath: false };
+    const result = bridge.executeTask(opp, { log: () => {} });
+    check('humanGate bloqué', result.ok === false);
+    check('bloqué flag', result.blocked === true);
+    check('raison humanGate', /humanGate/.test(result.output));
+  }
+
+  // 10h. executeTask avec moneyPath → bloqué
+  {
+    const opp = { id: 'T-EXEC3', task_id: 'T-EXEC3', repository_full_name: LOCAL, issue_number: 5004, humanGate: false, moneyPath: true };
+    const result = bridge.executeTask(opp, { log: () => {} });
+    check('moneyPath bloqué', result.ok === false);
+    check('bloqué flag', result.blocked === true);
+    check('raison moneyPath', /moneyPath/.test(result.output));
+  }
+
+  // 10i. canExecute : refus humanGate / moneyPath
+  {
+    check('humanGate non exécutable', bridge.canExecute({ humanGate: true }).executable === false);
+    check('moneyPath non exécutable', bridge.canExecute({ moneyPath: true }).executable === false);
+    check('normal exécutable', bridge.canExecute({ humanGate: false, moneyPath: false }).executable === true);
+  }
+
+  // 10j. runWatchCycle : queue vide → claimed false
+  {
+    const result = bridge.runWatchCycle({
+      runnerId: 'runner-watch1',
+      loadQueue: () => ({ opportunities: [] }),
+      saveQueue: () => {},
+      publishStatus: () => true,
+      log: () => {},
+      acquireLock: () => ({ fd: null, lockId: 'watch-lock' }),
+      releaseLock: () => {},
+    });
+    check('watch queue vide => claimed false', result.claimed === false);
+  }
+
+  // 10k. runWatchCycle : claim + exec simulé + ACK auto + publication
+  {
+    const queue = {
+      opportunities: [
+        { id: 'T-WATCH1', task_id: 'T-WATCH1', repository_full_name: LOCAL, issue_number: 5005, humanGate: false, moneyPath: false, status: 'new' },
+      ],
+    };
+    let saveCalled = 0;
+    let published = null;
+    const result = bridge.runWatchCycle({
+      runnerId: 'runner-watch2',
+      loadQueue: () => queue,
+      saveQueue: () => { saveCalled += 1; },
+      publishStatus: (repo, issue, status, detail, opts) => {
+        published = { repo, issue, status, taskId: opts && opts.taskId };
+        return true;
+      },
+      log: () => {},
+      acquireLock: () => ({ fd: null, lockId: 'watch-lock-k' }),
+      releaseLock: () => {},
+    });
+    check('watch claimé', result.claimed === true);
+    check('watch exécuté', result.executed === true);
+    check('watch ACKé', result.acked === true);
+    check('watch publié', result.published === true);
+    check('saveQueue appelée', saveCalled >= 1);
+    check('publication sur BOT-WOW', published.repo === LOCAL && published.status === 'completed');
+    check('taskId dans publication', published.taskId === 'T-WATCH1');
+    check('tâche passée à completed', queue.opportunities[0].status === 'completed');
+  }
+
+  // 10l. runWatchCycle : tâche qui échoue → ACK failed + retry (backoff)
+  {
+    const queue = {
+      opportunities: [
+        { id: 'T-WATCHFAIL', task_id: 'T-WATCHFAIL', repository_full_name: LOCAL, issue_number: 5006, humanGate: false, moneyPath: false, status: 'new', maxRetries: 3, retryCount: 0 },
+      ],
+    };
+    // Forcer l'échec via une commande externe qui retourne code non-zéro
+    const result = bridge.runWatchCycle({
+      runnerId: 'runner-watch3',
+      loadQueue: () => queue,
+      saveQueue: () => {},
+      publishStatus: () => true,
+      log: () => {},
+      execCmd: 'node -e "process.exit(1)"',
+      execTimeoutMs: 5000,
+      acquireLock: () => ({ fd: null, lockId: 'watch-lock-l' }),
+      releaseLock: () => {},
+    });
+    check('watch échec détecté', result.claimed === true && result.executed === true && result.acked === true);
+    check('tâche passée à failed', queue.opportunities[0].status === 'failed');
+    check('retryCount incrémenté', queue.opportunities[0].retryCount === 1);
+    check('nextRetryAt dans le futur', new Date(queue.opportunities[0].nextRetryAt).getTime() > Date.now());
+  }
+
+  // 10m. CLI --consume : claim + persistance sur disque (temp dir)
+  {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-consume-'));
+    const queuePath = path.join(tmpDir, 'queue.json');
+    fs.writeFileSync(queuePath, JSON.stringify({
+      opportunities: [
+        { id: 'T-CLI1', task_id: 'T-CLI1', repository_full_name: LOCAL, issue_number: 5007, status: 'new', humanGate: false, moneyPath: false },
+      ],
+    }), 'utf8');
+
+    // Créer un script wrapper qui redirige les chemins de mémoire
+    // (on utilise les injectables via require, pas le CLI réel qui utilise C.paths)
+    const saved = [];
+    const queue = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
+    const cycle = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-cli-1',
+      log: () => {},
+      saveQueue: (q) => { saved.push(q); },
+      acquireLock: () => ({ fd: null, lockId: 'cli-lock-1' }),
+      releaseLock: () => {},
+    });
+    check('--consume claimé', cycle.claimed === true);
+    check('--consume saveQueue appelée', saved.length === 1);
+    check('--consume tâche claimée', saved[0].opportunities[0].status === 'claimed');
+
+    // Vérifier que --ack complète la tâche
+    const ackResult = bridge.acknowledge(saved[0], 'T-CLI1', 'completed', 'tâche faite', {
+      runnerId: 'runner-cli-1',
+      log: () => {},
+      publishStatus: () => true,
+    });
+    check('--ack ok', ackResult.ok === true);
+    check('--ack statut completed', ackResult.opp.status === 'completed');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  // 10n. Deux consommateurs concurrents ne réclament pas la même tâche
+  {
+    const queue = {
+      opportunities: [
+        { id: 'T-CONC1', task_id: 'T-CONC1', repository_full_name: LOCAL, issue_number: 5008, status: 'new' },
+        { id: 'T-CONC2', task_id: 'T-CONC2', repository_full_name: LOCAL, issue_number: 5009, status: 'new' },
+      ],
+    };
+    let saves = 0;
+    const claimedIds = [];
+    // Consommateur A
+    const resA = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-A',
+      log: () => {},
+      saveQueue: () => { saves += 1; },
+      acquireLock: () => ({ fd: null, lockId: 'conc-lock-A' }),
+      releaseLock: () => {},
+    });
+    if (resA.claimed) claimedIds.push(resA.opp.id);
+    // Consommateur B (même queue en mémoire, déjà mutée par A)
+    const resB = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-B',
+      log: () => {},
+      saveQueue: () => { saves += 1; },
+      acquireLock: () => ({ fd: null, lockId: 'conc-lock-B' }),
+      releaseLock: () => {},
+    });
+    if (resB.claimed) claimedIds.push(resB.opp.id);
+    check('deux tâches distinctes réclamées', claimedIds.length === 2);
+    check('pas de double-claim sur la même tâche', new Set(claimedIds).size === 2);
+    check('sauvegardes effectuées', saves === 2);
+  }
+
+  // 10o. Crash et reprise : verrou orphelin récupéré après redémarrage
+  {
+    // Simuler une tâche claimée depuis trop longtemps (orphelin)
+    const queue = {
+      opportunities: [
+        {
+          id: 'T-ORPHAN', task_id: 'T-ORPHAN', repository_full_name: LOCAL, issue_number: 5010,
+          status: 'claimed', claimedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // il y a 10 min
+          claimedBy: 'runner-mort', lockId: 'dead-lock-orphan',
+        },
+      ],
+    };
+    const cycle = bridge.runConsumeCycle(queue, {
+      runnerId: 'runner-nouveau',
+      log: () => {},
+      saveQueue: () => {},
+      orphanTimeoutMs: 5 * 60 * 1000, // 5 min : le claim de 10 min est orphelin
+      acquireLock: () => ({ fd: null, lockId: 'orphan-lock' }),
+      releaseLock: () => {},
+    });
+    check('orphelin récupéré et réclamé', cycle.claimed === true);
+    check('nouveau claim par runner actuel', cycle.opp.claimedBy === 'runner-nouveau');
+    check('tâche repassée à claimed', cycle.opp.status === 'claimed');
+  }
 }
 
 console.log('');

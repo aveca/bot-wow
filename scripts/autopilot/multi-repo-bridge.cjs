@@ -58,7 +58,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const C = require('./lib/common.cjs');
 const mem = require('./lib/memory.cjs');
 
@@ -96,6 +96,10 @@ const DEFAULT_MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 5000;      // 5 s
 const BACKOFF_MULTIPLIER = 3;      // ×3 à chaque échec (5s, 15s, 45s…)
 const DEFAULT_ORPHAN_TIMEOUT_MS = 30 * 60 * 1000; // 30 min : verrou orphelin si pas de heartbeat
+const DEFAULT_POLL_INTERVAL_MS = 10000; // 10 s entre deux polls en mode --watch
+
+/** Fichier de verrou interprocessus (un seul claimant à la fois). */
+const LOCK_HOLDER_TTL_MS = 60 * 1000; // un verrou non libéré après 60 s est considéré orphelin
 
 /** Champs ajoutés au schéma d'opportunité par la consommation. */
 const CONSUMPTION_FIELDS = [
@@ -864,6 +868,159 @@ function recoverOrphanedLocks(queue, deps = {}) {
   return recovered;
 }
 
+// ── Verrou interprocessus ─────────────────────────────────────────────────────
+
+/**
+ * Tente d'acquérir le verrou interprocessus sur le fichier de queue.
+ *
+ * Utilise `fs.openSync(..., 'wx')` (création exclusive) : seul le premier
+ * processus à créer le fichier l'obtient. Les autres reçoivent EEXIST.
+ *
+ * Le fichier verrou contient le PID du détenteur, un identifiant de verrou et
+ * l'horodatage d'acquisition, afin qu'un autre processus puisse détecter un
+ * verrou orphelin (détenteur mort) et le révoquer.
+ *
+ * @param {object} deps   dépendances (paths.lock injecté, log facultatif)
+ * @returns {object|null} { fd, lockId } si le verrou est acquis, null sinon
+ */
+function acquireLock(deps = {}) {
+  const lockPath = deps.lockPath || C.paths.lock;
+  const lockId = makeLockId();
+  const holder = { pid: process.pid, lockId, acquiredAt: new Date().toISOString() };
+
+  let fd;
+  try {
+    fd = fs.openSync(lockPath, 'wx'); // 'wx' = échoue si le fichier existe déjà
+  } catch (e) {
+    if (e.code !== 'EEXIST') {
+      appendRunLog(deps, `LOCK erreur ouverture: ${e.message}`);
+      return null;
+    }
+    // Un autre processus détient le verrou : vérifier s'il est orphelin
+    if (tryStealOrphanLock(lockPath, holder, deps)) {
+      try {
+        fd = fs.openSync(lockPath, 'wx');
+      } catch (e2) {
+        if (e2.code === 'EEXIST') return null; // quelqu'un d'autre l'a pris entre-temps
+        appendRunLog(deps, `LOCK erreur réouverture après orphelin: ${e2.message}`);
+        return null;
+      }
+    } else {
+      return null; // verrou occupé par un processus vivant
+    }
+  }
+
+  try {
+    fs.writeFileSync(fd, JSON.stringify(holder, null, 2), 'utf8');
+  } catch (e) {
+    fs.closeSync(fd);
+    appendRunLog(deps, `LOCK erreur écriture: ${e.message}`);
+    return null;
+  }
+
+  appendRunLog(deps, `LOCK acquis pid=${process.pid} lockId=${lockId}`);
+  return { fd, lockId };
+}
+
+/**
+ * Tente de révoquer un verrou orphelin : lit le fichier verrou, vérifie si le
+ * PID du détenteur est toujours vivant. Si mort, supprime le fichier et
+ * retourne true (le caller pourra recréer le verrou).
+ *
+ * @param {string} lockPath
+ * @param {object} holder   infos du candidat détenteur
+ * @param {object} deps
+ * @returns {boolean}
+ */
+function tryStealOrphanLock(lockPath, holder, deps = {}) {
+  let content;
+  try {
+    content = fs.readFileSync(lockPath, 'utf8');
+  } catch (_) {
+    return false; // fichier déjà supprimé ou illisible
+  }
+
+  let existing;
+  try {
+    existing = JSON.parse(content);
+  } catch (_) {
+    return false;
+  }
+
+  const existingPid = existing && existing.pid;
+  if (!existingPid) return false;
+
+  // Vérifier si le processus existe (kill(pid, 0) ne fait rien si le processus vit)
+  let alive = true;
+  try {
+    process.kill(Number(existingPid), 0);
+  } catch (e) {
+    alive = false;
+  }
+
+  if (alive) {
+    // Le détenteur vit encore : vérifier si le verrou n'est pas trop ancien
+    const acquiredAt = existing && existing.acquiredAt ? new Date(existing.acquiredAt).getTime() : 0;
+    if (Date.now() - acquiredAt > LOCK_HOLDER_TTL_MS) {
+      alive = false; // verrou abandonné (TTL dépassé)
+    }
+  }
+
+  if (!alive) {
+    try {
+      fs.unlinkSync(lockPath);
+      appendRunLog(deps, `LOCK orphelin révoqué pid=${existingPid} (prend le relais)`);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Libère le verrou interprocessus. Ne supprime le fichier que si nous sommes
+ * encore le détenteur (vérification du lockId).
+ *
+ * @param {object|null} lock   résultat de acquireLock
+ * @param {string}      lockId
+ * @param {object}      deps
+ */
+function releaseLock(lock, lockId, deps = {}) {
+  if (!lock || !lock.fd) return;
+  const lockPath = deps.lockPath || C.paths.lock;
+
+  try {
+    // Vérifier que nous sommes encore le détenteur avant de supprimer
+    let content;
+    try { content = fs.readFileSync(lockPath, 'utf8'); } catch (_) { content = ''; }
+    let existing;
+    try { existing = JSON.parse(content || '{}'); } catch (_) { existing = {}; }
+    if (existing.lockId !== lockId) {
+      appendRunLog(deps, `LOCK non libéré: détenteur changé (notre lockId=${lockId})`);
+      try { fs.closeSync(lock.fd); } catch (_) {}
+      return;
+    }
+
+    fs.closeSync(lock.fd);
+    fs.unlinkSync(lockPath);
+    appendRunLog(deps, `LOCK libéré pid=${process.pid} lockId=${lockId}`);
+  } catch (e) {
+    appendRunLog(deps, `LOCK erreur libération: ${e.message}`);
+    try { fs.closeSync(lock.fd); } catch (_) {}
+  }
+}
+
+/**
+ * Nettoyage du verrou à la sortie du processus (best-effort).
+ */
+function releaseLockOnExit(lock, lockId, deps = {}) {
+  process.once('exit', () => {
+    releaseLock(lock, lockId, deps);
+  });
+}
+
 /**
  * Met une opportunité en quarantaine manuellement (hors cycle de retry normal).
  */
@@ -912,19 +1069,229 @@ function appendRunLog(deps, message) {
 }
 
 /**
- * Cycle de consommation complet : récupère les orphelins, réclame la prochaine
- * opportunité, et l'affiche sur stdout au format JSON pour que le runner
- * (session OpenCode) puisse l'exécuter. Retourne { claimed: true, opp, lockId }
- * ou { claimed: false, reason: 'aucune opportunité disponible' }.
+ * Cycle de consommation complet : acquiert le verrou interprocessus, récupère
+ * les orphelins, réclame la prochaine opportunité, persiste atomiquement le
+ * claim (saveQueue) avant de retourner, puis libère le verrou.
+ *
+ * Retourne { claimed: true, opp, lockId } ou
+ * { claimed: false, reason: '...' }.
+ *
+ * Dépendances injectables (tests) :
+ *   - acquireLock(deps) => { fd, lockId } | null   (défaut: verrou fichier réel)
+ *   - releaseLock(lock, lockId, deps)               (défaut: suppression fichier)
+ *   - saveQueue(q)                                  (défaut: aucune persistance)
+ *   - loadQueue()                                   (défaut: pas de rechargement)
+ *   - runnerId, log, logPath
  */
 function runConsumeCycle(queue, deps = {}) {
-  const claimed = claimNext(queue, deps);
-  if (!claimed) {
-    appendRunLog(deps, 'CONSUME aucune opportunité réclamable');
-    return { claimed: false, reason: 'aucune opportunité réclamable' };
+  const saveQueue = deps.saveQueue;
+  const acquireLockFn = deps.acquireLock || defaultAcquireLock;
+  const releaseLockFn = deps.releaseLock || defaultReleaseLock;
+
+  const lock = acquireLockFn(deps);
+  if (!lock) {
+    appendRunLog(deps, 'CONSUME verrou interprocessus occupé, aucun claim');
+    return { claimed: false, reason: 'verrou occupé par un autre processus' };
   }
-  appendRunLog(deps, `CONSUME ${claimed.opp.id} prête à exécuter (lock=${claimed.lockId})`);
-  return { claimed: true, opp: claimed.opp, lockId: claimed.lockId };
+
+  try {
+    const claimed = claimNext(queue, deps);
+    if (!claimed) {
+      appendRunLog(deps, 'CONSUME aucune opportunité réclamable');
+      return { claimed: false, reason: 'aucune opportunité réclamable' };
+    }
+
+    // Persistance atomique du claim AVANT de retourner :
+    // le claim est écrit sur disque avant que ce processus ne cède la main.
+    if (saveQueue) {
+      saveQueue(queue);
+    }
+
+    appendRunLog(deps, `CONSUME ${claimed.opp.id} prête à exécuter (lock=${claimed.lockId})`);
+    return { claimed: true, opp: claimed.opp, lockId: claimed.lockId };
+  } finally {
+    releaseLockFn(lock, lock.lockId, deps);
+  }
+}
+
+/**
+ * Implémentation par défaut de l'acquisition du verrou interprocessus.
+ * Utilise `fs.openSync(lockPath, 'wx')` pour l'exclusivité.
+ */
+function defaultAcquireLock(deps = {}) {
+  return acquireLock(deps);
+}
+
+/**
+ * Implémentation par défaut de la libération du verrou interprocessus.
+ */
+function defaultReleaseLock(lock, lockId, deps = {}) {
+  releaseLock(lock, lockId, deps);
+}
+
+// ── Exécution de tâche ───────────────────────────────────────────────────────
+
+/**
+ * Détermine si une opportunité peut être exécutée automatiquement.
+ * humanGate et moneyPath bloquent l'exécution automatique (statut 'blocked').
+ *
+ * @returns {object} { executable: boolean, reason?: string }
+ */
+function canExecute(opp) {
+  if (opp.humanGate) {
+    return { executable: false, reason: 'humanGate : approbation humaine requise' };
+  }
+  if (opp.moneyPath) {
+    return { executable: false, reason: 'moneyPath : exécution automatique interdite (argent)' };
+  }
+  return { executable: true };
+}
+
+/**
+ * Exécute une opportunité et collecte le résultat.
+ *
+ * Modes d'exécution (selon `deps.execCmd` ou env AUTOPILOT_EXEC_CMD) :
+ *   - si défini : exécute la commande via spawnSync, la tâche reçoit son id
+ *     et son numéro d'issue via les variables d'env AUTOPILOT_TASK_ID /
+ *     AUTOPILOT_ISSUE_NUMBER ;
+ *   - si non défini : simulation de succès (pour les tests / E2E sans
+ *     exécuteur externe).
+ *
+ * Retourne { ok: boolean, output: string, exitCode: number|null }.
+ */
+function executeTask(opp, deps = {}) {
+  const policy = canExecute(opp);
+  if (!policy.executable) {
+    return { ok: false, output: policy.reason, exitCode: null, blocked: true };
+  }
+
+  const execCmd = deps.execCmd || process.env.AUTOPILOT_EXEC_CMD;
+  if (!execCmd) {
+    // Pas d'exécuteur externe configuré : succès simulé (E2E local).
+    const output = `[auto-ack] tâche ${opp.id} (${opp.task_id || opp.id}) exécutée sans exécuteur externe — résultat simulé`;
+    appendRunLog(deps, `EXEC ${opp.id} simulée (aucun AUTOPILOT_EXEC_CMD)`);
+    return { ok: true, output, exitCode: 0 };
+  }
+
+  // Exécution réelle via commande externe.
+  const env = {
+    ...process.env,
+    AUTOPILOT_TASK_ID: String(opp.task_id || opp.id),
+    AUTOPILOT_ISSUE_NUMBER: String(opp.issue_number || ''),
+    AUTOPILOT_REPO: String(opp.repository_full_name || ''),
+    AUTOPILOT_MODE: String(opp.mode || 'agent'),
+  };
+
+  let result;
+  try {
+    result = spawnSync(execCmd, [], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: deps.execTimeoutMs || 300000,
+      env,
+      windowsHide: true,
+    });
+  } catch (e) {
+    appendRunLog(deps, `EXEC ${opp.id} erreur lancement: ${e.message}`);
+    return { ok: false, output: `erreur lancement: ${e.message}`, exitCode: null };
+  }
+
+  const output = (result.stdout || '') + (result.stderr || `\n[code ${result.status}]`);
+  const ok = result.status === 0;
+  appendRunLog(
+    deps,
+    `EXEC ${opp.id} sortie=${ok ? 'succès' : 'échec'} code=${result.status}`,
+  );
+  return { ok, output, exitCode: result.status === null ? -1 : result.status };
+}
+
+/**
+ * Cycle complet watch : claim → exécuter → collecter résultat → ACK auto →
+ * publier sur GitHub → attendre le prochain poll.
+ *
+ * Retourne { claimed: boolean, executed?: boolean, acked?: boolean,
+ * published?: boolean, reason?: string }.
+ */
+function runWatchCycle(deps = {}) {
+  const pollIntervalMs = deps.pollIntervalMs || DEFAULT_POLL_INTERVAL_MS;
+  const queue = (deps.loadQueue || mem.loadQueue)();
+  const saveQueue = deps.saveQueue || mem.saveQueue;
+  const publish = deps.publishStatus || publishStatus;
+
+  const cycle = runConsumeCycle(queue, {
+    ...deps,
+    saveQueue,
+    acquireLock: deps.acquireLock,
+    releaseLock: deps.releaseLock,
+  });
+
+  if (!cycle.claimed) {
+    return { claimed: false, reason: cycle.reason, pollIntervalMs };
+  }
+
+  const opp = cycle.opp;
+  const lockId = cycle.lockId;
+
+  // Exécuter la tâche
+  const execResult = executeTask(opp, deps);
+
+  // Recharger la queue pour l'ACK (état actuel sur disque)
+  const currentQueue = (deps.loadQueue || mem.loadQueue)();
+  const currentOpp = currentQueue.opportunities.find((o) => o.id === opp.id);
+  if (!currentOpp || currentOpp.status !== 'claimed') {
+    appendRunLog(deps, `WATCH ${opp.id} n'est plus réclamée (échappée entre deux cycles), abandon`);
+    return { claimed: true, executed: true, acked: false, reason: 'tâche plus réclamée' };
+  }
+
+  // Déterminer l'issue de l'ACK
+  let ackOutcome;
+  let ackDetail;
+  if (execResult.blocked) {
+    ackOutcome = 'failed';
+    ackDetail = `bloqué: ${execResult.output}`;
+  } else if (execResult.ok) {
+    ackOutcome = 'completed';
+    ackDetail = execResult.output || 'tâche complétée';
+  } else {
+    ackOutcome = 'failed';
+    ackDetail = execResult.output || `échec (code ${execResult.exitCode})`;
+  }
+
+  const ackResult = acknowledge(currentQueue, opp.id, ackOutcome, ackDetail, {
+    ...deps,
+    saveQueue,
+  });
+
+  if (!ackResult.ok) {
+    appendRunLog(deps, `WATCH ${opp.id} ACK refusé: ${ackResult.error}`);
+    return { claimed: true, executed: true, acked: false, reason: ackResult.error };
+  }
+
+  saveQueue(currentQueue);
+
+  // Publier le résultat sur l'issue GitHub
+  let published = false;
+  if (opp.repository_full_name && opp.issue_number) {
+    published = publish(
+      opp.repository_full_name,
+      opp.issue_number,
+      ackOutcome,
+      ackDetail,
+      { taskId: opp.id, fingerprint: opp.fingerprint },
+    );
+    appendRunLog(deps, `WATCH ${opp.id} publié sur ${opp.repository_full_name}#${opp.issue_number}: ${published}`);
+  }
+
+  return {
+    claimed: true,
+    executed: true,
+    acked: true,
+    published,
+    oppId: opp.id,
+    outcome: ackOutcome,
+    detail: ackDetail,
+    pollIntervalMs,
+  };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -978,16 +1345,66 @@ function resolveRelayStatus(args = {}) {
 function runCli(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
 
-  // ── Consommation : réclamer la prochaine opportunité ─────────────────────
+  // ── Consommation : réclamer la prochaine opportunité (one-shot) ────────────
   if (args.consume) {
     const queue = mem.loadQueue();
     const deps = {
       runnerId: args.runner || `runner-${process.pid}`,
       orphanTimeoutMs: args['orphan-timeout'] ? Number(args['orphan-timeout']) : undefined,
       logPath: undefined,
+      saveQueue: mem.saveQueue, // persistance atomique du claim avant retour
     };
     const result = runConsumeCycle(queue, deps);
     console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  // ── Consommation continue : polling, exécution, ACK auto, publication ──────
+  if (args.watch) {
+    const pollIntervalMs = args.interval ? Number(args.interval) : DEFAULT_POLL_INTERVAL_MS;
+    const execCmd = args['exec-cmd'] || process.env.AUTOPILOT_EXEC_CMD;
+    const runnerId = args.runner || `runner-${process.pid}`;
+    let running = true;
+
+    process.once('SIGINT', () => { running = false; });
+    process.once('SIGTERM', () => { running = false; });
+
+    appendRunLog({ log: (m) => console.log(m.trim()), logPath: undefined }, `WATCH démarré (intervalle=${pollIntervalMs}ms, runner=${runnerId})`);
+
+    while (running) {
+      const queue = mem.loadQueue();
+      const result = runWatchCycle({
+        runnerId,
+        pollIntervalMs,
+        execCmd,
+        execTimeoutMs: args['exec-timeout'] ? Number(args['exec-timeout']) : undefined,
+        loadQueue: mem.loadQueue,
+        saveQueue: mem.saveQueue,
+        publishStatus,
+        logPath: undefined,
+        log: (m) => console.log(m.trim()),
+      });
+
+      console.log(JSON.stringify(result, null, 2));
+
+      if (!result.claimed) {
+        // Rien à faire : attendre avant le prochain poll
+        if (running) {
+          const start = Date.now();
+          while (running && Date.now() - start < pollIntervalMs) {
+            // attente active courte (permet de répondre à SIGINT/SIGTERM)
+            // eslint-disable-next-line no-empty
+            for (let i = 0; i < 1000000 && running; i += 1) { /* attente */ }
+          }
+        }
+        continue;
+      }
+
+      // Une tâche a été traitée : enchainer immédiatement le prochain poll
+      // (pas d'attente supplémentaire si une tâche vient d'être consommée)
+    }
+
+    appendRunLog({ log: (m) => console.log(m.trim()), logPath: undefined }, 'WATCH arrêté');
     return;
   }
 
@@ -1096,5 +1513,15 @@ module.exports = {
   recoverOrphanedLocks,
   quarantineOpportunity,
   runConsumeCycle,
+  acquireLock,
+  releaseLock,
+  defaultAcquireLock,
+  defaultReleaseLock,
+  tryStealOrphanLock,
+  canExecute,
+  executeTask,
+  runWatchCycle,
+  DEFAULT_POLL_INTERVAL_MS,
+  LOCK_HOLDER_TTL_MS,
   runCli,
 };
