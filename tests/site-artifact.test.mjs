@@ -92,7 +92,7 @@ const frCompare = fs.readFileSync(path.join(out, 'fr/compare.html'), 'utf8');
 check('EN FAQ : réservation bêta et CTA visibles', /€20/.test(enFaq) && /Reserve the beta/.test(enFaq));
 check('FR FAQ : réservation bêta et CTA visibles', /20 €/.test(frFaq) && /Réserver la bêta/.test(frFaq));
 check('EN FAQ : aucun message de fermeture du checkout', !/No current sale is offered|checkout is closed|do not send payment/i.test(enFaq));
-check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle n’est proposée|checkout est fermé|N’envoyez aucun paiement/i.test(frFaq));
+check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle n'est proposée|checkout est fermé|N'envoyez aucun paiement/i.test(frFaq));
 check('EN comparaison : offre bêta Stripe visible', /€20 beta reservation/.test(enCompare) && /Reserve beta/.test(enCompare) && /Stripe/.test(enCompare));
 check('FR comparaison : offre bêta Stripe visible', /réservation bêta/.test(frCompare) && /Réserver la bêta/.test(frCompare) && /Stripe/.test(frCompare));
 check('EN comparaison : aucun checkout fermé ou ancien prix cible', !/Checkout closed|No payment form is available|historical target only|No current sale/i.test(enCompare));
