@@ -879,6 +879,22 @@ function main() {
       eol: 'LF',
     };
   }
+  // Ship the customer-side integrity verifier and include it in the manifest.
+  const verifierSrc = path.join(REPO_ROOT, 'distribution', 'verify-package.py');
+  if (!fs.existsSync(verifierSrc)) {
+    throw new IntegrityError('distribution/verify-package.py absent : verification client impossible.');
+  }
+  {
+    const verifierBuf = normalizeText(fs.readFileSync(verifierSrc)).buf;
+    fs.writeFileSync(path.join(stage, 'verify-package.py'), verifierBuf);
+    manifest.files['verify-package.py'] = {
+      sha256: sha256(verifierBuf),
+      bytes: verifierBuf.length,
+      source: 'distribution/verify-package.py',
+      eol: 'LF',
+    };
+  }
+
   if (NOTES && fs.existsSync(NOTES)) {
     const res = normalizeText(fs.readFileSync(NOTES));
     const buf = res.buf;
