@@ -70,6 +70,8 @@ check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
+check('EN : OG title no longer calls the active reservation a historical project', !/Historical project/.test(enHome));
+check('FR : OG title no longer calls the active reservation a historical project', !/Projet historique/.test(frHome));
 check('EN : homepage FAQ schema advertises the refundable beta reservation', /Is a beta reservation available/.test(enHome) && /€20 one-time beta reservation is open/.test(enHome));
 check('FR : homepage FAQ schema advertises the refundable beta reservation', /Une réservation bêta est-elle disponible/.test(frHome) && /réservation bêta unique à 20 € est ouverte/.test(frHome));
 check('EN : homepage limits use to servers that expressly permit fishing automation', /expressly permit fishing automation/i.test(enHome));
