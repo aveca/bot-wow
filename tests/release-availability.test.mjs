@@ -351,7 +351,7 @@ for (const item of [
   const html = read(item.file);
   check(item.file + ' : CTA principal vers le statut d’achat', item.cta.test(html));
   check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement historique, pas une offre', item.target.test(html));
+  check(item.file + ' : prix explicitement une réservation bêta, pas une licence immédiate', item.target.test(html));
   check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
   check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
   check(item.file + ' : aucune promesse de machine ou renvoi de licence',

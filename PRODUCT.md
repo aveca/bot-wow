@@ -46,7 +46,7 @@ BOT-WOW est décrit publiquement comme un outil d'automatisation de pêche pour 
 
 ## Users — hypothèse de cible, non validée commercialement
 
-Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherche un assistant de pêche. Cette cible n'est pas validée par des ventes et ne doit pas être activement sollicitée tant que le périmètre contractuel autorisé n'est pas établi.
+Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherche un assistant de pêche. Cette cible n'est pas validée par des ventes. Le propriétaire a autorisé une réservation bêta remboursable de 20 € ; la prospection doit rester limitée aux communautés de serveurs privés dont les règles publiées autorisent explicitement les bots de pêche. Ne jamais cibler les services Blizzard ni les serveurs qui interdisent l'automatisation.
 
 ## Offer — intended terms, not purchasable
 
