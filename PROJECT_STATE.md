@@ -1,5 +1,7 @@
 # BOT-WOW — état partagé
 
+**Ajout 2026-11-11 — décision propriétaire de réservation bêta :** le Payment Link Stripe LIVE existant est autorisé pour une réservation unique de 20 €, remboursable intégralement si BOT-WOW ne peut pas être livré. Ce n'est ni une licence activée ni un téléchargement immédiat ; livraison manuelle uniquement après validation finale. PR #188 fusionnée, déploiement Cloudflare Pages production confirmé sur `bot-wow.com` et `www.bot-wow.com` (commit `77e354b`). Au contrôle Stripe du 11/11 : 0 paiement confirmé, 6 sessions Checkout ouvertes et non payées, sans e-mail client. Les événements D1 sur 24 h : 49 vues accueil, 49 démos, 11 vues des pages d'achat, 0 clic CTA enregistré. Le profil fiscal Stripe est `pending` et la description de l'activité reste à aligner ; ne pas inventer l'identité légale du vendeur.
+
 **Ajout 2026-11-11 — mission P0 « packaging BOT-WOW livrable » : les trois PR du paquet sont fusionnées, `main` est cohérent, couverture de livraison restituée, nouveau paquet réel mesuré.**
 Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérificateur client) AVANT #185 (guide)**, car le guide documente `package/verify-package.py` qui n'existait pas avant #179.
 
