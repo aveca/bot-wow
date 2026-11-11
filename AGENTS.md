@@ -69,3 +69,10 @@ BLOCAGE: oui/non — <raison>
 - Les règles locales concernant paiements, données, sécurité et production priment.
 - Pas de migration destructive, merge sur branche par défaut ou déploiement de production sans autorisation explicite.
 - Un commit documentaire ne doit pas déclencher un déploiement applicatif inutile : utiliser `paths-ignore: ['AGENTS.md']` dans les workflows de déploiement concernés, sans désactiver la CI utile.
+
+
+## Mandatory correction and anti-recurrence standard
+
+For every task: inspect prior issues/PRs/reports first; prove the current root cause; implement the smallest authorized correction; add a regression test; run relevant tests and inspect the full diff; report exact commands, exit codes, commit SHA and CI on that SHA; then verify the actual live URL/API or runtime. If live verification is unavailable, mark NON VÉRIFIÉ. A report, dispatch, build or green CI alone never closes a task.
+
+Publish an actionable anti-recurrence note for the responsible agents (symptom, proven cause, exact fix, regression test, guardrail and links). Never claim an agent handoff without a posted message or confirmed receipt. Reuse existing issues/PRs; do not duplicate work. Keep CORRIGÉ, TESTÉ, CI VALIDÉE, DÉPLOYÉ, LIVE VÉRIFIÉ and BLOQUÉ as separate evidence-backed statuses. Never bypass a delivery policy, legal/payment/security gate or human approval. A failed/blocked task remains blocked until the underlying gate is corrected through its authorized process.
