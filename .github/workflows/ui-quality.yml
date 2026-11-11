@@ -34,7 +34,12 @@ jobs:
       - name: Build the publishable site artifact
         run: node scripts/build-site.mjs _site
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        # --with-deps retire : apt-get tente de contacter azure.archive.ubuntu.com
+        # sur le runner ubuntu-24.04 et echoue (Temporary failure resolving).
+        # Ce probleme DNS est infrastructurel (pas de code en cause). Les images
+        # runners GitHub Actions ubuntu-24.04 embarquent deja les bibliotheques
+        # systeme Chromium ; on installe seulement le binaire Chromium.
+        run: npx playwright install chromium
       - name: Run real-browser UI checks
         run: npm run test:e2e
       - name: Preserve UI screenshots and test evidence
