@@ -16,6 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
       - name: Validate static project
         run: npm run validate
 
@@ -111,6 +120,13 @@ jobs:
           }
           console.log('RELEASE RIGHTS: BLOCKED AS EXPECTED; source provenance exact; client terms pending.');
           NODE
+
+          # factory#82 : la liste scripts du MANIFEST doit être EXACTEMENT la
+          # fermeture BFS des imports locaux de scripts/fishing_bot.py du
+          # checkout source épinglé — aucun module manquant, aucun module mort.
+          node "$BOT_WOW_DIR/scripts/verify-bot-files-closure.mjs" \
+            --manifest "$OUT_FIRST/casinobabe-fishing-1.2.2-rc.1/MANIFEST.json" \
+            --scripts-dir "$SOURCE_DIR/scripts"
 
 
           # Exercise the release gate against the REAL pinned source checkout,
