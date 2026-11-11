@@ -4,9 +4,6 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 
 | commande | contexte | résultat |
 |---|---|---|
-| `npm test` et `npm run validate` | local, 2026-11-13, branche `cursor/live-offer-copy-bd31` | exit 0. Webhook sans signature et signature invalide : 400. Pages d’achat EN/FR/ES : les deux liens LIVE. |
-| `npm test` | local, 2026-11-13, après les URL LIVE | exit 0. Repli `payment_link` planner et `payment_intent.metadata` studio inclus. `npm run validate` exit 0. |
-| `npm test` | local, 2026-11-13, branche compagnon conforme | exit 0. Webhook Planner/Studio sans clé API, sans zip ; remboursement révoque. Python et registre Casinobabe absents : parité SKIP, pas un échec. |
 | sondes HTTP `bot-wow.com`, `www`, `api.bot-wow.com` | production, 2026-11-06T14:15Z puis 14:17Z | voir `PROJECT_STATE.md` |
 | D1 SELECT agrégats | `changed_db=false`, `rows_written=0` | 0 payé hors example.com ; 0 livraison ; 0 activation |
 | `node tests/delivery-replay.test.mjs` | sandbox local, 2026-11-06T14:20Z | exit 0, `LIVRAISON REPRISE : OK`, y compris webhook paid → octets ZIP simulés |
@@ -29,8 +26,6 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `git diff --check` | local, 2026-11-08 | exit 0 |
 | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-08 | `AGENT STATE : OK`, exit 0 |
 
-| CI PR #192 sur SHA `1802d69` | GitHub Actions, 2026-11-11 | Validate success ; package-candidate success ; GitGuardian success ; ui-quality success (tous les checks verts après retrait de --with-deps) |
-
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
 | `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |
 | CI PR #150 sur SHA `e28626d` | GitHub Actions, 2026-11-08 | Validate `42471183238` success ; UI quality `42471182891` success ; GitGuardian success |
@@ -51,11 +46,3 @@ La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `n
 | bac à sable isolé : ancien test (`HEAD`) vs nouveau test × 3 états de `agents/locks.md` (état réel / tous verrous libérés / `p0-payment-prep` expiré) | local, 2026-11-11, `C:\Users\user\AppData\Local\Temp\opencode\lock-regression` | ancien test **FAIL 3/3** (seuil `>= 5` ; puis « le fichier reel doit contenir au moins un verrou actif »), nouveau test **PASS 3/3** |
 | test de mutation du nouveau test (réintroduction de `Date.now()` ; réintroduction du seuil codé en dur `>= 5`) | local, 2026-11-11, bac à sable isolé | les deux mutations sont **détectées** (FAIL attendu) : garde-fou de la section 8 efficace |
 | `npm run test:e2e` | non relancé en local, 2026-11-11 | **non exécuté** : la suite Playwright réécrit `artifacts/ui/`, qui porte des modifications non commitées préexistantes à ne pas écraser. Couvert par le job `ui-quality` en CI. |
-| CI PR #195 sur le SHA exact `9f94ffa39d865530b1ed488c35a3638ac2c6e022` | GitHub Actions, 2026-11-11 | `validate` **success** (run `43065917581`, 25 s) ; `ui-quality` **success** (run `43065917655`, 4 min 44 s, log `AGENT STATE LOCKS: OK (43 contrôles)`) ; `package-candidate` **pass** (17 s) ; GitGuardian **pass** |
-| `npm run validate` | local, 2026-11-14, `factory/corrections-20261111` après merge `a299c39` | exit 0, `BOT-WOW validation PASS` |
-| `npm test` (suite complète) | local, 2026-11-14, après merge + correctifs `cf13a22` et `d8b2b52` | exit 0 (tous groupes : PAYMENT LINK, COMPANION, PARCOURS DE PAIEMENT, MODE DE PAIEMENT, DEDUPLICATION, ARTEFACT, OFFRES LIVE, LIENS INTERNES, ANALYTICS SOURCES, CURRENT COMPANION STOREFRONT, AB VARIANTS, CHECKOUT GATE, GARDE MOLLIE, LIVRAISON REPRISE, CARTE DES ROUTES, MIGRATIONS, D1 IDENTIFIANTS, MIGRATION 0004, COMPATIBILITY DATA, AGENT STATE LOCKS, MULTI-REPO-BRIDGE, I18N) |
-| `node tests/agent-state-locks.test.mjs` | local, 2026-11-14 | exit 0, `AGENT STATE LOCKS: OK (43 contrôles)` — indépendant de l'heure, passe après fusion des nouveaux verrous de origin/main |
-| `node tests/analytics-source.test.mjs` | local, 2026-11-14, avec le correctif telemetry `cf13a22` | exit 0, `ANALYTICS SOURCES : OK` + 5 contrôles nouveaux (Payment Link LIVE planner/studio → `checkout_requested` ; lien intermédiaire `/buy.html` → non ; lien beta retiré → non) |
-| parcours d'achat sans transaction (`purchase-path-check-2026-11-14.mjs`, Chromium headless contre `_site` local) | local, 2026-11-14 | exit 1 corrigé en relecture iframe, puis vérifié : clic `planner-buy` et `studio-buy` sur `/buy.html` → URL `https://buy.stripe.com/4gM4gB62W4749MO78C63K01` et `…/eVqdRb8b4dHE6AC50u63K02` atteintes 2/2 ; prix rendus « BOT-WOW Planner 9,00 € » et « BOT-WOW Studio 29,00 € », Live mode ; AUCUNE saisie, AUCUNE soumission, AUCUNE commande |
-| `Invoke-WebRequest` lecture seule | production, 2026-11-14 | `buy.stripe.com/4gM4gB62W4749MO78C63K01` HTTP 200 ; `buy.stripe.com/eVqdRb8b4dHE6AC50u63K02` HTTP 200 ; `api.bot-wow.com/api/config` HTTP 200 (`offers` planner 900/studio 2900, `url: null`) ; `bot-wow.com/buy`, `/fr/buy`, `/es/buy` HTTP 200 avec les 2 liens ; `/de/buy` HTTP 200 sans lien (« Kein kostenpflichtiges Angebot ») ; `/thanks` HTTP 200 |
-| CI sur le SHA `32047b0` (tête poussée de `factory/corrections-20261111`) | GitHub Actions, 2026-11-14 | `Validate Bot-Wow` **success** (run `43620603734`) ; `UI quality and visual evidence` **success** (run `43620603646`, annotations dépréciation Node 20 préexistantes, sans échec). PR #195 : MERGEABLE / CLEAN |
