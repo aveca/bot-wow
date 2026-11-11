@@ -70,6 +70,11 @@ check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
+check('EN : homepage FAQ schema advertises the refundable beta reservation', /Is a beta reservation available/.test(enHome) && /€20 one-time beta reservation is open/.test(enHome));
+check('FR : homepage FAQ schema advertises the refundable beta reservation', /Une réservation bêta est-elle disponible/.test(frHome) && /réservation bêta unique à 20 € est ouverte/.test(frHome));
+check('EN : homepage limits use to servers that expressly permit fishing automation', /expressly permit fishing automation/i.test(enHome));
+check('FR : homepage limits use to servers that expressly permit fishing automation', /autorisent explicitement l’automatisation de la pêche/i.test(frHome));
+check('FR : homepage has no obsolete closed-sale answer', !/Aucune offre, aucun paiement/.test(frHome));
 check('FR : serveurs privés dans le bandeau ou le corps',
   /serveurs privés/i.test(frHome));
 
