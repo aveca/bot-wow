@@ -30,6 +30,8 @@ console.log('=== COHERENCE COMMERCIALE EN/FR (non-regression) ===');
 
 const EN = read('index.html');
 const FR = read('fr/index.html');
+const FAQ_EN = read('faq.html');
+const FAQ_FR = read('fr/faq.html');
 
 // 1. Lien nav vers buy.html : libellé "Réservation bêta", identique EN/FR
 check('index.html : nav buy.html = "Reserve beta — €20"',
@@ -53,6 +55,12 @@ check('index.html : FAQ remboursement mentionne le remboursement intégral',
   /fully refunded/.test(EN));
 check('fr/index.html : FAQ remboursement mentionne le remboursement intégral',
   /intégralement remboursé|intégral/.test(FR));
+
+// 4b. Ne pas promettre une annulation avant livraison absente de la politique publiée.
+check('English homepage and FAQ do not promise pre-delivery cancellation',
+  !/request cancellation before delivery|cancel before delivery/i.test(EN + FAQ_EN));
+check('French homepage and FAQ do not promise pre-delivery cancellation',
+  !/demander l[’']annulation avant livraison/i.test(FR + FAQ_FR));
 
 // 5. Prix 20 € / €20 présent de manière cohérente
 check('index.html : prix €20 present', /€20/.test(EN));
