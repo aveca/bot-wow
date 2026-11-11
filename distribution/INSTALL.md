@@ -13,15 +13,25 @@ documentation d'installation.
 ```
 package/
   addon/Casinobabe/        -> à copier dans <WoW>\Interface\AddOns\Casinobabe
+                             (fichiers du module de pêche UNIQUEMENT, livrés
+                              par liste blanche : CasinobabeFishing.lua,
+                              LiveErrorCapture.lua, Casinobabe.toc générée)
   scripts/fishing_*.py     -> le bot et ses modules (Python 3.11+)
   requirements.txt         -> dépendances Python nécessaires
   config.example.json      -> gabarit de configuration
   INSTALL.md               -> ce document
   THIRD_PARTY_NOTICES.md   -> avis de licences tiers
+  verify-package.py        -> vérificateur d'intégrité à lancer AVANT toute
+                              installation ou exécution (étape 3.2)
 MANIFEST.json              -> SHA-256 de chaque fichier (intégrité)
 VERSION                    -> version du paquet
 RELEASE-NOTES.md           -> notes de version
 ```
+
+Le dossier `addon/Casinobabe` ne contient **que** les fichiers nécessaires au mode
+pêche. L'interface casino n'est pas livrée : elle n'était pas utilisée par ce
+module. `MANIFEST.json` liste en annexe les fichiers de la source qui ont été
+exclus, avec la raison, afin que rien ne soit retiré silencieusement.
 
 ## 2. Prérequis
 
@@ -40,7 +50,7 @@ Classic specific (couleurs d'eau, taille de la minicarte).
 ## 3. Installation
 
 1. Décompressez l'archive dans un dossier de votre choix (par exemple
-   `C:\Casinababe\`).
+   `C:\Casinobabe\`).
 2. Depuis la racine du dossier extrait, vérifiez l'intégrité avant toute
    installation ou exécution : `py -3 package/verify-package.py`.
    Le vérificateur contrôle chaque SHA-256 et taille, refuse les liens symboliques,
@@ -52,8 +62,8 @@ Classic specific (couleurs d'eau, taille de la minicarte).
    internes, mais ne prouve pas l'identité de l'éditeur ni les droits de distribution.
 3. Installez les dépendances depuis la racine extraite :
    `python -m pip install -r package/requirements.txt`.
-4. Copiez `package\addon\Casinababe` dans
-   `<WoW>\Interface\AddOns\Casinababe`
+4. Copiez `package\addon\Casinobabe` dans
+   `<WoW>\Interface\AddOns\Casinobabe`
    (`<WoW>` = le dossier d'installation du client, par exemple
    `C:\Program Files (x86)\World of Warcraft\_anniversary_`).
 5. Copiez `package\config.example.json` vers
