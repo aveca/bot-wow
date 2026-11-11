@@ -3,7 +3,7 @@
 | id | scope | status | preuve |
 |---|---|---|---|
 | 20261106-commercial-truth | agent-state, delivery-sandbox, api-route-map | done | https://github.com/aveca/bot-wow/pull/129 |
-| owner-reopen-checkout | checkout public, prix, profil Mollie | blocked | Brouillon à flag seulement. Le checkout public et le prix ne changent pas. |
+| owner-beta-reservation | réservation bêta Stripe 20 €, transparence et suivi des paiements | done | Décision propriétaire reçue 2026-11-11 : Payment Link Stripe LIVE actif pour une réservation unique, non livrable immédiatement, livraison manuelle après validation finale, remboursement intégral si impossible. PR #188 fusionnée et déployée. Ne pas demander à nouveau l'autorisation de réservation ; ne pas vendre de licence logicielle tant que les droits runtime restent bloquants. |
 | pr-90-mollie-profileid | credential Mollie | open-elsewhere | PR brouillon #90, ne pas dupliquer |
 | 20261106-api-head | api-head-readonly | done | https://github.com/aveca/bot-wow/pull/129 — en production, déploiement `6ca34fa3-198a-44b8-a6ed-300e7db37f99` |
 | 20261107-legal-draft | legal-draft | active | champs A COMPLETER, achat toujours fermé |
