@@ -21,6 +21,8 @@ package/
   config.example.json      -> gabarit de configuration
   INSTALL.md               -> ce document
   THIRD_PARTY_NOTICES.md   -> avis de licences tiers
+  verify-package.py        -> vérificateur d'intégrité à lancer AVANT toute
+                              installation ou exécution (étape 3.2)
 MANIFEST.json              -> SHA-256 de chaque fichier (intégrité)
 VERSION                    -> version du paquet
 RELEASE-NOTES.md           -> notes de version
@@ -48,7 +50,7 @@ Classic specific (couleurs d'eau, taille de la minicarte).
 ## 3. Installation
 
 1. Décompressez l'archive dans un dossier de votre choix (par exemple
-   `C:\Casinababe\`).
+   `C:\Casinobabe\`).
 2. Depuis la racine du dossier extrait, vérifiez l'intégrité avant toute
    installation ou exécution : `py -3 package/verify-package.py`.
    Le vérificateur contrôle chaque SHA-256 et taille, refuse les liens symboliques,
