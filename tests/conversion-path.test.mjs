@@ -69,18 +69,18 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('compare.html');
   const fr = read('fr/compare.html');
-  check('compare EN : BOT-WOW est en vente pour serveurs privés',
+  check('compare EN : réservation bêta BOT-WOW à 20 € ouverte pour serveurs privés',
     /private servers/i.test(en) && /20,00 €/.test(en));
-  check('compare FR : BOT-WOW est en vente pour serveurs privés',
+  check('compare FR : réservation bêta BOT-WOW à 20 € ouverte pour serveurs privés',
     /serveurs privés/i.test(fr) && /20,00 €/.test(fr));
   check('compare EN : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
   check('compare EN : CTA statut vers la page achat',
-    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(en));
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve"/.test(en));
   check('compare FR : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(fr));
   check('compare FR : CTA statut vers la page achat',
-    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(fr));
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve"/.test(fr));
   check('compare : aucun lien interne mort vers #buy', !/href="#buy"/.test(en + fr));
   check('compare : sources concurrentes et dates de consultation visibles',
     /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
@@ -185,7 +185,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-status'], ['fr/compare.html', 'mbar-status']]) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-reserve'], ['fr/compare.html', 'mbar-reserve']]) {
     const t = read(f);
     check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
