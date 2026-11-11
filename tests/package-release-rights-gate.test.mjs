@@ -27,6 +27,9 @@ function seedSource(dir) {
   // whitelistés doivent exister dans toute source de test.
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'LiveErrorCapture.lua'), '-- lec fixture\n');
   writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'CasinobabeFishing.lua'), '-- fishing fixture\n');
+  // Fichier inconnu de la source : il doit rester EXCLU du paquet et apparaître
+  // dans les droits non résolus (aucune suppression silencieuse).
+  writeFileSync(join(dir, 'runtime-addon', 'Casinobabe', 'Unexpected.lua'), '-- unknown upstream file\n');
   writeFileSync(join(dir, 'scripts', 'fishing_bot.py'), 'print("fixture")\n');
 }
 
@@ -57,6 +60,10 @@ try {
       unresolved.includes('provenance source') && manifest.distribution?.sourceCommitMatches === false);
     check('les composants historiques exclus ne sont pas comptés comme dépendances du candidat',
       !unresolved.includes('LibStub / LibDBIcon-1.0 / background.tga'));
+    check('un fichier addon inconnu reste exclu et apparaît dans les droits non résolus',
+      manifest.distribution?.addon?.unlisted?.includes('Unexpected.lua')
+        && unresolved.includes('fichier addon non inventorié : Unexpected.lua')
+        && !manifest.files?.['addon/Casinobabe/Unexpected.lua']);
     check('le commit source de référence est conservé dans le manifeste',
       manifest.distribution?.expectedSourceCommit === 'b625ccec5fd61225dd92c5c54fa8721da76c3876');
   }
