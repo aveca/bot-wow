@@ -84,6 +84,20 @@ check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 
 
+// 3d. FAQ et comparaison doivent refléter l'offre bêta réellement payable.
+const enFaq = fs.readFileSync(path.join(out, 'faq.html'), 'utf8');
+const frFaq = fs.readFileSync(path.join(out, 'fr/faq.html'), 'utf8');
+const enCompare = fs.readFileSync(path.join(out, 'compare.html'), 'utf8');
+const frCompare = fs.readFileSync(path.join(out, 'fr/compare.html'), 'utf8');
+check('EN FAQ : réservation bêta et CTA visibles', /€20/.test(enFaq) && /Reserve the beta/.test(enFaq));
+check('FR FAQ : réservation bêta et CTA visibles', /20 €/.test(frFaq) && /Réserver la bêta/.test(frFaq));
+check('EN FAQ : aucun message de fermeture du checkout', !/No current sale is offered|checkout is closed|do not send payment/i.test(enFaq));
+check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle n’est proposée|checkout est fermé|N’envoyez aucun paiement/i.test(frFaq));
+check('EN comparaison : offre bêta Stripe visible', /€20 beta reservation/.test(enCompare) && /Reserve beta/.test(enCompare) && /Stripe/.test(enCompare));
+check('FR comparaison : offre bêta Stripe visible', /réservation bêta/.test(frCompare) && /Réserver la bêta/.test(frCompare) && /Stripe/.test(frCompare));
+check('EN comparaison : aucun checkout fermé ou ancien prix cible', !/Checkout closed|No payment form is available|historical target only|No current sale/i.test(enCompare));
+check('FR comparaison : aucun paiement fermé ou ancien prix cible', !/Paiement fermé|Aucun formulaire de paiement n’est disponible|ancien prix cible|Aucune vente actuelle/i.test(frCompare));
+
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {
   check(`protection conservee : ${f}`, fs.existsSync(path.join(out, f)));
