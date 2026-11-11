@@ -37,3 +37,12 @@ La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `n
 | `git diff --check` | local, 2026-11-09 | exit 0 |
 | `npx playwright test` | Chromium local contre `_site`, 2026-11-09 | exit 0 (desktop + mobile) |
 | `prefers-reduced-motion` sur `/` | Playwright, 2026-11-09 | vidéo en pause, `autoplay` faux, mascotte reste le PNG |
+| `node tests/agent-state-locks.test.mjs` | local, 2026-11-11, branche `factory/corrections-20261111`, après correction CI | exit 0, `AGENT STATE LOCKS: OK (43 contrôles)` (36 avant la correction) |
+| `npm test` | local, 2026-11-11, branche `factory/corrections-20261111` | exit 0, suite complète verte (inclut `tests/agent-state-locks.test.mjs`) |
+| `npm run validate` | local, 2026-11-11, branche `factory/corrections-20261111` | exit 0, `BOT-WOW validation PASS` |
+| `npm run audit:css` | local, 2026-11-11, branche `factory/corrections-20261111` | exit 0, 13 feuilles de style, 50 jetons définis, 0 jeton utilisé non défini |
+| `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-11, branche `factory/corrections-20261111` | exit 0, `AGENT STATE : OK` |
+| `git diff --check` | local, 2026-11-11 | exit 0 |
+| bac à sable isolé : ancien test (`HEAD`) vs nouveau test × 3 états de `agents/locks.md` (état réel / tous verrous libérés / `p0-payment-prep` expiré) | local, 2026-11-11, `C:\Users\user\AppData\Local\Temp\opencode\lock-regression` | ancien test **FAIL 3/3** (seuil `>= 5` ; puis « le fichier reel doit contenir au moins un verrou actif »), nouveau test **PASS 3/3** |
+| test de mutation du nouveau test (réintroduction de `Date.now()` ; réintroduction du seuil codé en dur `>= 5`) | local, 2026-11-11, bac à sable isolé | les deux mutations sont **détectées** (FAIL attendu) : garde-fou de la section 8 efficace |
+| `npm run test:e2e` | non relancé en local, 2026-11-11 | **non exécuté** : la suite Playwright réécrit `artifacts/ui/`, qui porte des modifications non commitées préexistantes à ne pas écraser. Couvert par le job `ui-quality` en CI. |
