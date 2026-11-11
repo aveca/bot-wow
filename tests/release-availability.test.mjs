@@ -105,16 +105,16 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
 
 // Sales pages use the requested neutral private-server scope and non-affiliation statement.
 for (const [file, notice, footer] of [
-  ['index.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/index.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['index.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/index.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['buy.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/buy.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['faq.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/faq.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['faq.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/faq.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
-  ['compare.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
-  ['fr/compare.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['compare.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compare.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['features.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/features.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['modules.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
@@ -160,8 +160,8 @@ for (const [file, unavailable, simulated, staleClaims] of [
   check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
   check(file + ' : paiement Stripe décrit sans promesse de téléchargement immédiat', /Stripe/i.test(flat) && /manual|manuellement/i.test(flat));
   const expectedFooter = file === 'faq.html'
-    ? 'Historical BOT-WOW project. No current game-integrated product is offered.'
-    : "Projet BOT-WOW historique. Aucun produit intégré à un jeu n'est actuellement proposé.";
+    ? 'A €20 beta reservation is open. No immediate game-integrated download or activation is available; delivery is manual after final validation.'
+    : 'Une réservation bêta à 20 € est ouverte. Aucun téléchargement ni aucune activation immédiats ; livraison manuelle après validation finale.';
   const archivedInstallLabel = file === 'faq.html'
     ? 'Archived installation notes (not current instructions)'
     : 'Notes d’installation archivées (instructions non actuelles)';
@@ -199,9 +199,9 @@ if (fishRegistry) {
 }
 const productTruth = read('PRODUCT.md');
 const productFlat = productTruth.replace(/\s+/g, ' ');
-check('PRODUCT.md : checkout déclaré fermé', /checkout public est \*\*fermé\*\*/i.test(productFlat));
+check('PRODUCT.md : seule la réservation bêta Stripe est ouverte', /réservation bêta à 20,00 €/.test(productFlat) && /Payment Link Stripe en production/.test(productFlat));
 check('PRODUCT.md : profil Mollie BOT-WOW dédié absent', /aucun profil Mollie BOT-WOW dédié/i.test(productFlat));
-check('PRODUCT.md : livraison non certifiée', /livraison en production n'est pas certifiée/i.test(productFlat));
+check('PRODUCT.md : livraison logicielle non certifiée', /Livraison éventuelle : manuelle/.test(productFlat) && /Release commercial du logiciel : toujours bloqué/.test(productFlat));
 check('PRODUCT.md : compatibilité limitée à Classic 1.13', /WoW Classic 1\.13 testé/i.test(productFlat) && !/majorité des serveurs privés|WoW Retail \(The War Within\)|Season of Discovery/i.test(productFlat));
 check('PRODUCT.md : compatibilité tierce ne vaut pas autorisation', /sans autorisation implicite/i.test(productFlat));
 check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut de configuration à 2 activations/i.test(productFlat));
@@ -335,16 +335,16 @@ for (const item of purchaseStatusPageCases) {
 for (const item of [
   {
     file: 'compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Purchase status<\/a>/i,
-    bar: /data-cta-id="mbar-status">Buy<\/a>/i,
-    target: /20,00 €/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve">Reserve beta — €20<\/a>/i,
+    bar: /data-cta-id="mbar-reserve">Reserve beta — €20<\/a>/i,
+    target: /€20 beta reservation open/i,
     scope: /No Blizzard authorization is claimed or documented/i,
   },
   {
     file: 'fr/compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Statut d'achat<\/a>/i,
-    bar: /data-cta-id="mbar-status">Acheter<\/a>/i,
-    target: /20,00 €/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve">Réserver la bêta — 20 €<\/a>/i,
+    bar: /data-cta-id="mbar-reserve">Réserver la bêta — 20 €<\/a>/i,
+    target: /Réservation bêta à 20 € ouverte/i,
     scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
   },
 ]) {

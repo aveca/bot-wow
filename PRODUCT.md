@@ -50,10 +50,11 @@ Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherch
 
 ## Offer — intended terms, not purchasable
 
-- Prix cible documenté : **20,00 €** (EUR), paiement unique, licence à vie ; ce montant n'est pas une invitation à payer actuellement.
-- Le checkout public est **fermé** et le bouton d'achat est désactivé. Aucune vente BOT-WOW ne doit être engagée tant que le paquet et la livraison ne sont pas certifiés.
+- Offre publique actuelle : **réservation bêta à 20,00 €** (EUR), paiement unique via un Payment Link Stripe en production. Ce paiement réserve une place ; il ne vend pas une licence activée et ne donne pas droit à un téléchargement immédiat.
+- Livraison éventuelle : manuelle par e-mail uniquement après validation finale du paquet. Aucune date n'est promise ; remboursement intégral si BOT-WOW ne peut pas livrer.
+- **Release commercial du logiciel : toujours bloqué** par les droits de redistribution du runtime et les conditions de licence client. Ne jamais présenter la réservation comme une licence livrable ou une version immédiatement utilisable.
 - Conditions d'entitlement prévues : activation sur 1 machine ; le backend comporte toutefois un défaut de cohérence documenté avec un défaut de configuration à 2 activations. Ne pas promettre cette règle avant résolution.
-- Le code contient des chemins d'intégration Mollie et Bitcoin manuel, mais aucun moyen de paiement BOT-WOW n'est actuellement certifié opérationnel. Aucun profil Mollie BOT-WOW dédié n'est disponible ; ne jamais réutiliser un profil d'une autre activité.
+- Le Payment Link Stripe BOT-WOW est actif en production pour la réservation bêta de 20 € (`plink_1UaG0TRnrMmUAHDtXMyagAIa`, offre `fishing_assistant_beta_reservation`). Il est distinct du checkout Worker/Mollie ; aucun profil Mollie BOT-WOW dédié n'est disponible, ne jamais réutiliser un profil d'une autre activité.
 - Livraison prévue : e-mail contenant une clé de licence et un lien de téléchargement. La livraison en production n'est pas certifiée ; le dernier relevé D1 du 2026-11-05 montre 0 livraison et 0 activation.
 - Compatibilité vérifiée dans la matrice : WoW Classic 1.13 testé ; environnement de serveur tiers utilisé pour des tests techniques uniquement, sans autorisation implicite. TBC, WotLK et Live ne sont pas testés / pas pris en charge ; macOS et Linux ne sont pas pris en charge. Windows 10/11 et Python 3.11+ sont les prérequis publiés.
 
@@ -64,7 +65,7 @@ Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherch
 - La lecture d'écran ne confère aucune autorisation et ne prévient pas les sanctions. Aucune promesse d'indétectabilité, d'anti-ban ou de compte protégé n'est acceptable.
 - Les modules `planned` ne sont pas livrés et ne doivent pas être présentés comme disponibles.
 - Ne jamais fabriquer des avis clients, nombres d'utilisateurs, compteurs, preuves sociales, benchmarks ou résultats mesurés non sourcés.
-- Ne pas ouvrir le checkout, créer des paiements, envoyer des emails ou lancer de campagnes tant que la disponibilité du paquet, l'autorisation commerciale et la livraison ne sont pas établies.
+- Ne pas vendre une licence logicielle, promettre un téléchargement ou lancer une livraison tant que les droits du runtime et la validation client ne sont pas établis. La réservation bêta à 20 € reste autorisée uniquement avec la divulgation explicite de son caractère non livrable immédiatement et le remboursement intégral si impossible.
 
 
 ## Assets réels disponibles
@@ -82,4 +83,4 @@ Le profil historiquement visé est un utilisateur de WoW Classic 1.13 qui cherch
 - D1 production, lecture seule le 2026-11-05 : 5 commandes Bitcoin marquées `paid` utilisent des adresses `example.com` (données de test), 8 commandes `pending_payment`, 1 `rejected`, 11 Mollie `failed` ; 5 licences, 5 jetons de téléchargement, 0 livraison, 0 activation, 16 événements webhook et 12 enregistrements email dont 0 confirmé. Aucune de ces lignes ne prouve une vente commerciale.
 - Analytics D1, événements `test=0` : 1 726 `page_view`, 680 `journey_view`, 48 `cta_click`, 29 `checkout_requested`, 4 `checkout_start`, 6 `checkout_created`, 6 `checkout_failed` ; aucun événement de paiement confirmé, conversion, livraison ou activation.
 - Les requêtes D1 étaient en lecture seule : `changed_db=false`, `rows_written=0`.
-- Le site doit conserver le checkout fermé jusqu'à preuve du paquet lisible, de sa provenance reproductible, du profil de paiement indépendant et de la livraison de bout en bout.
+- Le checkout de licence logicielle reste fermé jusqu'à preuve des droits, du paquet livrable et de la livraison de bout en bout. Le Payment Link Stripe de réservation bêta reste actif sous les conditions ci-dessus.
