@@ -1,5 +1,7 @@
 # BOT-WOW — État courant Factory V3
 
+**État court au 2026-11-11T01:10Z : `PROJECT_STATE.md`** (entrée datée 2026-11-11). Mission packaging : PR #179 (`aa02ad3`), #185 (`4a3b657`) et #186 (`0774272`) fusionnées en squash, #182 fermée sans fusion et couverture restituée, nouveau paquet réel byte-identique `7d48c249…` (180 805 o). Rapport : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
+
 **État court au 2026-11-06T14:48Z : `PROJECT_STATE.md`.** Ce fichier reste l'historique. Les sections qui décrivent le Worker v50 comme la version en production, `www` comme un 200 permanent, ou `HEAD` API encore en 404, sont périmées à partir de 14:48Z.
 
 **Dernière mise à jour de l'historique long : 2026-11-04T23:48Z**, complété par les sections P0.33 à P0.68 puis par le relevé du 2026-11-06 en fin de fichier.

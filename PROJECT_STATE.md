@@ -1,5 +1,33 @@
 # BOT-WOW — état partagé
 
+**Ajout 2026-11-11 — mission P0 « packaging BOT-WOW livrable » : les trois PR du paquet sont fusionnées, `main` est cohérent, couverture de livraison restituée, nouveau paquet réel mesuré.**
+Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérificateur client) AVANT #185 (guide)**, car le guide documente `package/verify-package.py` qui n'existait pas avant #179.
+
+| PR | Objet | Fusion squash dans `main` | Horodatage UTC |
+|---|---|---|---|
+| [#179](https://github.com/aveca/bot-wow/pull/179) | Vérificateur d'intégrité côté client (`distribution/verify-package.py`, embarqué dans `package/`), SHA-256, inventaire ZIP, refus des chemins dangereux et des symlinks, refus d'un paquet QA par défaut | `aa02ad3caf8423b1ab32b1392b07aa3e82c377b0` | 2026-11-11T00:39:36Z |
+| [#185](https://github.com/aveca/bot-wow/pull/185) | Guide d'installation réconcilié (conflit résolu sur `distribution/INSTALL.md` après #179) | `4a3b657a8d059abc378762cd9f87daa5de30e93c` | 2026-11-11T00:51:39Z |
+| [#186](https://github.com/aveca/bot-wow/pull/186) | Couverture de livraison réelle restituée (nouvelle branche depuis `main`, jamais la branche fermée) | `0774272320a0f811d7cba56cd8def120497d7f6d` | 2026-11-11T01:05:37Z |
+
+**PR #182** : fermée sans fusion par le propriétaire. Son contenu utile est repris par #184 (code), #185 (documents) et #179 (vérificateur). Sa fermeture avait fait disparaître de `main` deux protections qui n'existaient nulle part ailleurs ; elles sont restituées par la PR #186, sur une branche **neuve créée depuis `main`** (`p0/package-delivery-coverage-20261111`), conformément à la consigne de ne jamais réutiliser `p0/package-whitelist-toc-20261110`.
+
+**Nouvelle mesure du paquet réel (build depuis `main` final `0774272`)** : deux builds indépendants sur la source épinglée `aveca/Casinobabe@b625ccec5fd61225dd92c5c54fa8721da76c3876` donnent un ZIP **byte-identique**, SHA-256 `7d48c2496c83bbdf12e2beac6aab42d5ba66b7fb3bb65725c746b1c10d89f335`, 180 805 octets, 26 entrées ZIP / 25 au manifeste (2 fichiers liste blanche + TOC générée + 16 scripts Python + 3 documents + `verify-package.py` + `config.example.json` + `requirements.txt` + `VERSION` + `MANIFEST.json`), 3 fichiers du dossier addon source déclarés exclus, provenance vérifiée contre le checkout réel.
+**Pourquoi cette mesure diffère de `14beafc7…` (176 903 o)** : le builder livré dans `main` embarque désormais `package/verify-package.py` (apporté par #179) et le déclare au manifeste. L'archive ne peut donc plus être identique à l'ancienne. Aucune réécriture d'historique : la nouvelle valeur est publiée telle quelle, l'ancienne reste dans les rapports datés.
+
+**Vérifications réelles du nouveau paquet, toutes vertes** :
+- `scripts/verify-package-archive.cjs` → `PACKAGE ARCHIVE: PASS` (version `1.2.2-rc.1`, source `aveca/Casinobabe@b625ccec…`, 26 entrées, 25 fichiers manifeste, 180 805 o, SHA-256 `7d48c249…`).
+- `scripts/verify-bot-files-closure.mjs` → PASS (16 scripts = fermeture BFS = `BOT_FILES`).
+- Extraction réelle puis `py -3 package/verify-package.py --allow-qa` → « PACKAGE INTEGRITY OK — QA ONLY; not authorized for customer distribution (unresolved rights: 2) ». Sans `--allow-qa` → **refus** (exit 1) : `QA-only package; refusing installation without --allow-qa`.
+- Droits du candidat : `mode = qa`, `eligible = false`, provenance exacte, `unresolvedComponents = ["Code original Casinobabe","Police DejaVu Sans"]`.
+- `--release` contre la vraie source épinglée : **REFUSÉ** (exit 1) — « release refusée : 2 exigence(s) non satisfaite(s) (Code original Casinobabe, Police DejaVu Sans) ; aucun artefact existant ne sera supprimé et aucune archive ne sera produite ». Sentinelles préservées (`KEEP PACKAGE`, ZIP de 8 o intact).
+- Inventaire ZIP contrôlé : aucun `Casinobabe.lua`, aucun `LibStub`, aucun `LibDBIcon`, aucun `.ttf`, aucun `.tga`.
+
+**Blocages inchangés (aucun ouvert, aucune protection supprimée)** :
+- Les conditions de licence client ne sont pas publiées : `--release` échoue toujours sur « Code original Casinobabe ». C'est le comportement fail-closed voulu ; seulement un build **QA** est possible.
+- **Non vérifié** : exécution dans un véritable client WoW autorisé. Les tests Lua 5.1 + mock WoW prouvent le chargement réel des octets, pas l'activation côté client Blizzard.
+
+Rapport détaillé : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
+
 **Ajout 2026-11-10 — issue factory-control#82 : candidat Fishing Assistant minimal (liste blanche + tests installation/activation).**
 Branche `factory/issue82-mwaoy17i`, PR https://github.com/aveca/bot-wow/pull/184 (**revue uniquement — aucune fusion, aucun déploiement**).
 Source runtime lue SEULE sur le commit épinglé `aveca/Casinababe@b625ccec5fd61225dd92c5c54fa8721da76c3876` (lecture seule, jamais modifiée).
@@ -191,3 +219,14 @@ expliciter les **droits de redistribution** du runtime `aveca/Casinobabe`
 remplacement de l'artefact R2 live par le paquet reproductible `F8138F3C…`
 (`B-r2-live`). Sans réponse écrite, aucune vente du runtime ne peut être
 justifiée et le checkout reste fermé.
+
+**Prochaine action (cycle 2026-11-11) :** le paquet est construit, reproductible
+et vérifiable de bout en bout ; il ne manque plus que la **décision propriétaire
+sur les droits de redistribution et les conditions de licence client**. Ce sont
+elles — et seulement elles — qui ouvrent `--release` (échoue aujourd'hui sur
+« Code original Casinobabe » et « Police DejaVu Sans »). Aucune action technique
+supplémentaire n'est requise pour rendre le paquet livrable ; l'inventaire des
+documents commerciaux encore à écrire est dans
+`reports/operations/2026-11-11-package-merge-and-delivery-restitution.md` §6.
+Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce
+dépôt.
