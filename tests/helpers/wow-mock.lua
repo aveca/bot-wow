@@ -39,6 +39,7 @@ end
 __WoWMock = {
   frames = {},        -- frames creees, par nom
   events = {},        -- evenements enregistres : { frame =, event = }
+  addons = {},        -- metadata lues par TOC, par nom d addon
   errorHandler = nil, -- gestionnaire d'erreurs courant (chaine)
 }
 
@@ -102,7 +103,25 @@ end
 -- WoW fournit ces tables ; sans elles, indexer `nil` fait echouer le chargement.
 SlashCmdList = {}
 
-function GetAddOnMetadata(name, key) return nil end
+-- METADONNEES : le client lit les lignes `## Cle: valeur` de la TOC qu'il a
+-- chargee. `__WoWMockLoadAddOn` reproduit cette lecture (appelee par les tests
+-- avec le texte REEL de la TOC produite par le builder), pour qu'un fichier
+-- Lua qui se cale sur la version declaree soit exerce contre la vraie valeur.
+function __WoWMockLoadAddOn(name, toc)
+  local meta = {}
+  for line in tostring(toc or ''):gmatch('[^\r\n]+') do
+    local k, v = line:match('^%s*##%s*([%w_]+)%s*:%s*(.-)%s*$')
+    if k then meta[k:lower()] = v end
+  end
+  __WoWMock.addons[name] = meta
+  return meta
+end
+
+function GetAddOnMetadata(name, key)
+  local meta = __WoWMock.addons[name]
+  if not meta or key == nil then return nil end
+  return meta[key:lower()]
+end
 function GetTime() return time() end
 function IsAddOnLoaded() return true end
 function wipe(t) for k in pairs(t) do t[k] = nil end return t end
