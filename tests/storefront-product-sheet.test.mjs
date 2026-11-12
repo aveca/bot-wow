@@ -263,6 +263,26 @@ for (const p of PAGES) {
   check('legal/fr/terms.html : description SEO de la reservation beta',
     frTerms.includes('réservation bêta') && !frTerms.includes('licence de pêche à vie'));
 }
+/* 7c — coherence des autres langues de la fiche -------------------------- */
+const LOCALIZED_PRODUCT_PAGES = [
+  { file: 'de/product.html', keyword: 'beta-reservierung', price: 'Beta-Reservierung · 20,00 €' },
+  { file: 'es/product.html', keyword: 'reserva de la beta', price: 'Reserva de la beta · 20,00 €' },
+  { file: 'pt-br/product.html', keyword: 'reserva da beta', price: 'Reserva da beta · 20,00 €' },
+  { file: 'ru/product.html', keyword: 'резервирование', price: 'Бронь беты · 20,00 €' },
+  { file: 'it/product.html', keyword: 'prenotazione', price: 'Prenotazione beta · 20,00 €' },
+  { file: 'pl/product.html', keyword: 'rezerwacja', price: 'Rezerwacja bety · 20,00 €' },
+];
+for (const p of LOCALIZED_PRODUCT_PAGES) {
+  const html = read(p.file);
+  const descriptionLine = html.split('\n').find((line) => line.includes('<meta name="description"')) || '';
+  check(p.file + ' : description SEO annonce la reservation beta',
+    descriptionLine.toLowerCase().includes(p.keyword) && descriptionLine.includes('20')) ;
+  check(p.file + ' : aucun prix de licence a vie dans la fiche',
+    !html.includes('Lifetime · 20,00 €') && !descriptionLine.toLowerCase().includes('lifetime'));
+  check(p.file + ' : le prix affiche est libelle comme reservation beta',
+    html.includes(p.price));
+}
+
 /* 8 — cablage : sitemap, build, validate, pages d'entree ------------------ */
 check('scripts/build-site.mjs : product.html est publie',
   FILES.includes('product.html'));
