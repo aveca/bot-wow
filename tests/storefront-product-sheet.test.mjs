@@ -4,10 +4,11 @@
  *
  * CONTEXTE
  * ---------
- * Le site BOT-WOW ne vend rien : le paiement est ferme et aucun runtime n'est
- * distribue. Une "fiche produit" type PixelBuddy risquerait donc de devenir une
- * page de vente mensongere : statut des modules transforme en "disponible",
- * prix historique presente comme une offre, licence oubliee, provenance cachee.
+ * Le site BOT-WOW propose une reservation beta unique de 20 € ; le paquet n'est
+ * pas encore distribue et la licence complete n'est pas disponible. Une "fiche
+ * produit" type PixelBuddy risquerait de devenir une page de vente mensongere :
+ * statut des modules transforme en "disponible", reservation presentee comme
+ * une licence, licence oubliee, provenance cachee.
  *
  * CE QUE CE TEST VERIFIE (sur le code source, pas sur R2 ni sur un navigateur)
  * ---------------------------------------------------------------------------
@@ -24,7 +25,8 @@
  *     moyen de paiement ;
  *  6. honnete licence + provenance : les deux empreintes sont publiees, le
  *     manque de droits de redistribution est dit ;
- *  7. paiement ferme : aucun formulaire, aucun POST, aucun champ e-mail ;
+ *  7. paiement sur la page d'achat : aucun formulaire, aucun POST, aucun champ
+ *     e-mail sur la fiche produit elle-meme ;
  *  8. cablage : sitemap, scripts/build-site.mjs, scripts/validate.mjs et les
  *     pages d'entree (buy / features EN+FR) pointent vers la fiche ;
  *  9. liens et ancres internes de la fiche : aucun lien mort ;
@@ -182,7 +184,7 @@ for (const p of PAGES) {
     !/\breviews?\b|\bavis d'un client|\btestimonials?\b|\btémoignages?\b|\b[45](?:[.,]\d)?\s*\/\s*5\b|\bstars?\b|\bnotations?\b/i.test(flat));
   check(`${p.file} : aucun compteur d'utilisateurs invente`,
     !/\b\d[\d\s.,]*\s*(users|players|customers|joueurs|clients|utilisateurs)\b/i.test(flat));
-  check(`${p.file} : aucun moyen de paiement mentionne`,
+  check(`${p.file} : aucun prestataire de paiement alternatif non autorise`,
     !/\bMollie\b|\bBitcoin\b|\bPayPal\b|\bcredit card\b|\bcarte bancaire\b|\bcarte de crédit\b/i.test(flat));
   check(`${p.file} : pas de promesse de garantie de disponibilite`,
     !/available now|disponible maintenant|download now|téléchargez maintenant/i.test(flat));
@@ -219,19 +221,66 @@ for (const p of PAGES) {
     !/MIT licence|licence MIT|Apache-2\.0|GPL/i.test(flat));
 }
 
-/* 7 — paiement ferme ------------------------------------------------------ */
+/* 7 — paiement sur la page d'achat, jamais sur la fiche ------------------ */
 for (const p of PAGES) {
   const html = perLang[p.lang].html;
   check(`${p.file} : le paiement se fait sur la page d'achat, pas sur la fiche`,
     !/<form\b/i.test(html) && !/id="buyForm"|id="buyBtn"/i.test(html));
   check(`${p.file} : aucune requete POST`, !/method="post"|method='post'|fetch\([^)]*method:\s*['"]post/i.test(html));
   check(`${p.file} : la fiche elle-même ne collecte pas d'e-mail`, !/type="email"/i.test(html));
-  check(`${p.file} : le prix 20,00 EUR est une offre`,
-    /20,00\s?€/.test(html) && /20,00 €/.test(html));
+  check(`${p.file} : le prix de reservation 20,00 EUR est explicite`,
+    /20,00\s?€/.test(html) && /20,00 €/.test(html) &&
+    (p.lang === 'en' ? /beta reservation/i.test(stripTags(html)) : /réservation bêta/i.test(stripTags(html))));
   check(`${p.file} : serveurs privés explicites`,
     /private servers|serveurs privés/i.test(html));
   check(`${p.file} : aucun CTA ne pointe vers un paiement`,
     !/<a[^>]+href="[^"]*(?:checkout|payment|payer|paiement)[^"]*"/i.test(html));
+}
+
+/* 7b — reservation beta active, livraison et remboursement ---------------- */
+for (const p of PAGES) {
+  const html = perLang[p.lang].html;
+  const flat = stripTags(html);
+  const en = p.lang === 'en';
+  check(p.file + ' : la reservation beta de 20 € est clairement ouverte',
+    en ? /beta reservation is open on the buy page/i.test(flat) : /réservation bêta ouverte sur la page d'achat/i.test(flat));
+  check(p.file + " : le CTA renvoie vers la page d'achat",
+    html.includes('href="./buy.html"') && (en ? flat.includes('Reserve beta — €20') : flat.includes('Réserver la bêta — 20 €')));
+  check(p.file + ' : aucun téléchargement immediat ni activation promis',
+    en ? /no immediate download|does not include an immediate download/i.test(flat) : /pas de téléchargement immédiat|ni téléchargement immédiat/i.test(flat));
+  check(p.file + ' : livraison manuelle apres validation finale annoncee',
+    en ? /delivery is manual by email after final validation|manual delivery after final validation/i.test(flat) : /livraison est manuelle après validation finale|livraison manuelle après validation finale/i.test(flat));
+  check(p.file + ' : remboursement integral si livraison impossible annonce',
+    en ? /fully refunded if delivery is impossible/i.test(flat) : /intégralement remboursée/i.test(flat));
+  check(p.file + ' : aucun prix historique presente comme offre',
+    !flat.includes('historical target price') && !flat.includes('not an offer') && !flat.includes('prix cible historique') && !flat.includes('pas une offre') && !flat.includes('licence de pêche à vie'));
+}
+{
+  const enTerms = read('legal/terms.html');
+  const frTerms = read('legal/fr/terms.html');
+  check('legal/terms.html : description SEO de la reservation beta',
+    enTerms.includes('beta reservation') && !enTerms.includes('lifetime fishing licence'));
+  check('legal/fr/terms.html : description SEO de la reservation beta',
+    frTerms.includes('réservation bêta') && !frTerms.includes('licence de pêche à vie'));
+}
+/* 7c — coherence des autres langues de la fiche -------------------------- */
+const LOCALIZED_PRODUCT_PAGES = [
+  { file: 'de/product.html', keyword: 'reservierung', price: 'Beta-Reservierung · 20,00 €' },
+  { file: 'es/product.html', keyword: 'reserva', price: 'Reserva de la beta · 20,00 €' },
+  { file: 'pt-br/product.html', keyword: 'reserva', price: 'Reserva da beta · 20,00 €' },
+  { file: 'ru/product.html', keyword: 'резервирование', price: 'Бронь беты · 20,00 €' },
+  { file: 'it/product.html', keyword: 'prenotazione', price: 'Prenotazione beta · 20,00 €' },
+  { file: 'pl/product.html', keyword: 'rezerwacja', price: 'Rezerwacja bety · 20,00 €' },
+];
+for (const p of LOCALIZED_PRODUCT_PAGES) {
+  const html = read(p.file);
+  const descriptionLine = html.split('\n').find((line) => line.includes('<meta name="description"')) || '';
+  check(p.file + ' : description SEO annonce la reservation beta',
+    descriptionLine.toLowerCase().includes(p.keyword) && descriptionLine.includes('20')) ;
+  check(p.file + ' : aucun prix de licence a vie dans la fiche',
+    !html.includes('Lifetime · 20,00 €') && !descriptionLine.toLowerCase().includes('lifetime'));
+  check(p.file + ' : le prix affiche est libelle comme reservation beta',
+    html.includes(p.price));
 }
 
 /* 8 — cablage : sitemap, build, validate, pages d'entree ------------------ */
