@@ -249,7 +249,7 @@ for (const p of PAGES) {
   check(p.file + ' : aucun téléchargement immediat ni activation promis',
     en ? /no immediate download|does not include an immediate download/i.test(flat) : /pas de téléchargement immédiat|ni téléchargement immédiat/i.test(flat));
   check(p.file + ' : livraison manuelle apres validation finale annoncee',
-    en ? /manual delivery by email after final validation/i.test(flat) : /livraison manuelle après validation finale/i.test(flat));
+    en ? /delivery is manual by email after final validation|manual delivery after final validation/i.test(flat) : /livraison est manuelle après validation finale|livraison manuelle après validation finale/i.test(flat));
   check(p.file + ' : remboursement integral si livraison impossible annonce',
     en ? /fully refunded if delivery is impossible/i.test(flat) : /intégralement remboursée/i.test(flat));
   check(p.file + ' : aucun prix historique presente comme offre',
