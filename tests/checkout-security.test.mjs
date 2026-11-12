@@ -159,32 +159,29 @@ console.log('=== SECURITE DU CHECKOUT (rate limit, locale, fuites) ===');
     'en_NL', 'en_US', 'es_ES', 'fi_FI', 'fr_BE', 'fr_FR', 'fr_LU', 'hu_HU', 'is_IS', 'it_IT',
     'lt_LT', 'lv_LV', 'nb_NO', 'nl_BE', 'nl_NL', 'pl_PL', 'pt_PT', 'sk_SK', 'sl_SI', 'sv_SE', 'tr_TR',
   ]);
-  const expectations = [
-    // validateLang2 normalise d'abord : une langue inconnue devient "fr"
-    // (defaut du site), d'ou fr_FR cote Mollie.
-    ['fr', 'fr_FR'], ['en', 'en_US'], ['de', 'de_DE'], ['es', 'es_ES'],
-    ['pt', 'pt_PT'],
-    // "ru" est accepte par validateLang mais Mollie n'a pas de page hebergee
-    // russe : repli sur en_US plutot qu'une locale invalide.
-    ['ru', 'en_US'],
-    // langue inconnue -> normalisee en "fr" par validateLang2
-    ['xx', 'fr_FR'],
-  ];
-  for (const [lang, expected] of expectations) {
-    const state = freshState();
-    const env = makeEnv(state);
-    mollieCalls = [];
-    await callWorker('/api/checkout', {
-      method: 'POST', body: { email: 'loc@test.fr', lang }, env,
-      headers: { 'cf-connecting-ip': '192.0.2.5' },
-    });
-    const payment = mollieCalls.find((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST');
-    check('le montant reste 2000 centimes', payment && payment.body['line_items[0][price_data][unit_amount]'] === '2000');
-    const langSent = payment && payment.body['metadata[lang]'];
-    const supported = new Set(['fr', 'en', 'de', 'es', 'pt', 'ru']);
-    const normalized = supported.has(lang) ? lang : 'fr';
-    check(`langue envoyee a Stripe pour lang=${lang}`, langSent === normalized, `(recu ${langSent}, attendu ${normalized})`);
-  }
+    const expectations = [
+      ['fr', 'fr'], ['en', 'en'], ['de', 'de'], ['es', 'es'],
+      ['pt', 'pt'], ['pt-br', 'pt-br'], ['ru', 'ru'], ['it', 'it'], ['pl', 'pl'],
+      ['xx', 'en'],
+    ];
+    const locales = {
+      fr: 'fr', en: 'en', de: 'de', es: 'es', pt: 'pt-BR', 'pt-br': 'pt-BR',
+      ru: 'ru', it: 'it', pl: 'pl', xx: 'en',
+    };
+    for (const [lang, expected] of expectations) {
+      const state = freshState();
+      const env = makeEnv(state);
+      mollieCalls = [];
+      await callWorker('/api/checkout', {
+        method: 'POST', body: { email: 'loc@test.fr', lang }, env,
+        headers: { 'cf-connecting-ip': '192.0.2.5' },
+      });
+      const payment = mollieCalls.find((c) => c.url.endsWith('/checkout/sessions') && c.method === 'POST');
+      check('le montant reste 2000 centimes', payment && payment.body['line_items[0][price_data][unit_amount]'] === '2000');
+      const langSent = payment && payment.body['metadata[lang]'];
+      check(`langue envoyee a Stripe pour lang=${lang}`, langSent === expected, `(recu ${langSent}, attendu ${expected})`);
+      check(`locale Stripe pour lang=${lang}`, payment && payment.body.locale === locales[lang], `(recu ${payment && payment.body.locale})`);
+    }
 }
 
 /* 5. aucune fuite de secret dans les reponses */

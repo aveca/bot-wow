@@ -30,8 +30,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // src/license.ts
-var SUPPORTED_LANGS = ["fr", "en", "de", "es", "pt", "ru"];
-var DEFAULT_LANG = "fr";
+var SUPPORTED_LANGS = ["fr", "en", "de", "es", "pt", "pt-br", "ru", "it", "pl"];
+var DEFAULT_LANG = "en";
 var LICENSE_KEY_PREFIX = "BOTW-";
 var LICENSE_KEY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 var DOWNLOAD_TOKEN_BYTES = 24;
@@ -835,6 +835,7 @@ async function createStripeCheckoutSession(env2, params) {
   body.set("metadata[email]", params.email);
   body.set("metadata[lang]", params.lang);
   body.set("metadata[product]", PRODUCT_METADATA_KEY);
+  body.set("locale", stripeLocale(params.lang));
   if (params.journeyId) body.set("metadata[journey_id]", params.journeyId);
   body.set("expires_at", String(Math.floor(Date.now() / 1000) + 30 * 60));
   const response = await fetch(STRIPE_API + "/checkout/sessions", {
@@ -959,10 +960,19 @@ function validateEmail2(email) {
 }
 __name(validateEmail2, "validateEmail");
 function validateLang2(lang) {
-  const supported = ["fr", "en", "de", "es", "pt", "ru"];
-  return supported.includes(lang.toLowerCase()) ? lang.toLowerCase() : "fr";
+  const supported = ["fr", "en", "de", "es", "pt", "pt-br", "ru", "it", "pl"];
+  const normalized = String(lang || "").toLowerCase();
+  return supported.includes(normalized) ? normalized : "en";
 }
 __name(validateLang2, "validateLang");
+function stripeLocale(lang) {
+  const map = {
+    en: "en", fr: "fr", de: "de", es: "es", pt: "pt-BR", "pt-br": "pt-BR",
+    ru: "ru", it: "it", pl: "pl"
+  };
+  return map[String(lang || "").toLowerCase()] || "en";
+}
+__name(stripeLocale, "stripeLocale");
 function getClientIp2(request) {
   return request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
