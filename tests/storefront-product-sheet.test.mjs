@@ -265,9 +265,9 @@ for (const p of PAGES) {
 }
 /* 7c — coherence des autres langues de la fiche -------------------------- */
 const LOCALIZED_PRODUCT_PAGES = [
-  { file: 'de/product.html', keyword: 'beta-reservierung', price: 'Beta-Reservierung · 20,00 €' },
-  { file: 'es/product.html', keyword: 'reserva de la beta', price: 'Reserva de la beta · 20,00 €' },
-  { file: 'pt-br/product.html', keyword: 'reserva da beta', price: 'Reserva da beta · 20,00 €' },
+  { file: 'de/product.html', keyword: 'reservierung', price: 'Beta-Reservierung · 20,00 €' },
+  { file: 'es/product.html', keyword: 'reserva', price: 'Reserva de la beta · 20,00 €' },
+  { file: 'pt-br/product.html', keyword: 'reserva', price: 'Reserva da beta · 20,00 €' },
   { file: 'ru/product.html', keyword: 'резервирование', price: 'Бронь беты · 20,00 €' },
   { file: 'it/product.html', keyword: 'prenotazione', price: 'Prenotazione beta · 20,00 €' },
   { file: 'pl/product.html', keyword: 'rezerwacja', price: 'Rezerwacja bety · 20,00 €' },
