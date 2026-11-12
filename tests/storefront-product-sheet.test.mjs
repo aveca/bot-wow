@@ -244,7 +244,7 @@ for (const p of PAGES) {
   const en = p.lang === 'en';
   check(p.file + ' : la reservation beta de 20 € est clairement ouverte',
     en ? /beta reservation is open on the buy page/i.test(flat) : /réservation bêta ouverte sur la page d'achat/i.test(flat));
-  check(p.file + ' : le CTA renvoie vers la page d'achat',
+  check(p.file + " : le CTA renvoie vers la page d'achat",
     html.includes('href="./buy.html"') && (en ? flat.includes('Reserve beta — €20') : flat.includes('Réserver la bêta — 20 €')));
   check(p.file + ' : aucun téléchargement immediat ni activation promis',
     en ? /no immediate download|does not include an immediate download/i.test(flat) : /pas de téléchargement immédiat|ni téléchargement immédiat/i.test(flat));
