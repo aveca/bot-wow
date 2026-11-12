@@ -30,6 +30,12 @@ Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérific
 
 Rapport détaillé : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
 
+**Ajout 2026-11-11 — cycle bridge autopilot + correction CI ui-quality :**
+
+- **Bridge multi-dépôt (P1 — consommation de .ai/autopilot/queue.json)** : branche `bridge-clean` créée depuis `main` (dc1fb69), 3 commits uniquement bridge (0cf5168, 9b3ec95, afa5852), poussée sur origin. PR #194 ouverte (`bridge-clean` → `main`, https://github.com/aveca/bot-wow/pull/194), remplaçant l'ancienne PR #193 sur `bridge-queue-consumption` (fermée). Fonctionnalités : verrou interprocessus (fichier `.ai/autopilot/queue.lock`, ouverture `wx` exclusive, révocation orphelin par PID mort/TTL), `--consume` persiste le claim via `saveQueue` avant retour, `--watch` polling continu + exécution + ACK auto + publication sur issue GitHub, blocage humanGate/moneyPath. Tests : 17 nouveaux checks, 0 échec. E2E CLI réel vérifié : claim persisté sur disque, `--ack` complète la tâche, 2 consommateurs concurrents réclament des tâches distinctes, reprise après crash (verrou orphelin récupéré). Aucun merge ni déploiement sans autorisation explicite. Ancienne branche `bridge-queue-consumption` abandonnée (héritait de `cro-conversion-fixes` / PR #192). Aucune écriture R2, aucun secret modifié, aucun déploiement effectué.
+
+- **PR #192 — échec Chromium ui-quality** : cause racine prouvée par les logs du check-run 130590490177 (runner `ubuntu-24.04`, `Temporary failure resolving 'azure.archive.ubuntu.com'`, puis `E: Failed to fetch` sur security.ubuntu.com). L'option `--with-deps` de `npx playwright install --with-deps chromium` déclenche `apt-get` qui échoue sur ce DNS mirror. Ce n'est pas un problème de code. Correctif : `npx playwright install chromium` (sans `--with-deps`), commit `1802d69` sur `cro-conversion-fixes`, poussé sur origin. CI relancée sur `1802d69` : tous les checks verts — `validate`, `package-candidate`, `GitGuardian Security Checks`, `ui-quality` (tous `success`). Logs : `C:\Users\user\AppData\Local\Temp\opencode\pr192-job-logs.txt` (445 KB, UTF-16).
+
 **Ajout 2026-11-10 — issue factory-control#82 : candidat Fishing Assistant minimal (liste blanche + tests installation/activation).**
 Branche `factory/issue82-mwaoy17i`, PR https://github.com/aveca/bot-wow/pull/184 (**revue uniquement — aucune fusion, aucun déploiement**).
 Source runtime lue SEULE sur le commit épinglé `aveca/Casinababe@b625ccec5fd61225dd92c5c54fa8721da76c3876` (lecture seule, jamais modifiée).
