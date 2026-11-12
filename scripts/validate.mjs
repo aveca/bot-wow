@@ -79,6 +79,18 @@ const PUBLIC_PAGES = [
   "fr/getting-started.html", "fr/compatibility.html", "fr/roadmap.html",
   "fr/faq.html", "fr/modules.html",
   "fr/compare.html",
+  "de/index.html", "de/buy.html", "de/features.html", "de/product.html", "de/faq.html",
+  "es/index.html", "es/buy.html", "es/features.html", "es/product.html", "es/faq.html",
+  "pt-br/index.html", "pt-br/buy.html", "pt-br/features.html", "pt-br/product.html", "pt-br/faq.html",
+  "ru/index.html", "ru/buy.html", "ru/features.html", "ru/product.html", "ru/faq.html",
+  "it/index.html", "it/buy.html", "it/features.html", "it/product.html", "it/faq.html",
+  "pl/index.html", "pl/buy.html", "pl/features.html", "pl/product.html", "pl/faq.html",
+  "legal/de/terms.html", "legal/de/privacy.html", "legal/de/refund.html",
+  "legal/es/terms.html", "legal/es/privacy.html", "legal/es/refund.html",
+  "legal/pt-br/terms.html", "legal/pt-br/privacy.html", "legal/pt-br/refund.html",
+  "legal/ru/terms.html", "legal/ru/privacy.html", "legal/ru/refund.html",
+  "legal/it/terms.html", "legal/it/privacy.html", "legal/it/refund.html",
+  "legal/pl/terms.html", "legal/pl/privacy.html", "legal/pl/refund.html",
   "assets/favicon.svg", "robots.txt", "sitemap.xml",
 ];
 for (const file of PUBLIC_PAGES) {

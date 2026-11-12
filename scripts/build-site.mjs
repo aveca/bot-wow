@@ -29,7 +29,7 @@ const FILES = [
 ];
 
 /* Repertoires publies recursivement. */
-const DIRS = ['assets', 'docs', 'legal', 'fr'];
+const DIRS = ['assets', 'docs', 'legal', 'fr', 'de', 'es', 'pt-br', 'ru', 'it', 'pl'];
 
 /* Motifs de fichiers JAMAIS publies (meme s'ils se trouvaient dans un
    repertoire publie) : secrets, sources, migrations, sauvegardes. */

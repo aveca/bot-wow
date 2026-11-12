@@ -5,11 +5,11 @@
    - achat : le montant et la devise sont fixés côté serveur, le navigateur
      n'envoie que l'e-mail.
 */
-import { planRound } from './route-planner.js?v=81a221ed';
-import './analytics.js?v=81a221ed';
-import './journey.js?v=81a221ed';
-import './session.js?v=81a221ed';
-import './film.js?v=81a221ed';
+import { planRound } from './route-planner.js?v=11efd133';
+import './analytics.js?v=11efd133';
+import './journey.js?v=11efd133';
+import './session.js?v=11efd133';
+import './film.js?v=11efd133';
 
 // La classe `js` est posee des le chargement du module : sans JavaScript,
 // le CSS n'applique aucune masquee (page 100% lisible). Elle est posee
@@ -124,7 +124,11 @@ async function startCheckout(email) {
   const ok = document.getElementById('buyOk');
   // La page est servie en EN par defaut et en FR sous /fr/ ; la langue
   // declaree par <html lang> pilote aussi la langue de livraison de la cle.
-  const isFr = (document.documentElement.lang || 'en').toLowerCase() === 'fr';
+  const rawLang = String(document.documentElement.lang || 'en').toLowerCase();
+  const checkoutLang = rawLang.startsWith('pt') ? 'pt-br'
+    : ['fr', 'de', 'es', 'ru', 'it', 'pl', 'en'].includes(rawLang.split('-')[0]) ? rawLang.split('-')[0]
+    : 'en';
+  const isFr = checkoutLang === 'fr';
   const T = isFr
     ? { pending: 'Redirection…',
         fail: 'Le paiement n’a pas pu être lancé (%1) — réessayez, ou écrivez à support@bot-wow.com : la licence peut être délivrée à la main.',
@@ -139,7 +143,7 @@ async function startCheckout(email) {
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = T.pending;
-  const payload = { email, lang: isFr ? 'fr' : 'en' };
+  const payload = { email, lang: checkoutLang };
   if (window.botwowJourneyId) {
     payload.journey_id = window.botwowJourneyId;
   }
