@@ -26,6 +26,7 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { createIsolatedDatabase, createD1Binding } from './helpers/d1-sqlite-adapter.mjs';
 import { applyProdSchema, seedProdFixture, migrationFiles } from './helpers/prod-fixture.mjs';
@@ -71,6 +72,8 @@ function makeSqliteEnv(state, { now = Date.now() } = {}) {
       RATE_LIMIT: makeKV(),
       R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
       MOLLIE_API_KEY: 'test_key',
+      STRIPE_SECRET_KEY: 'sk_test_unit',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test',
       MOLLIE_WEBHOOK_SECRET: 'test_secret',
       ADMIN_JWT_SECRET: 'test_admin_secret',
       ADMIN_EMAIL: 'admin@example.com',
@@ -93,26 +96,32 @@ let mollieCalls = [];
 
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_REGR01', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    const m = u.match(/\/payments\/([^/?]+)$/);
-    if (m) {
-      return new Response(JSON.stringify({ ...paymentState, id: m[1] }),
+  if (u.startsWith('https://api.stripe.com/v1/checkout/sessions')) {
+    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? Object.fromEntries(new URLSearchParams(String(opts.body))) : null });
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_REGR01', url: 'https://checkout.stripe.com/c/pay/cs_REGR01' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const ps = paymentState;
+    return new Response(JSON.stringify({
+      id: ps.id, payment_status: 'paid', amount_total: 2000, currency: 'eur', livemode: true, metadata: ps.metadata,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   return realFetch(url, opts);
 };
 
 async function callWorker(path, { method = 'GET', body = null, env, headers = {} } = {}) {
+  if (String(path).includes('webhook')) {
+    const id = body && body.id;
+    const payload = JSON.stringify({ id: 'evt_' + id, type: 'checkout.session.completed', data: { object: { id } } });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    return workerMod.default.fetch(new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+      body: payload,
+    }), env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },

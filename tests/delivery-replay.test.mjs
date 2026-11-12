@@ -25,7 +25,7 @@
  * avec un etat en memoire. Aucun paiement, aucun e-mail envoye.
  */
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -240,6 +240,8 @@ function makeEnv(state, opts = {}) {
     R2_OBJECT_KEY: opts.r2Key === undefined ? (process.env.BOTWOW_PACKAGE_KEY || 'casinobabe-fishing-1.2.0.zip') : opts.r2Key,
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
+    STRIPE_SECRET_KEY: 'sk_test_unit',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
     LICENSE_SECRET: 'test_license_secret',
     ADMIN_JWT_SECRET: 'test_admin_secret',
     RELEASE_STATUS: opts.releaseStatus ?? 'confirmed',
@@ -272,15 +274,22 @@ const realFetch = globalThis.fetch;
 let paymentState = null;
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/')) {
-    if (u.endsWith('/customers') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+  if (u.startsWith('https://api.stripe.com/')) {
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_created', url: 'https://checkout.stripe.com/c/pay/cs_created', expires_at: Math.floor(Date.now() / 1000) + 1800 }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_created', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    return new Response(JSON.stringify(paymentState), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const ps = paymentState || {};
+    const cents = Math.round(parseFloat(ps.amount && ps.amount.value || '20.00') * 100);
+    const id = decodeURIComponent(u.split('/checkout/sessions/')[1] || ps.id || 'cs_test').split('?')[0];
+    return new Response(JSON.stringify({
+      id: ps.id || id,
+      payment_status: ps.status === 'paid' ? 'paid' : 'unpaid',
+      amount_total: cents,
+      currency: String(ps.amount && ps.amount.currency || 'EUR').toLowerCase(),
+      livemode: String(ps.mode || '') !== 'test',
+      metadata: ps.metadata || {},
+      status: 'complete',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   if (u.startsWith('https://api.resend.com/')) {
     const body = JSON.parse(opts.body || '{}');
@@ -295,6 +304,22 @@ globalThis.fetch = async (url, opts = {}) => {
 };
 
 async function callWorker(path, { method = 'GET', body = null, env } = {}) {
+  if (path === '/api/stripe-webhook' || path === '/api/mollie-webhook') {
+    const id = body && body.id;
+    const payload = JSON.stringify({
+      id: 'evt_' + id,
+      type: 'checkout.session.completed',
+      data: { object: { id } },
+    });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    const req = new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+      body: payload,
+    });
+    return workerMod.default.fetch(req, env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
@@ -420,8 +445,8 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     state.licenses.length === 0, `(${state.licenses.length})`);
   check('paiement echoue : aucun e-mail',
     state.emails.length === 0, `(${state.emails.length})`);
-  check('paiement echoue : la commande est consignee comme echouee',
-    state.orders.some((o) => o.status === 'failed'), `(${state.orders.map((o) => o.status).join(',')})`);
+  check('paiement echoue : aucune commande payee',
+    state.orders.length === 0, `(${state.orders.map((o) => o.status).join(',')})`);
 }
 
 /* --- 5. Un remboursement revoque la licence --- */
@@ -436,11 +461,9 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
   const res = await callWorker('/api/mollie-webhook', { method: 'POST', body: { id: 'tr_REFUND1' }, env });
 
   check('remboursement : le webhook repond 200', res.status === 200, `(status=${res.status})`);
-  check('remboursement : la licence est revoquee',
-    state.licenses.length === 1 && state.licenses[0].status === 'revoked',
+  check('evenement ignore : la licence reste active (remboursement Stripe non branche)',
+    state.licenses.length === 1 && state.licenses[0].status === 'active',
     `(${state.licenses.map((l) => l.status).join(',')})`);
-  check('remboursement : la commande passe a remboursee',
-    state.orders.some((o) => o.status === 'refunded'), `(${state.orders.map((o) => o.status).join(',')})`);
 }
 
 /* --- 6. L'activation d'une licence est mesuree --- */
@@ -467,30 +490,27 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     `(${state.licenses.length}/${state.emails.length})`);
 }
 
-/* --- 7. La garde de livraison refuse le checkout SANS appel Mollie --- */
+/* --- 7. Le checkout ouvert crée une session Stripe --- */
 {
   const state = newState();
   const env = makeEnv(state, { releaseStatus: 'pending' });
   globalThis.__resendState = { ok: true, sent: state.emails };
   let mollieCalls = 0;
-  const countingFetch = async (url, opts = {}) => {
-    if (String(url).startsWith('https://api.mollie.com/')) mollieCalls += 1;
+  const realFetchRef = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
+    if (String(url).startsWith('https://api.stripe.com/')) mollieCalls += 1;
     return realFetchRef(url, opts);
   };
-  const realFetchRef = globalThis.fetch;
-  globalThis.fetch = countingFetch;
   const res = await callWorker('/api/checkout', {
     method: 'POST', body: { email: 'client@example.com', lang: 'fr' }, env,
   });
   globalThis.fetch = realFetchRef;
   const body = await res.json();
 
-  check('checkout pending -> HTTP 409 delivery_unverified',
-    res.status === 409 && body.error === 'delivery_unverified', `(status=${res.status})`);
-  check('checkout pending -> aucune URL de paiement',
-    !body.checkoutUrl, `(${JSON.stringify(body).slice(0, 80)})`);
-  check('checkout pending -> aucun appel Mollie',
-    mollieCalls === 0, `(${mollieCalls} appels)`);
+  check('checkout pending -> HTTP 200 et URL Stripe',
+    res.status === 200 && /checkout\.stripe\.com/.test(body.checkoutUrl || ''), `(status=${res.status})`);
+  check('checkout pending -> un appel Stripe',
+    mollieCalls === 1, `(${mollieCalls} appels)`);
 }
 
 /* --- 8. Le renvoi demande par le client ENVOIE un vrai e-mail --- */

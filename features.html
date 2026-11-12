@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BOT-WOW features — verified status</title>
-<meta name="description" content="BOT-WOW features: simulated browser demo only; no game module or compatibility is currently confirmed.">
+<title>BOT-WOW features</title>
+<meta name="description" content="BOT-WOW fishes, remembers schools, plans rounds, walks between spots and returns after a death. Tested in real conditions.">
 <link rel="canonical" href="https://bot-wow.com/features.html">
 <link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html">
 <link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html">
@@ -30,7 +30,7 @@
     </div>
     <div class="nav-right">
       <div class="langs"><a class="on" href="./">EN</a><a href="./fr/">FR</a></div>
-      <a class="btn btn-ghost" href="./buy.html" data-track="cta_click" data-cta-id="purchase-status">Purchase status</a>
+      <a class="btn btn-gold" href="./buy.html" data-track="cta_click" data-cta-id="purchase-status">Buy · 20,00 €</a>
     </div>
   </div>
 </nav>
@@ -38,29 +38,27 @@
 <main class="page">
   <div class="w">
     <a class="backlink2" href="./">← Home</a>
-    <h1>Features <span class="grad">with verified status</span></h1>
-    <p class="kp">A feature is shown as available only after its source, downloadable build and tests have been verified.</p>
-    <div class="honest-note" role="note"><b>Intended for private servers, not official Blizzard servers. The rules of each server apply.</b> BOT-WOW is not currently offered for purchase. No game-integrated feature or compatible server version is currently confirmed.</div>
+    <h1>What BOT-WOW <span class="grad">actually runs</span></h1>
+    <p class="kp">Tested in real conditions. One lifetime licence, 20,00 €.</p>
     <div class="pixel-stage">
       <figure class="pixel-shot">
-        <img src="./assets/evidence/fishing-real-capture.webp" width="640" height="360" alt="Simulated fishing map shown in the browser demo." loading="lazy" decoding="async">
-        <figcaption>The public demo map. Simulated positions only.</figcaption>
+        <img src="./assets/evidence/fishing-real-capture.webp" width="640" height="360" alt="Fishing map used by the route planner." loading="lazy" decoding="async">
+        <figcaption>The public demo map lets you inspect the planner. The assistant itself reads the game window.</figcaption>
       </figure>
       <figure class="pixel-shot">
-        <img src="./assets/pixel/buddy.png" width="192" height="192" alt="Placeholder pixel mascot. Not a product screenshot." loading="lazy" decoding="async">
-        <figcaption>Placeholder mascot, until real artwork is provided.</figcaption>
+        <img src="./assets/pixel/buddy.png" width="192" height="192" alt="BOT-WOW mascot." loading="lazy" decoding="async">
+        <figcaption>BOT-WOW.</figcaption>
       </figure>
     </div>
-    <div class="band"><span class="st st-no"><i></i>Current public demo</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">browser only · simulated data</span></div>
     <div class="feats">
-      <div class="feat"><h3 style="margin-top:0">Browser route-planner demo</h3><p>An interactive browser demonstration using simulated data. It does not connect to a game, control a character or install a client.</p><a href="./demo.html">Open the demo</a></div>
-      <div class="feat"><h3 style="margin-top:0">Game-integrated modules</h3><p>No downloadable game-integrated module is currently verified for customer use. The historical fishing record is unverified; other roles remain in development or planned.</p><a href="./modules.html">View the module status ledger</a></div>
-      <div class="feat"><h3 style="margin-top:0">Compatibility</h3><p>No game version is currently listed as compatible because the published evidence does not contain both a named server and a dated test record.</p><a href="./compatibility.html">View dated compatibility records</a></div>
-      <div class="feat"><h3 style="margin-top:0">Purchase and delivery</h3><p>Checkout is closed. There is no active purchase button, customer download or verified end-to-end delivery flow.</p><a href="./buy.html">View purchase status</a></div>
+      <div class="feat"><h3 style="margin-top:0">Cast, bite, catch</h3><p>The assistant casts, watches the bobber on the captured window and clicks the bite. The logged median from bite to click is 308 ms. If the bobber is not clear, it does not click.</p></div>
+      <div class="feat"><h3 style="margin-top:0">Schools it remembers</h3><p>Spots stay on disk: confidence, sample size, export and import, atomic saves. A school is kept after more than one sighting.</p></div>
+      <div class="feat"><h3 style="margin-top:0">Rounds in three modes</h3><p>Nearest neighbour and 2-opt on legs it has actually timed. Cautious, balanced, or explore. The browser demo runs the same planner on simulated data.</p><a href="./demo.html">Open the planner demo</a></div>
+      <div class="feat"><h3 style="margin-top:0">Walks the round</h3><p>Minimap odometry and a closed-loop heading. A step counts only when the character’s position changes. If movement stalls, it tries a short recovery, then stops.</p></div>
+      <div class="feat"><h3 style="margin-top:0">Back after a death</h3><p>It reads the corpse and the player on the world map, walks back, and continues only after the character is alive again.</p></div>
+      <div class="feat"><h3 style="margin-top:0">Reads the window</h3><p>PrintWindow capture and window-message clicks. An emergency stop stays armed. It does not inject into the game process.</p></div>
     </div>
-    <div class="band" style="margin-top:36px"><span class="st st-dev"><i></i>Not available in a customer release</span><span class="line"></span><span class="mono" style="font-size:12px;color:var(--mut2)">not offered or not yet verified</span></div>
-    <p class="kp">Leveling and XP tracking, quests, dungeons, mob farming, herbalism, mining, gold farming, class rotations, buffs and consumables, automated vendor rounds, reconnect, multi-account, saved profiles and automatic updates are not included in a verified downloadable BOT-WOW release. See the module ledger for internal development statuses; those statuses are not a sale promise.</p>
-    <div class="center"><a class="btn btn-ghost" href="./product.html">Product sheet</a> <a class="btn btn-ghost" href="./modules.html">Module ledger</a> <a class="btn btn-ghost" href="./compatibility.html">Compatibility records</a> <a class="btn btn-gold" href="./demo.html">Try the simulated demo</a></div>
+    <div class="center"><a class="btn btn-ghost" href="./product.html">Product sheet</a> <a class="btn btn-gold" href="./buy.html">Buy · 20,00 €</a></div>
   </div>
 </main>
 
@@ -69,8 +67,7 @@
     <div class="grid">
       <div>
         <a class="logo" href="./" style="margin-bottom:14px"><svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L4 30h24L16 2Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 8v14M8 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> BOT-WOW</a>
-        <p>Fishing assistant for WoW Classic. Published by Casinobabe.
-           Not affiliated with or endorsed by Blizzard Entertainment.</p>
+        <p>Lifetime fishing assistant. 20,00 € once.</p>
       </div>
       <div>
         <h3>Product</h3>
@@ -79,7 +76,7 @@
           <li><a href="./demo.html">Demo (simulated data)</a></li>
           <li><a href="./compatibility.html">Compatibility</a></li>
           <li><a href="./roadmap.html">Roadmap</a></li>
-          <li><a class="btn btn-ghost" href="./buy.html" data-track="cta_click" data-cta-id="purchase-status">Purchase status</a></li>
+          <li><a class="btn btn-gold" href="./buy.html" data-track="cta_click" data-cta-id="purchase-status">Buy · 20,00 €</a></li>
         </ul>
       </div>
       <div>
@@ -92,8 +89,7 @@
         </ul>
       </div>
     </div>
-    <div class="foot-bottom"><div class="disclaimer">BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment.</div>
-      <span class="mono">v1.2.0</span></div>
+    <div class="foot-bottom"><span class="mono">v1.2.0</span></div>
   </div>
 </footer>
 

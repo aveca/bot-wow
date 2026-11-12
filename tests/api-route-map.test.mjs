@@ -29,7 +29,7 @@ function check(name, ok, detail = '') {
 let mollieCalls = 0;
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
-  if (String(url).startsWith('https://api.mollie.com/')) {
+  if (String(url).startsWith('https://api.stripe.com/')) {
     mollieCalls += 1;
     return new Response('{}', { status: 500 });
   }
@@ -38,7 +38,9 @@ globalThis.fetch = async (url, opts) => {
 
 const env = {
   CONTACT_EMAIL: 'support@bot-wow.com',
-  RELEASE_STATUS: 'confirmed',
+  RELEASE_STATUS: 'pending',
+  STRIPE_SECRET_KEY: 'sk_test_unit',
+  STRIPE_WEBHOOK_SECRET: 'whsec_test',
   DB: { prepare() { throw new Error('DB ne doit pas etre touchee par la carte de routes'); } },
   RATE_LIMIT: { get: async () => null, put: async () => {} },
 };
@@ -121,14 +123,14 @@ console.log('=== CARTE DES ROUTES API (sandbox, aucun paiement) ===');
     `(status=${res.status} mollie=${mollieCalls} ${JSON.stringify(body)})`);
 }
 {
-  const res = await call('/api/mollie-webhook');
-  check('GET /api/mollie-webhook n\'existe pas', res.status === 404, `(status=${res.status})`);
+  const res = await call('/api/stripe-webhook');
+  check('GET /api/stripe-webhook n\'existe pas', res.status === 404, `(status=${res.status})`);
 }
 {
-  const res = await call('/api/mollie-webhook', 'POST', '');
+  const res = await call('/api/stripe-webhook', 'POST', '');
   const text = await res.text();
-  check('POST /api/mollie-webhook sans id : 400, aucun appel Mollie',
-    res.status === 400 && /missing payment id/i.test(text) && mollieCalls === 0,
+  check('POST /api/stripe-webhook sans signature : 401, aucun appel Stripe',
+    res.status === 401 && mollieCalls === 0,
     `(status=${res.status} mollie=${mollieCalls} ${text.slice(0, 80)})`);
 }
 {
