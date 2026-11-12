@@ -34,8 +34,9 @@
   if (!link) return;
   var bar = document.createElement('div');
   bar.setAttribute('role', 'status');
-  bar.style.cssText = 'position:sticky;top:0;z-index:30;background:#122033;color:#e8f1ff;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font:600 14px/1.4 Sora,sans-serif';
+  bar.style.cssText = 'position:sticky;top:0;z-index:30;background:#122033;color:#e8f1ff;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;box-sizing:border-box;font:600 14px/1.4 Sora,sans-serif';
   var text = document.createElement('span');
+  text.style.cssText = 'min-width:0';
   text.textContent = prompts[suggested] || prompts.en;
   var go = document.createElement('a');
   go.href = link.getAttribute('href');
