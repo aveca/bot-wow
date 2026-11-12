@@ -237,7 +237,7 @@ function makeEnv(state, opts = {}) {
         return state.r2.get(key) || null;
       },
     },
-    R2_OBJECT_KEY: opts.r2Key === undefined ? 'casinobabe-fishing-1.2.0.zip' : opts.r2Key,
+    R2_OBJECT_KEY: opts.r2Key === undefined ? (process.env.BOTWOW_PACKAGE_KEY || 'casinobabe-fishing-1.2.0.zip') : opts.r2Key,
     MOLLIE_API_KEY: 'test_key',
     MOLLIE_WEBHOOK_SECRET: 'test_secret',
     STRIPE_SECRET_KEY: 'sk_test_unit',
@@ -262,7 +262,11 @@ function newState() {
 
 /* --------------------------------------------------------------- Worker */
 const tmpWorker = join(HERE, '.worker-replay-under-test.mjs');
-writeFileSync(tmpWorker, readFileSync(join(REPO, 'worker', 'index.js'), 'utf8'));
+const workerSource = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+const confirmedSource = workerSource.replace('var RELEASE_STATUS = "pending";', 'var RELEASE_STATUS = "confirmed";');
+if (confirmedSource === workerSource) throw new Error('RELEASE_STATUS source flag fixture anchor missing');
+// Test-only authorized-release fixture; production source remains fail-closed.
+writeFileSync(tmpWorker, confirmedSource);
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
 
 /* ------------------------------------------------------- fetch simule */
@@ -486,30 +490,27 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     `(${state.licenses.length}/${state.emails.length})`);
 }
 
-/* --- 7. La garde de livraison refuse le checkout SANS appel Mollie --- */
+/* --- 7. Le checkout ouvert crée une session Stripe --- */
 {
   const state = newState();
   const env = makeEnv(state, { releaseStatus: 'pending' });
   globalThis.__resendState = { ok: true, sent: state.emails };
   let mollieCalls = 0;
-  const countingFetch = async (url, opts = {}) => {
+  const realFetchRef = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
     if (String(url).startsWith('https://api.stripe.com/')) mollieCalls += 1;
     return realFetchRef(url, opts);
   };
-  const realFetchRef = globalThis.fetch;
-  globalThis.fetch = countingFetch;
   const res = await callWorker('/api/checkout', {
     method: 'POST', body: { email: 'client@example.com', lang: 'fr' }, env,
   });
   globalThis.fetch = realFetchRef;
   const body = await res.json();
 
-  check('checkout ouvert : pas de 409 quand RELEASE_STATUS est pending',
-    res.status !== 409, `(status=${res.status})`);
-  check('checkout ouvert : une URL de paiement est renvoyée',
-    !!body.checkoutUrl, `(${JSON.stringify(body).slice(0, 80)})`);
-  check('checkout ouvert : Mollie est appelé',
-    mollieCalls > 0, `(${mollieCalls} appels)`);
+  check('checkout pending -> HTTP 200 et URL Stripe',
+    res.status === 200 && /checkout\.stripe\.com/.test(body.checkoutUrl || ''), `(status=${res.status})`);
+  check('checkout pending -> un appel Stripe',
+    mollieCalls === 1, `(${mollieCalls} appels)`);
 }
 
 /* --- 8. Le renvoi demande par le client ENVOIE un vrai e-mail --- */
@@ -611,8 +612,15 @@ console.log('=== LIVRAISON : reprise apres echec, idempotence, preuve de livrais
     '(URL de production absente)');
 }
 
-const RELEASE_KEY = 'casinobabe-fishing-1.2.0.zip';
-const ZIP_BYTES = Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x62, 0x6f, 0x74, 0x77]);
+const RELEASE_KEY = process.env.BOTWOW_PACKAGE_KEY || 'casinobabe-fishing-1.2.0.zip';
+const PACKAGE_FIXTURE_PATH = process.env.BOTWOW_PACKAGE_FIXTURE || null;
+const ZIP_BYTES = PACKAGE_FIXTURE_PATH
+  ? new Uint8Array(readFileSync(PACKAGE_FIXTURE_PATH))
+  : Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x62, 0x6f, 0x74, 0x77]);
+
+if (PACKAGE_FIXTURE_PATH) {
+  console.log(`PACKAGE FIXTURE: ${PACKAGE_FIXTURE_PATH} (${ZIP_BYTES.length} octets)`);
+}
 
 function seedArtifact(state) {
   state.r2.set(RELEASE_KEY, { body: ZIP_BYTES });

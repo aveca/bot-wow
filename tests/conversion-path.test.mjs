@@ -7,7 +7,7 @@
  *  2. le radar interactif a une sortie vers la demonstration ;
  *  3. les sections de preuve (telemetry, etapes) et la fin de page
  *     proposent une action ;
- *  4. aucun faux formulaire de paiement n'est expose tant que les ventes sont fermees ;
+ *  4. aucun faux formulaire n'est expose ; le CTA Stripe est une reservation beta ;
  *  5. la liste d'attente reste proposee en repli ;
  *  6. l'instrumentation ne transporte AUCUNE donnee personnelle ;
  *  7. les evenements documentes sont bien ceux emis.
@@ -46,8 +46,8 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   // 3. Cibles des CTA : uniquement des pages du site
   const badHref = [...t.matchAll(/<a[^>]+class="[^"]*btn[^"]*"[^>]+href="([^"]+)"/g)]
     .map(([, h]) => h)
-    .filter((h) => /^[a-z]+:\/\//i.test(h) && !/^(mailto:|https:\/\/bot-wow\.com)/.test(h));
-  check(`${label} : aucun CTA vers un domaine tiers`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
+    .filter((h) => /^[a-z]+:\/\//i.test(h) && !/^(mailto:|https:\/\/bot-wow\.com|https:\/\/buy\.stripe\.com)/.test(h));
+  check(`${label} : CTA externe autorisé uniquement vers Stripe`, badHref.length === 0, `(trouve ${badHref.join(', ')})`);
 }
 
 // 4. Parcours hero -> demonstration -> comparaison -> statut d'achat (accueil EN)
@@ -59,10 +59,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check("accueil : formulaire de paiement présent", /<form id="buyForm"/.test(t));
-  check("accueil : champ e-mail de paiement présent", /id="email"[^>]*type="email"/.test(t));
-  check("accueil : bouton de paiement présent", /id="buyBtn"/.test(t));
-  check("accueil : le montant est fixé côté serveur", /server sets the amount|serveur fixe le montant/i.test(t));
+  check("accueil : réservation Stripe avec livraison manuelle clairement annoncée",
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(t) &&
+    /manual/i.test(t) && /full refund/i.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
@@ -70,28 +69,28 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('compare.html');
   const fr = read('fr/compare.html');
-  check('compare EN : BOT-WOW est en vente à 20 €',
-    /tested in real conditions/i.test(en) && /20,00 €/.test(en));
-  check('compare FR : BOT-WOW est en vente à 20 €',
-    /testé en conditions réelles/i.test(fr) && /20,00 €/.test(fr));
+  check('compare EN : réservation bêta BOT-WOW à 20 € ouverte pour serveurs privés',
+    /private servers/i.test(en) && /20,00 €/.test(en));
+  check('compare FR : réservation bêta BOT-WOW à 20 € ouverte pour serveurs privés',
+    /serveurs privés/i.test(fr) && /20,00 €/.test(fr));
   check('compare EN : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
   check('compare EN : CTA statut vers la page achat',
-    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(en));
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve"/.test(en));
   check('compare FR : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(fr));
   check('compare FR : CTA statut vers la page achat',
-    /href="\.\/buy\.html"[^>]*data-cta-id="compare-status"/.test(fr));
+    /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve"/.test(fr));
   check('compare : aucun lien interne mort vers #buy', !/href="#buy"/.test(en + fr));
-  check('compare : comparaison générique, sans vendeur nommé',
-    /typical rental/i.test(en) && /location habituelle/i.test(fr)
-      && !/pixelwowbot\.com/i.test(en + fr));
-  check('compare EN : pas de grille tarifaire recopiée',
-    !/€1\.99 for 48 hours/.test(en));
-  check('compare FR : pas de grille tarifaire recopiée',
-    !/1,99 € pour 48 h/.test(fr));
-  check('compare : aucun nom de serveur concurrent attribué à BOT-WOW',
-    !/WoW Forever/.test(en + fr));
+  check('compare : sources concurrentes et dates de consultation visibles',
+    /https:\/\/pixelwowbot\.com\//.test(en) && /2026-11-06/.test(en)
+      && /https:\/\/pixelwowbot\.com\//.test(fr) && /06\/11\/2026/.test(fr));
+  check('compare EN : prix concurrent conformes à la page publique',
+    /€1\.99 for 48 hours; €19\.99 per 30 days; individual roles from €6\.99/.test(en));
+  check('compare FR : prix concurrent conformes à la page publique',
+    /1,99 € pour 48 h ; 19,99 € par 30 jours ; rôles individuels à partir de 6,99 €/.test(fr));
+  check('compare : compatibilité WoW Forever attribuée au vendeur, pas à BOT-WOW',
+    /WoW Forever/.test(en) && /WoW Forever/.test(fr));
   check('compare : ancien calculateur de cout retire', !/id="ownership"/.test(en + fr));
 }
 
@@ -186,7 +185,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
     const t = read(f);
     check(`${f} : au moins un CTA instrumente`, /data-track="cta_click"/.test(t));
   }
-  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-status'], ['fr/compare.html', 'mbar-status']]) {
+  for (const [f, id] of [['index.html', 'mbar-status'], ['fr/index.html', 'mbar-status'], ['compare.html', 'mbar-reserve'], ['fr/compare.html', 'mbar-reserve']]) {
     const t = read(f);
     check(`${f} : la barre mobile est instrumentee`, new RegExp(`data-cta-id="${id}"`).test(t));
   }
@@ -224,8 +223,8 @@ for (const file of ['index.html', 'fr/index.html']) {
     .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
   check(file + ' : le hero renvoie vers la politique publiée',
     /legal\/(fr\/)?refund\.html/.test(html), '(aucun lien vers la politique)');
-  check(file + ' : le hero précise que le produit a été testé en conditions réelles',
-    /tested in real conditions|testé en conditions réelles/i.test(heroGuarantee + html), '');
+  check(file + ' : le hero précise le périmètre serveurs privés',
+    /private servers|serveurs privés/i.test(heroGuarantee + html), '');
 }
 
 // 9. Les pages FR ne doivent pas renvoyer vers les pages legales EN.
@@ -239,10 +238,9 @@ for (const file of ['fr/index.html', 'fr/compare.html', 'fr/buy.html', 'fr/demo.
     wrong.length === 0, `(${wrong.join(', ')})`);
 }
 
-// 11. Tant que le checkout est fermé, aucun CTA de statut ne doit utiliser
-// le traitement visuel réservé à un achat immédiat.
+// 11. Les CTA dorés doivent rester limités aux actions de réservation/achat.
 {
-  const PURCHASE = ['hero-status', 'nav-buy', 'features-buy', 'compare-home-buy', 'final-status', 'mbar-status', 'offer-status'];
+  const PURCHASE = ['hero-status', 'nav-buy', 'final-status', 'mbar-status', 'offer-status', 'beta-reservation-stripe'];
   for (const file of ['index.html', 'fr/index.html']) {
     const html = read(file);
     const golds = [...html.matchAll(/<a\s[^>]*class="[^"]*\bbtn-gold\b[^"]*"[^>]*>/g)]
@@ -281,12 +279,13 @@ for (const file of ['index.html', 'fr/index.html']) {
     untitled === 0, `(${untitled} sans titre)`);
 }
 
-// 13. Le checkout fermé ne doit pas exposer un champ e-mail inutilisable.
+// 13. La réservation Stripe ne collecte pas de champ e-mail local inutilisable.
 // Les règles de focus du composant restent vérifiées pour les formulaires futurs.
 for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
-  check(`${file} : le formulaire d'achat est présent`,
-    /id="buyForm"/.test(html) && /id="email"/.test(html));
+  check(`${file} : aucun formulaire ni champ e-mail de paiement`,
+    !/id="buyForm"|id="email"|id="buyBtn"|type="email"/i.test(html) &&
+    /id="beta-reservation"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));

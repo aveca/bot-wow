@@ -34,21 +34,20 @@ for (const [page, file, claimRe] of [
   // Les retours a la ligne du HTML ne sont pas significatifs : on compare
   // sur une version a espaces normalises.
   const flat = html.replace(/\s+/g, ' ');
-  check(`${page} : avis de disponibilite present`,
-    /id="release-availability-notice"/.test(html) && /role="status"/.test(html));
-  check(`${page} : mention « testé en conditions réelles »`,
-    /id="before-buying"/.test(html) && /Tested in real conditions|Testé en conditions réelles/i.test(html));
-  check(`${page} : avis de disponibilité présent et formulaire de paiement exposé`,
-    html.includes('id="release-availability-notice"') &&
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /type="email"/i.test(html));
+  check(`${page} : réservation Stripe à 20 € avec livraison manuelle`,
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) && /manual|manuelle/i.test(flat) && /full refund|intégralement remboursé|remboursement intégral/i.test(flat));
+  check(`${page} : mention « Avant d'acheter » des serveurs privés`,
+    /id="before-buying"/.test(html) && /Intended for private servers|Destiné aux serveurs privés/i.test(html));
+  check(`${page} : réservation sans formulaire local ni collecte d’e-mail`,
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) &&
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(`${page} : aucune promesse de livraison immediate`, !claimRe.test(html));
   check(`${page} : v1.2.0 non presente comme une version confirmee`,
     !/<b>v1\.2\.0<\/b>\s*current release/i.test(html) && !/<b>v1\.2\.0<\/b>\s*version actuelle/i.test(html));
-  check(`${page} : ton neutre sur le type de serveur`,
-    /Tested in real conditions|Testé en conditions réelles/i.test(flat) &&
-    !/not official Blizzard|serveurs officiels/i.test(flat));
-  check(`${page} : formulaire d'achat exposé`,
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html));
+  check(`${page} : périmètre serveurs privés`,
+    /Intended for private servers|Destiné aux serveurs privés/i.test(flat));
+  check(`${page} : aucun formulaire ni champ e-mail`,
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(`${page} : prix 20,00 EUR inchange`,
     /20,00\s*€/.test(html));
   check(`${page} : CTAs instrumentes pour la mesure`,
@@ -82,10 +81,10 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 ]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(page + ' : formulaire d’achat présent',
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html));
-  check(page + ' : le paiement est proposé',
-    /Pay 20,00 €|Payer 20,00 €/.test(html));
+  check(page + ' : réservation Stripe active sans formulaire local ni collecte d’e-mail',
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html) &&
+    /manual|manuelle/i.test(flat) &&
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
   check(page + ' : aucun message ne prétend que Mollie est actuellement actif',
     !forbiddenClaim.test(flat));
 }
@@ -94,8 +93,8 @@ for (const [page, file, forbiddenClaim, blockedLabel] of [
 for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const html = read(file);
   const flat = html.replace(/\s+/g, ' ');
-  check(file + ' : la page présente une offre à 20 €, testée en conditions réelles',
-    /20,00\s*€/.test(flat) && /tested in real conditions|testé en conditions réelles/i.test(flat));
+  check(file + ' : la page présente une offre à 20 € pour serveurs privés',
+    /20,00\s*€/.test(flat) && /private servers|serveurs privés/i.test(flat));
   check(file + ' : aucune procédure de lancement présentée comme disponible',
     !/Unzip the package|paste your licence key|press F9|Décompressez le paquet|collez votre clé de licence|appuyez sur F9/i.test(flat));
   check(file + ' : aucune promesse de remboursement dans le marketing',
@@ -104,27 +103,20 @@ for (const [file, lang] of [['index.html', 'en'], ['fr/index.html', 'fr'], ['buy
     !/The bot itself is paid|Le bot lui-même est payant|activation on one machine|activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
 
-// Sales pages stay neutral on server type. The third-party notice lives on the terms page.
-for (const [file, neutral] of [
-  ['index.html', /tested in real conditions/i],
-  ['fr/index.html', /testé en conditions réelles/i],
-  ['buy.html', /tested in real conditions/i],
-  ['fr/buy.html', /testé en conditions réelles/i],
-  ['faq.html', /tested in real conditions/i],
-  ['fr/faq.html', /testé en conditions réelles/i],
-  ['features.html', /tested in real conditions/i],
-  ['fr/features.html', /testé en conditions réelles/i],
-]) {
-  const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : testé en conditions réelles', neutral.test(flat));
-  check(file + ' : pas de restriction de type de serveur',
-    !/not official Blizzard|serveurs officiels|private servers only|serveurs privés seulement/i.test(flat));
-  check(file + ' : aucun terme de contournement ou promesse de détection',
-    !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
-}
+// Sales pages use the requested neutral private-server scope and non-affiliation statement.
 for (const [file, notice, footer] of [
+  ['index.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/index.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['buy.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/buy.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['faq.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/faq.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
   ['compatibility.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/compatibility.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['compare.html', /Use BOT-WOW only on private servers whose published rules expressly permit fishing automation/i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
+  ['fr/compare.html', /Utilisez BOT-WOW uniquement sur des serveurs privés dont les règles publiées autorisent explicitement l’automatisation de la pêche/i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
+  ['features.html', /tested in real conditions/i, /20,00 €/],
+  ['fr/features.html', /testé en conditions réelles/i, /20,00 €/],
   ['modules.html', /Intended for private servers, not official Blizzard servers\. The rules of each server apply\./i, /BOT-WOW is neither affiliated with nor endorsed by Blizzard Entertainment\. World of Warcraft is a trademark of Blizzard Entertainment\./i],
   ['fr/modules.html', /Destiné aux serveurs privés, pas aux serveurs officiels Blizzard\. Les règles de chaque serveur s'appliquent\./i, /BOT-WOW n'est ni affilié, ni approuvé par Blizzard Entertainment\. World of Warcraft est une marque de Blizzard Entertainment\./i],
 ]) {
@@ -136,40 +128,47 @@ for (const [file, notice, footer] of [
     !/bypass|contournement|Warden|indétectable|undetectable|anti-ban|anti-cheat\\s*(?:bypass|evasion)|anti-triche\\s*(?:contournement|évitement)/i.test(flat));
 }
 // The comparison page must not present historical BOT-WOW features as a current offer.
-for (const [file, neutral] of [
-  ['compare.html', /tested in real conditions/i],
-  ['fr/compare.html', /testé en conditions réelles/i],
+for (const [file, noOffer, sourceLink] of [
+  ['compare.html', /private servers/i, /pixelwowbot\.com/],
+  ['fr/compare.html', /serveurs privés/i, /pixelwowbot\.com/],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : comparaison générique en vente', neutral.test(flat) && /20,00\s*€/.test(flat));
-  check(file + ' : aucun vendeur nommé', !/pixelwowbot\.com|PixelBuddy/i.test(flat));
+  check(file + ' : offre serveurs privés visible', noOffer.test(flat));
+  check(file + ' : sources publiques du concurrent citées', sourceLink.test(flat));
   check(file + ' : aucune ancienne promesse runtime BOT-WOW',
     !/308 ms|308\s*ms|12\/12|Persistent spot memory|Mémoire persistante des spots|build du bot de pêche v1\.2\.0/i.test(flat));
 }
 
-for (const [file, onSale] of [
-  ['faq.html', /lifetime licence/i],
-  ['fr/faq.html', /licence à vie/i],
+for (const [file, unavailable] of [
+  ['faq.html', /Stripe is the current payment method for the €20 beta reservation/i],
+  ['fr/faq.html', /Stripe est le moyen de paiement actuel pour la réservation bêta à 20 €/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : la FAQ décrit la licence en vente', onSale.test(flat) && /20,00/.test(flat));
+  check(file + ' : les moyens de paiement ne sont pas présentés comme actifs', unavailable.test(flat));
   check(file + ' : aucune affirmation de checkout Mollie actif',
     !/Card payments through Mollie's checkout|La carte via le checkout de Mollie/i.test(flat));
-  check(file + ' : pas de projet historique ni de paiement fermé',
-    !/historical project|projet historique|checkout is closed|checkout est fermé|No BOT-WOW product is currently offered|Aucun produit BOT-WOW n'est actuellement proposé/i.test(flat));
 }
 
-// FAQ pages sell the implemented runtime and do not revive the closed-checkout story.
-for (const [file, features] of [
-  ['faq.html', /fishes, remembers the schools, plans the round/i],
-  ['fr/faq.html', /pêche, mémorise les bancs, prépare la ronde/i],
+// FAQ pages must describe the current project, not the historical bot as a sellable or verified runtime.
+for (const [file, unavailable, simulated, staleClaims] of [
+  ['faq.html', /A €20 beta reservation is open/i, /browser planner demo uses simulated data only/i, /It fishes, the way a careful human would|the bot itself is a paid product|A refund can be requested within 14 days|Selected third-party builds have been used/i],
+  ['fr/faq.html', /réservation bêta à 20 €/i, /démo navigateur utilise uniquement des données simulées/i, /Il pêche, comme un humain soigneux|Le bot lui-même est un produit payant|Un remboursement peut être demandé dans les 14 jours|Certains builds tiers ont servi aux tests techniques/i],
 ]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : les fonctions implémentées sont décrites', features.test(flat));
-  check(file + ' : la démo navigateur reste une prévisualisation',
-    /simulated data|données simulées/i.test(flat));
-  check(file + ' : pas d’interdiction de paiement',
-    !/Do not send payment|N'envoyez aucun paiement/i.test(flat));
+  check(file + ' : réservation bêta et livraison manuelle annoncées dès la FAQ', unavailable.test(flat));
+  check(file + ' : démo explicitement simulée et sans intégration de jeu', simulated.test(flat));
+  check(file + ' : aucune capacité runtime, compatibilité ou promesse de remboursement historique présentée comme actuelle', !staleClaims.test(flat));
+  check(file + ' : paiement Stripe décrit sans promesse de téléchargement immédiat', /Stripe/i.test(flat) && /manual|manuellement/i.test(flat));
+  const expectedFooter = file === 'faq.html'
+    ? 'A €20 beta reservation is open. No immediate game-integrated download or activation is available; delivery is manual after final validation.'
+    : 'Une réservation bêta à 20 € est ouverte. Aucun téléchargement ni aucune activation immédiats ; livraison manuelle après validation finale.';
+  const archivedInstallLabel = file === 'faq.html'
+    ? 'Archived installation notes (not current instructions)'
+    : 'Notes d’installation archivées (instructions non actuelles)';
+  check(file + ' : pied de page cohérent avec le statut historique', flat.includes(expectedFooter));
+  check(file + ' : anciennes affirmations de produit actuel retirées du pied de page',
+    !/Fishing assistant for WoW Classic|Assistant de pêche pour WoW Classic/i.test(flat));
+  check(file + ' : les notes d’installation sont explicitement archivées', flat.includes(archivedInstallLabel));
 }
 
 // Public module pages must distinguish internal registry status from commercial availability.
@@ -200,9 +199,9 @@ if (fishRegistry) {
 }
 const productTruth = read('PRODUCT.md');
 const productFlat = productTruth.replace(/\s+/g, ' ');
-check('PRODUCT.md : checkout déclaré fermé', /checkout public est \*\*fermé\*\*/i.test(productFlat));
+check('PRODUCT.md : seule la réservation bêta Stripe est ouverte', /réservation bêta à 20,00 €/.test(productFlat) && /Payment Link Stripe en production/.test(productFlat));
 check('PRODUCT.md : profil Mollie BOT-WOW dédié absent', /aucun profil Mollie BOT-WOW dédié/i.test(productFlat));
-check('PRODUCT.md : livraison non certifiée', /livraison en production n'est pas certifiée/i.test(productFlat));
+check('PRODUCT.md : livraison logicielle non certifiée', /Livraison éventuelle : manuelle/.test(productFlat) && /Release commercial du logiciel : toujours bloqué/.test(productFlat));
 check('PRODUCT.md : compatibilité limitée à Classic 1.13', /WoW Classic 1\.13 testé/i.test(productFlat) && !/majorité des serveurs privés|WoW Retail \(The War Within\)|Season of Discovery/i.test(productFlat));
 check('PRODUCT.md : compatibilité tierce ne vaut pas autorisation', /sans autorisation implicite/i.test(productFlat));
 check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut de configuration à 2 activations/i.test(productFlat));
@@ -211,10 +210,10 @@ check('PRODUCT.md : règle d’activation contradictoire documentée', /défaut 
 // Primary purchase pages must not describe historical scope as a current deliverable.
 for (const [file, lang] of [['buy.html', 'en'], ['fr/buy.html', 'fr']]) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : l’offre décrit la pêche, testée en conditions réelles',
-    /fishing|pêche/i.test(flat) && /tested in real conditions|testé en conditions réelles/i.test(flat));
-  check(file + ' : le formulaire d’achat est présent',
-    /id="buyForm"/.test(read(file)));
+  check(file + ' : l’offre concerne la pêche sur serveurs privés',
+    /fishing assistant|assistant de pêche/i.test(flat) && /private servers|serveurs privés/i.test(flat));
+  check(file + ' : aucun formulaire ou champ e-mail public',
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(read(file)));
   check(file + ' : aucune promesse de machine ou de livraison',
     !/Activation on one machine|Activation sur une machine|delivered by email|livré par e-mail/i.test(flat));
 }
@@ -247,10 +246,14 @@ const licenceTruthCases = [
     /The licence covers one machine|One licence = one active machine|machine fingerprint is recorded|old activation can be revoked|license keys are re-sent by support on request/i],
   ['docs/fr/license.html', /Les conditions d'activation sont en cours de vérification/i, /checkout public est fermé/i,
     /La licence porte sur une machine|Une licence = une machine active|empreinte de la machine est enregistrée|ancienne activation peut être révoquée|clé peut être renvoyée par le support/i],
+  ['faq.html', /A €20 beta reservation is open/i, /Activation limits and terms remain under verification/i,
+    /one machine per licence|no seat limits beyond one machine|license keys are re-sent by support on request/i],
+  ['fr/faq.html', /réservation bêta à 20 €/i, /limites et conditions d'activation restent en cours de vérification/i,
+    /une machine par licence|pas de limite de postes au-delà d'une machine|clé perdue peut être renvoyée par le support/i],
 ];
 for (const [file, availability, activation, stale] of licenceTruthCases) {
   const flat = read(file).replace(/\s+/g, ' ');
-  check(file + ' : disponibilité commerciale explicitement fermée', availability.test(flat));
+  check(file + ' : réservation bêta explicitement annoncée', availability.test(flat));
   check(file + ' : conditions d’activation explicitement non confirmées', activation.test(flat));
   check(file + ' : aucune ancienne promesse machine ou de renvoi de clé', !stale.test(flat));
 }
@@ -264,22 +267,21 @@ check('fr/index.html : la vente ne décrit pas une procédure d’installation',
 // the standalone licence documentation.
 
 
-// Homepage purchase CTAs must report availability, never imply that checkout
-// is currently open. The target price remains visible as a target, not a buy-now offer.
+// Homepage purchase CTAs offer a beta reservation with manual delivery.
 const homepagePurchaseStatusCases = [
   {
     file: 'index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Buy the lifetime licence<\/a>/i,
-    bar: /aria-label="Buy the licence"[\s\S]*?data-cta-id="mbar-status">Buy<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Reserve beta — €20<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?data-cta-id="mbar-status">Reserve beta — €20<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /buy|20,00/i,
+    allowedStatusLabel: /reserve|beta|€20/i,
   },
   {
     file: 'fr/index.html',
-    hero: /data-cta-id="hero-status"[^>]*>Acheter la licence à vie<\/a>/i,
-    bar: /aria-label="Acheter la licence"[\s\S]*?data-cta-id="mbar-status">Acheter<\/a>/i,
+    hero: /data-cta-id="hero-status"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    bar: /aria-label="Statut de l’achat"[\s\S]*?data-cta-id="mbar-status">Réserver la bêta — 20 €<\/a>/i,
     targetPrice: /20,00 €/i,
-    allowedStatusLabel: /acheter|20,00/i,
+    allowedStatusLabel: /réserver|bêta|20 €/i,
   },
 ];
 for (const item of homepagePurchaseStatusCases) {
@@ -287,8 +289,8 @@ for (const item of homepagePurchaseStatusCases) {
   const statusLinks = [...html.matchAll(/<a\b[^>]*href="#buy"[^>]*>([\s\S]*?)<\/a>/gi)];
   const labels = statusLinks.map((match) => match[1].replace(/<[^>]*>/g, '').trim());
   check(item.file + ' : CTA principal de statut présent', item.hero.test(html));
-  check(item.file + ' : barre mobile annonce le statut, pas un achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement présenté comme cible', item.targetPrice.test(html));
+  check(item.file + ' : barre mobile propose la réservation bêta', item.bar.test(html));
+  check(item.file + ' : prix de réservation 20 € visible', item.targetPrice.test(html));
   check(item.file + ' : les liens vers l’achat sont uniquement des liens de statut',
     statusLinks.length >= 2 && labels.every((label) => item.allowedStatusLabel.test(label)));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
@@ -297,32 +299,32 @@ for (const item of homepagePurchaseStatusCases) {
     !/<a\b[^>]*href="\.\/buy\.html"[^>]*>(?:Buy the licence|Acheter la licence)/i.test(html));
 }
 
-// The standalone Buy routes are currently status pages, not purchasable offers.
+// The standalone Buy routes offer a beta reservation with manual delivery.
 const purchaseStatusPageCases = [
   {
     file: 'buy.html',
-    title: /<title>Buy BOT-WOW/i,
-    nav: /data-cta-id="nav-status"[^>]*>Buy · 20,00 €<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Pay 20,00 €<\/a>/i,
-    bar: /aria-label="Buy"[\s\S]*?20,00 €/i,
+    title: /<title>BOT-WOW — Fishing Assistant Beta Reservation/i,
+    nav: /data-cta-id="nav-status"[^>]*>Reserve beta — €20<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Reserve beta — €20<\/a>/i,
+    bar: /aria-label="Purchase status"[\s\S]*?Reserve beta — €20/i,
     targetPrice: /20,00 €/i,
   },
   {
     file: 'fr/buy.html',
-    title: /<title>Acheter BOT-WOW/i,
-    nav: /data-cta-id="nav-status"[^>]*>Acheter · 20,00 €<\/a>/i,
-    hero: /data-cta-id="buy-status-primary"[^>]*>Payer 20,00 €<\/a>/i,
-    bar: /aria-label="Acheter"[\s\S]*?20,00 €/i,
+    title: /<title>BOT-WOW — Réservation bêta de l’assistant de pêche/i,
+    nav: /data-cta-id="nav-status"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    hero: /data-cta-id="buy-status-primary"[^>]*>Réserver la bêta — 20 €<\/a>/i,
+    bar: /aria-label="Statut de disponibilité"[\s\S]*?Réserver la bêta — 20 €/i,
     targetPrice: /20,00 €/i,
   },
 ];
 for (const item of purchaseStatusPageCases) {
   const html = read(item.file);
-  check(item.file + ' : titre SEO décrit un statut, pas un achat ouvert', item.title.test(html));
-  check(item.file + ' : CTA de navigation décrit la disponibilité', item.nav.test(html));
-  check(item.file + ' : CTA principal décrit la disponibilité', item.hero.test(html));
-  check(item.file + ' : barre persistante annonce le statut et le prix cible', item.bar.test(html));
-  check(item.file + ' : 20 € est présenté comme prix cible historique', item.targetPrice.test(html));
+  check(item.file + ' : titre SEO décrit la réservation bêta', item.title.test(html));
+  check(item.file + ' : CTA de navigation propose la réservation bêta', item.nav.test(html));
+  check(item.file + ' : CTA principal propose la réservation bêta', item.hero.test(html));
+  check(item.file + ' : barre persistante propose la réservation', item.bar.test(html));
+  check(item.file + ' : prix de réservation 20 € visible', item.targetPrice.test(html));
   check(item.file + ' : anciens identifiants de CTA d’achat supprimés',
     !/(?:nav-buy|buy-hero-primary)/i.test(html));
 }
@@ -333,23 +335,23 @@ for (const item of purchaseStatusPageCases) {
 for (const item of [
   {
     file: 'compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Buy · 20,00 €<\/a>/i,
-    bar: /data-cta-id="mbar-status">Buy<\/a>/i,
-    target: /20,00 €/i,
-    scope: /tested in real conditions/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve">Reserve beta — €20<\/a>/i,
+    bar: /data-cta-id="mbar-reserve">Reserve beta — €20<\/a>/i,
+    target: /€20 beta reservation open/i,
+    scope: /No Blizzard authorization is claimed or documented/i,
   },
   {
     file: 'fr/compare.html',
-    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-status">Acheter · 20,00 €<\/a>/i,
-    bar: /data-cta-id="mbar-status">Acheter<\/a>/i,
-    target: /20,00 €/i,
-    scope: /testé en conditions réelles/i,
+    cta: /href="\.\/buy\.html"[^>]*data-cta-id="compare-reserve">Réserver la bêta — 20 €<\/a>/i,
+    bar: /data-cta-id="mbar-reserve">Réserver la bêta — 20 €<\/a>/i,
+    target: /Réservation bêta à 20 € ouverte/i,
+    scope: /Aucune autorisation de Blizzard n'est revendiquée ni documentée/i,
   },
 ]) {
   const html = read(item.file);
   check(item.file + ' : CTA principal vers le statut d’achat', item.cta.test(html));
   check(item.file + ' : barre mobile = statut, pas achat', item.bar.test(html));
-  check(item.file + ' : prix explicitement historique, pas une offre', item.target.test(html));
+  check(item.file + ' : prix explicitement une réservation bêta, pas une licence immédiate', item.target.test(html));
   check(item.file + ' : aucun ancien CTA d’achat', !/(?:formula-ours-buy|mbar-buy)/i.test(html));
   check(item.file + ' : aucun fournisseur Mollie présenté comme actif', !/Mollie/i.test(html));
   check(item.file + ' : aucune promesse de machine ou renvoi de licence',
@@ -368,6 +370,29 @@ for (const file of ['modules.html', 'fr/modules.html']) {
 
 
 
+// Search previews and structured data must describe the beta reservation accurately.
+for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
+  const html = read(file);
+  const head = html.slice(0, html.indexOf('</head>'));
+  check(file + ' : aperçu social décrit correctement l’offre bêta',
+    /<meta property="og:type" content="website">/.test(head) &&
+    /<meta property="og:(?:title|description)"[^>]*(?:20,00\s*€|20\s*€|€20|20 euros)/i.test(head));
+  check(file + ' : aucun prix ou offre dans les données structurées',
+    !/"@type"\s*:\s*"Offer"|"offers"\s*:/i.test(head) &&
+    !/"@type"\s*:\s*"Product"/i.test(head) &&
+    /"@type"\s*:\s*"WebPage"/i.test(head));
+}
+for (const [file, noPaymentClaim, noPriceQuestion] of [
+  ['index.html', /After the payment provider confirms|licence key and the download link are sent by email/i, /What do I get for 20,00 €\?/i],
+  ['fr/index.html', /Après confirmation du paiement|la clé de licence et le lien de téléchargement sont envoyés par e-mail/i, /Qu’est-ce que j’ai pour 20,00 €\?/i],
+]) {
+  const html = read(file);
+  check(file + ' : aucune promesse de livraison après paiement', !noPaymentClaim.test(html));
+  check(file + ' : aucune FAQ ne promet une licence immédiate à 20 €', !noPriceQuestion.test(html));
+  check(file + ' : prix de réservation affiché dans le héros', /hero__price-value">20,00 €/i.test(html));
+  check(file + ' : démo explicitement simulée', /simulated data|données simulées/i.test(html));
+}
+
 // Closed checkout pages must not expose a fake email field or disabled payment form.
 for (const file of ['compare.html', 'fr/compare.html']) {
   const html = read(file);
@@ -377,8 +402,9 @@ for (const file of ['compare.html', 'fr/compare.html']) {
 }
 for (const file of ['index.html', 'fr/index.html', 'buy.html', 'fr/buy.html']) {
   const html = read(file);
-  check(file + ' : le formulaire de paiement est exposé',
-    /id="buyForm"/.test(html) && /id="buyBtn"/.test(html) && /type="email"/i.test(html));
+  check(file + ' : aucun formulaire de paiement ni collecte d’e-mail',
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html) &&
+    /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(html));
 }
 
 
@@ -387,22 +413,22 @@ for (const item of [
   {
     file: 'index.html',
     hero: /<h1 class="hero__title">[\s\S]*?Read the window/i,
-    notice: /tested in real conditions/i,
+    notice: /private servers/i,
     price: /20,00 €/i,
     forbidden: /Unzip the package|paste your licence key|press F9|Automate my fishing|Refundable:/i,
   },
   {
     file: 'fr/index.html',
     hero: /<h1 class="hero__title">[\s\S]*?Lire la fenêtre/i,
-    notice: /testé en conditions réelles/i,
+    notice: /serveurs privés/i,
     price: /20,00 €/i,
     forbidden: /Décompressez le paquet|collez votre clé de licence|appuyez sur F9|Automatiser ma pêche|Remboursable\s*:/i,
   },
 ]) {
   const html = read(item.file);
   check(item.file + ' : titre principal annonce le statut du projet', item.hero.test(html));
-  check(item.file + ' : avis indique qu’aucun produit n’est disponible', item.notice.test(html));
-  check(item.file + ' : prix conservé comme cible historique', item.price.test(html));
+  check(item.file + ' : avis indique le périmètre serveurs privés', item.notice.test(html));
+  check(item.file + ' : prix de réservation 20 € affiché', item.price.test(html));
   check(item.file + ' : aucune instruction d’automatisation ni promesse de remboursement', !item.forbidden.test(html));
   check(item.file + ' : CTA démo et statut présents', /data-cta-id="hero-demo"/i.test(html) && /data-cta-id="hero-status"/i.test(html));
 }

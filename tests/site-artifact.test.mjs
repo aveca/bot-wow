@@ -58,31 +58,52 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : la homepage vend la licence et reste neutre sur le type de serveur',
-  /id="buyForm"/.test(enHome) && /tested in real conditions/i.test(enHome));
-check('FR : la homepage vend la licence et reste neutre sur le type de serveur',
-  /id="buyForm"/.test(frHome) && /testé en conditions réelles/i.test(frHome));
-check('EN : formulaire d’achat présent', /id="buyBtn"/.test(enHome) && /id="email"/.test(enHome));
-check('FR : formulaire d’achat présent', /id="buyBtn"/.test(frHome) && /id="email"/.test(frHome));
+check('EN : réservation Stripe à 20 €, livraison manuelle annoncée',
+  /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(enHome) && /€20/.test(enHome) &&
+  /manual/i.test(enHome) && /full refund/i.test(enHome));
+check('FR : réservation Stripe à 20 €, livraison manuelle annoncée',
+  /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(frHome) && /20 €/.test(frHome) &&
+  /manuelle/i.test(frHome) && /intégralement remboursé/i.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));
 check('FR : aucune promesse de livraison immédiate par e-mail',
   !/Immédiatement par e-mail\s*:\s*lien de téléchargement et clé de licence/i.test(frHome));
 check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
-check('FR : conditions réelles dans le bandeau ou le corps',
-  /testé en conditions réelles/i.test(frHome));
+check('EN : OG title no longer calls the active reservation a historical project', !/Historical project/.test(enHome));
+check('FR : OG title no longer calls the active reservation a historical project', !/Projet historique/.test(frHome));
+check('EN : homepage FAQ schema advertises the refundable beta reservation', /Is a beta reservation available/.test(enHome) && /€20 one-time beta reservation is open/.test(enHome));
+check('FR : homepage FAQ schema advertises the refundable beta reservation', /Une réservation bêta est-elle disponible/.test(frHome) && /réservation bêta unique à 20 € est ouverte/.test(frHome));
+check('EN : homepage limits use to servers that expressly permit fishing automation', /expressly permit fishing automation/i.test(enHome));
+check('FR : homepage limits use to servers that expressly permit fishing automation', /autorisent explicitement l’automatisation de la pêche/i.test(frHome));
+check('FR : homepage has no obsolete closed-sale answer', !/Aucune offre, aucun paiement/.test(frHome));
+check('FR : serveurs privés dans le bandeau ou le corps',
+  /serveurs privés/i.test(frHome));
 
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
-check('EN buy : licence et conditions réelles',
-  /id="buyForm"/.test(enBuy) && /tested in real conditions/i.test(enBuy));
-check('FR buy : licence et conditions réelles',
-  /id="buyForm"/.test(frBuy) && /testé en conditions réelles/i.test(frBuy));
+check('EN buy : lien Stripe beta et livraison manuelle',
+  /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(enBuy) && /manual/i.test(enBuy) && /full refund/i.test(enBuy));
+check('FR buy : lien Stripe beta et livraison manuelle',
+  /https:\/\/buy\.stripe\.com\/00wbJ3gHAdHEf78fF863K00/.test(frBuy) && /manuelle/i.test(frBuy) && /remboursement intégral/i.test(frBuy));
 check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 
+
+// 3d. FAQ et comparaison doivent refléter l'offre bêta réellement payable.
+const enFaq = fs.readFileSync(path.join(out, 'faq.html'), 'utf8');
+const frFaq = fs.readFileSync(path.join(out, 'fr/faq.html'), 'utf8');
+const enCompare = fs.readFileSync(path.join(out, 'compare.html'), 'utf8');
+const frCompare = fs.readFileSync(path.join(out, 'fr/compare.html'), 'utf8');
+check('EN FAQ : réservation bêta et CTA visibles', /€20/.test(enFaq) && /Reserve the beta/.test(enFaq));
+check('FR FAQ : réservation bêta et CTA visibles', /20 €/.test(frFaq) && /Réserver la bêta/.test(frFaq));
+check('EN FAQ : aucun message de fermeture du checkout', !/No current sale is offered|checkout is closed|do not send payment/i.test(enFaq));
+check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle n'est proposée|checkout est fermé|N'envoyez aucun paiement/i.test(frFaq));
+check('EN comparaison : offre bêta Stripe visible', /€20 beta reservation/.test(enCompare) && /Reserve beta/.test(enCompare) && /Stripe/.test(enCompare));
+check('FR comparaison : offre bêta Stripe visible', /réservation bêta/.test(frCompare) && /Réserver la bêta/.test(frCompare) && /Stripe/.test(frCompare));
+check('EN comparaison : aucun checkout fermé ou ancien prix cible', !/Checkout closed|No payment form is available|historical target only|No current sale/i.test(enCompare));
+check('FR comparaison : aucun paiement fermé ou ancien prix cible', !/Paiement fermé|Aucun formulaire de paiement n'est disponible|ancien prix cible|Aucune vente actuelle/i.test(frCompare));
 
 // 4. Les protections sont conservees
 for (const f of ['_headers', '_redirects']) {

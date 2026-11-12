@@ -10,6 +10,12 @@ on:
       # son corps, mais la modification n'avait pas été appliquée au fichier
       # mergé.
       - 'reports/**'
+      # Même règle pour les documents d'état et les registres d'agents :
+      # `scripts/build-site.mjs` ne publie ni `PROJECT_STATE.md` ni `agents/`
+      # (FILES + DIRS = assets, docs, legal, fr), donc ces fichiers ne peuvent
+      # rien changer sur le site déployé.
+      - 'PROJECT_STATE.md'
+      - 'agents/**'
   workflow_dispatch:
 permissions:
   contents: read

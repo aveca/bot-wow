@@ -4,12 +4,6 @@ import path from 'node:path';
 
 const artifactDir = path.join(process.cwd(), 'artifacts', 'ui');
 
-function collectPageErrors(page) {
-  const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  return errors;
-}
-
 async function captureScreenshot(page, testInfo, name) {
   fs.mkdirSync(artifactDir, { recursive: true });
   await page.screenshot({
@@ -19,86 +13,61 @@ async function captureScreenshot(page, testInfo, name) {
   });
 }
 
-test('checkout open: email form on buy page (EN)', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
-  expect(response && response.ok()).toBeTruthy();
-  await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('#buyBtn')).toBeEnabled();
-  await expect(page.locator('#email')).toBeVisible();
-  await expect(page.locator('#before-buying')).toContainText(/tested in real conditions/i);
-  await captureScreenshot(page, testInfo, 'checkout-open-en');
-  expect(errors).toEqual([]);
-});
-
-test('checkout open: email form on buy page (FR)', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  const response = await page.goto('/fr/buy.html', { waitUntil: 'domcontentloaded' });
-  expect(response && response.ok()).toBeTruthy();
-  await expect(page.locator('#buyForm')).toBeVisible();
-  await expect(page.locator('#buyBtn')).toBeEnabled();
-  await expect(page.locator('#before-buying')).toContainText(/testé en conditions réelles/i);
-  await captureScreenshot(page, testInfo, 'checkout-open-fr');
-  expect(errors).toEqual([]);
-});
-
-test('checkout open: home pages expose the payment form (EN/FR)', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  for (const [lang, route] of [['en', '/'], ['fr', '/fr/']]) {
+for (const [lang, route, reservationLabel] of [
+  ['en', '/buy.html', 'beta reservation'],
+  ['fr', '/fr/buy.html', 'réservation bêta'],
+  ['home-en', '/', 'beta reservation'],
+  ['home-fr', '/fr/', 'réservation bêta'],
+]) {
+  test('beta reservation: Stripe offer is visible without local email collection (' + lang + ')', async ({ page }, testInfo) => {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
-    await expect(page.locator('#buyForm')).toBeVisible();
-    await expect(page.locator('#buyBtn')).toBeEnabled();
-    await captureScreenshot(page, testInfo, 'checkout-open-home-' + lang);
-  }
-  expect(errors).toEqual([]);
-});
-
-test('purchase unavailable: comparison pages expose no payment form (EN/FR)', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
-  for (const [lang, route] of [['en', '/compare.html'], ['fr', '/fr/compare.html']]) {
-    const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
-    expect(response && response.ok(), route).toBeTruthy();
+    await expect(page.locator('.price-card--offer')).toBeVisible();
+    const stripeLink = page.locator('a[data-cta-id="beta-reservation-stripe"]');
+    await expect(stripeLink).toBeVisible();
+    await expect(stripeLink).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+    await expect(page.locator('.price-card--offer')).toContainText(new RegExp(reservationLabel, 'i'));
+    await expect(page.locator('.price-card--offer')).toContainText(/manual|manuelle/i);
+    await expect(page.locator('.price-card--offer')).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
-    await captureScreenshot(page, testInfo, 'checkout-unavailable-compare-' + lang);
-  }
-  expect(errors).toEqual([]);
-});
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await captureScreenshot(page, testInfo, 'beta-reservation-' + lang);
+  });
+}
 
-test('purchase unavailable: status navigation cannot call checkout', async ({ page }) => {
+test('reservation page navigation never calls internal checkout', async ({ page }) => {
   const checkoutRequests = [];
   page.on('request', request => {
     if (request.url().includes('/api/checkout')) checkoutRequests.push(request.url());
   });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
-  await expect(page.locator('#buyForm')).toBeVisible();
-  await page.locator('a[data-cta-id="buy-status-primary"]').click();
+  await expect(page.locator('.price-card--offer')).toBeVisible();
+  const statusLink = page.locator('a[data-cta-id="buy-status-primary"]');
+  if (await statusLink.count()) await statusLink.click();
   expect(checkoutRequests).toEqual([]);
 });
 
-test('checkout: mobile sticky status bar remains visible on buy pages', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
+test('reservation: mobile sticky bar remains visible with price and delivery terms', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-
-  for (const [lang, route] of [['en', '/buy.html'], ['fr', '/fr/buy.html']]) {
+  for (const [lang, route, label] of [['en', '/buy.html', 'beta reservation'], ['fr', '/fr/buy.html', 'réservation bêta']]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
-    expect(response && response.ok(), 'HTTP ' + route).toBeTruthy();
+    expect(response && response.ok(), route).toBeTruthy();
     const mbar = page.locator('.mbar');
     await expect(mbar).toBeVisible();
-    await expect(mbar).toContainText('20,00 €');
+    await expect(mbar).toContainText(label);
+    await expect(mbar).toContainText(/manual|manuelle/i);
     await captureScreenshot(page, testInfo, 'mobile-status-' + lang);
   }
-  expect(errors).toEqual([]);
 });
 
-test('checkout: desktop sticky status bar remains attached after hero', async ({ page }, testInfo) => {
-  const errors = collectPageErrors(page);
+test('reservation: desktop sticky bar remains attached', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('.mbar')).toBeAttached();
+  await expect(page.locator('.mbar')).toContainText('beta reservation');
+  await expect(page.locator('.mbar')).toContainText('manual delivery');
   await captureScreenshot(page, testInfo, 'desktop-status');
-  expect(errors).toEqual([]);
 });

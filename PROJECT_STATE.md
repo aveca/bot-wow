@@ -1,6 +1,63 @@
 # BOT-WOW — état partagé
 
-**Ajout 2026-11-10 — vitrine de vente, PR https://github.com/aveca/bot-wow/pull/173.** La page d’accueil et la comparaison présentent le cycle de pêche, la mémoire des bancs, le planificateur, la marche et le retour après une mort, avec la vidéo de démo et une grille illustrée. Comparaison contre une location habituelle, sans vendeur nommé. Pas d’essai séparé : `PRICE_TABLE` ne contient que `bot-wow-lifetime` à 2000 centimes EUR. Pas de témoignages : aucun avis client réel dans le dépôt. La mention logiciel tiers / usage à vos risques reste dans les conditions de vente. `POST /api/checkout` crée une Checkout Session Stripe (20,00 EUR côté serveur) et renvoie `checkoutUrl`. `POST /api/stripe-webhook` vérifie `Stripe-Signature` avec `STRIPE_WEBHOOK_SECRET`, relit la session avec `STRIPE_SECRET_KEY`, puis lance la même livraison (licence + e-mail Resend) que l'ancien webhook Mollie. Secrets à poser : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. Événement Stripe : `checkout.session.completed`. URL : `https://api.bot-wow.com/api/stripe-webhook`. Le Worker de production n'est pas redéployé par cette PR.
+**Ajout 2026-11-12 — achat ouvert.** Le lien Stripe `https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00` reste le bouton public « Reserve beta — €20 ». `POST /api/checkout` crée aussi une Checkout Session Stripe et n'est plus bloqué par `RELEASE_STATUS`. Le Worker n'est pas déployé par cette fusion.
+
+**Ajout 2026-11-11 — décision propriétaire de réservation bêta :** le Payment Link Stripe LIVE existant est autorisé pour une réservation unique de 20 €, remboursable intégralement si BOT-WOW ne peut pas être livré. Ce n'est ni une licence activée ni un téléchargement immédiat ; livraison manuelle uniquement après validation finale. PR #188 fusionnée, déploiement Cloudflare Pages production confirmé sur `bot-wow.com` et `www.bot-wow.com` (commit `77e354b`). Au contrôle Stripe du 11/11 : 0 paiement confirmé, 6 sessions Checkout ouvertes et non payées, sans e-mail client. Les événements D1 sur 24 h : 49 vues accueil, 49 démos, 11 vues des pages d'achat, 0 clic CTA enregistré. Le profil fiscal Stripe est `pending` et la description de l'activité reste à aligner ; ne pas inventer l'identité légale du vendeur.
+
+**Ajout 2026-11-11 — mission P0 « packaging BOT-WOW livrable » : les trois PR du paquet sont fusionnées, `main` est cohérent, couverture de livraison restituée, nouveau paquet réel mesuré.**
+Ordre de fusion imposé par la cohérence documentaire : **#179 (code + vérificateur client) AVANT #185 (guide)**, car le guide documente `package/verify-package.py` qui n'existait pas avant #179.
+
+| PR | Objet | Fusion squash dans `main` | Horodatage UTC |
+|---|---|---|---|
+| [#179](https://github.com/aveca/bot-wow/pull/179) | Vérificateur d'intégrité côté client (`distribution/verify-package.py`, embarqué dans `package/`), SHA-256, inventaire ZIP, refus des chemins dangereux et des symlinks, refus d'un paquet QA par défaut | `aa02ad3caf8423b1ab32b1392b07aa3e82c377b0` | 2026-11-11T00:39:36Z |
+| [#185](https://github.com/aveca/bot-wow/pull/185) | Guide d'installation réconcilié (conflit résolu sur `distribution/INSTALL.md` après #179) | `4a3b657a8d059abc378762cd9f87daa5de30e93c` | 2026-11-11T00:51:39Z |
+| [#186](https://github.com/aveca/bot-wow/pull/186) | Couverture de livraison réelle restituée (nouvelle branche depuis `main`, jamais la branche fermée) | `0774272320a0f811d7cba56cd8def120497d7f6d` | 2026-11-11T01:05:37Z |
+
+**PR #182** : fermée sans fusion par le propriétaire. Son contenu utile est repris par #184 (code), #185 (documents) et #179 (vérificateur). Sa fermeture avait fait disparaître de `main` deux protections qui n'existaient nulle part ailleurs ; elles sont restituées par la PR #186, sur une branche **neuve créée depuis `main`** (`p0/package-delivery-coverage-20261111`), conformément à la consigne de ne jamais réutiliser `p0/package-whitelist-toc-20261110`.
+
+**Nouvelle mesure du paquet réel (build depuis `main` final `0774272`)** : deux builds indépendants sur la source épinglée `aveca/Casinobabe@b625ccec5fd61225dd92c5c54fa8721da76c3876` donnent un ZIP **byte-identique**, SHA-256 `7d48c2496c83bbdf12e2beac6aab42d5ba66b7fb3bb65725c746b1c10d89f335`, 180 805 octets, 26 entrées ZIP / 25 au manifeste (2 fichiers liste blanche + TOC générée + 16 scripts Python + 3 documents + `verify-package.py` + `config.example.json` + `requirements.txt` + `VERSION` + `MANIFEST.json`), 3 fichiers du dossier addon source déclarés exclus, provenance vérifiée contre le checkout réel.
+**Pourquoi cette mesure diffère de `14beafc7…` (176 903 o)** : le builder livré dans `main` embarque désormais `package/verify-package.py` (apporté par #179) et le déclare au manifeste. L'archive ne peut donc plus être identique à l'ancienne. Aucune réécriture d'historique : la nouvelle valeur est publiée telle quelle, l'ancienne reste dans les rapports datés.
+
+**Vérifications réelles du nouveau paquet, toutes vertes** :
+- `scripts/verify-package-archive.cjs` → `PACKAGE ARCHIVE: PASS` (version `1.2.2-rc.1`, source `aveca/Casinobabe@b625ccec…`, 26 entrées, 25 fichiers manifeste, 180 805 o, SHA-256 `7d48c249…`).
+- `scripts/verify-bot-files-closure.mjs` → PASS (16 scripts = fermeture BFS = `BOT_FILES`).
+- Extraction réelle puis `py -3 package/verify-package.py --allow-qa` → « PACKAGE INTEGRITY OK — QA ONLY; not authorized for customer distribution (unresolved rights: 2) ». Sans `--allow-qa` → **refus** (exit 1) : `QA-only package; refusing installation without --allow-qa`.
+- Droits du candidat : `mode = qa`, `eligible = false`, provenance exacte, `unresolvedComponents = ["Code original Casinobabe","Police DejaVu Sans"]`.
+- `--release` contre la vraie source épinglée : **REFUSÉ** (exit 1) — « release refusée : 2 exigence(s) non satisfaite(s) (Code original Casinobabe, Police DejaVu Sans) ; aucun artefact existant ne sera supprimé et aucune archive ne sera produite ». Sentinelles préservées (`KEEP PACKAGE`, ZIP de 8 o intact).
+- Inventaire ZIP contrôlé : aucun `Casinobabe.lua`, aucun `LibStub`, aucun `LibDBIcon`, aucun `.ttf`, aucun `.tga`.
+
+**Blocages inchangés (aucun ouvert, aucune protection supprimée)** :
+- Les conditions de licence client ne sont pas publiées : `--release` échoue toujours sur « Code original Casinobabe ». C'est le comportement fail-closed voulu ; seulement un build **QA** est possible.
+- **Non vérifié** : exécution dans un véritable client WoW autorisé. Les tests Lua 5.1 + mock WoW prouvent le chargement réel des octets, pas l'activation côté client Blizzard.
+
+Rapport détaillé : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
+
+**Ajout 2026-11-11 — cycle bridge autopilot + correction CI ui-quality :**
+
+- **Bridge multi-dépôt (P1 — consommation de .ai/autopilot/queue.json)** : branche `bridge-clean` créée depuis `main` (dc1fb69), 3 commits uniquement bridge (0cf5168, 9b3ec95, afa5852), poussée sur origin. PR #194 ouverte (`bridge-clean` → `main`, https://github.com/aveca/bot-wow/pull/194), remplaçant l'ancienne PR #193 sur `bridge-queue-consumption` (fermée). Fonctionnalités : verrou interprocessus (fichier `.ai/autopilot/queue.lock`, ouverture `wx` exclusive, révocation orphelin par PID mort/TTL), `--consume` persiste le claim via `saveQueue` avant retour, `--watch` polling continu + exécution + ACK auto + publication sur issue GitHub, blocage humanGate/moneyPath. Tests : 17 nouveaux checks, 0 échec. E2E CLI réel vérifié : claim persisté sur disque, `--ack` complète la tâche, 2 consommateurs concurrents réclament des tâches distinctes, reprise après crash (verrou orphelin récupéré). Aucun merge ni déploiement sans autorisation explicite. Ancienne branche `bridge-queue-consumption` abandonnée (héritait de `cro-conversion-fixes` / PR #192). Aucune écriture R2, aucun secret modifié, aucun déploiement effectué.
+
+- **PR #192 — échec Chromium ui-quality** : cause racine prouvée par les logs du check-run 130590490177 (runner `ubuntu-24.04`, `Temporary failure resolving 'azure.archive.ubuntu.com'`, puis `E: Failed to fetch` sur security.ubuntu.com). L'option `--with-deps` de `npx playwright install --with-deps chromium` déclenche `apt-get` qui échoue sur ce DNS mirror. Ce n'est pas un problème de code. Correctif : `npx playwright install chromium` (sans `--with-deps`), commit `1802d69` sur `cro-conversion-fixes`, poussé sur origin. CI relancée sur `1802d69` : tous les checks verts — `validate`, `package-candidate`, `GitGuardian Security Checks`, `ui-quality` (tous `success`). Logs : `C:\Users\user\AppData\Local\Temp\opencode\pr192-job-logs.txt` (445 KB, UTF-16).
+
+**Ajout 2026-11-10 — issue factory-control#82 : candidat Fishing Assistant minimal (liste blanche + tests installation/activation).**
+Branche `factory/issue82-mwaoy17i`, PR https://github.com/aveca/bot-wow/pull/184 (**revue uniquement — aucune fusion, aucun déploiement**).
+Source runtime lue SEULE sur le commit épinglé `aveca/Casinababe@b625ccec5fd61225dd92c5c54fa8721da76c3876` (lecture seule, jamais modifiée).
+Fermeture vérifiée sur ces octets : Lua — 20 appels `G()` du module pêche = API WoW uniquement, aucun symbole du core casino, ordre TOC `[LiveErrorCapture.lua, CasinobabeFishing.lua]` nécessaire (chaînage des gestionnaires d'erreurs) ; Python — fermeture BFS = 16 modules = `BOT_FILES` exactement.
+Builder : liste blanche addon + TOC BOT-WOW générée (Interface 20506, SavedVariables `CasinobabeDB, CasinobabeErrorBus`), exclusions déclarées au manifeste, fail-closed sur fichier non inventorié ; correction d'un bug TDZ (`unresolvedRights` poussé avant déclaration) exposé par les nouveaux tests.
+Tests nouveaux : contrat d'installation (19 contrôles), activation Lua 5.1 réelle (wasmoon + mock WoW ; octets réels via `BOTWOW_PACKAGE_FIXTURE`, sinon SKIP visible jamais compté), script `verify-bot-files-closure.mjs` câblé CI (MANIFEST == fermeture BFS, 16=16 sur la source épinglée).
+Preuves locales : double-build byte-identique `14beafc73c9b840c4b8f7c525032047a9186435ba5a3950814efc522c26f5ade` (176 903 octets, 25 entrées / 24 SHA-256 manifeste — `verify-package-archive` PASS), `--release` REFUSÉ (sentinelles préservées), fulfillment réel (delivery-replay) SHA-256 livré exact, `npm run validate` PASS, `npm test` PASS.
+**Correction 2026-11-10 (mesure réelle)** : la mesure publiée initialement `48818ceb…` (176 892 octets) n'est PAS reproductible avec le builder livré — deux builds indépendants redonnent `14beafc7…` (176 903 octets). Aucune variante d'un seul champ ne reproduit `48818ceb…` (`builtAt=null` → 176 916 octets ; `commitDate=null` → 176 897 octets) : l'ancienne valeur vient d'un état antérieur du builder. Le builder livré est déterministe (les deux builds sont byte-identiques) ; les preuves publiées sont donc corrigées sur la mesure réelle. Pas de réécriture d'historique : le message du commit `880ae28` conserve l'ancienne valeur, la correction est portée par un commit documentaire dédié.
+La vente reste fermée : aucun paiement/prix/checkout/Worker/secret/R2 modifié. Rapport : `reports/operations/2026-11-10-issue82-minimal-package.md`.
+
+**Correction 2026-11-10 — mesure de l'intention d'achat.** Le bouton de statut
+`nav-buy` était encore inclus dans le sélecteur `checkout_requested`, alors qu'il
+affiche « Purchase unavailable ». Les deux pages d'accueil EN/FR utilisent désormais
+l'identifiant neutre `nav-status` : le clic reste mesuré comme `cta_click`, sans
+être compté comme intention de checkout. Le test exécute le vrai script Analytics
+et vérifie le HTML des deux langues. Aucun script d'analytics, checkout, paiement,
+Worker ou prix n'a été modifié. Le rapport historique est conservé dans
+`reports/operations/2026-11-10-purchase-intent-measurement-findings.md`.
+
+**Ajout 2026-11-10 — checkout rouvert dans le code, usage serveurs privés.** Branche `cursor/pixel-visual-redesign-0da7`, PR https://github.com/aveca/bot-wow/pull/172. Le Worker n’exige plus `RELEASE_STATUS=confirmed` pour `POST /api/checkout`. Le prix reste 20,00 EUR fixé serveur. Les pages d’accueil, d’achat, la FAQ, la fiche et les conditions disent : testé et destiné aux serveurs privés, pas aux serveurs officiels Blizzard. Vérifié localement avec Mollie simulé : un e-mail valide reçoit une `checkoutUrl`. Le Worker de production n’a pas été redéployé dans ce cycle.
 
 **Relevé : 2026-11-07T16:00Z.** Les faits ci-dessous sont directement vérifiés dans ce cycle, sauf mention contraire. Les rapports antérieurs à cette heure ne sont pas une preuve.
 
@@ -172,3 +229,14 @@ expliciter les **droits de redistribution** du runtime `aveca/Casinobabe`
 remplacement de l'artefact R2 live par le paquet reproductible `F8138F3C…`
 (`B-r2-live`). Sans réponse écrite, aucune vente du runtime ne peut être
 justifiée et le checkout reste fermé.
+
+**Prochaine action (cycle 2026-11-11) :** le paquet est construit, reproductible
+et vérifiable de bout en bout ; il ne manque plus que la **décision propriétaire
+sur les droits de redistribution et les conditions de licence client**. Ce sont
+elles — et seulement elles — qui ouvrent `--release` (échoue aujourd'hui sur
+« Code original Casinobabe » et « Police DejaVu Sans »). Aucune action technique
+supplémentaire n'est requise pour rendre le paquet livrable ; l'inventaire des
+documents commerciaux encore à écrire est dans
+`reports/operations/2026-11-11-package-merge-and-delivery-restitution.md` §6.
+Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce
+dépôt.

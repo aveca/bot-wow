@@ -126,6 +126,83 @@ const OUT = path.resolve(arg('out', path.join(process.cwd(), 'dist')));
 const NOTES = arg('notes', null);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
+const RELEASE_BUILD = process.argv.includes('--release');
+const NOTICE_FILE = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
+
+/**
+ * Le tableau « Inventaire vérifié » conserve aussi des composants historiques
+ * des anciennes archives R2. Seule la section dédiée au candidat courant est
+ * une source de décision pour le mode --release.
+ */
+function sameRepository(actual, expected) {
+  const normalize = (value) => String(value || '')
+    .replace(/^https?:\/\/github\.com\//i, '')
+    .replace(/^git@github\.com:/i, '')
+    .replace(/\.git$/i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+  return !!expected && normalize(actual) === normalize(expected);
+}
+
+function inspectDistributionRights(document) {
+  const heading = /^## État des droits du paquet candidat\s*$/mi;
+  const match = heading.exec(document);
+  if (!match) {
+    return {
+      expectedRepository: null,
+      expectedSourceCommit: null,
+      unresolved: [{ component: 'section des droits du candidat absente', status: 'NON ÉTABLI' }],
+    };
+  }
+
+  const bodyStart = match.index + match[0].length;
+  const tail = document.slice(bodyStart);
+  const nextHeading = /^## /m.exec(tail);
+  const section = nextHeading ? tail.slice(0, nextHeading.index) : tail;
+  const repositoryMatch = /^\*\*Dépôt source de référence :\*\*\s*\x60([^\x60]+)\x60/mi.exec(section);
+  const commitMatch = /^\*\*Commit source de référence :\*\*\s*\x60([0-9a-f]{40})\x60/mi.exec(section);
+  const tableLines = section.split(/\r?\n/).filter((line) => /^\|/.test(line));
+  const headerIndex = tableLines.findIndex((line) =>
+    line.includes('Composant') && line.includes('Présence') && line.includes('Statut'));
+  const unresolved = [];
+  const seen = new Set();
+
+  if (!repositoryMatch || !commitMatch) unresolved.push({ component: 'métadonnées de provenance du candidat', status: 'NON ÉTABLI' });
+  if (headerIndex < 0) {
+    unresolved.push({ component: 'table des droits du candidat absente', status: 'NON ÉTABLI' });
+  } else {
+    const rows = tableLines.slice(headerIndex + 2);
+    for (const line of rows) {
+      const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+      if (cells.length !== 4) {
+        unresolved.push({ component: 'ligne de droits candidate invalide', status: 'NON ÉTABLI' });
+        continue;
+      }
+      const [component, presence, , status] = cells;
+      seen.add(component);
+      const established = presence === 'oui' && /^\*\*ÉTABLI\*\*/u.test(status);
+      const excluded = presence === 'non'
+        && (/^\*\*EXCLU\*\*/u.test(status) || /^\*\*NON EMBARQUÉ\*\*/u.test(status));
+      if (!established && !excluded) unresolved.push({ component, status: status || 'STATUT MANQUANT' });
+    }
+    if (!rows.length) unresolved.push({ component: 'inventaire du candidat vide', status: 'NON ÉTABLI' });
+  }
+
+  for (const required of [
+    'Code original Casinobabe',
+    'Police DejaVu Sans',
+    'LibStub / LibDBIcon-1.0 / background.tga',
+    'wasmoon-lua5.1 / lodash',
+  ]) if (!seen.has(required)) unresolved.push({ component: required, status: 'LIGNE ABSENTE' });
+
+  return {
+    expectedRepository: repositoryMatch ? repositoryMatch[1].trim() : null,
+    expectedSourceCommit: commitMatch ? commitMatch[1].toLowerCase() : null,
+    unresolved,
+  };
+}
+
+
 /** Fichiers du bot Python livre au client. */
 const BOT_FILES = [
   // Entry point + every local module imported by the runtime (directly or
@@ -154,6 +231,88 @@ const FORBIDDEN = [
   'state', 'reports', 'logs', '.git', 'node_modules', '__pycache__',
   '.autopilot', 'bridge', 'site', 'tests',
 ];
+
+/**
+ * LISTE BLANCHE de l'addon livre — BOT-WOW Fishing Assistant.
+ *
+ * POURQUOI une liste blanche : le builder copiait TOUT le repertoire addon
+ * source sans distinction, ce qui livrait l'interface casino historique
+ * (`Casinobabe.lua`, 373 Ko), ses bibliotheques minimap et une police tierce
+ * (757 Ko) dont le module de peche ne se sert pas. La liste blanche inverse la
+ * regle : seuls les fichiers NECESSAIRES entrent dans le paquet, tout le reste
+ * est exclu et DECLARE au manifeste (aucune suppression silencieuse).
+ *
+ * Dependances verifiees sur le commit source `257418c9a0c2c489a01226e8065ac9c8eaded954`
+ * (checkout `C:\factory\worktrees\casinobabe-v2`, lecture seule) :
+ *   - `Casinobabe.lua` : 0 reference au module peche (ni `CasinobabeFishing`,
+ *     ni `Fishing`, ni `fishing`) et 0 symbole exporte susceptible d'etre
+ *     appele par lui. Il n'est PAS indispensable au module de peche.
+ *   - `CasinobabeFishing.lua` : cree lui-meme la table `Casinobabe`
+ *     (`local CB = Casinobabe or {}`) et ses propres variables sauvegardees
+ *     (`CasinobabeDB.fishing.totals`), n'utilise NI LibStub NI LibDBIcon
+ *     (0 occurrence) et n'utilise AUCUNE police (0 `SetFont`, 0 `ttf`).
+ *   - `LiveErrorCapture.lua` : autonome (API WoW + `CasinobabeErrorBus`), et il
+ *     doit etre charge AVANT le module de peche : celui-ci chaîne son propre
+ *     gestionnaire d'erreurs sur le precedent.
+ *   - consequence de la whitelist : la police DejaVu Sans et les bibliotheques
+ *     minimap ne sont plus livrees (leurs seuls utilisateurs etaient le fichier
+ *     casino). `distribution/THIRD_PARTY_NOTICES.md` est mis a jour en
+ *     consequence.
+ * Preuve executable existante cote source : `tests/run-fishing-harness.mjs`
+ * charge `CasinobabeFishing.lua` SEUL sous un mock WoW et obtient
+ * `Casinobabe.Fishing`.
+ */
+const ADDON_WHITELIST = [
+  'LiveErrorCapture.lua',
+  'CasinobabeFishing.lua',
+];
+
+/**
+ * Fichiers du addon source volontairement NON livres, avec la raison exacte.
+ * Un fichier present dans la source mais absent de cette table est exclu lui
+ * aussi (liste blanche), et signale comme « non inventorié » : en build
+ * `--release`, un fichier non inventorié fait ECHOUER le build (voir plus bas).
+ */
+const ADDON_EXCLUDED = {
+  'Casinobabe.lua':
+    'interface casino historique : 0 reference au module peche et 0 symbole '
+    + 'exporte utilise par lui (verifie sur le commit source) ; non requis',
+  'Casinobabe.toc':
+    'TOC du addon casino : remplacee par la TOC BOT-WOW generee par ce builder',
+  'Libs/LibStub/LibStub.lua':
+    'bibliotheque du bouton minimap casino (4 references dans Casinobabe.lua, '
+    + '0 dans le module peche) ; droits non etablis',
+  'Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua':
+    'icone minimap casino (15 references dans Casinobabe.lua, 0 dans le module '
+    + 'peche) ; droits non etablis',
+  'media/background.tga':
+    'fond de l interface casino ; droits non etablis',
+  'media/casino_uni.ttf':
+    'police DejaVu Sans : 0 SetFont / 0 ttf dans le module peche (verifie) ; '
+    + 'non requise par le paquet BOT-WOW',
+};
+
+/**
+ * Nom du dossier addon livre ET du fichier `.toc` genere.
+ *
+ * CONTRAINTE DURE, ne pas renommer sans relire le bot Python : WoW ecrit les
+ * variables sauvegardees dans `WTF/Account/<compte>/<serveur>/SavedVariables`
+ * sous le nom du `.toc` (moins l'extension). Le bot livré lit exactement
+ * `SavedVariables/Casinobabe.lua` :
+ *   - `scripts/fishing_bot.py` : `if fn == "Casinobabe.lua"` (enumere les
+ *     SavedVariables pour lire l'etat persiste de l'addon) ;
+ *   - `scripts/fishing_controls.py` :
+ *     `os.path.join("SavedVariables", "Casinobabe.lua")`.
+ * Renommer le addon en `BotWowFishingAssistant` ferait ecrire
+ * `SavedVariables/BotWowFishingAssistant.lua` et le bot ne trouverait plus
+ * rien. Le nom reste donc `Casinobabe` ; c'est le CONTENU de la TOC qui est
+ * dedie BOT-WOW (titre, auteur, fichiers charges), pas son nom de fichier.
+ * `tests/package-addon-install.test.mjs` verrouille cette correspondance.
+ */
+const ADDON_DIR = 'Casinobabe';
+const ADDON_TOC_FILE = 'Casinobabe.toc';
+const ADDON_SAVED_VARIABLES = ['CasinobabeDB', 'CasinobabeErrorBus'];
+
 
 /**
  * Parcours de la source. REFUSE tout lien symbolique (fichier ou repertoire)
@@ -417,17 +576,96 @@ function main() {
     console.error(`Source introuvable : ${SOURCE}`);
     process.exit(1);
   }
-  // Préflight juridique avant toute suppression ou écriture d'un artefact existant.
+  // Préflight juridique et provenance avant toute suppression ou écriture d'un artefact existant.
   const addonDir = path.join(SOURCE, 'runtime-addon', 'Casinobabe');
   const addonFiles = fs.existsSync(addonDir) ? walk(addonDir) : [];
-  assertNoUnverifiedAddonComponents(addonFiles);
+  /* FAIL-CLOSED sur la liste blanche elle-meme : si un fichier que nous
+     livrons ETait un composant aux droits non etablis, le build doit echouer
+     (une liste blanche mal editee ne doit jamais faire livrer un composant
+     interdit). Le controle ne porte plus sur toute la source : une source qui
+     CONTIENT encore des composants non certifies les voit exclus, pas refuses
+     (sinon le vrai depot source, qui les contient, serait inconsctructible). */
+  assertNoUnverifiedAddonComponents(ADDON_WHITELIST);
+  /* Completude : chaque fichier de la liste blanche doit exister dans la
+     source, sinon le paquet serait livre incomplet. */
+  for (const rel of ADDON_WHITELIST) {
+    if (!addonFiles.includes(rel)) {
+      throw new IntegrityError(
+        `fichier de la liste blanche absent de la source : ${rel} `
+        + `(attendu dans runtime-addon/Casinobabe/)`,
+      );
+    }
+  }
+  /* Inventaire des exclus du addon source : JAMAIS supprime en silence, toujours
+     declare au manifeste avec sa raison. Un fichier present dans la source mais
+     absent de ADDON_EXCLUDED est exclu lui aussi (liste blanche) et compte comme
+     NON INVENTORIE : en `--release`, il fait echouer le build — un nouveau
+     fichier amont ne doit pas entrer silencieusement dans un paquet de release. */
+  const excludedAddon = [];
+  const unlistedAddon = [];
+  for (const rel of addonFiles.slice().sort()) {
+    if (ADDON_WHITELIST.includes(rel)) continue;
+    const reason = ADDON_EXCLUDED[rel]
+      || 'non liste dans la liste blanche BOT-WOW : non requis par le module peche';
+    excludedAddon.push({ file: rel, reason });
+    if (!ADDON_EXCLUDED[rel]) unlistedAddon.push(rel);
+  }
+  /* Les droits Non etablis des fichiers non inventories sont collectés ICI
+     mais poussés dans unresolvedRights seulement apres sa declaration
+     (plus bas) : pousser avant levait une ReferenceError TDZ des qu'une
+     source contenait un fichier non inventorie (expose par
+     tests/package-addon-install.test.mjs, 2026-11-10). */
+  const unlistedRights = unlistedAddon.map((rel) => ({
+    component: `fichier addon non inventorié : ${rel}`,
+    status: 'NON ÉTABLI',
+  }));
 
-  const pkgDir = path.join(OUT, `casinobabe-fishing-${VERSION}`);
+
+  if (!fs.existsSync(NOTICE_FILE)) throw new IntegrityError('distribution/THIRD_PARTY_NOTICES.md absent : droits non vérifiables');
+  const noticeDocument = fs.readFileSync(NOTICE_FILE, 'utf8');
+  const rightsReview = inspectDistributionRights(noticeDocument);
+  const git = gitInfo(SOURCE);
+  const unresolvedRights = rightsReview.unresolved.slice();
+  unresolvedRights.push(...unlistedRights);
+  const sourceRepositoryMatches = !!git && sameRepository(git.repository, rightsReview.expectedRepository);
+  const sourceCommitMatches = !!git && !!rightsReview.expectedSourceCommit
+    && String(git.commit).toLowerCase() === rightsReview.expectedSourceCommit;
+  if (!sourceRepositoryMatches || !sourceCommitMatches) {
+    unresolvedRights.push({ component: 'provenance source', status: 'NON ÉTABLI' });
+  }
+  if (RELEASE_BUILD && unresolvedRights.length) {
+    const components = unresolvedRights.map((item) => item.component).join(', ');
+    throw new IntegrityError(
+      'release refusée : ' + unresolvedRights.length
+      + ' exigence(s) non satisfaite(s) (' + components
+      + ') ; aucun artefact existant ne sera supprimé et aucune archive ne sera produite',
+    );
+  }
+
+  const pkgDir = path.join(OUT, 'casinobabe-fishing-' + VERSION);
   const stage = path.join(pkgDir, 'package');
   fs.rmSync(pkgDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(stage, 'scripts'), { recursive: true });
 
   const manifest = { name: 'casinobabe-fishing', version: VERSION, builtAt: null, source: null, files: {} };
+  manifest.distribution = {
+    mode: RELEASE_BUILD ? 'release' : 'qa',
+    eligible: unresolvedRights.length === 0,
+    unresolvedRights: unresolvedRights.length,
+    unresolvedComponents: unresolvedRights.map((item) => item.component).sort(),
+    expectedSourceRepository: rightsReview.expectedRepository,
+    expectedSourceCommit: rightsReview.expectedSourceCommit,
+    sourceRepositoryMatches,
+    sourceCommitMatches,
+    addon: {
+      folder: ADDON_DIR,
+      toc: ADDON_TOC_FILE,
+      savedVariables: ADDON_SAVED_VARIABLES.slice(),
+      whitelist: ADDON_WHITELIST.slice(),
+      excluded: excludedAddon,
+      unlisted: unlistedAddon.slice(),
+    },
+  };
 
   // Provenance de la source.
   //
@@ -436,7 +674,6 @@ function main() {
   // resolue, HEAD). Si elle ne peut pas etre prouvee, le build ECHOUE : un
   // manifeste portant une provenance falsifiee ferait croire a un artefact
   // auto-documentant alors qu'il ne demontre rien.
-  const git = gitInfo(SOURCE);
   const provenanceVerified = !!git;
   const provenance = {
     repository: git ? git.repository : null,
@@ -523,16 +760,54 @@ function main() {
     return true;
   };
 
-  // 1. l'addon
+  // 1. l'addon — LISTE BLANCHE UNIQUEMENT (voir ADDON_WHITELIST)
   let addonCount = 0;
-  if (addonFiles.length) {
-    for (const rel of addonFiles) {
-      if (copy(path.join('runtime-addon', 'Casinobabe', rel), path.join('addon', 'Casinobabe', rel))) addonCount++;
-    }
+  const addonOut = path.join('addon', ADDON_DIR);
+  for (const rel of ADDON_WHITELIST) {
+    if (copy(path.join('runtime-addon', 'Casinobabe', rel), path.join(addonOut, rel))) addonCount++;
   }
   if (!addonCount) {
     console.error('Aucun addon trouve dans runtime-addon/Casinobabe : paquet incomplet.');
     process.exit(1);
+  }
+
+  /* TOC BOT-WOW dediee, GENERE par ce builder.
+     Pourquoi generee et non copiee : la TOC source charge `Casinobabe.lua`
+     (casino) et les bibliotheques `Libs\*`, qui ne sont pas livrees — la
+     copier ferait echouer le chargement chez le client (« fichier declare
+     manquant »). Contenu ASCII pur et deterministe : le meme commit source
+     produit la meme TOC.
+     Le NOM du fichier (`Casinobabe.toc`) est une contrainte dure : voir
+     ADDON_DIR — le bot Python livré lit `SavedVariables/Casinobabe.lua`. */
+  const tocKey = path.posix.join(addonOut.replace(/\\/g, '/'), ADDON_TOC_FILE);
+  const tocLines = [
+    '## Interface: 20506',
+    '## Title: |cffFFD700BOT-WOW|r Fishing Assistant',
+    '## Notes: Observation-only fishing assistant for WoW Classic Era (20506). '
+      + 'No input simulation, no protected action.',
+    '## Author: BOT-WOW (aveca)',
+    `## Version: ${VERSION}`,
+    `## SavedVariables: ${ADDON_SAVED_VARIABLES.join(', ')}`,
+    '## X-Category: Miscellaneous',
+    '',
+    ...ADDON_WHITELIST,
+    '',
+  ];
+  const tocBuf = Buffer.from(tocLines.join('\n'), 'utf8');
+  fs.writeFileSync(path.join(stage, tocKey), tocBuf);
+  manifest.files[tocKey] = {
+    sha256: sha256(tocBuf), bytes: tocBuf.length, source: '(genere)', eol: 'LF',
+  };
+  /* Auto-controle : la TOC generee ne doit declarer que des fichiers
+     reellement livres dans le paquet. Un decalage rendrait l'addon
+     inchageable chez le client. */
+  for (const declared of ADDON_WHITELIST) {
+    const key = path.posix.join(addonOut.replace(/\\/g, '/'), declared);
+    if (!manifest.files[key]) {
+      throw new IntegrityError(
+        `TOC generee incoherente : ${declared} declare mais absent du paquet`,
+      );
+    }
   }
 
   // 2. le bot
@@ -592,16 +867,9 @@ function main() {
      archives R2 restent historiques et ne sont pas une source de build.
      Le document d'attribution est livré et déclaré au manifeste. Sans notice,
      le build échoue plutôt que de produire un paquet non conforme. */
-  const noticeSrc = path.join(REPO_ROOT, 'distribution', 'THIRD_PARTY_NOTICES.md');
-  if (!fs.existsSync(noticeSrc)) {
-    console.error(
-      'distribution/THIRD_PARTY_NOTICES.md est absent : la police DejaVu Sans '
-      + 'embarquée exige ses avis de licence. Paquet NON construit.',
-    );
-    process.exit(1);
-  }
+  const noticeSrc = NOTICE_FILE;
   {
-    const res = normalizeText(fs.readFileSync(noticeSrc));
+    const res = normalizeText(Buffer.from(noticeDocument, 'utf8'));
     const buf = res.buf;
     fs.writeFileSync(path.join(stage, 'THIRD_PARTY_NOTICES.md'), buf);
     manifest.files['THIRD_PARTY_NOTICES.md'] = {
@@ -611,6 +879,22 @@ function main() {
       eol: 'LF',
     };
   }
+  // Ship the customer-side integrity verifier and include it in the manifest.
+  const verifierSrc = path.join(REPO_ROOT, 'distribution', 'verify-package.py');
+  if (!fs.existsSync(verifierSrc)) {
+    throw new IntegrityError('distribution/verify-package.py absent : verification client impossible.');
+  }
+  {
+    const verifierBuf = normalizeText(fs.readFileSync(verifierSrc)).buf;
+    fs.writeFileSync(path.join(stage, 'verify-package.py'), verifierBuf);
+    manifest.files['verify-package.py'] = {
+      sha256: sha256(verifierBuf),
+      bytes: verifierBuf.length,
+      source: 'distribution/verify-package.py',
+      eol: 'LF',
+    };
+  }
+
   if (NOTES && fs.existsSync(NOTES)) {
     const res = normalizeText(fs.readFileSync(NOTES));
     const buf = res.buf;
@@ -649,7 +933,8 @@ function main() {
   console.log(`  version   : ${VERSION}`);
   console.log(`  source    : ${manifest.source ? `${manifest.source.repository || '?'}@${(manifest.source.commit || '?').slice(0, 12)} (${manifest.source.ref || '?'})` : 'provenance inconnue'}`);
   console.log(`  builtAt   : ${manifest.builtAt || '(non horodate : SOURCE_DATE_EPOCH / date de commit absente)'}`);
-  console.log(`  addon     : ${addonCount} fichier(s)`);
+  console.log(`  addon     : ${addonCount} fichier(s) de la liste blanche + TOC ${ADDON_TOC_FILE} generee (${ADDON_DIR}/)`);
+  console.log(`  exclus    : ${excludedAddon.length} fichier(s) du addon source non livres${unlistedAddon.length ? ` — DONT ${unlistedAddon.length} NON INVENTORIE(S) : ${unlistedAddon.join(', ')}` : ''}`);
   console.log(`  bot       : ${botCount} script(s)`);
   console.log(`  archive   : ${count} entree(s)`);
   console.log(`  manifeste : ${Object.keys(manifest.files).length} entree(s) (sha256)`);
