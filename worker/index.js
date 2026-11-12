@@ -409,6 +409,12 @@ __name(jsonResponse, "jsonResponse");
 import { createHmac } from "crypto";
 var STRIPE_API = "https://api.stripe.com/v1";
 var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
+// Payment Link public (bouton « Reserve beta — €20 »). Ces identifiants
+// sont ceux du lien live ; un autre lien ou un autre prix ne déclenche pas
+// de licence.
+var STRIPE_PAYMENT_LINK_ID = "plink_1UaG0TRnrMmUAHDtXMyagAIa";
+var STRIPE_PAYMENT_LINK_PRICE_ID = "price_1UaG0TRnrMmUAHDtO3r6xVq4";
+var PAYMENT_LINK_PRODUCT_LABEL = "BOT-WOW";
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
 // remontee a 100 pendant le debogage Mollie, ce qui autorisait 1200 creations
@@ -527,7 +533,7 @@ async function handleStripeWebhook(request, env2) {
   }
   const payment = sessionToPayment(session);
   const isTestPayment = payment.mode === "test";
-  if (payment.metadata?.product !== PRODUCT_METADATA_KEY) {
+  if (!isBotWowCheckoutSession(session)) {
     console.log(`Webhook: session ${sessionId} ignoree - autre produit`);
     return new Response("OK", { status: 200 });
   }
@@ -538,7 +544,7 @@ async function handleStripeWebhook(request, env2) {
     console.error(`Webhook: montant inattendu pour ${sessionId}: ${paidAmount} ${paidCurrency}`);
     return new Response("Amount mismatch", { status: 400 });
   }
-  const email = String(payment.metadata?.email || "").toLowerCase();
+  const email = sessionBuyerEmail(session);
   const lang = validateLang2(payment.metadata?.lang || "fr");
   if (!email) {
     return new Response("Missing email", { status: 400 });
@@ -854,7 +860,9 @@ async function createStripeCheckoutSession(env2, params) {
 }
 __name(createStripeCheckoutSession, "createStripeCheckoutSession");
 async function fetchStripeSession(env2, sessionId) {
-  const response = await fetch(STRIPE_API + "/checkout/sessions/" + encodeURIComponent(sessionId), {
+  const response = await fetch(
+    STRIPE_API + "/checkout/sessions/" + encodeURIComponent(sessionId) + "?expand[]=line_items",
+    {
     headers: { "Authorization": "Bearer " + env2.STRIPE_SECRET_KEY }
   });
   if (!response.ok) {
@@ -864,6 +872,35 @@ async function fetchStripeSession(env2, sessionId) {
   return response.json();
 }
 __name(fetchStripeSession, "fetchStripeSession");
+function paymentLinkId(session) {
+  const link = session && session.payment_link;
+  if (!link) return "";
+  if (typeof link === "string") return link;
+  return String(link.id || "");
+}
+__name(paymentLinkId, "paymentLinkId");
+function sessionLinePriceIds(session) {
+  const items = session && session.line_items && session.line_items.data;
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => {
+    if (!item || !item.price) return "";
+    return typeof item.price === "string" ? item.price : String(item.price.id || "");
+  }).filter(Boolean);
+}
+__name(sessionLinePriceIds, "sessionLinePriceIds");
+function isBotWowCheckoutSession(session) {
+  const product = String(session && session.metadata && session.metadata.product || "");
+  if (product === PRODUCT_METADATA_KEY || product === PAYMENT_LINK_PRODUCT_LABEL) return true;
+  if (paymentLinkId(session) === STRIPE_PAYMENT_LINK_ID) return true;
+  return sessionLinePriceIds(session).includes(STRIPE_PAYMENT_LINK_PRICE_ID);
+}
+__name(isBotWowCheckoutSession, "isBotWowCheckoutSession");
+function sessionBuyerEmail(session) {
+  const metadataEmail = session && session.metadata && session.metadata.email;
+  const detailsEmail = session && session.customer_details && session.customer_details.email;
+  return String(metadataEmail || detailsEmail || session && session.customer_email || "").toLowerCase().trim();
+}
+__name(sessionBuyerEmail, "sessionBuyerEmail");
 function sessionToPayment(session) {
   const cents = Number(session.amount_total || 0);
   return {

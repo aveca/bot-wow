@@ -1,5 +1,7 @@
 # BOT-WOW — état partagé
 
+**Ajout 2026-11-12 — licence Payment Link.** `checkout.session.completed` délivre aussi une licence si la session vient du Payment Link `plink_1UaG0TRnrMmUAHDtXMyagAIa`, du prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`, ou de `metadata.product` `BOT-WOW`. L'e-mail est lu dans `metadata.email`, puis `customer_details.email`, puis `customer_email`. Les boutons publics restent le Payment Link : les pages n'ont pas de formulaire `/api/checkout`. Le Worker n'est pas déployé par cette correction.
+
 **Ajout 2026-11-12 — vitrine multilingue.** Anglais reste à `/`. Sous-chemins `/fr/`, `/de/`, `/es/`, `/pt-br/`, `/ru/`, `/it/`, `/pl/` pour l'accueil, l'achat, les fonctions, la fiche, la FAQ et les pages légales. `hreflang` + `x-default` vers l'anglais, sitemap avec `xhtml:link`, sélecteur de langue, bannière de suggestion sans redirection. Le lien Stripe `https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00` reste sur chaque accueil et chaque page d'achat. `worker/index.js` envoie `locale` Stripe (`pt` et `pt-br` → `pt-BR`). Le Worker n'est pas déployé.
 
 **Ajout 2026-11-12 — achat ouvert.** Le lien Stripe `https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00` reste le bouton public « Reserve beta — €20 ». `POST /api/checkout` crée aussi une Checkout Session Stripe et n'est plus bloqué par `RELEASE_STATUS`. Le Worker n'est pas déployé par cette fusion.
