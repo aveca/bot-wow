@@ -433,7 +433,9 @@ var RELEASE_STATUS = "pending";
 // pouvait demander un montant arbitraire (y compris 1,00 EUR) et c'etait le
 // serveur qui debitait. Le navigateur n'envoie plus que l'e-mail et la langue.
 var PRICE_TABLE = {
-  "bot-wow-lifetime": { amount: 2000, currency: "EUR", description: "BOT-WOW — Accès à vie" }
+  "bot-wow-lifetime": { amount: 2000, currency: "EUR", description: "BOT-WOW — Accès à vie" },
+  "planner": { amount: 900, currency: "EUR", description: "BOT-WOW Planner" },
+  "studio": { amount: 2900, currency: "EUR", description: "BOT-WOW Studio" }
 };
 var CANONICAL_REDIRECT_URL = "https://bot-wow.com/success.html";
 var CANONICAL_CANCEL_URL = "https://bot-wow.com/cancel.html";
@@ -496,7 +498,7 @@ async function handleCheckout(request, env2) {
 }
 __name(handleCheckout, "handleCheckout");
 async function handleStripeWebhook(request, env2) {
-  if (!env2.STRIPE_WEBHOOK_SECRET || !env2.STRIPE_SECRET_KEY) {
+  if (!env2.STRIPE_WEBHOOK_SECRET) {
     console.error("Webhook Stripe: secret manquant");
     return new Response("Server Error", { status: 500 });
   }
@@ -517,19 +519,34 @@ async function handleStripeWebhook(request, env2) {
   } catch {
     return new Response("Bad Request", { status: 400 });
   }
-  if (!event || event.type !== "checkout.session.completed") {
+  if (!event || !event.type) return new Response("Bad Request", { status: 400 });
+  if (event.type === "charge.refunded" || event.type === "charge.dispute.created" || event.type === "charge.dispute.funds_withdrawn") {
+    return handleStripeRevocation(event, env2);
+  }
+  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed" || event.type === "payment_intent.payment_failed") {
+    await emitFunnelEvent(env2, "payment_failed", null, "/api/stripe-webhook", "en", { step: "payment_failed", test: 0 });
+    return new Response("OK", { status: 200 });
+  }
+  if (event.type !== "checkout.session.completed") {
     return new Response("OK", { status: 200 });
   }
   const sessionId = event.data && event.data.object && event.data.object.id;
   if (!sessionId) {
     return new Response("Missing session ID", { status: 400 });
   }
-  let session;
-  try {
-    session = await fetchStripeSession(env2, sessionId);
-  } catch (e) {
-    console.error("Webhook Stripe: lecture de la session impossible", e && e.message);
-    return new Response("Server Error", { status: 500 });
+  let session = event.data && event.data.object;
+  const sessionComplete = session && session.amount_total != null && session.currency && session.payment_status;
+  if (!sessionComplete) {
+    if (!env2.STRIPE_SECRET_KEY) {
+      console.error("Webhook Stripe: session incomplete sans cle API");
+      return new Response("Server Error", { status: 500 });
+    }
+    try {
+      session = await fetchStripeSession(env2, sessionId);
+    } catch (e) {
+      console.error("Webhook Stripe: lecture de la session impossible", e && e.message);
+      return new Response("Server Error", { status: 500 });
+    }
   }
   const payment = sessionToPayment(session);
   const isTestPayment = payment.mode === "test";
@@ -537,7 +554,7 @@ async function handleStripeWebhook(request, env2) {
     console.log(`Webhook: session ${sessionId} ignoree - autre produit`);
     return new Response("OK", { status: 200 });
   }
-  const plan = PRICE_TABLE[PRODUCT_METADATA_KEY];
+  const plan = pricedOffer(session);
   const paidAmount = Math.round(parseFloat(payment.amount?.value || "0") * 100);
   const paidCurrency = String(payment.amount?.currency || "").toUpperCase();
   if (paidAmount !== plan.amount || paidCurrency !== plan.currency) {
@@ -581,6 +598,7 @@ async function handleStripeWebhook(request, env2) {
     } else {
       await fulfillOrder(env2, payment, email, lang, eventId, journeyId, paymentRef, isTestPayment);
       await emitFunnelEvent(env2, "payment_confirmed", journeyId, "/api/stripe-webhook", lang, { step: "payment_confirmed", ref: paymentRef, test: isTestPayment ? 1 : 0 });
+      await emitFunnelEvent(env2, "payment_success", journeyId, "/api/stripe-webhook", lang, { step: "payment_success", ref: paymentRef, test: isTestPayment ? 1 : 0 });
       try {
         await recordConversion(env2, payment, email, lang, isTestPayment);
       } catch (e) {
@@ -698,7 +716,12 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
       email,
       amount,
       payment.amount.currency,
-      JSON.stringify({ lang, product: PRODUCT_METADATA_KEY, mollie: payment }),
+      JSON.stringify({
+        lang,
+        product: companionTierOf(payment) || (payment.metadata && payment.metadata.product) || PRODUCT_METADATA_KEY,
+        price_key: companionTierOf(payment) || null,
+        payment_intent: payment.payment_intent || null
+      }),
       now,
       now
     ).run();
@@ -707,14 +730,25 @@ async function fulfillOrder(env2, payment, email, lang, eventId, journeyId, paym
   let license = await env2.DB.prepare(
     "SELECT l.id, l.key FROM licenses l JOIN orders o ON o.id = l.order_id WHERE o.provider = 'stripe' AND o.provider_id = ? LIMIT 1"
   ).bind(payment.id).first();
+  const tier = companionTierOf(payment);
+  const legacyZip = RELEASE_STATUS === "confirmed" && String(payment.metadata && payment.metadata.product || "") === PRODUCT_METADATA_KEY && !tier;
+  const licenseStatus = tier || (legacyZip ? "active" : "withheld");
   if (!license) {
     const licenseKey = generateLicenseKey2();
     const licenseResult = await env2.DB.prepare(`
       INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
-    `).bind(licenseKey, order.id, email, lang, 2, now, now).run();
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(licenseKey, order.id, email, lang, licenseStatus, 2, now, now).run();
     license = { id: licenseResult?.meta?.last_row_id ?? null, key: licenseKey };
     await emitFunnelEvent(env2, 'license_created', journeyId, '/api/stripe-webhook', lang, { step: 'license_created', ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    if (tier) {
+      await emitFunnelEvent(env2, 'entitlement_granted', journeyId, '/api/stripe-webhook', lang, { step: tier, ref: paymentRef, test: isTestPayment ? 1 : 0 });
+    }
+  }
+  if (!legacyZip) {
+    await sendCompanionEmail2(env2, email, license.key, tier || "withheld", lang, journeyId, isTestPayment);
+    console.log(`Order recorded: ${payment.id}`);
+    return;
   }
   let download = await env2.DB.prepare(
     "SELECT token FROM downloads WHERE license_id = ? LIMIT 1"
@@ -888,7 +922,20 @@ function sessionLinePriceIds(session) {
   }).filter(Boolean);
 }
 __name(sessionLinePriceIds, "sessionLinePriceIds");
+function pricedOffer(session) {
+  const key = String(session && session.metadata && session.metadata.price_key || "");
+  if (key === "planner" || key === "studio") return PRICE_TABLE[key];
+  return PRICE_TABLE[PRODUCT_METADATA_KEY];
+}
+__name(pricedOffer, "pricedOffer");
+function companionTierOf(payment) {
+  const key = String(payment && payment.metadata && payment.metadata.price_key || "");
+  return key === "planner" || key === "studio" ? key : "";
+}
+__name(companionTierOf, "companionTierOf");
 function isBotWowCheckoutSession(session) {
+  const key = String(session && session.metadata && session.metadata.price_key || "");
+  if (key === "planner" || key === "studio") return true;
   const product = String(session && session.metadata && session.metadata.product || "");
   if (product === PRODUCT_METADATA_KEY || product === PAYMENT_LINK_PRODUCT_LABEL) return true;
   if (paymentLinkId(session) === STRIPE_PAYMENT_LINK_ID) return true;
@@ -911,7 +958,8 @@ function sessionToPayment(session) {
       value: (cents / 100).toFixed(2),
       currency: String(session.currency || "").toUpperCase()
     },
-    metadata: session.metadata || {}
+    metadata: session.metadata || {},
+    payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : String(session.payment_intent && session.payment_intent.id || "")
   };
 }
 __name(sessionToPayment, "sessionToPayment");
@@ -1394,12 +1442,103 @@ async function handleAdminRejectOrder(request, env2) {
   }
 }
 __name(handleAdminRejectOrder, "handleAdminRejectOrder");
+async function sendCompanionEmail2(env2, email, key, tier, lang, journeyId, isTestPayment) {
+  const fr = lang === "fr";
+  const tool = "https://bot-wow.com/companion.html";
+  const subject = tier === "withheld"
+    ? (fr ? "BOT-WOW — paiement reçu, automatisation non livrée" : "BOT-WOW — payment received, automation not delivered")
+    : (fr ? "BOT-WOW — votre accès " + tier : "BOT-WOW — your " + tier + " access");
+  const text = tier === "withheld"
+    ? (fr
+      ? "Un paiement pour l'ancien logiciel d'automatisation a été enregistré. Ce logiciel n'est pas livré. Écrivez à support@bot-wow.com pour le remboursement. Ce message ne contient aucun téléchargement."
+      : "A payment for the former automation software was recorded. That software is not delivered. Email support@bot-wow.com for a refund. This message contains no download.")
+    : (fr
+      ? ["Votre accès est confirmé par notre serveur.", "", "Offre : " + tier, "Clé : " + key, "Outil : " + tool, "", "L'outil ne capture pas le jeu et n'envoie pas de clics. Collez la clé dans la page.", "Support : support@bot-wow.com"].join("\n")
+      : ["Your access was confirmed by our server.", "", "Offer: " + tier, "Key: " + key, "Tool: " + tool, "", "The tool does not capture the game and does not send clicks. Paste the key on the page.", "Support: support@bot-wow.com"].join("\n"));
+  const marker = tier === "withheld" ? "automation-withheld:" + key : "companion:" + key;
+  try {
+    const already = await env2.DB.prepare("SELECT id FROM deliveries WHERE kind = 'delivery' AND status = 'sent' AND body LIKE ? LIMIT 1").bind("%" + marker + "%").first();
+    if (already) return { sent: true, reason: "already_sent" };
+  } catch (e) {
+    console.error("[EMAIL] verification impossible", e && e.message);
+  }
+  const body = marker + "\n" + text;
+  const status = await sendEmail2(env2, email, subject, body, "<p>" + text.replace(/\n/g, "<br>") + "</p>");
+  try {
+    await env2.DB.prepare("INSERT INTO deliveries (email, subject, body, kind, status, created_at, sent_at) VALUES (?, ?, ?, 'delivery', ?, ?, ?)").bind(email, subject, body, status.sent ? "sent" : "pending", Date.now(), status.sent ? Date.now() : null).run();
+  } catch (e) {
+    console.error("[EMAIL] consignation impossible", e && e.message);
+  }
+  await emitFunnelEvent(env2, status.sent ? "delivery_sent" : "delivery_failed", journeyId, "/api/stripe-webhook", lang, { step: tier, test: isTestPayment ? 1 : 0 });
+  return status;
+}
+__name(sendCompanionEmail2, "sendCompanionEmail2");
+async function handleStripeRevocation(event, env2) {
+  if (!event.id) return new Response("Bad Request", { status: 400 });
+  const now = Date.now();
+  try {
+    await env2.DB.prepare("INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, 'stripe', ?)").bind("refund:" + event.id, now).run();
+  } catch (e) {
+    const msg = String(e && e.message || "");
+    if (/UNIQUE|constraint/i.test(msg)) return new Response("OK", { status: 200 });
+    console.error("Webhook: revocation non enregistree", msg);
+    return new Response("Server Error", { status: 500 });
+  }
+  const obj = event.data && event.data.object || {};
+  const pi = typeof obj.payment_intent === "string" ? obj.payment_intent : "";
+  if (!/^pi_[A-Za-z0-9]+$/.test(pi)) {
+    console.log("Revocation sans payment_intent exploitable");
+    return new Response("OK", { status: 200 });
+  }
+  const order = await env2.DB.prepare("SELECT id FROM orders WHERE provider = 'stripe' AND metadata LIKE ? LIMIT 1").bind('%"payment_intent":"' + pi + '"%').first();
+  if (!order) {
+    console.log("Revocation: aucune commande");
+    return new Response("OK", { status: 200 });
+  }
+  await env2.DB.prepare("UPDATE licenses SET status = 'revoked', updated_at = ? WHERE order_id = ?").bind(now, order.id).run();
+  await env2.DB.prepare("UPDATE orders SET status = 'refunded', updated_at = ? WHERE id = ?").bind(now, order.id).run();
+  await emitFunnelEvent(env2, "refund", null, "/api/stripe-webhook", "en", { step: event.type, ref: order.id });
+  console.log("Access revoked");
+  return new Response("OK", { status: 200 });
+}
+__name(handleStripeRevocation, "handleStripeRevocation");
+async function handleCompanionAccess(request, env2) {
+  const ip = getClientIp2(request);
+  const rl = await checkRateLimit2(env2.RATE_LIMIT, "access", ip, { max: 20, windowMs: 3e5 });
+  if (!rl.allowed) return jsonResponse2({ ok: false, error: "rate_limited" }, 429);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse2({ ok: false, error: "invalid_json" }, 400);
+  }
+  const key = String(body.key || "").trim().toUpperCase();
+  if (!key || key.length > 64) return jsonResponse2({ ok: false, error: "missing_key" }, 400);
+  const row = await env2.DB.prepare("SELECT status FROM licenses WHERE key = ? LIMIT 1").bind(key).first();
+  if (!row || (row.status !== "planner" && row.status !== "studio")) {
+    return jsonResponse2({ ok: false, error: "invalid_key" }, 404);
+  }
+  return jsonResponse2({ ok: true, tier: row.status });
+}
+__name(handleCompanionAccess, "handleCompanionAccess");
+function safePaymentLink(value) {
+  const url = String(value || "");
+  if (!/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(url)) return null;
+  if (url === "https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00") return null;
+  return url;
+}
+__name(safePaymentLink, "safePaymentLink");
 async function handleConfigWithBitcoin(env2) {
   return jsonResponse3({
     contactEmail: env2.CONTACT_EMAIL,
     product: PRODUCT_METADATA_KEY2,
     priceEur: PRICE_EUR / 100,
     currency: "eur",
+    automationForSale: false,
+    offers: [
+      { priceKey: "planner", name: "BOT-WOW Planner", amount: 900, currency: "eur", interval: null, url: safePaymentLink(env2.STRIPE_LINK_PLANNER) },
+      { priceKey: "studio", name: "BOT-WOW Studio", amount: 2900, currency: "eur", interval: null, url: safePaymentLink(env2.STRIPE_LINK_STUDIO) }
+    ],
     bitcoin: {
       enabled: true,
       address: null
@@ -3775,6 +3914,9 @@ var index_default = {
       }
       if (path === "/api/checkout" && method === "POST") {
         return handleCheckout(request, env2);
+      }
+      if (path === "/api/access" && method === "POST") {
+        return handleCompanionAccess(request, env2);
       }
       if (path === "/api/stripe-webhook" && method === "POST") {
         return handleStripeWebhook(request, env2);

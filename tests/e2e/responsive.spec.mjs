@@ -120,9 +120,8 @@ test('responsive: beta reservation price card is visible on all viewports', asyn
     expect(response && response.ok()).toBeTruthy();
 
     await expect(page.locator('.price-card--offer')).toBeVisible();
-    await expect(page.locator('.price-card--offer a[data-cta-id="beta-reservation-stripe"]')).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
-    await expect(page.locator('.price-card--offer')).toContainText(/manual|manuelle/i);
-    await expect(page.locator('.price-card--offer')).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
+    await expect(page.locator('.price-card--offer a[data-cta-id="waitlist"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+    await expect(page.locator('.price-card--offer')).toContainText(/No paid offer|Aucune offre payante/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);

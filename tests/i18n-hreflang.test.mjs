@@ -11,6 +11,7 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log('  FAIL ' + name + ' ' + detail); }
 };
 const STRIPE = 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00';
+const WAITLIST = 'mailto:support@bot-wow.com';
 const pages = [
   ['index.html', 'en', 'https://bot-wow.com/'],
   ['de/index.html', 'de', 'https://bot-wow.com/de/'],
@@ -27,7 +28,8 @@ for (const [file, lang, canon] of pages) {
   check(file + ' canonical', html.includes(`rel="canonical" href="${canon}"`));
   check(file + ' x-default', /hreflang="x-default" href="https:\/\/bot-wow\.com\/"/.test(html));
   check(file + ' hreflang de', html.includes('hreflang="de" href="https://bot-wow.com/de/"'));
-  check(file + ' stripe link', html.includes(STRIPE));
+  check(file + ' no stripe payment link', !html.includes(STRIPE));
+  check(file + ' waitlist mail', html.includes(WAITLIST));
   check(file + ' no redirect script', !/window\.location\s*=/.test(html));
   check(file + ' switcher', html.includes('class="langs"') && html.includes('lang="pt-BR"'));
 }

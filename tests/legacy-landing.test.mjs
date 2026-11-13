@@ -96,7 +96,9 @@ for (const path of LEGACY_PATHS) {
   // On compte les CLES d'offre ("id": { ... }), pas les chaines (la
   // description et la devise sont aussi entre guillemets).
   const keys = tableMatch ? (tableMatch[1].match(/^\s*"[^"]+"\s*:\s*\{/gm) || []) : [];
-  check('PRICE_TABLE ne contient qu\'une seule offre', keys.length === 1, `(offres=${keys.length})`);
+  check('PRICE_TABLE a l\'offre historique plus Planner et Studio',
+    keys.length === 3 && /"planner"/.test(tableMatch[1]) && /"studio"/.test(tableMatch[1]),
+    `(offres=${keys.length})`);
 }
 
 console.log('');

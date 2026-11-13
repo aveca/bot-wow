@@ -305,8 +305,9 @@ async function call(path, { method = 'GET', body = null } = {}) {
   check('post-migration : la licence reference la commande', !!lic && lic.order_id === order.id);
   check('post-migration : une seule licence pour ce paiement',
     order && iso2.db.prepare('SELECT COUNT(*) c FROM licenses WHERE order_id = ?').get(order.id).c === 1);
+  check('post-migration : la licence ne debloque pas le zip', !!lic && lic.status === 'withheld', `(${lic && lic.status})`);
   const dl = lic ? iso2.db.prepare('SELECT COUNT(*) c FROM downloads WHERE license_id = ?').get(lic.id).c : 0;
-  check('post-migration : un jeton de telechargement est cree', dl === 1, `(${dl})`);
+  check('post-migration : aucun jeton de telechargement du bot', dl === 0, `(${dl})`);
   /* `deliveries` n'est renseignée qu'en cas d'echec d'envoi (rejeu possible).
      Si l'envoi reussit, il n'y a rien a rejouer : on le verifie explicitement. */
   const deliveriesPending = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'pending'").get().c;

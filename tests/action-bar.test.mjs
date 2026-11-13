@@ -55,12 +55,12 @@ for (const [name, html] of [['EN', en], ['FR', fr]]) {
 
 /* 2. la barre affiche l'offre bêta à 20 €, sans fausse promesse de livraison immédiate */
 for (const [name, html, expected] of [
-  ['EN', en, /20,00 €\s*<small>beta reservation · manual delivery<\/small>/i],
-  ['FR', fr, /20,00 €\s*<small>réservation bêta · livraison manuelle<\/small>/i],
+  ['EN', en, /9,00 €\s*<small>Planner · you fish yourself<\/small>/i],
+  ['FR', fr, /9,00 €\s*<small>Planner · vous pêchez vous-même<\/small>/i],
 ]) {
   const mbar = extractMbar(html) || '';
-  check(`${name} : la barre annonce la réservation bêta à 20 €`, expected.test(mbar), `(${mbar.slice(0, 120)})`);
-  check(`${name} : le montant de réservation est visible`, /20,00 €/.test(mbar), `(${mbar.slice(0, 120)})`);
+  check(`${name} : la barre annonce l'absence d'offre payante`, expected.test(mbar), `(${mbar.slice(0, 140)})`);
+  check(`${name} : aucun prix de vente dans la barre`, !/20,00 €/.test(mbar), `(${mbar.slice(0, 140)})`);
 }
 
 /* 3. aucune fausse urgence (compte a rebours, stock, "plus que X") */

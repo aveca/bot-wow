@@ -1,5 +1,7 @@
 # BOT-WOW — État courant Factory V3
 
+**État court au 2026-11-13 : repositionnement conforme, non déployé.** Le site de la branche `cursor/compliant-companion-reposition-bd31` ne vend plus l’automatisation et n’affiche plus le Payment Link. Aucune offre payante : liste d’attente par e-mail. Le Payment Link LIVE et le Worker n’ont pas été modifiés. La production reste l’ancienne vitrine tant qu’il n’y a pas de fusion autorisée.
+
 **État court au 2026-11-12 : `PROJECT_STATE.md`.** Le webhook `checkout.session.completed` délivre aussi une licence pour le Payment Link `plink_1UaG0TRnrMmUAHDtXMyagAIa` (prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`, `metadata.product` `BOT-WOW`). Les boutons publics restent ce lien. Le Worker n'est pas déployé tant que le propriétaire ne le publie pas.
 
 **État court au 2026-11-11T01:10Z : `PROJECT_STATE.md`** (entrée datée 2026-11-11). Mission packaging : PR #179 (`aa02ad3`), #185 (`4a3b657`) et #186 (`0774272`) fusionnées en squash, #182 fermée sans fusion et couverture restituée, nouveau paquet réel byte-identique `7d48c249…` (180 805 o). Rapport : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.

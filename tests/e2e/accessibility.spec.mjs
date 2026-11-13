@@ -57,11 +57,10 @@ test('accessibility: beta reservation is announced and Stripe handoff is explici
     expect(response && response.ok(), `HTTP ${path}`).toBeTruthy();
     const offer = page.locator('.price-card--offer');
     await expect(offer).toBeVisible();
-    const stripe = offer.locator('a[data-cta-id="beta-reservation-stripe"]');
-    await expect(stripe).toBeVisible();
-    await expect(stripe).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
-    await expect(offer).toContainText(/manual|manuelle/i);
-    await expect(offer).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
+    const waitlist = offer.locator('a[data-cta-id="waitlist"]');
+    await expect(waitlist).toBeVisible();
+    await expect(waitlist).toHaveAttribute('href', /mailto:support@bot-wow.com/);
+    await expect(offer).toContainText(/No paid offer|Aucune offre payante/i);
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#email')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);

@@ -224,10 +224,10 @@ console.log('=== D1 : identifiants de commande (Worker reel, schema live) ===');
   check("Mollie 'paid' : une cle de licence est generee",
     !!lic && /^[A-Z0-9-]{10,}$/.test(lic.key), `(${lic && lic.key})`);
 
+  check("Mollie 'paid' : la licence n'active pas le zip tant que la release n'est pas confirmee",
+    !!lic && lic.status === 'withheld', `(${lic && lic.status})`);
   const dl = lic ? iso.db.prepare('SELECT * FROM downloads WHERE license_id = ?').get(lic.id) : null;
-  check("Mollie 'paid' : un jeton de telechargement est cree", !!dl);
-  check("Mollie 'paid' : le jeton est lie a la licence", !!dl && dl.license_id === lic.id);
-  check("Mollie 'paid' : le quota d'usage est borne", !!dl && Number(dl.max_count) > 0 && Number(dl.count) === 0);
+  check("Mollie 'paid' : aucun jeton de telechargement du bot", !dl);
 
   check("Mollie 'paid' : une livraison est enregistree",
     await count(iso.db, 'deliveries') > 0);
@@ -250,8 +250,8 @@ console.log('=== D1 : identifiants de commande (Worker reel, schema live) ===');
   check("Mollie rejoue : aucune licence supplementaire",
     await count(iso.db, 'licenses') === before.licenses + 1,
     `(${before.licenses} -> ${await count(iso.db, 'licenses')})`);
-  check("Mollie rejoue : aucun jeton supplementaire",
-    await count(iso.db, 'downloads') === before.downloads + 1,
+  check("Mollie rejoue : aucun jeton de telechargement",
+    await count(iso.db, 'downloads') === before.downloads,
     `(${before.downloads} -> ${await count(iso.db, 'downloads')})`);
   check("Mollie rejoue : aucune livraison envoyee en double",
     (() => {

@@ -1,0 +1,7 @@
+## Interface: 110207
+## Title: BOT-WOW Notes
+## Notes: Saves spots you mark with the official map API. Does not cast, click, or read the screen.
+## SavedVariables: BotWowNotesDB
+## Version: 1.0.0
+
+BotWowNotes.lua
