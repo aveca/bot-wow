@@ -419,8 +419,16 @@ console.log('=== PARCOURS DE PAIEMENT (Worker reel, D1 simule) ===');
     body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'tr_refund' } } }),
   });
   const res = await workerMod.default.fetch(raw, env, {});
-  check('un webhook sans signature est refuse', res.status === 401, `(status=${res.status})`);
+  check('un webhook sans signature est refuse', res.status === 400, `(status=${res.status})`);
   check('la licence n\'est pas touchee par un webhook non signe', state.licenses.length === 1, `(${state.licenses.length})`);
+  const bad = new Request('https://api.bot-wow.com/api/stripe-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=1,v1=deadbeef' },
+    body: JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'tr_refund' } } }),
+  });
+  const badRes = await workerMod.default.fetch(bad, env, {});
+  check('un webhook a signature invalide est refuse en 400', badRes.status === 400, `(status=${badRes.status})`);
+  check('une signature invalide ne modifie pas la licence', state.licenses.length === 1, `(${state.licenses.length})`);
 }
 
 

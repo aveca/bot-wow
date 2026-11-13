@@ -228,8 +228,8 @@ for (const p of PAGES) {
     !/<form\b/i.test(html) && !/id="buyForm"|id="buyBtn"/i.test(html));
   check(`${p.file} : aucune requete POST`, !/method="post"|method='post'|fetch\([^)]*method:\s*['"]post/i.test(html));
   check(`${p.file} : la fiche elle-même ne collecte pas d'e-mail`, !/type="email"/i.test(html));
-  check(`${p.file} : aucune offre payante n'est affichée comme un prix`,
-    /No paid offer|Aucune offre payante|aucune offre payante/i.test(html) && !/buy\.stripe\.com/.test(html));
+  check(`${p.file} : les deux prix sont nommés, le Payment Link reste sur la page d'achat`,
+    /9,00 €/.test(html) && /29,00 €/.test(html) && !/buy\.stripe\.com/.test(html));
   check(`${p.file} : l'automatisation n'est pas une offre`,
     /not for sale|n'est pas|n’est pas|not offered|pas proposé|EULA|automat/i.test(html));
   check(`${p.file} : aucun CTA ne pointe vers un paiement`,
@@ -241,10 +241,10 @@ for (const p of PAGES) {
   const html = perLang[p.lang].html;
   const flat = stripTags(html);
   const en = p.lang === 'en';
-  check(p.file + ' : aucune offre payante n’est ouverte sur la fiche',
-    /No paid offer|Aucune offre payante|aucune offre payante/i.test(flat));
-  check(p.file + " : le CTA renvoie vers la liste d'attente",
-    html.includes('href="./buy.html"') && /Join the waitlist|liste d’attente|liste d'attente/i.test(flat));
+  check(p.file + ' : les deux offres sont nommées sur la fiche',
+    /9,00 €/.test(flat) && /29,00 €/.test(flat));
+  check(p.file + ' : le CTA renvoie vers la page d’achat',
+    html.includes('href="./buy.html"') && /See the offers|Voir les offres/i.test(flat));
   check(p.file + ' : pas de Payment Link ni de prix de vente',
     !/buy\.stripe\.com/.test(html) && !/20,00\s*€/.test(flat));
   check(p.file + ' : aucun prix historique presente comme offre',
@@ -253,10 +253,10 @@ for (const p of PAGES) {
 {
   const enTerms = read('legal/terms.html');
   const frTerms = read('legal/fr/terms.html');
-  check('legal/terms.html : aucune offre payante',
-    /No paid offer is open/i.test(enTerms) && !enTerms.includes('lifetime fishing licence') && !/buy\.stripe\.com/.test(enTerms));
-  check('legal/fr/terms.html : aucune offre payante',
-    /Aucune offre payante/i.test(frTerms) && !frTerms.includes('licence de pêche à vie') && !/buy\.stripe\.com/.test(frTerms));
+  check('legal/terms.html : les deux offres sont décrites',
+    /9,00/.test(enTerms) && /29,00/.test(enTerms) && !enTerms.includes('lifetime fishing licence') && !/buy\.stripe\.com/.test(enTerms));
+  check('legal/fr/terms.html : les deux offres sont décrites',
+    /9,00/.test(frTerms) && /29,00/.test(frTerms) && !frTerms.includes('licence de pêche à vie') && !/buy\.stripe\.com/.test(frTerms));
 }
 /* 7c — coherence des autres langues de la fiche -------------------------- */
 const LOCALIZED_PRODUCT_PAGES = [

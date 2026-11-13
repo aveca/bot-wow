@@ -58,11 +58,11 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
-check('EN : aucune offre payante, pas de Payment Link',
-  /No paid offer/i.test(enHome) && /mailto:support@bot-wow.com/.test(enHome) &&
+check('EN : offres 9 € et 29 €, pas de Payment Link sur l’accueil',
+  /9,00 €/.test(enHome) && /29,00 €/.test(enHome) && /mailto:support@bot-wow.com/.test(enHome) &&
   !/buy\.stripe\.com/.test(enHome));
-check('FR : aucune offre payante, pas de Payment Link',
-  /Aucune offre payante/i.test(frHome) && /mailto:support@bot-wow.com/.test(frHome) &&
+check('FR : offres 9 € et 29 €, pas de Payment Link sur l’accueil',
+  /9,00 €/.test(frHome) && /29,00 €/.test(frHome) && /mailto:support@bot-wow.com/.test(frHome) &&
   !/buy\.stripe\.com/.test(frHome));
 check('EN : aucune promesse de livraison immédiate par e-mail',
   !/Immediately by email:\s*download link/i.test(enHome));
@@ -72,8 +72,8 @@ check('EN : le badge ne présente plus v1.2.0 comme une version disponible',
   !/<b>v1\.2\.0<\/b>\s*current release/i.test(enHome));
 check('EN : OG title no longer calls the active reservation a historical project', !/Historical project/.test(enHome));
 check('FR : OG title no longer calls the active reservation a historical project', !/Projet historique/.test(frHome));
-check('EN : homepage FAQ schema says there is no paid offer', /Can I buy it/.test(enHome) && /No paid offer is open/.test(enHome));
-check('FR : homepage FAQ schema says there is no paid offer', /Puis-je l’acheter/.test(frHome) && /Aucune offre payante/.test(frHome));
+check('EN : homepage FAQ schema describes the two offers', /Can I buy it/.test(enHome) && /9,00 EUR once/.test(enHome));
+check('FR : homepage FAQ schema describes the two offers', /Puis-je l’acheter/.test(frHome) && /9,00 EUR une fois/.test(frHome));
 check('EN : homepage refuses automation under the EULA', /EULA prohibits bots/i.test(enHome));
 check('FR : homepage refuses automation under the EULA', /EULA de Blizzard interdit/i.test(frHome));
 check('FR : homepage has no obsolete closed-sale answer', !/Aucune offre, aucun paiement/.test(frHome));
@@ -83,10 +83,10 @@ check('FR : serveurs privés dans le bandeau ou le corps',
 // 3c. Les pages d'achat FR/EN décrivent correctement l'absence de paquet client.
 const enBuy = fs.readFileSync(path.join(out, 'buy.html'), 'utf8');
 const frBuy = fs.readFileSync(path.join(out, 'fr/buy.html'), 'utf8');
-check('EN buy : liste d’attente sans Payment Link',
-  /mailto:support@bot-wow.com/.test(enBuy) && /No paid offer/i.test(enBuy) && !/buy\.stripe\.com/.test(enBuy));
-check('FR buy : liste d’attente sans Payment Link',
-  /mailto:support@bot-wow.com/.test(frBuy) && /Aucune offre payante/i.test(frBuy) && !/buy\.stripe\.com/.test(frBuy));
+check('EN buy : liens LIVE Planner et Studio',
+  /mailto:support@bot-wow.com/.test(enBuy) && enBuy.includes('https://buy.stripe.com/4gM4gB62W4749MO78C63K01') && enBuy.includes('https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02'));
+check('FR buy : liens LIVE Planner et Studio',
+  /mailto:support@bot-wow.com/.test(frBuy) && frBuy.includes('https://buy.stripe.com/4gM4gB62W4749MO78C63K01') && frBuy.includes('https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02'));
 check('FR buy : pas d’ancien avertissement de fermeture',
   !/n'achetez pas tant que la livraison n'est pas confirmée/i.test(frBuy));
 
@@ -96,12 +96,12 @@ const enFaq = fs.readFileSync(path.join(out, 'faq.html'), 'utf8');
 const frFaq = fs.readFileSync(path.join(out, 'fr/faq.html'), 'utf8');
 const enCompare = fs.readFileSync(path.join(out, 'compare.html'), 'utf8');
 const frCompare = fs.readFileSync(path.join(out, 'fr/compare.html'), 'utf8');
-check('EN FAQ : pas d’offre payante', /No paid offer/i.test(enFaq) && !/buy\.stripe\.com/.test(enFaq));
-check('FR FAQ : pas d’offre payante', /Aucune offre payante/i.test(frFaq) && !/buy\.stripe\.com/.test(frFaq));
+check('EN FAQ : les deux offres sont nommées', /9,00 €/.test(enFaq) && /29,00 €/.test(enFaq) && !/buy\.stripe\.com/.test(enFaq));
+check('FR FAQ : les deux offres sont nommées', /9,00 €/.test(frFaq) && /29,00 €/.test(frFaq) && !/buy\.stripe\.com/.test(frFaq));
 check('EN FAQ : aucun message de fermeture du checkout', !/No current sale is offered|checkout is closed|do not send payment/i.test(enFaq));
 check('FR FAQ : aucun message de fermeture du checkout', !/Aucune vente actuelle n'est proposée|checkout est fermé|N'envoyez aucun paiement/i.test(frFaq));
-check('EN comparaison : pas de vente Stripe', /No paid offer is open/.test(enCompare) && /Join the waitlist/.test(enCompare) && !/buy\.stripe\.com/.test(enCompare));
-check('FR comparaison : pas de vente Stripe', /Aucune offre payante/.test(frCompare) && /liste d’attente/i.test(frCompare) && !/buy\.stripe\.com/.test(frCompare));
+check('EN comparaison : les deux offres, sans Payment Link', /9,00 €/.test(enCompare) && /See the offers/.test(enCompare) && !/buy\.stripe\.com/.test(enCompare));
+check('FR comparaison : les deux offres, sans Payment Link', /9,00 €/.test(frCompare) && /Voir les offres/.test(frCompare) && !/buy\.stripe\.com/.test(frCompare));
 check('EN comparaison : aucun checkout fermé ou ancien prix cible', !/Checkout closed|No payment form is available|historical target only|No current sale/i.test(enCompare));
 check('FR comparaison : aucun paiement fermé ou ancien prix cible', !/Paiement fermé|Aucun formulaire de paiement n'est disponible|ancien prix cible|Aucune vente actuelle/i.test(frCompare));
 

@@ -185,7 +185,7 @@ for (const re of forbidden) {
   if (re.test(commercial)) failures.push(`section commerciale : promesse a ne pas prouver : ${re}`);
 }
 // Aucune offre payante : la page d'accueil ne renvoie pas vers un paiement.
-if (!home.includes("No paid offer")) failures.push("index.html : l'absence d'offre payante doit etre explicite");
+if (!home.includes("9,00 €") || !home.includes("29,00 €")) failures.push("index.html : les deux offres doivent etre explicites");
 if (home.includes("buy.stripe.com")) failures.push("index.html : le Payment Link ne doit pas etre promu");
 if (/308\s*ms|PrintWindow|window messages/i.test(home)) failures.push("index.html : argument d'automatisation encore present");
 

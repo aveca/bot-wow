@@ -59,9 +59,9 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   check('accueil : CTA apres la telemetry', /data-cta-id="telemetry-demo"/.test(t));
   check('accueil : CTA apres les etapes', /data-cta-id="steps-demo"/.test(t));
   check('accueil : CTA de statut final en fin de page', /id="final"[\s\S]{0,900}data-cta-id="final-status"/.test(t));
-  check("accueil : liste d'attente, sans Payment Link",
+  check("accueil : offres 9 € et 29 €, sans Payment Link",
     /mailto:support@bot-wow\.com/.test(t) &&
-    /No paid offer/i.test(t) && !/buy\.stripe\.com/.test(t));
+    /9,00 €/.test(t) && /29,00 €/.test(t) && !/buy\.stripe\.com/.test(t));
   check('accueil : canal de secours vers le support', /mailto:support@bot-wow\.com/.test(t));
 }
 
@@ -69,10 +69,10 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
 {
   const en = read('compare.html');
   const fr = read('fr/compare.html');
-  check('compare EN : aucune offre payante',
-    /No paid offer is open/i.test(en) && !/buy\.stripe\.com/.test(en));
-  check('compare FR : aucune offre payante',
-    /Aucune offre payante/i.test(fr) && !/buy\.stripe\.com/.test(fr));
+  check('compare EN : les deux offres sont nommées',
+    /9,00 €/.test(en) && /29,00 €/.test(en) && !/buy\.stripe\.com/.test(en));
+  check('compare FR : les deux offres sont nommées',
+    /9,00 €/.test(fr) && /29,00 €/.test(fr) && !/buy\.stripe\.com/.test(fr));
   check('compare EN : CTA demo vers la demo simulee',
     /href="\.\/demo\.html"[^>]*data-cta-id="compare-demo"/.test(en));
   check('compare EN : CTA statut vers la page achat',
@@ -196,7 +196,7 @@ for (const file of ['index.html', 'fr/index.html', 'compare.html', 'fr/compare.h
   const t = read('index.html');
   const prices = [...new Set([...t.matchAll(/(\d+[.,]\d\d\s?€|€\s?\d+[.,]\d\d)/g)].map((m) => m[0].replace(/\s/g, ' ')))];
   check('accueil : un seul prix annonce', prices.length <= 2, `(prix : ${prices.join(', ')})`);
-  check('accueil : aucune offre payante', /No paid offer/i.test(t) && !/20,00\s?€/.test(t));
+  check('accueil : deux prix, pas 20 €', /9,00\s?€/.test(t) && /29,00\s?€/.test(t) && !/20,00\s?€/.test(t));
 }
 
 // 8. Le stamp des assets est a jour (regression observee en production :
@@ -285,7 +285,7 @@ for (const file of ['index.html', 'fr/index.html']) {
   const html = read(file);
   check(`${file} : aucun formulaire ni champ e-mail de paiement`,
     !/id="buyForm"|id="email"|id="buyBtn"|type="email"|buy\.stripe\.com/i.test(html) &&
-    /id="waitlist"/.test(html));
+    /id="offre"/.test(html));
   const css = read('assets/site.css');
   check(`site.css : pm-input retrouve un :focus-visible`,
     /\.pm-input:focus-visible\{[^}]*outline:/.test(css));

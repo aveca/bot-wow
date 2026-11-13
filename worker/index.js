@@ -512,8 +512,8 @@ async function handleStripeWebhook(request, env2) {
   }
   const signature = request.headers.get("Stripe-Signature") || "";
   if (!verifyStripeSignature(payload, signature, env2.STRIPE_WEBHOOK_SECRET)) {
-    console.error("Webhook Stripe: signature invalide");
-    return new Response("Invalid Signature", { status: 401 });
+    console.error("Webhook Stripe: signature absente ou invalide");
+    return new Response("Bad Request", { status: 400 });
   }
   let event;
   try {

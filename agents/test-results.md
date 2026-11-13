@@ -4,6 +4,7 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 
 | commande | contexte | résultat |
 |---|---|---|
+| `npm test` et `npm run validate` | local, 2026-11-13, branche `cursor/live-offer-copy-bd31` | exit 0. Webhook sans signature et signature invalide : 400. Pages d’achat EN/FR/ES : les deux liens LIVE. |
 | `npm test` | local, 2026-11-13, après les URL LIVE | exit 0. Repli `payment_link` planner et `payment_intent.metadata` studio inclus. `npm run validate` exit 0. |
 | `npm test` | local, 2026-11-13, branche compagnon conforme | exit 0. Webhook Planner/Studio sans clé API, sans zip ; remboursement révoque. Python et registre Casinobabe absents : parité SKIP, pas un échec. |
 | sondes HTTP `bot-wow.com`, `www`, `api.bot-wow.com` | production, 2026-11-06T14:15Z puis 14:17Z | voir `PROJECT_STATE.md` |
