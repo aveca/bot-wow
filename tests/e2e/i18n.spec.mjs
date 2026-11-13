@@ -99,9 +99,10 @@ test('i18n: beta reservation price is consistent on EN and FR', async ({ page })
   ]) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-    await expect(page.locator('.price-card .price-tag')).toContainText(/Waitlist|Liste d’attente/i);
-    await expect(page.locator('.price-card a[data-cta-id="waitlist"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card .price-tag').first()).toContainText('Planner');
+    await expect(page.locator('body')).toContainText('9,00 €');
+    await expect(page.locator('body')).toContainText('29,00 €');
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
   }
   expect(errors).toEqual([]);
 });

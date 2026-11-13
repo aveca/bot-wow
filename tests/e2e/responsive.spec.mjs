@@ -119,9 +119,9 @@ test('responsive: beta reservation price card is visible on all viewports', asyn
     const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
 
-    await expect(page.locator('.price-card--offer')).toBeVisible();
-    await expect(page.locator('.price-card--offer a[data-cta-id="waitlist"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
-    await expect(page.locator('.price-card--offer')).toContainText(/No paid offer|Aucune offre payante/i);
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
+    await expect(page.locator('.price-card--offer').first()).toContainText('9,00 €');
+    await expect(page.locator('a[data-price-key="planner"]').first()).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);

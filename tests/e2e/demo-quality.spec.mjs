@@ -100,10 +100,10 @@ async function verifyBetaReservation(page, testInfo, lang) {
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
-  const offer = page.locator('.price-card--offer');
+  const offer = page.locator('.price-card--offer').first();
   await expect(offer).toBeVisible();
-  await expect(offer.locator('a[data-cta-id="waitlist"]')).toHaveAttribute('href', /mailto:support@bot-wow.com/);
-  await expect(offer).toContainText(/No paid offer|Aucune offre payante/i);
+  await expect(offer).toContainText('9,00 €');
+  await expect(page.locator('a[data-price-key="planner"]').first()).toBeVisible();
   await expect(page.locator('#buyBtn')).toHaveCount(0);
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -115,7 +115,7 @@ test('homepage: demo and beta-reservation paths remain visible and responsive', 
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('.price-card--offer')).toBeVisible();
+  await expect(page.locator('.price-card--offer').first()).toBeVisible();
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
   await expect(page.locator('#before-buying')).toContainText(/EULA/i);
@@ -147,7 +147,7 @@ test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ 
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -186,7 +186,7 @@ test('comparison EN/FR: beta reservation CTAs navigate to the reservation page a
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
     await expect(page).toHaveURL(route.target);
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
 
