@@ -16,14 +16,14 @@ const check = (name, ok, detail = '') => {
   else { failures += 1; console.log('  FAIL ' + name + ' ' + detail); }
 };
 const PAGES = [
-  {file:'product.html',lang:'en',buy:'https://bot-wow.com/buy.html',noGame:'It does not connect to World of Warcraft',noLive:'live Auction House prices',noDownload:'no downloadable package is offered'},
-  {file:'fr/product.html',lang:'fr',buy:'https://bot-wow.com/fr/buy.html',noGame:'Il ne se connecte pas à World of Warcraft',noLive:'prix en direct de l’hôtel des ventes',noDownload:'aucun paquet téléchargeable n’est proposé'},
-  {file:'de/product.html',lang:'de',buy:'https://bot-wow.com/de/buy.html',noGame:'Es verbindet sich nicht mit World of Warcraft',noLive:'Live-Auktionshauspreise',noDownload:'ein Downloadpaket wird nicht angeboten'},
-  {file:'es/product.html',lang:'es',buy:'https://bot-wow.com/es/buy.html',noGame:'No se conecta a World of Warcraft',noLive:'precios en directo de la casa de subastas',noDownload:'no se ofrece un paquete descargable'},
-  {file:'pt-br/product.html',lang:'pt-BR',buy:'https://bot-wow.com/pt-br/buy.html',noGame:'Não se conecta ao World of Warcraft',noLive:'preços ao vivo da Casa de Leilões',noDownload:'nenhum pacote para download é oferecido'},
-  {file:'ru/product.html',lang:'ru',buy:'https://bot-wow.com/ru/buy.html',noGame:'Он не подключается к World of Warcraft',noLive:'актуальные цены аукциона',noDownload:'скачиваемый пакет не предлагается'},
-  {file:'it/product.html',lang:'it',buy:'https://bot-wow.com/it/buy.html',noGame:'Non si collega a World of Warcraft',noLive:'prezzi in tempo reale della casa d’aste',noDownload:'non viene offerto un pacchetto scaricabile'},
-  {file:'pl/product.html',lang:'pl',buy:'https://bot-wow.com/pl/buy.html',noGame:'Nie łączy się z World of Warcraft',noLive:'aktualnych cen z domu aukcyjnego',noDownload:'pakiet do pobrania nie jest oferowany'},
+  {file:'product.html',lang:'en',buy:'https://bot-wow.com/buy.html',interfaceNote:'Companion interface currently in English.',noGame:'It does not connect to World of Warcraft',noLive:'live Auction House prices',noDownload:'no downloadable package is offered'},
+  {file:'fr/product.html',lang:'fr',buy:'https://bot-wow.com/fr/buy.html',interfaceNote:'Interface du compagnon est actuellement en anglais.',noGame:'Il ne se connecte pas à World of Warcraft',noLive:'prix en direct de l’hôtel des ventes',noDownload:'aucun paquet téléchargeable n’est proposé'},
+  {file:'de/product.html',lang:'de',buy:'https://bot-wow.com/de/buy.html',interfaceNote:'Die Begleiter-Oberfläche ist derzeit auf Englisch.',noGame:'Es verbindet sich nicht mit World of Warcraft',noLive:'Live-Auktionshauspreise',noDownload:'ein Downloadpaket wird nicht angeboten'},
+  {file:'es/product.html',lang:'es',buy:'https://bot-wow.com/es/buy.html',interfaceNote:'La interfaz del compañero está actualmente en inglés.',noGame:'No se conecta a World of Warcraft',noLive:'precios en directo de la casa de subastas',noDownload:'no se ofrece un paquete descargable'},
+  {file:'pt-br/product.html',lang:'pt-BR',buy:'https://bot-wow.com/pt-br/buy.html',interfaceNote:'A interface do companheiro está atualmente em inglês.',noGame:'Não se conecta ao World of Warcraft',noLive:'preços ao vivo da Casa de Leilões',noDownload:'nenhum pacote para download é oferecido'},
+  {file:'ru/product.html',lang:'ru',buy:'https://bot-wow.com/ru/buy.html',interfaceNote:'Интерфейс помощника пока доступен на английском.',noGame:'Он не подключается к World of Warcraft',noLive:'актуальные цены аукциона',noDownload:'скачиваемый пакет не предлагается'},
+  {file:'it/product.html',lang:'it',buy:'https://bot-wow.com/it/buy.html',interfaceNote:'L’interfaccia del compagno è attualmente in inglese.',noGame:'Non si collega a World of Warcraft',noLive:'prezzi in tempo reale della casa d’aste',noDownload:'non viene offerto un pacchetto scaricabile'},
+  {file:'pl/product.html',lang:'pl',buy:'https://bot-wow.com/pl/buy.html',interfaceNote:'Interfejs towarzysza jest obecnie po angielsku.',noGame:'Nie łączy się z World of Warcraft',noLive:'aktualnych cen z domu aukcyjnego',noDownload:'pakiet do pobrania nie jest oferowany'},
 ];
 const URLS = [
   'https://bot-wow.com/product.html','https://bot-wow.com/fr/product.html',
@@ -57,6 +57,7 @@ for (const p of PAGES) {
   check(p.file + ' documents the manual margin formula', html.includes('data-formula="(sell-buy)*count"') && html.includes('sell − buy'));
   check(p.file + ' links to the live companion', html.includes('href="https://bot-wow.com/companion.html"'));
   check(p.file + ' links to its localised buy page', html.includes('href="' + p.buy + '"'));
+  check(p.file + ' discloses the companion UI language', html.includes(p.interfaceNote));
   check(p.file + ' is clear about no game connection', html.includes(p.noGame));
   check(p.file + ' is clear about no live market prices', html.includes(p.noLive));
   check(p.file + ' is clear that no downloadable package is offered', html.includes(p.noDownload));
