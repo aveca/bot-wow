@@ -1,6 +1,6 @@
 # BOT-WOW — État courant Factory V3
 
-**État court au 2026-11-13 : repositionnement conforme, non déployé.** Le site de la branche `cursor/compliant-companion-reposition-bd31` ne vend plus l’automatisation et n’affiche plus le Payment Link. Aucune offre payante : liste d’attente par e-mail. Le Payment Link LIVE et le Worker n’ont pas été modifiés. La production reste l’ancienne vitrine tant qu’il n’y a pas de fusion autorisée.
+**État court au 2026-11-13 : liens LIVE dans la PR #200, non fusionnée, Worker non déployé.** Planner https://buy.stripe.com/4gM4gB62W4749MO78C63K01 (`plink_1UbIoJRnrMmUAHDtGYXfbz3m`). Studio https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02 (`plink_1UbIoKRnrMmUAHDtQnO7HFRk`). Le webhook de la branche reconnaît `price_key`, puis `payment_intent.metadata.price_key`, puis ces deux `payment_link`. La production sert encore l’ancienne vitrine. Aucun déploiement Worker, aucun secret modifié, aucune fusion.
 
 **État court au 2026-11-12 : `PROJECT_STATE.md`.** Le webhook `checkout.session.completed` délivre aussi une licence pour le Payment Link `plink_1UaG0TRnrMmUAHDtXMyagAIa` (prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`, `metadata.product` `BOT-WOW`). Les boutons publics restent ce lien. Le Worker n'est pas déployé tant que le propriétaire ne le publie pas.
 

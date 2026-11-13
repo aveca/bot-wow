@@ -5,8 +5,8 @@
  */
 export const RETIRED_PAYMENT_LINK = "https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00";
 export const PAYMENT_LINKS = {
-  planner: "",
-  studio: ""
+  planner: "https://buy.stripe.com/4gM4gB62W4749MO78C63K01",
+  studio: "https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02"
 };
 
 const links = { planner: PAYMENT_LINKS.planner, studio: PAYMENT_LINKS.studio };

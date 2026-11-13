@@ -4,14 +4,14 @@ Compte : `acct_1UZwjERnrMmUAHDt` uniquement. Ne pas utiliser `acct_1UZwjTDCQkzI0
 
 Le Payment Link historique `https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00` n’est pas modifié et n’est plus affiché.
 
-## Produits
+## Produits créés le 2026-11-13
 
-| Nom | Montant | Devise | Type | metadata `price_key` |
-|---|---|---|---|---|
-| BOT-WOW Planner | 900 (9,00) | EUR | paiement unique | `planner` |
-| BOT-WOW Studio | 2900 (29,00) | EUR | paiement unique | `studio` |
+| Nom | Montant | Devise | Type | metadata `price_key` | Payment Link | Identifiants |
+|---|---|---|---|---|---|---|
+| BOT-WOW Planner | 900 (9,00) | EUR | paiement unique | `planner` | https://buy.stripe.com/4gM4gB62W4749MO78C63K01 | `plink_1UbIoJRnrMmUAHDtGYXfbz3m`, `price_1UbIoARnrMmUAHDtUOiNMeir` |
+| BOT-WOW Studio | 2900 (29,00) | EUR | paiement unique | `studio` | https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02 | `plink_1UbIoKRnrMmUAHDtQnO7HFRk`, `price_1UbIoBRnrMmUAHDtY4JprzB1` |
 
-Les deux sont des prix `one_time`, mode `payment`, pas d’abonnement. La collecte d’e-mail Stripe reste activée. Aucun autre metadata n’est requis. Ne pas réutiliser le prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`.
+Les URL sont dans `assets/payment-links.js`. Succès Stripe : `https://bot-wow.com/thanks.html?session_id={CHECKOUT_SESSION_ID}`. `price_key` est lu sur la session, puis sur `payment_intent.metadata`, puis déduit du `payment_link` si la métadonnée manque. Ne pas réutiliser le prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`.
 
 ## Webhook
 
@@ -41,7 +41,7 @@ Le corps signé suffit. Le Worker ne rappelle pas l’API Stripe si la session d
 
 `STRIPE_SECRET_KEY` n’est pas nécessaire pour cette livraison. Ne pas y mettre une clé live pour « faire marcher » l’ancien checkout API.
 
-Après création des liens, coller les URL dans `assets/payment-links.js` (`planner`, `studio`) ou dans les variables ci-dessus, puis republier Pages et le Worker. Le lien historique est refusé par le site.
+Les URL LIVE sont déjà dans `assets/payment-links.js`. `STRIPE_LINK_PLANNER` et `STRIPE_LINK_STUDIO` restent optionnelles : si elles sont posées, elles remplacent ces URL côté `/api/config`. Le lien historique est refusé par le site.
 
 ## Phrase de description d’activité
 

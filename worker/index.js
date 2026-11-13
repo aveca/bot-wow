@@ -414,6 +414,8 @@ var PRODUCT_METADATA_KEY = "bot-wow-lifetime";
 // de licence.
 var STRIPE_PAYMENT_LINK_ID = "plink_1UaG0TRnrMmUAHDtXMyagAIa";
 var STRIPE_PAYMENT_LINK_PRICE_ID = "price_1UaG0TRnrMmUAHDtO3r6xVq4";
+var STRIPE_PLANNER_LINK_ID = "plink_1UbIoJRnrMmUAHDtGYXfbz3m";
+var STRIPE_STUDIO_LINK_ID = "plink_1UbIoKRnrMmUAHDtQnO7HFRk";
 var PAYMENT_LINK_PRODUCT_LABEL = "BOT-WOW";
 // Rate limit du checkout : 5 tentatives par IP toutes les 5 minutes.
 // Valeur restauree (2026-10-21, audit V9) : la version locale avait ete
@@ -922,20 +924,35 @@ function sessionLinePriceIds(session) {
   }).filter(Boolean);
 }
 __name(sessionLinePriceIds, "sessionLinePriceIds");
+function metadataPriceKey(metadata) {
+  const key = String(metadata && metadata.price_key || "");
+  return key === "planner" || key === "studio" ? key : "";
+}
+__name(metadataPriceKey, "metadataPriceKey");
+function resolvePriceKey(session) {
+  const fromSession = metadataPriceKey(session && session.metadata);
+  if (fromSession) return fromSession;
+  const intent = session && session.payment_intent;
+  const fromIntent = metadataPriceKey(intent && typeof intent === "object" && intent.metadata);
+  if (fromIntent) return fromIntent;
+  const link = paymentLinkId(session);
+  if (link === STRIPE_PLANNER_LINK_ID) return "planner";
+  if (link === STRIPE_STUDIO_LINK_ID) return "studio";
+  return "";
+}
+__name(resolvePriceKey, "resolvePriceKey");
 function pricedOffer(session) {
-  const key = String(session && session.metadata && session.metadata.price_key || "");
+  const key = resolvePriceKey(session);
   if (key === "planner" || key === "studio") return PRICE_TABLE[key];
   return PRICE_TABLE[PRODUCT_METADATA_KEY];
 }
 __name(pricedOffer, "pricedOffer");
 function companionTierOf(payment) {
-  const key = String(payment && payment.metadata && payment.metadata.price_key || "");
-  return key === "planner" || key === "studio" ? key : "";
+  return metadataPriceKey(payment && payment.metadata);
 }
 __name(companionTierOf, "companionTierOf");
 function isBotWowCheckoutSession(session) {
-  const key = String(session && session.metadata && session.metadata.price_key || "");
-  if (key === "planner" || key === "studio") return true;
+  if (resolvePriceKey(session)) return true;
   const product = String(session && session.metadata && session.metadata.product || "");
   if (product === PRODUCT_METADATA_KEY || product === PAYMENT_LINK_PRODUCT_LABEL) return true;
   if (paymentLinkId(session) === STRIPE_PAYMENT_LINK_ID) return true;
@@ -950,6 +967,9 @@ function sessionBuyerEmail(session) {
 __name(sessionBuyerEmail, "sessionBuyerEmail");
 function sessionToPayment(session) {
   const cents = Number(session.amount_total || 0);
+  const metadata = Object.assign({}, session.metadata || {});
+  const priceKey = resolvePriceKey(session);
+  if (priceKey) metadata.price_key = priceKey;
   return {
     id: session.id,
     status: session.payment_status === "paid" ? "paid" : String(session.payment_status || ""),
@@ -958,7 +978,7 @@ function sessionToPayment(session) {
       value: (cents / 100).toFixed(2),
       currency: String(session.currency || "").toUpperCase()
     },
-    metadata: session.metadata || {},
+    metadata,
     payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : String(session.payment_intent && session.payment_intent.id || "")
   };
 }

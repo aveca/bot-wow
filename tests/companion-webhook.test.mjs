@@ -140,5 +140,25 @@ console.log('=== COMPANION WEBHOOK ===');
   check('accès : clé inconnue refusée', denied.status === 404);
 }
 
+{
+  const state = { events: new Set(), orders: [], licenses: [], downloads: [] };
+  const env = envFor(state);
+  const event = paid('cs_link_only', 'planner', 900);
+  delete event.data.object.metadata.price_key;
+  event.data.object.payment_link = 'plink_1UbIoJRnrMmUAHDtGYXfbz3m';
+  const res = await post(env, event);
+  check('repli payment_link planner : 200', res.status === 200, String(res.status));
+  check('repli payment_link planner : licence planner', state.licenses.length === 1 && state.licenses[0].status === 'planner', JSON.stringify(state.licenses));
+}
+{
+  const state = { events: new Set(), orders: [], licenses: [], downloads: [] };
+  const env = envFor(state);
+  const event = paid('cs_intent_only', 'studio', 2900);
+  delete event.data.object.metadata.price_key;
+  event.data.object.payment_intent = { id: 'pi_csintentonly', metadata: { price_key: 'studio' } };
+  const res = await post(env, event);
+  check('repli payment_intent.metadata : licence studio', res.status === 200 && state.licenses[0] && state.licenses[0].status === 'studio', String(res.status));
+}
+
 console.log(failures ? `COMPANION : ${failures} ECHEC(S)` : 'COMPANION : OK');
 process.exit(failures ? 1 : 0);
