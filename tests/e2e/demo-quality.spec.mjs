@@ -91,12 +91,12 @@ async function verifyBetaReservation(page, testInfo, lang) {
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
 
   if (lang === 'fr') {
-    await expect(navStatus).toContainText('liste d’attente');
-    await expect(heroStatus).toContainText('liste d’attente');
+    await expect(navStatus).toContainText('Voir les offres');
+    await expect(heroStatus).toContainText('Voir les offres');
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
   } else {
-    await expect(navStatus).toContainText('Join the waitlist');
-    await expect(heroStatus).toContainText('Join the waitlist');
+    await expect(navStatus).toContainText('See the offers');
+    await expect(heroStatus).toContainText('See the offers');
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
@@ -137,8 +137,8 @@ test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ 
   });
 
   for (const route of [
-    { path: '/', label: 'Join the waitlist', bar: 'Purchase status' },
-    { path: '/fr/', label: 'liste d’attente', bar: 'Statut de l’achat' },
+    { path: '/', label: 'See the offers', bar: 'Purchase status' },
+    { path: '/fr/', label: 'Voir les offres', bar: 'Statut de l’achat' },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -170,8 +170,8 @@ test('comparison EN/FR: beta reservation CTAs navigate to the reservation page a
   });
 
   for (const route of [
-    { path: '/compare.html', label: 'Join the waitlist', bar: 'Purchase status', target: /\/buy\.html$/ },
-    { path: '/fr/compare.html', label: 'liste d’attente', bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
+    { path: '/compare.html', label: 'See the offers', bar: 'Purchase status', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: 'Voir les offres', bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -274,8 +274,8 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('No paid offer');
-    await expect(mobileOffer).toContainText('Waitlist');
+    await expect(mobileOffer).toContainText('9,00 €');
+    await expect(mobileOffer).toContainText('See the offers');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -319,8 +319,8 @@ test('French demo: locale stays French and all key navigation targets are locali
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('Aucune offre payante');
-    await expect(mobileOffer).toContainText('Liste d’attente');
+    await expect(mobileOffer).toContainText('9,00 €');
+    await expect(mobileOffer).toContainText('Voir les offres');
   } else {
     await expect(mobileOffer).toBeHidden();
   }

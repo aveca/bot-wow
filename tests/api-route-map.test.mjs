@@ -129,8 +129,8 @@ console.log('=== CARTE DES ROUTES API (sandbox, aucun paiement) ===');
 {
   const res = await call('/api/stripe-webhook', 'POST', '');
   const text = await res.text();
-  check('POST /api/stripe-webhook sans signature : 401, aucun appel Stripe',
-    res.status === 401 && mollieCalls === 0,
+  check('POST /api/stripe-webhook sans signature : 400, aucun appel Stripe',
+    res.status === 400 && mollieCalls === 0,
     `(status=${res.status} mollie=${mollieCalls} ${text.slice(0, 80)})`);
 }
 {

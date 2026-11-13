@@ -1,6 +1,8 @@
 # BOT-WOW — État courant Factory V3
 
-**État court au 2026-11-13 : liens LIVE dans la PR #200, non fusionnée, Worker non déployé.** Planner https://buy.stripe.com/4gM4gB62W4749MO78C63K01 (`plink_1UbIoJRnrMmUAHDtGYXfbz3m`). Studio https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02 (`plink_1UbIoKRnrMmUAHDtQnO7HFRk`). Le webhook de la branche reconnaît `price_key`, puis `payment_intent.metadata.price_key`, puis ces deux `payment_link`. La production sert encore l’ancienne vitrine. Aucun déploiement Worker, aucun secret modifié, aucune fusion.
+**État court au 2026-11-13 : PR #200 fusionnée (`ca9e08c`), Worker déployé par le propriétaire, correctif des pages d’achat en cours.** Les pages EN, FR et ES doivent montrer Planner 9 € et Studio 29 €. Une signature webhook absente ou invalide doit répondre 400. Le propriétaire redéploie le Worker lui-même.
+
+**État court au 2026-11-13 : liens LIVE dans la PR #200.** Planner https://buy.stripe.com/4gM4gB62W4749MO78C63K01 (`plink_1UbIoJRnrMmUAHDtGYXfbz3m`). Studio https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02 (`plink_1UbIoKRnrMmUAHDtQnO7HFRk`). Le webhook de la branche reconnaît `price_key`, puis `payment_intent.metadata.price_key`, puis ces deux `payment_link`. La production sert encore l’ancienne vitrine. Aucun déploiement Worker, aucun secret modifié, aucune fusion.
 
 **État court au 2026-11-12 : `PROJECT_STATE.md`.** Le webhook `checkout.session.completed` délivre aussi une licence pour le Payment Link `plink_1UaG0TRnrMmUAHDtXMyagAIa` (prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`, `metadata.product` `BOT-WOW`). Les boutons publics restent ce lien. Le Worker n'est pas déployé tant que le propriétaire ne le publie pas.
 
