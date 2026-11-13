@@ -305,7 +305,7 @@ const purchaseStatusPageCases = [
     title: /<title>BOT-WOW — Waitlist, no paid offer/i,
     nav: /data-cta-id="nav-status"[^>]*>Join the waitlist<\/a>/i,
     hero: /data-cta-id="buy-status-primary"[^>]*>Join the waitlist<\/a>/i,
-    bar: /aria-label="Purchase status"[\s\S]*?Join the waitlist/i,
+    bar: /aria-label="Purchase status"[\s\S]*?See the offers/i,
     targetPrice: /No paid offer/i,
   },
   {
@@ -313,7 +313,7 @@ const purchaseStatusPageCases = [
     title: /<title>BOT-WOW — Liste d’attente, aucune offre payante/i,
     nav: /data-cta-id="nav-status"[^>]*>Rejoindre la liste d’attente<\/a>/i,
     hero: /data-cta-id="buy-status-primary"[^>]*>Rejoindre la liste d’attente<\/a>/i,
-    bar: /aria-label="Statut de disponibilité"[\s\S]*?Rejoindre la liste d’attente/i,
+    bar: /aria-label="Statut de disponibilité"[\s\S]*?Voir les offres/i,
     targetPrice: /Aucune offre payante/i,
   },
 ];
