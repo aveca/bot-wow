@@ -91,24 +91,23 @@ async function verifyBetaReservation(page, testInfo, lang) {
   await expect(page.locator('[data-cta-id="nav-buy"], [data-cta-id="buy-hero-primary"]')).toHaveCount(0);
 
   if (lang === 'fr') {
-    await expect(navStatus).toContainText('Réserver la bêta');
-    await expect(heroStatus).toContainText('Réserver la bêta');
+    await expect(navStatus).toContainText('liste d’attente');
+    await expect(heroStatus).toContainText('liste d’attente');
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Statut de disponibilité');
   } else {
-    await expect(navStatus).toContainText('Reserve beta');
-    await expect(heroStatus).toContainText('Reserve beta');
+    await expect(navStatus).toContainText('Join the waitlist');
+    await expect(heroStatus).toContainText('Join the waitlist');
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', 'Purchase status');
   }
 
-  const offer = page.locator('.price-card--offer');
+  const offer = page.locator('.price-card--offer').first();
   await expect(offer).toBeVisible();
-  await expect(offer.locator('a[data-cta-id="beta-reservation-stripe"]')).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
-  await expect(offer).toContainText(/manual|manuelle/i);
-  await expect(offer).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
+  await expect(offer).toContainText('9,00 €');
+  await expect(page.locator('a[data-price-key="planner"]').first()).toBeVisible();
   await expect(page.locator('#buyBtn')).toHaveCount(0);
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
-  await expect(page.locator('#before-buying')).toContainText(/serveurs privés|private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/EULA|automat/i);
 }
 
 test('homepage: demo and beta-reservation paths remain visible and responsive', async ({ page }, testInfo) => {
@@ -116,10 +115,10 @@ test('homepage: demo and beta-reservation paths remain visible and responsive', 
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('.price-card--offer')).toBeVisible();
+  await expect(page.locator('.price-card--offer').first()).toBeVisible();
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/EULA/i);
   await expect(page.locator('a[data-cta-id="hero-demo"]')).toBeVisible();
   await expect(page.locator('a[data-cta-id="hero-status"]')).toBeVisible();
   await expect(page.locator('nav .nav-links a[href="./features.html"]')).toHaveCount(1);
@@ -138,8 +137,8 @@ test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ 
   });
 
   for (const route of [
-    { path: '/', label: 'Reserve beta', bar: 'Purchase status' },
-    { path: '/fr/', label: 'Réserver la bêta', bar: 'Statut de l’achat' },
+    { path: '/', label: 'Join the waitlist', bar: 'Purchase status' },
+    { path: '/fr/', label: 'liste d’attente', bar: 'Statut de l’achat' },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -148,7 +147,7 @@ test('homepage EN/FR: reservation CTAs never start internal checkout', async ({ 
     await expect(statusCta).toBeVisible();
     await expect(statusCta).toContainText(route.label);
     await expect(page.locator('.mbar')).toHaveAttribute('aria-label', route.bar);
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -171,8 +170,8 @@ test('comparison EN/FR: beta reservation CTAs navigate to the reservation page a
   });
 
   for (const route of [
-    { path: '/compare.html', label: 'Reserve beta — €20', bar: 'Purchase status', target: /\/buy\.html$/ },
-    { path: '/fr/compare.html', label: 'Réserver la bêta — 20 €', bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
+    { path: '/compare.html', label: 'Join the waitlist', bar: 'Purchase status', target: /\/buy\.html$/ },
+    { path: '/fr/compare.html', label: 'liste d’attente', bar: 'Statut de disponibilité', target: /\/fr\/buy\.html$/ },
   ]) {
     const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
@@ -187,7 +186,7 @@ test('comparison EN/FR: beta reservation CTAs navigate to the reservation page a
     await expect(page.locator('body')).not.toContainText(/Mollie/i);
     await statusCta.click();
     await expect(page).toHaveURL(route.target);
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
 
@@ -248,7 +247,7 @@ test('index.html: CTA navigation pointe vers la demo, pas vers le checkout', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('a[data-cta-id="nav-demo"]')).toBeAttached();
   await expect(page.locator('nav .nav-links a[href="#buy"]')).toHaveCount(0);
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/EULA/i);
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, testInfo, 'homepage-nav');
   expect(errors).toEqual([]);
@@ -275,8 +274,8 @@ test('English demo: simulation disclosure, interactions and purchase handoff wor
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('20,00 €');
-    await expect(mobileOffer).toContainText('Private servers');
+    await expect(mobileOffer).toContainText('No paid offer');
+    await expect(mobileOffer).toContainText('Waitlist');
   } else {
     await expect(mobileOffer).toBeHidden();
   }
@@ -320,8 +319,8 @@ test('French demo: locale stays French and all key navigation targets are locali
   if ((page.viewportSize()?.width ?? 1440) <= 640) {
     await expect(mobileOffer).toBeVisible();
     await expect(mobileOffer.locator('a')).toHaveAttribute('href', './buy.html');
-    await expect(mobileOffer).toContainText('20,00 €');
-    await expect(mobileOffer).toContainText('Serveurs privés');
+    await expect(mobileOffer).toContainText('Aucune offre payante');
+    await expect(mobileOffer).toContainText('Liste d’attente');
   } else {
     await expect(mobileOffer).toBeHidden();
   }

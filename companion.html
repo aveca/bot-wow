@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOT-WOW companion — spots, route, margin</title>
+<meta name="description" content="Enter your own spots and prices. The page orders the route and computes a margin. It does not read the game or click.">
+<link rel="canonical" href="https://bot-wow.com/companion.html">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="./assets/favicon.svg?v=91f5f0fa" type="image/svg+xml">
+<link rel="stylesheet" href="./assets/site.css?v=91f5f0fa">
+<link rel="stylesheet" href="./assets/style.css?v=91f5f0fa">
+</head>
+<body>
+<a class="skip-link" href="#tool">Skip to the tool</a>
+<nav><div class="w">
+  <a class="logo" href="./">BOT-WOW</a>
+  <div class="nav-links"><a href="./buy.html">Offers</a><a href="./demo.html">Demo</a><a href="assets/addon/BotWowNotes/BotWowNotes.lua">Free addon</a></div>
+</div></nav>
+<main class="page" id="tool"><div class="w">
+  <h1>Companion</h1>
+  <p class="kp">You type every coordinate and every price. Distance is ordinary Euclidean distance in those coordinates. Margin is (sell − buy) × count. Nothing on this page is a market price, a catch rate, or a click sent to a game.</p>
+  <p id="tier-label">Free: 4 spots, no export, no journal. Planner (9,00 €): 12 spots and export. Studio (29,00 €): 40 spots, named lists and a journal.</p>
+  <form id="key-form">
+    <label for="access-key">Access key from the payment email</label>
+    <input id="access-key" name="key" autocomplete="off" maxlength="64">
+    <button class="btn btn-ghost" type="submit">Check key</button>
+    <p id="key-msg" role="status"></p>
+  </form>
+  <h2>Spots</h2>
+  <form id="spot-form">
+    <label>Name <input id="spot-name" required maxlength="40"></label>
+    <label>X <input id="spot-x" type="number" step="any" required></label>
+    <label>Y <input id="spot-y" type="number" step="any" required></label>
+    <button class="btn btn-gold" type="submit">Add spot</button>
+  </form>
+  <p id="spot-msg" role="status"></p>
+  <ol id="route"></ol>
+  <p id="distance"></p>
+  <p><button class="btn btn-ghost" type="button" id="export-btn" disabled>Export route</button>
+  <label>List name <input id="list-name" maxlength="40"></label>
+  <button class="btn btn-ghost" type="button" id="save-list" disabled>Save named list</button></p>
+  <ul id="lists"></ul>
+  <h2>Margin</h2>
+  <p>Formula, using only the numbers below: (sell − buy) × count.</p>
+  <form id="margin-form">
+    <label>Label <input id="m-label" maxlength="40"></label>
+    <label>Buy <input id="m-buy" type="number" step="any"></label>
+    <label>Sell <input id="m-sell" type="number" step="any"></label>
+    <label>Count <input id="m-count" type="number" step="1"></label>
+    <button class="btn btn-ghost" type="submit">Calculate</button>
+  </form>
+  <p id="margin-out"></p>
+  <h2>Checklist</h2>
+  <ul>
+    <li><label><input type="checkbox"> Write the coordinates where you are standing. The page cannot see them.</label></li>
+    <li><label><input type="checkbox"> Read the order, then walk it yourself.</label></li>
+    <li><label><input type="checkbox"> Type a price you actually saw before trusting the margin.</label></li>
+  </ul>
+  <h2>Catch journal</h2>
+  <p>Studio only. Saved in this browser, not on a server. Species and counts are whatever you type.</p>
+  <form id="journal-form">
+    <label>Date <input id="j-date" type="date"></label>
+    <label>What you caught <input id="j-what" maxlength="60"></label>
+    <label>Count <input id="j-count" type="number" step="1"></label>
+    <button class="btn btn-ghost" type="submit" id="journal-add" disabled>Add note</button>
+  </form>
+  <ul id="journal"></ul>
+</div></main>
+<script type="module">
+const FREE = 4, PLANNER = 12, STUDIO = 40;
+const state = { tier: "free", spots: [] };
+const $ = (id) => document.getElementById(id);
+function cap() { return state.tier === "studio" ? STUDIO : state.tier === "planner" ? PLANNER : FREE; }
+function hypot(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+function order(spots) {
+  const left = spots.map((s, i) => ({ ...s, i }));
+  if (!left.length) return [];
+  const route = [left.shift()];
+  while (left.length) {
+    const cur = route[route.length - 1];
+    let best = 0, bestD = Infinity;
+    left.forEach((s, i) => { const d = hypot(cur, s); if (d < bestD) { bestD = d; best = i; } });
+    route.push(left.splice(best, 1)[0]);
+  }
+  return route;
+}
+function render() {
+  const route = order(state.spots);
+  $("route").innerHTML = route.map((s, n) => `<li>${n + 1}. ${s.name} (${s.x}, ${s.y})</li>`).join("");
+  let dist = 0;
+  for (let i = 1; i < route.length; i++) dist += hypot(route[i - 1], route[i]);
+  $("distance").textContent = route.length > 1 ? `Total Euclidean distance: ${dist.toFixed(2)} in your coordinates.` : "";
+  $("tier-label").textContent = `Current access: ${state.tier}. Spot cap: ${cap()}.`;
+  $("export-btn").disabled = state.tier === "free" || route.length === 0;
+  $("save-list").disabled = state.tier !== "studio" || route.length === 0;
+  $("journal-add").disabled = state.tier !== "studio";
+}
+$("spot-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (state.spots.length >= cap()) { $("spot-msg").textContent = `Cap reached (${cap()}).`; return; }
+  state.spots.push({ name: $("spot-name").value.trim(), x: Number($("spot-x").value), y: Number($("spot-y").value) });
+  $("spot-msg").textContent = "";
+  render();
+});
+$("export-btn").addEventListener("click", () => {
+  const lines = order(state.spots).map((s, n) => `${n + 1}\t${s.name}\t${s.x}\t${s.y}`);
+  const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "botwow-route.txt";
+  a.click();
+});
+$("save-list").addEventListener("click", () => {
+  const name = $("list-name").value.trim();
+  if (!name) return;
+  const all = JSON.parse(localStorage.getItem("botwow_lists") || "{}");
+  all[name] = state.spots;
+  localStorage.setItem("botwow_lists", JSON.stringify(all));
+  $("lists").innerHTML = Object.keys(all).map((k) => `<li>${k} (${all[k].length})</li>`).join("");
+});
+$("margin-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const buy = Number($("m-buy").value), sell = Number($("m-sell").value), count = Number($("m-count").value);
+  if (!Number.isFinite(buy) || !Number.isFinite(sell) || !Number.isFinite(count)) { $("margin-out").textContent = "Enter buy, sell and count."; return; }
+  const margin = (sell - buy) * count;
+  $("margin-out").textContent = `${$("m-label").value || "Item"}: (${sell} − ${buy}) × ${count} = ${margin}`;
+});
+$("journal-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (state.tier !== "studio") return;
+  const row = { date: $("j-date").value, what: $("j-what").value.trim(), count: $("j-count").value };
+  const rows = JSON.parse(localStorage.getItem("botwow_journal") || "[]");
+  rows.push(row);
+  localStorage.setItem("botwow_journal", JSON.stringify(rows));
+  $("journal").innerHTML = rows.map((r) => `<li>${r.date} — ${r.what} × ${r.count}</li>`).join("");
+});
+$("key-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("key-msg").textContent = "Checking…";
+  try {
+    const res = await fetch("https://api.bot-wow.com/api/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: $("access-key").value.trim() })
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.tier) { state.tier = "free"; $("key-msg").textContent = "Key not accepted. No access was granted."; }
+    else { state.tier = body.tier; $("key-msg").textContent = "Server confirmed " + body.tier + "."; }
+  } catch (e) {
+    $("key-msg").textContent = "The access server did not answer. No access was granted.";
+  }
+  render();
+});
+render();
+</script>
+</body>
+</html>

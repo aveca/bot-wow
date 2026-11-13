@@ -2,6 +2,8 @@
 
 | date | décision | statut |
 |---|---|---|
+| 2026-11-13 | Ne plus vendre ni promouvoir le client qui capture la fenêtre et envoie des clics. L’EULA Blizzard §1.C.2 l’interdit, y compris sur serveurs privés. Tant qu’un compagnon limité à l’information (notes, spots, itinéraire exécuté par le joueur) n’est pas livrable, le site ne propose qu’une liste d’attente. Le Payment Link LIVE existant n’est pas modifié et n’est plus affiché. | tenue sur la branche `cursor/compliant-companion-reposition-bd31`, pas encore en production |
+|---|---|---|
 | 2026-11-06 | L'hôte canonique est `https://bot-wow.com`. | tenue, canonical + Redirect Rule observée |
 | 2026-11-06 | Ne pas rouvrir le CTA ni le checkout dans le cycle d'état partagé. La page « purchase unavailable » est la posture publiée. | tenue par ce cycle |
 | 2026-11-06 | Ne pas ajouter une redirection `www` dans `_redirects` ni une Pages Function tant que la Redirect Rule de zone répond 301. | tenue |

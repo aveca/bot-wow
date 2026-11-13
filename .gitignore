@@ -15,6 +15,7 @@ backups/
 
 # Copies temporaires du Worker utilisees par les harness de test.
 tests/.worker-under-test.mjs
+tests/.worker-companion.mjs
 tests/.worker-download-delivery.mjs
 
 # Captures d'ecran de verification (audit-viewports) : ne pas versionner.

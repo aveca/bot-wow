@@ -53,8 +53,8 @@ for (const v of VARIANTS) {
     !/everything below is delivered and working now|tout ce qui suit est livre et fonctionne maintenant/i.test(s));
   check(`${v.f} : mentionne la non-verification du paquet`,
     /not currently verified|n'est pas verifiee|pas verifiee/i.test(s));
-  check(`${v.f} : avis de disponibilite AVANT le formulaire`,
-    read(v.f).indexOf('id="release-availability-notice"') < read(v.f).indexOf('id="buyForm"'));
+  check(`${v.f} : l'automatisation n'est pas l'offre`,
+    /not for sale|No paid offer|n'est pas en vente|Aucune offre payante|EULA/i.test(read(v.f)));
 }
 
 /* --- C. aucune garantie de resultats ------------------------------ */
@@ -73,12 +73,13 @@ for (const v of VARIANTS) {
 for (const v of VARIANTS) {
   const html = read(v.f);
   const flat = html.replace(/\s+/g, ' ');
-  check(`${v.f} : vrai formulaire de checkout`,
-    /id="buyForm"/.test(html) && /id="email"/.test(html) && /id="buyBtn"/.test(html) && /id="buyErr"/.test(html));
-  check(`${v.f} : prix 20,00 EUR inchange`, /20,00\s*€|20\.00/.test(html));
+  check(`${v.f} : pas de formulaire de checkout`,
+    !/id="buyForm"|id="buyBtn"|type="email"/i.test(html));
+  check(`${v.f} : pas de prix 20 EUR ni de l'ancien Payment Link`,
+    !/20,00\s*€/.test(html) && !/00wbJ3gHAdHEf78fF863K00/.test(html));
   check(`${v.f} : CTA instrumentes (>=3)`, (html.match(/data-cta-id="buy-/g) || []).length >= 3);
-  check(v.f + ' : bouton de checkout actif',
-    /id="buyBtn"/.test(html) && !/id="buyBtn"[^>]*disabled/.test(html));
+  check(v.f + ' : aucun bouton de checkout du bot',
+    !/id="buyBtn"/.test(html));
   check(v.f + ' : aucun badge Mollie ne suggère un paiement actif',
     !/Payment by <b[^>]*>Mollie<\/b>|Paiement par <b[^>]*>Mollie<\/b>/i.test(flat));
   check(v.f + ' : aucune redirection Mollie promise',

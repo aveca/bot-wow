@@ -184,8 +184,10 @@ const forbidden = [/\bzero ban\b/i, /\bzéro ban\b/i, /24\/7/i, /garanti/i,
 for (const re of forbidden) {
   if (re.test(commercial)) failures.push(`section commerciale : promesse a ne pas prouver : ${re}`);
 }
-// Le prix annonce doit correspondre a celui du serveur (20 EUR).
-if (!home.includes("20,00 €")) failures.push("index.html : le prix de l'offre doit etre affiche (20,00 EUR)");
+// Aucune offre payante : la page d'accueil ne renvoie pas vers un paiement.
+if (!home.includes("No paid offer")) failures.push("index.html : l'absence d'offre payante doit etre explicite");
+if (home.includes("buy.stripe.com")) failures.push("index.html : le Payment Link ne doit pas etre promu");
+if (/308\s*ms|PrintWindow|window messages/i.test(home)) failures.push("index.html : argument d'automatisation encore present");
 
 // --- Migrations D1 : le schema doit etre reproductible --------------------
 // FIX 2026-10-23 : les migrations sont separees par base de donnees.
