@@ -6,13 +6,13 @@
    assets/site.css (widgets : modale de paiement, HUD démo…) reste chargé
    par les pages AVANT ce shim — theme.css prime ensuite sur le décor.
    ========================================================================== */
-@import url("theme.css?v=91f5f0fa");
-@import url("hero.css?v=91f5f0fa");
-@import url("compare.css?v=91f5f0fa");
-@import url("components.css?v=91f5f0fa");
-@import url("motion.css?v=91f5f0fa");
-@import url("premium.css?v=91f5f0fa");
-@import url("pixel-skin.css?v=91f5f0fa");
+@import url("theme.css?v=885b2494");
+@import url("hero.css?v=885b2494");
+@import url("compare.css?v=885b2494");
+@import url("components.css?v=885b2494");
+@import url("motion.css?v=885b2494");
+@import url("premium.css?v=885b2494");
+@import url("pixel-skin.css?v=885b2494");
 
 @media (max-width:900px){
   .topbar .w{flex-wrap:wrap}
