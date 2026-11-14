@@ -73,7 +73,7 @@ check(
   homeFr.includes('data-cta-id="nav-buy"')
 );
 
-async function checkoutClickEvents(cta) {
+async function checkoutClickEvents(cta, href = '') {
   const sent = [];
   const listeners = {};
   const store = new Map();
@@ -103,6 +103,7 @@ async function checkoutClickEvents(cta) {
     getAttribute(name) {
       if (name === 'data-cta-id') return cta;
       if (name === 'data-track') return 'cta_click';
+      if (name === 'href') return href;
       return null;
     },
     closest() { return null; }
@@ -111,6 +112,7 @@ async function checkoutClickEvents(cta) {
     closest(selector) {
       if (selector === '[data-track]') return element;
       if (selector.includes('[data-cta-id="' + cta + '"]')) return element;
+      if (href.startsWith('https://buy.stripe.com/') && selector.startsWith('a[href^="https://buy.stripe.com/"]')) return element;
       return null;
     }
   };
@@ -122,6 +124,31 @@ check(
   'status navigation click does not emit checkout_requested',
   !statusEvents.includes('checkout_requested'),
   '(' + statusEvents.join(', ') + ')'
+);
+
+const liveLinkEvents = await checkoutClickEvents('planner-buy', 'https://buy.stripe.com/4gM4gB62W4749MO78C63K01');
+check(
+  'live Payment Link click emits checkout_requested',
+  liveLinkEvents.includes('checkout_requested'),
+  '(' + liveLinkEvents.join(', ') + ')'
+);
+const studioLinkEvents = await checkoutClickEvents('studio-buy', 'https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02');
+check(
+  'studio Payment Link click emits checkout_requested',
+  studioLinkEvents.includes('checkout_requested'),
+  '(' + studioLinkEvents.join(', ') + ')'
+);
+const intermediateEvents = await checkoutClickEvents('planner-buy', './buy.html#planner');
+check(
+  'intermediate buy.html link click does not emit checkout_requested',
+  !intermediateEvents.includes('checkout_requested'),
+  '(' + intermediateEvents.join(', ') + ')'
+);
+const retiredEvents = await checkoutClickEvents('beta-reservation-stripe', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
+check(
+  'retired beta Payment Link click does not emit checkout_requested',
+  !retiredEvents.includes('checkout_requested'),
+  '(' + retiredEvents.join(', ') + ')'
 );
 
 console.log(failures === 0 ? '\nANALYTICS SOURCES : OK' : `\nANALYTICS SOURCES : ${failures} ECHEC(S)`);

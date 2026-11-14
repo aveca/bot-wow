@@ -235,16 +235,27 @@
   }, { passive: true });
 
   /* 4. Clics sur les CTA d'achat (checkout_requested). */
-  // Écouteur élargi : couvre maintenant 8 IDs CTA buy-réels (contre 4 auparavant),
-  // dont le Payment Link Stripe de la réservation beta (beta-reservation-stripe),
-  // le seul moyen de paiement actuellement ouvert. Les boutons de démonstration/
-  // navigation qui n'ouvrent pas le checkout sont exclus (hero-demo, final-demo,
-  // telemetry-*, radar-, journey-*, steps-demo, compare-cta). Le serveur conserve
-  // le contrôle : seul payment_confirmed → license_created → delivery_sent crée
-  // une conversion réelle.
+  // Deux sources d'intention d'achat :
+  //   a) les IDs CTA buy historiques (hero-offer, mbar-buy, final-buy,
+  //      compare-buy, journey-*-buy, steps-buy), encore presents sur les
+  //      variantes A/B (ab/a, ab/b) ;
+  //   b) tout lien qui ouvre directement un Payment Link Stripe (href
+  //      https://buy.stripe.com/) : sur buy.html, les boutons planner-buy et
+  //      studio-buy pointent vers le checkout Stripe, le clic est donc
+  //      l'intention d'achat reelle (semantique du commit 190cd61). Les
+  //      liens intermediaires vers /buy.html (index.html, product.html)
+  //      restent de simples cta_click : ils n'ouvrent pas le checkout.
+  //      L'ancien lien de reservation beta (00wbJ3gHAdHEf78fF863K00) est
+  //      refuse par assets/payment-links.js et ne compte pas.
+  // Le serveur conserve le controle : seul payment_confirmed ->
+  // license_created -> delivery_sent cree une conversion reelle.
   document.addEventListener('click', function (ev) {
     var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
-    if (!el) return;
+    if (!el) {
+      var link = ev.target.closest ? ev.target.closest('a[href^="https://buy.stripe.com/"]') : null;
+      if (!link || link.getAttribute('href') === 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00') return;
+      el = link;
+    }
     track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
   }, { passive: true });
 
