@@ -27,17 +27,25 @@ Le site et l'API sont **indépendants** : la démo fonctionne sans l'API ✓ (el
 ## 2. Secrets à configurer (Cloudflare) — JAMAIS dans le dépôt
 
 ```bash
-wrangler secret put MOLLIE_API_KEY        # clé API Mollie (test ou live)
-wrangler secret put MOLLIE_WEBHOOK_SECRET # secret de signature des webhooks (optionnel)
-wrangler secret put RESEND_API_KEY        # envoi des e-mails de livraison
-wrangler secret put ADMIN_PASSWORD        # accès aux routes /api/admin/*
+wrangler secret put STRIPE_SECRET_KEY      # sk_test_... ou sk_live_...
+wrangler secret put STRIPE_WEBHOOK_SECRET  # secret du endpoint Stripe
+wrangler secret put RESEND_API_KEY         # envoi des e-mails de livraison
 ```
 
 | Secret | Rôle | Conséquence de son absence |
 |---|---|---|
-| `MOLLIE_API_KEY` | créer le paiement et **relire** le paiement dans le webhook | le checkout échoue (`checkout_failed`) |
-| `MOLLIE_WEBHOOK_SECRET` | vérification **supplémentaire** de la signature du webhook | le webhook fonctionne quand même (l'état du paiement est relu via l'API) |
+| `STRIPE_SECRET_KEY` | créer la Checkout Session et relire la session dans le webhook | le checkout échoue (`checkout_failed`) |
+| `STRIPE_WEBHOOK_SECRET` | vérifier `Stripe-Signature` sur `POST /api/stripe-webhook` | le webhook répond 500 et ne livre rien |
 | `RESEND_API_KEY` | envoi du e-mail de licence | la commande est **conservée** en base (table `deliveries`, statut `pending`) et peut être rejouée ; **aucune licence n'est perdue** |
+
+Le webhook Stripe à déclarer : `https://api.bot-wow.com/api/stripe-webhook`, événement `checkout.session.completed`. Le Worker n'est pas déployé par GitHub Actions : après fusion, le déployer avec l'API Cloudflare ou `wrangler deploy`. Les bindings `ASSETS`, `DB`, `TELEMETRY_DB`, `RATE_LIMIT` et `R2_BINARIES` ne changent pas.
+
+```bash
+# anciennes commandes Mollie, plus lues par le Worker
+# wrangler secret put MOLLIE_API_KEY
+# wrangler secret put MOLLIE_WEBHOOK_SECRET
+wrangler secret put ADMIN_PASSWORD        # accès aux routes /api/admin/*
+```
 | `ADMIN_PASSWORD` | routes d'administration | l'administration est inaccessible |
 
 Variables (non secrètes, dans `wrangler.toml`) : `ENVIRONMENT = "production"`,

@@ -4,6 +4,9 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 
 | commande | contexte | résultat |
 |---|---|---|
+| `npm test` et `npm run validate` | local, 2026-11-13, branche `cursor/live-offer-copy-bd31` | exit 0. Webhook sans signature et signature invalide : 400. Pages d’achat EN/FR/ES : les deux liens LIVE. |
+| `npm test` | local, 2026-11-13, après les URL LIVE | exit 0. Repli `payment_link` planner et `payment_intent.metadata` studio inclus. `npm run validate` exit 0. |
+| `npm test` | local, 2026-11-13, branche compagnon conforme | exit 0. Webhook Planner/Studio sans clé API, sans zip ; remboursement révoque. Python et registre Casinobabe absents : parité SKIP, pas un échec. |
 | sondes HTTP `bot-wow.com`, `www`, `api.bot-wow.com` | production, 2026-11-06T14:15Z puis 14:17Z | voir `PROJECT_STATE.md` |
 | D1 SELECT agrégats | `changed_db=false`, `rows_written=0` | 0 payé hors example.com ; 0 livraison ; 0 activation |
 | `node tests/delivery-replay.test.mjs` | sandbox local, 2026-11-06T14:20Z | exit 0, `LIVRAISON REPRISE : OK`, y compris webhook paid → octets ZIP simulés |
@@ -25,6 +28,8 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `npm run validate` | local, 2026-11-08 | exit 0, `BOT-WOW validation PASS` |
 | `git diff --check` | local, 2026-11-08 | exit 0 |
 | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-08 | `AGENT STATE : OK`, exit 0 |
+
+| CI PR #192 sur SHA `1802d69` | GitHub Actions, 2026-11-11 | Validate success ; package-candidate success ; GitGuardian success ; ui-quality success (tous les checks verts après retrait de --with-deps) |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
 | `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |

@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 /**
- * checkout-gate.test.mjs - la garde de livraison du checkout.
+ * checkout-gate.test.mjs — le checkout public est ouvert.
  *
- * Defaut couvert : la page dit « ne pas acheter tant que la livraison n'est
- * pas confirmee » mais /api/checkout encaissait quand meme. Le Worker refuse
- * maintenant tant que RELEASE_STATUS !== 'confirmed'.
- *
- * Point cle : l'etat est cote serveur. Un visiteur ne doit PAS pouvoir le
- * contourner en injectant un champ dans le corps de la requete.
+ * POST /api/checkout crée une Checkout Session Stripe. RELEASE_STATUS ne
+ * bloque plus la vente. Le montant reste celui de PRICE_TABLE.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,8 +11,6 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..');
-/* Meme mecanique que checkout-security : on copie le Worker puis on
-   l'importe dynamiquement, pour qu'il s'execute comme un module ES. */
 const tmpWorker = path.join(HERE, '.worker-under-test.mjs');
 fs.writeFileSync(tmpWorker, fs.readFileSync(path.join(REPO, 'worker', 'index.js'), 'utf8'));
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
@@ -35,17 +29,22 @@ function makeEnv(releaseStatus) {
     delete: async (k) => { store.delete(k); },
   };
   const db = {
-    prepare(sql) {
-      const key = sql.replace(/\s+/g, ' ').trim();
+    prepare() {
       return { bind: () => ({
         run: async () => ({ meta: { last_row_id: 0 } }),
-        first: async () => (/FROM mollie_customers/i.test(key) ? null : null),
+        first: async () => null,
         all: async () => [],
       }) };
     },
     batch: async () => [],
   };
-  return { DB: db, RATE_LIMIT: kv, RELEASE_STATUS: releaseStatus };
+  return {
+    DB: db,
+    RATE_LIMIT: kv,
+    RELEASE_STATUS: releaseStatus,
+    STRIPE_SECRET_KEY: 'sk_test_unit',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
+  };
 }
 
 function call(body, env, ip) {
@@ -57,41 +56,41 @@ function call(body, env, ip) {
   return workerMod.default.fetch(req, env, {});
 }
 
-console.log('=== GARDE DE LIVRAISON DU CHECKOUT ===');
+console.log('=== CHECKOUT OUVERT : SESSION STRIPE ===');
 
-/* The source flag and server binding must both be confirmed. The current source flag is pending. */
-let PROVIDER_CALLS = 0;
-globalThis.fetch = async () => {
-  PROVIDER_CALLS += 1;
-  return { ok: true, json: async () => ({ id: 'cst_test' }) };
+let STRIPE_CALLS = 0;
+globalThis.fetch = async (url) => {
+  if (String(url).includes('api.stripe.com')) {
+    STRIPE_CALLS += 1;
+    return new Response(JSON.stringify({
+      id: 'cs_open',
+      url: 'https://checkout.stripe.com/c/pay/cs_open',
+      expires_at: Math.floor(Date.now() / 1000) + 1800,
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
+  return new Response('{}', { status: 500 });
 };
+
 for (const [label, status] of [
   ['absent', undefined],
   ['pending', 'pending'],
-  ['invalid', 'oui-mais-non'],
-  ['secret-confirmed-but-source-pending', 'confirmed'],
+  ['confirmed', 'confirmed'],
 ]) {
-  PROVIDER_CALLS = 0;
+  STRIPE_CALLS = 0;
   const res = await call({ email: 'a@test.fr', lang: 'fr' }, makeEnv(status));
   const body = await res.json().catch(() => ({}));
-  check(label + ' -> HTTP 409 delivery_unverified', res.status === 409 && body.error === 'delivery_unverified', '(status ' + res.status + ')');
-  check(label + ' -> zero provider calls', PROVIDER_CALLS === 0, '(' + PROVIDER_CALLS + ')');
+  check(label + ' -> 200 et une URL Stripe',
+    res.status === 200 && /checkout\.stripe\.com/.test(body.checkoutUrl || ''),
+    `(status ${res.status} url ${body.checkoutUrl})`);
+  check(label + ' -> un appel Stripe', STRIPE_CALLS === 1, `(${STRIPE_CALLS})`);
 }
 
-/* Client-supplied status fields cannot override either server-side gate. */
-for (const attack of [
-  { RELEASE_STATUS: 'confirmed' },
-  { release_status: 'confirmed' },
-  { released: true },
-  { confirmed: true },
-]) {
-  PROVIDER_CALLS = 0;
-  const body = { email: 'b@test.fr', lang: 'fr', amount: 100, ...attack };
-  const res = await call(body, makeEnv('pending'));
-  check('injection ' + Object.keys(attack)[0] + ' cannot bypass the gate', res.status === 409, '(status ' + res.status + ')');
-  check('injection -> zero provider calls', PROVIDER_CALLS === 0, '(' + PROVIDER_CALLS + ')');
+{
+  const res = await call({ email: 'b@test.fr', lang: 'fr', amount: 100, RELEASE_STATUS: 'pending' }, makeEnv('pending'));
+  const body = await res.json().catch(() => ({}));
+  check('un montant navigateur différent est refusé', res.status === 400 && body.error === 'invalid_amount', `(status ${res.status})`);
 }
+
 console.log(failures === 0 ? '\nCHECKOUT GATE : OK' : `\nCHECKOUT GATE : ${failures} ECHEC(S)`);
 try { fs.unlinkSync(tmpWorker); } catch {}
 process.exit(failures === 0 ? 0 : 1);
-

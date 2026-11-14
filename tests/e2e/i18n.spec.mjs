@@ -29,11 +29,11 @@ test('i18n: EN buy page uses English text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.locator('h1')).toContainText('Reserve the fishing assistant beta');
+  await expect(page.locator('h1')).toContainText('Planner and Studio');
   await expect(page.locator('.price-card--offer')).toBeVisible();
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
-  await expect(page.locator('#before-buying')).toContainText(/private servers/i);
+  await expect(page.locator('#before-buying')).toContainText(/EULA/i);
 
   // Les liens legaux pointent vers /legal/ (pas /legal/fr/)
   await expect(page.locator('a[href="./legal/terms.html"]').first()).toBeAttached();
@@ -50,7 +50,7 @@ test('i18n: FR buy page uses French text', async ({ page }, testInfo) => {
   expect(response && response.ok()).toBeTruthy();
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(page.locator('h1')).toContainText('Réserver la bêta de l’assistant de pêche');
+  await expect(page.locator('h1')).toContainText('Planner et Studio');
   await expect(page.locator('.price-card--offer')).toBeVisible();
   await expect(page.locator('#buyForm')).toHaveCount(0);
   await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -99,10 +99,10 @@ test('i18n: beta reservation price is consistent on EN and FR', async ({ page })
   ]) {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok()).toBeTruthy();
-    await expect(page.locator('.price-card .amt b')).toContainText('20,00 €');
-    await expect(page.locator('.price-card .price-tag')).toContainText(expectedLabel);
-    await expect(page.locator('.price-card a[data-cta-id="beta-reservation-stripe"]')).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
-    await expect(page.locator('.price-card--offer')).toBeVisible();
+    await expect(page.locator('.price-card .price-tag').first()).toContainText('Planner');
+    await expect(page.locator('body')).toContainText('9,00 €');
+    await expect(page.locator('body')).toContainText('29,00 €');
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
   }
   expect(errors).toEqual([]);
 });

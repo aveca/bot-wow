@@ -24,6 +24,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -43,12 +44,17 @@ const realFetch = globalThis.fetch;
 let paymentState = null;
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    if (/\/payments\/tr_/.test(u)) {
-      const id = u.split('/').pop();
-      return new Response(JSON.stringify({ ...paymentState, id }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }
-    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+  if (u.startsWith('https://api.stripe.com/v1/checkout/sessions/')) {
+    const ps = paymentState || {};
+    const cents = Math.round(parseFloat(ps.amount && ps.amount.value || '0') * 100);
+    return new Response(JSON.stringify({
+      id: ps.id,
+      payment_status: ps.status === 'paid' ? 'paid' : 'unpaid',
+      amount_total: cents,
+      currency: String(ps.amount && ps.amount.currency || 'eur').toLowerCase(),
+      livemode: ps.mode !== 'test',
+      metadata: ps.metadata || {},
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   return realFetch(url, opts);
 };
@@ -96,7 +102,8 @@ function makeEnv(state) {
     TELEMETRY_DB: telemetry,
     RATE_LIMIT: { get: async () => null, put: async () => {} },
     R2_BINARIES: { get: async () => null },
-    MOLLIE_API_KEY: 'test_key',
+    STRIPE_SECRET_KEY: 'sk_test_unit',
+    STRIPE_WEBHOOK_SECRET: 'whsec_test',
     RESEND_API_KEY: '', // pas de secret : la livraison part en "pending"
     ADMIN_JWT_SECRET: 'test_admin_secret',
     LICENSE_SECRET: 'test_license_secret',
@@ -139,10 +146,13 @@ async function runWebhook(mode) {
     metadata: { email: 'client@test.fr', lang: 'fr', product: 'bot-wow-lifetime' },
   };
   if (mode !== undefined) paymentState.mode = mode;
-  const req = new Request('https://api.bot-wow.com/api/mollie-webhook', {
+  const payload = JSON.stringify({ id: 'evt_mode', type: 'checkout.session.completed', data: { object: { id: 'tr_mode' } } });
+  const t = Math.floor(Date.now() / 1000);
+  const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+  const req = new Request('https://api.bot-wow.com/api/stripe-webhook', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: 'tr_mode' }),
+    headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+    body: payload,
   });
   const res = await workerMod.default.fetch(req, env, {});
   return { res, state };

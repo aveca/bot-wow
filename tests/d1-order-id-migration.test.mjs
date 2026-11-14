@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 import { createIsolatedDatabase } from './helpers/d1-sqlite-adapter.mjs';
 import { applyProdSchema, applyProdSchemaPreMigration, seedProdFixture, seedLegacyFixture } from './helpers/prod-fixture.mjs';
 
@@ -242,22 +243,16 @@ globalThis.fetch = async (url, opts = {}) => {
   if (u.startsWith('https://api.resend.com/')) {
     return new Response(JSON.stringify({ id: 'email_simule' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_AFTER01', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
+  if (u.startsWith('https://api.stripe.com/v1/checkout/sessions')) {
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_AFTER01', url: 'https://checkout.stripe.com/c/pay/cs_AFTER01' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    const m = u.match(/\/payments\/([^/?]+)$/);
-    if (m) {
-      return new Response(JSON.stringify({
-        id: m[1], status: 'paid', amount: { value: '20.00', currency: 'EUR' },
-        metadata: { email: 'client30@example.com', lang: 'fr', product: 'bot-wow-lifetime' },
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const id = decodeURIComponent((u.split('/checkout/sessions/')[1] || 'cs_AFTER01').split('?')[0]);
+    return new Response(JSON.stringify({
+      id, payment_status: 'paid', amount_total: 2000, currency: 'eur', livemode: true,
+      metadata: { email: 'client30@example.com', lang: 'fr', product: 'bot-wow-lifetime' },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   return realFetch(url, opts);
 };
@@ -270,6 +265,8 @@ const env = {
   RATE_LIMIT: { get: async (k) => kvStore.get(k) ?? null, put: async (k, v) => { kvStore.set(k, v); } },
   R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
   MOLLIE_API_KEY: 'test_key',
+  STRIPE_SECRET_KEY: 'sk_test_unit',
+  STRIPE_WEBHOOK_SECRET: 'whsec_test',
   ADMIN_JWT_SECRET: 'test_admin_secret',
   LICENSE_SECRET: 'test_license_secret',
   CONTACT_EMAIL: 'support@bot-wow.com',
@@ -277,6 +274,17 @@ const env = {
 };
 
 async function call(path, { method = 'GET', body = null } = {}) {
+  if (String(path).includes('webhook')) {
+    const id = body && body.id;
+    const payload = JSON.stringify({ id: 'evt_' + id, type: 'checkout.session.completed', data: { object: { id } } });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    return workerMod.default.fetch(new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+      body: payload,
+    }), env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
@@ -297,8 +305,9 @@ async function call(path, { method = 'GET', body = null } = {}) {
   check('post-migration : la licence reference la commande', !!lic && lic.order_id === order.id);
   check('post-migration : une seule licence pour ce paiement',
     order && iso2.db.prepare('SELECT COUNT(*) c FROM licenses WHERE order_id = ?').get(order.id).c === 1);
+  check('post-migration : la licence ne debloque pas le zip', !!lic && lic.status === 'withheld', `(${lic && lic.status})`);
   const dl = lic ? iso2.db.prepare('SELECT COUNT(*) c FROM downloads WHERE license_id = ?').get(lic.id).c : 0;
-  check('post-migration : un jeton de telechargement est cree', dl === 1, `(${dl})`);
+  check('post-migration : aucun jeton de telechargement du bot', dl === 0, `(${dl})`);
   /* `deliveries` n'est renseignée qu'en cas d'echec d'envoi (rejeu possible).
      Si l'envoi reussit, il n'y a rien a rejouer : on le verifie explicitement. */
   const deliveriesPending = iso2.db.prepare("SELECT COUNT(*) c FROM deliveries WHERE status = 'pending'").get().c;

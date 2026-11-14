@@ -243,7 +243,7 @@
   // le contrôle : seul payment_confirmed → license_created → delivery_sent crée
   // une conversion réelle.
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="nav-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"], [data-cta-id="beta-reservation-stripe"]') : null;
+    var el = ev.target.closest ? ev.target.closest('[data-cta-id="hero-offer"], [data-cta-id="mbar-buy"], [data-cta-id="final-buy"], [data-cta-id="compare-buy"], [data-cta-id="journey-fish-buy"], [data-cta-id="journey-licence-buy"], [data-cta-id="steps-buy"]') : null;
     if (!el) return;
     track('checkout_requested', { step: el.getAttribute('data-cta-id') || 'unknown' });
   }, { passive: true });

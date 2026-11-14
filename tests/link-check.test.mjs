@@ -142,7 +142,7 @@ for (const home of ['index.html', 'fr/index.html']) {
     const html = fs.readFileSync(path.join(REPO, p), 'utf8');
     for (const m of html.matchAll(/href="([^"]*#offre)"/g)) links.push(`${p} -> ${m[1]}`);
   }
-  check('les liens "#offre" sont presents et ciblees', links.length > 0, `(${links.length} liens)`);
+  check('la vente ne dépend plus de liens #offre', links.length === 0, `(${links.length} liens)`);
 }
 
 console.log(failures === 0 ? '\nLIENS INTERNES : OK' : `\nLIENS INTERNES : ${failures} ECHEC(S)`);

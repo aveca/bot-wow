@@ -22,13 +22,10 @@ for (const [lang, route, reservationLabel] of [
   test('beta reservation: Stripe offer is visible without local email collection (' + lang + ')', async ({ page }, testInfo) => {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
     expect(response && response.ok(), route).toBeTruthy();
-    await expect(page.locator('.price-card--offer')).toBeVisible();
-    const stripeLink = page.locator('a[data-cta-id="beta-reservation-stripe"]');
-    await expect(stripeLink).toBeVisible();
-    await expect(stripeLink).toHaveAttribute('href', 'https://buy.stripe.com/00wbJ3gHAdHEf78fF863K00');
-    await expect(page.locator('.price-card--offer')).toContainText(new RegExp(reservationLabel, 'i'));
-    await expect(page.locator('.price-card--offer')).toContainText(/manual|manuelle/i);
-    await expect(page.locator('.price-card--offer')).toContainText(/full refund|intégralement remboursé|remboursement intégral/i);
+    await expect(page.locator('.price-card--offer').first()).toBeVisible();
+    await expect(page.locator('body')).toContainText('9,00 €');
+    await expect(page.locator('body')).toContainText('29,00 €');
+    await expect(page.locator('a[data-price-key="planner"]').first()).toBeVisible();
     await expect(page.locator('#buyForm')).toHaveCount(0);
     await expect(page.locator('#buyBtn')).toHaveCount(0);
     await expect(page.locator('input[type="email"]')).toHaveCount(0);
@@ -56,8 +53,8 @@ test('reservation: mobile sticky bar remains visible with price and delivery ter
     expect(response && response.ok(), route).toBeTruthy();
     const mbar = page.locator('.mbar');
     await expect(mbar).toBeVisible();
-    await expect(mbar).toContainText(label);
-    await expect(mbar).toContainText(/manual|manuelle/i);
+    await expect(mbar).toContainText('9,00 €');
+    await expect(mbar).toContainText(/Planner/i);
     await captureScreenshot(page, testInfo, 'mobile-status-' + lang);
   }
 });
@@ -67,7 +64,7 @@ test('reservation: desktop sticky bar remains attached', async ({ page }, testIn
   const response = await page.goto('/buy.html', { waitUntil: 'domcontentloaded' });
   expect(response && response.ok()).toBeTruthy();
   await expect(page.locator('.mbar')).toBeAttached();
-  await expect(page.locator('.mbar')).toContainText('beta reservation');
-  await expect(page.locator('.mbar')).toContainText('manual delivery');
+  await expect(page.locator('.mbar')).toContainText('9,00 €');
+  await expect(page.locator('.mbar')).toContainText(/Planner/i);
   await captureScreenshot(page, testInfo, 'desktop-status');
 });

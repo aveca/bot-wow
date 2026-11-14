@@ -24,12 +24,12 @@ const OUT = path.resolve(ROOT, process.argv[2] || '_site');
 const FILES = [
   'index.html', 'demo.html', 'compare.html', 'modules.html', 'features.html',
   'product.html', 'fishing.html', 'getting-started.html', 'compatibility.html', 'roadmap.html',
-  'faq.html', 'success.html', 'cancel.html', '404.html', 'buy.html',
+  'faq.html', 'success.html', 'thanks.html', 'cancel.html', '404.html', 'buy.html', 'companion.html',
   'robots.txt', 'sitemap.xml', 'version.txt', '.nojekyll', '_headers', '_redirects',
 ];
 
 /* Repertoires publies recursivement. */
-const DIRS = ['assets', 'docs', 'legal', 'fr'];
+const DIRS = ['assets', 'docs', 'legal', 'fr', 'de', 'es', 'pt-br', 'ru', 'it', 'pl'];
 
 /* Motifs de fichiers JAMAIS publies (meme s'ils se trouvaient dans un
    repertoire publie) : secrets, sources, migrations, sauvegardes. */

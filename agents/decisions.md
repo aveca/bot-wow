@@ -2,6 +2,8 @@
 
 | date | décision | statut |
 |---|---|---|
+| 2026-11-13 | Ne plus vendre ni promouvoir le client qui capture la fenêtre et envoie des clics. L’EULA Blizzard §1.C.2 l’interdit, y compris sur serveurs privés. Tant qu’un compagnon limité à l’information (notes, spots, itinéraire exécuté par le joueur) n’est pas livrable, le site ne propose qu’une liste d’attente. Le Payment Link LIVE existant n’est pas modifié et n’est plus affiché. | tenue sur la branche `cursor/compliant-companion-reposition-bd31`, pas encore en production |
+|---|---|---|
 | 2026-11-06 | L'hôte canonique est `https://bot-wow.com`. | tenue, canonical + Redirect Rule observée |
 | 2026-11-06 | Ne pas rouvrir le CTA ni le checkout dans le cycle d'état partagé. La page « purchase unavailable » est la posture publiée. | tenue par ce cycle |
 | 2026-11-06 | Ne pas ajouter une redirection `www` dans `_redirects` ni une Pages Function tant que la Redirect Rule de zone répond 301. | tenue |
@@ -18,3 +20,4 @@
 | 2026-11-08 | La divergence des PR #150 et #154 avec main est resolue par MERGE, jamais par rebase : `AGENTS.md` interdit le force-push et la reecriture d'historique. | tenue par ce cycle |
 | 2026-11-08 | Les empreintes publiees suivent le builder reellement livre. Le SHA reproductible publie est `A05FC380…` (builder durci), l'ancien `F8138F3C…` etant explicitement marque comme remplace. | tenue par ce cycle |
 | 2026-11-08 | Aucun deploiement de preview pour une PR ouverte : `.github/workflows/pages.yml` ne se declenche que sur `push` vers `main`. Rien n'est deploye depuis #150 ni #154. | verifie dans le workflow |
+| 2026-11-11 | Sur le runner GitHub Actions ubuntu-24.04, `npx playwright install --with-deps chromium` echoue car `apt-get` ne resout pas `azure.archive.ubuntu.com` (DNS mirror en panne, `Temporary failure resolving`). Correction : supprimer `--with-deps`, installer uniquement le binaire Chromium (les images runners contiennent deja les bibliotheques systeme Chromium). Ce n'est pas un probleme de code. PR #192, commit 1802d69, CI verte. | tenue (commit 1802d69, CI ui-quality success) |

@@ -5,12 +5,26 @@
   <url><loc>https://bot-wow.com/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+      <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+      <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+      <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+      <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+      <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+      <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
   </url>
 
   <!-- Pages principales (bilingues) -->
   <url><loc>https://bot-wow.com/features.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+      <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+      <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+      <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+      <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+      <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+      <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
   </url>
   <url><loc>https://bot-wow.com/fishing.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/fishing.html"/>
@@ -39,6 +53,13 @@
   <url><loc>https://bot-wow.com/product.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+      <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+      <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+      <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+      <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+      <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+      <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
   </url>
   <url><loc>https://bot-wow.com/compare.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/compare.html"/>
@@ -47,12 +68,26 @@
   <url><loc>https://bot-wow.com/faq.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
   </url>
 
   <!-- Page d'achat (bilingue) -->
   <url><loc>https://bot-wow.com/buy.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
   </url>
 
   <url><loc>https://bot-wow.com/fr/</loc>
@@ -169,4 +204,533 @@
   </url>
 
   <!-- Résultat de paiement : volontairement EXCLU (noindex, follow) -->
+  <url><loc>https://bot-wow.com/de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/es/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/pt-br/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/ru/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/it/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/pl/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/"/>
+  </url>
+  <url><loc>https://bot-wow.com/de/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/es/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pt-br/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/ru/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/it/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pl/buy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/buy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/buy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/de/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/es/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pt-br/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/ru/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/it/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pl/features.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/features.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/features.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/features.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/features.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/features.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/features.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/features.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/features.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/de/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/es/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pt-br/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/ru/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/it/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pl/product.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/product.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/product.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/product.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/product.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/product.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/product.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/product.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/product.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/de/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/es/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pt-br/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/ru/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/it/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/pl/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/fr/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/de/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/es/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/pt-br/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/ru/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/it/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/pl/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/faq.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/de/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/es/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pt-br/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/ru/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/it/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pl/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/terms.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/de/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/es/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pt-br/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/ru/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/it/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pl/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/privacy.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/de/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/es/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pt-br/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/ru/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/it/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/legal/pl/refund.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bot-wow.com/legal/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bot-wow.com/legal/fr/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://bot-wow.com/legal/de/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://bot-wow.com/legal/es/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://bot-wow.com/legal/pt-br/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://bot-wow.com/legal/ru/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://bot-wow.com/legal/it/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://bot-wow.com/legal/pl/refund.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bot-wow.com/legal/refund.html"/>
+  </url>
+  <url><loc>https://bot-wow.com/companion.html</loc></url>
 </urlset>

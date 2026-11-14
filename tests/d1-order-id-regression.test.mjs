@@ -26,6 +26,7 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { createIsolatedDatabase, createD1Binding } from './helpers/d1-sqlite-adapter.mjs';
 import { applyProdSchema, seedProdFixture, migrationFiles } from './helpers/prod-fixture.mjs';
@@ -71,6 +72,8 @@ function makeSqliteEnv(state, { now = Date.now() } = {}) {
       RATE_LIMIT: makeKV(),
       R2_BINARIES: { put: async () => {}, list: async () => ({ objects: [] }), get: async () => null, delete: async () => {} },
       MOLLIE_API_KEY: 'test_key',
+      STRIPE_SECRET_KEY: 'sk_test_unit',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test',
       MOLLIE_WEBHOOK_SECRET: 'test_secret',
       ADMIN_JWT_SECRET: 'test_admin_secret',
       ADMIN_EMAIL: 'admin@example.com',
@@ -93,26 +96,32 @@ let mollieCalls = [];
 
 globalThis.fetch = async (url, opts = {}) => {
   const u = String(url);
-  if (u.startsWith('https://api.mollie.com/v2/')) {
-    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null });
-    if (u.endsWith('/payments') && (opts.method || 'GET') === 'POST') {
-      return new Response(JSON.stringify({ id: 'tr_REGR01', _links: { checkout: { href: 'https://mollie.test/checkout' } } }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    const m = u.match(/\/payments\/([^/?]+)$/);
-    if (m) {
-      return new Response(JSON.stringify({ ...paymentState, id: m[1] }),
+  if (u.startsWith('https://api.stripe.com/v1/checkout/sessions')) {
+    mollieCalls.push({ url: u, method: opts.method || 'GET', body: opts.body ? Object.fromEntries(new URLSearchParams(String(opts.body))) : null });
+    if (u.endsWith('/checkout/sessions') && (opts.method || 'GET') === 'POST') {
+      return new Response(JSON.stringify({ id: 'cs_REGR01', url: 'https://checkout.stripe.com/c/pay/cs_REGR01' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    if (u.endsWith('/customers')) {
-      return new Response(JSON.stringify({ id: 'cst_test' }), { status: 201, headers: { 'Content-Type': 'application/json' } });
-    }
-    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const ps = paymentState;
+    return new Response(JSON.stringify({
+      id: ps.id, payment_status: 'paid', amount_total: 2000, currency: 'eur', livemode: true, metadata: ps.metadata,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   return realFetch(url, opts);
 };
 
 async function callWorker(path, { method = 'GET', body = null, env, headers = {} } = {}) {
+  if (String(path).includes('webhook')) {
+    const id = body && body.id;
+    const payload = JSON.stringify({ id: 'evt_' + id, type: 'checkout.session.completed', data: { object: { id } } });
+    const t = Math.floor(Date.now() / 1000);
+    const sig = createHmac('sha256', env.STRIPE_WEBHOOK_SECRET).update(t + '.' + payload).digest('hex');
+    return workerMod.default.fetch(new Request('https://api.bot-wow.com/api/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': 't=' + t + ',v1=' + sig },
+      body: payload,
+    }), env, {});
+  }
   const req = new Request('https://api.bot-wow.com' + path, {
     method,
     headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
@@ -215,10 +224,10 @@ console.log('=== D1 : identifiants de commande (Worker reel, schema live) ===');
   check("Mollie 'paid' : une cle de licence est generee",
     !!lic && /^[A-Z0-9-]{10,}$/.test(lic.key), `(${lic && lic.key})`);
 
+  check("Mollie 'paid' : la licence n'active pas le zip tant que la release n'est pas confirmee",
+    !!lic && lic.status === 'withheld', `(${lic && lic.status})`);
   const dl = lic ? iso.db.prepare('SELECT * FROM downloads WHERE license_id = ?').get(lic.id) : null;
-  check("Mollie 'paid' : un jeton de telechargement est cree", !!dl);
-  check("Mollie 'paid' : le jeton est lie a la licence", !!dl && dl.license_id === lic.id);
-  check("Mollie 'paid' : le quota d'usage est borne", !!dl && Number(dl.max_count) > 0 && Number(dl.count) === 0);
+  check("Mollie 'paid' : aucun jeton de telechargement du bot", !dl);
 
   check("Mollie 'paid' : une livraison est enregistree",
     await count(iso.db, 'deliveries') > 0);
@@ -241,8 +250,8 @@ console.log('=== D1 : identifiants de commande (Worker reel, schema live) ===');
   check("Mollie rejoue : aucune licence supplementaire",
     await count(iso.db, 'licenses') === before.licenses + 1,
     `(${before.licenses} -> ${await count(iso.db, 'licenses')})`);
-  check("Mollie rejoue : aucun jeton supplementaire",
-    await count(iso.db, 'downloads') === before.downloads + 1,
+  check("Mollie rejoue : aucun jeton de telechargement",
+    await count(iso.db, 'downloads') === before.downloads,
     `(${before.downloads} -> ${await count(iso.db, 'downloads')})`);
   check("Mollie rejoue : aucune livraison envoyee en double",
     (() => {

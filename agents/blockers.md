@@ -2,7 +2,7 @@
 
 | id | bloquant | preuve | qui peut lever |
 |---|---|---|---|
-| B-compliance | La page publique dit que le projet est historique et qu'aucun logiciel d'automatisation n'est offert. Aucune autorisation de plateforme n'est documentée dans ce dépôt. | GET `https://bot-wow.com/` 2026-11-06T14:15Z | Propriétaire |
+| B-compliance | Le client livrable historiquement capture la fenêtre et envoie des clics. L’EULA Blizzard §1.C.2 interdit de le proposer. Le site de la branche du 2026-11-13 retire cette vente. La production `bot-wow.com` affiche encore l’ancienne réservation tant que la branche n’est pas fusionnée et publiée. Le Payment Link LIVE reste encaissable dans Stripe. | Code du runtime documenté (`PrintWindow`, messages de fenêtre) ; décision propriétaire 2026-11-13 | Propriétaire : retirer ou désactiver le Payment Link dans Stripe, aligner la description du compte (elle parle encore de Sargasses), ne pas déployer le Worker de livraison du zip |
 | B-package | L'objet R2 `casinobabe-fishing-1.2.0.zip` est présent (1 387 543 octets). La page le marque « not verified ». Provenance et exécutables hors manifeste non revalidés dans ce cycle. | Liste R2 lecture seule ; issue #18 | Propriétaire, sans réécriture R2 |
 | B-mollie | Pas de preuve, dans ce cycle, d'un profil Mollie BOT-WOW dédié. Ne pas réutiliser un autre produit. `profileId` est encore envoyé avec la clé API sur `main` ; le correctif est la PR #90. | Code `mollieFetch` ; PR #90 | Propriétaire pour le profil ; revue de #90 pour le code |
 | B-secrets | Les noms de secrets sont liés au Worker. Les valeurs et leur validité fonctionnelle ne sont pas prouvées. | API settings, types seulement | Propriétaire si une clé doit être créée. Ne pas faire de `wrangler secret put` sans accord |

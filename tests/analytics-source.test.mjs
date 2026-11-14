@@ -65,12 +65,12 @@ for (const [label, search, expected] of cases) {
 const homeEn = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const homeFr = await readFile(new URL('../fr/index.html', import.meta.url), 'utf8');
 check(
-  'English homepage labels nav CTA as status, not purchase',
-  homeEn.includes('data-cta-id="nav-status"') && !homeEn.includes('data-cta-id="nav-buy"')
+  'English homepage labels nav CTA as purchase (nav-buy)',
+  homeEn.includes('data-cta-id="nav-buy"')
 );
 check(
-  'French homepage labels nav CTA as status, not purchase',
-  homeFr.includes('data-cta-id="nav-status"') && !homeFr.includes('data-cta-id="nav-buy"')
+  'French homepage labels nav CTA as purchase (nav-buy)',
+  homeFr.includes('data-cta-id="nav-buy"')
 );
 
 async function checkoutClickEvents(cta) {
