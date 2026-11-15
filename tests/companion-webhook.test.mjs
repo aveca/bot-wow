@@ -69,7 +69,7 @@ function envFor(state) {
           bind(...args) {
             return {
               run: async () => {
-                if (/INSERT INTO events/i.test(sql) && /VALUES \\(\\?, \\?,/.test(sql)) {
+                if (/INSERT INTO events/i.test(sql) && /VALUES \(\?, \?,/.test(sql)) {
                   telemetryEvents.push({ event: args[1], step: args[7] });
                 }
                 return {};
