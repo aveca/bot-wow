@@ -20,6 +20,9 @@
  *   6. lecture reelle de `agents/locks.md` : herite identique = 0 conflit,
  *      identite differente = conflit reel
  *   7. le gate local (`scripts/check-agent-state.mjs`) termine en exit 0
+ *   8. garde-fou anti-regression : le scenario d'identite reste vrai quel que
+ *      soit le cycle de vie des verrous reels (verrous liberes ou expires) :
+ *      aucun couplage a l'heure du runner ni au nombre de verrous actifs
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -61,6 +64,52 @@ function row(overrides = {}) {
     scopes: ["demo-scope"],
     ...overrides,
   };
+}
+
+/**
+ * Construit le scenario « identite de verrou » a partir de lignes reelles.
+ *
+ * Le scenario est INDEPENDANT du cycle de vie des verrous : une ligne reelle
+ * (`id`, `agent`, `branch`, `scope`) sert de support, puis elle est normalisee
+ * en verrou actif et non expire. Aucun instant de reference n'est lu depuis
+ * l'horloge du runner.
+ *
+ * Pourquoi : avant le 2026-11-11, la section 6 lisait `Date.now()` et exigeait
+ * `legacyConflicts >= 5`. Le seuil etait couple au nombre de verrous actifs du
+ * jour : la liberation des 6 verrous expires a fait echouer `validate` et
+ * `ui-quality`, et l'expiration de `p0-payment-prep` (2026-11-12) aurait
+ * fait echouer le test une seconde fois. Un test de regle ne doit dependre
+ * d'aucun etat metier ponctuel.
+ */
+function buildIdentityScenario(rows) {
+  const source = rows.find((r) => Array.isArray(r.scopes) && r.scopes.length > 0);
+  assert.ok(source, "le scenario exige au moins une ligne de verrou avec un scope");
+  // Support issu du fichier reel, normalise en verrou vivant.
+  const holder = { ...source, status: "active", expires: "2099-12-31T00:00:00Z" };
+  const localRows = rows.filter((r) => r.id !== source.id).concat(holder);
+  // Meme scope, identite differente (branche differente) => conflit attendu.
+  const remoteRows = localRows.map((r) =>
+    r.id === holder.id ? { ...r, branch: `${r.branch}-pr-autre` } : r,
+  );
+  const inherited = findScopeConflicts({
+    localRows,
+    remoteRows: localRows,
+    prNumber: 139,
+    now: NOW,
+  });
+  const conflict = findScopeConflicts({
+    localRows,
+    remoteRows,
+    prNumber: 140,
+    now: NOW,
+  });
+  // Ancien algorithme (comparaison des SCOPES seuls) : il ne distingue pas
+  // l'identite et signale donc un conflit sur un fichier herite identique.
+  const legacyConflicts = localRows
+    .filter((r) => r.status === "active")
+    .flatMap((r) => r.scopes.filter((scope) => localRows.some((o) => o.status === "active" && o.scopes.includes(scope))))
+    .length;
+  return { holder, localRows, inherited, conflict, legacyConflicts };
 }
 
 // ── 1. Identite de verrou ───────────────────────────────────────────────────
@@ -235,41 +284,32 @@ console.log("=== 5. erreurs de lecture distante ===");
 console.log("=== 6. agents/locks.md reel ===");
 {
   const markdown = readFileSync(path.join(ROOT, "agents", "locks.md"), "utf8");
-  const { rows, problems } = parseLockTable(markdown, "agents/locks.md", Date.now());
+  const { rows, problems } = parseLockTable(markdown, "agents/locks.md", NOW);
   check("table de verrous reelle sans probleme de format", problems.length === 0, problems.join(" | "));
   check("verrous reels lus", rows.length >= 5, String(rows.length));
 
   // Cas exact de l'issue #141 : une PR qui herite du fichier de main.
-  const inherited = findScopeConflicts({
-    localRows: rows,
-    remoteRows: rows,
-    prNumber: 139,
-    now: Date.now(),
-  });
-  check("heritage identique du fichier reel = 0 conflit", inherited.length === 0, JSON.stringify(inherited));
+  const scenario = buildIdentityScenario(rows);
+  check("heritage identique du fichier reel = 0 conflit", scenario.inherited.length === 0, JSON.stringify(scenario.inherited));
 
   // Une PR qui prendrait le meme scope avec une AUTRE identite reste un conflit.
-  const firstActive = rows.find((r) => r.status === "active" && r.scopes.length > 0 && Date.parse(r.expires) > Date.now());
-  assert.ok(firstActive, "le fichier reel doit contenir au moins un verrou actif");
-  const mutated = rows.map((r) =>
-    r.id === firstActive.id ? { ...r, branch: `${r.branch}-autre` } : r,
+  check("identite reelle differente = conflit reel", scenario.conflict.length >= 1, JSON.stringify(scenario.conflict));
+  check(
+    "le conflit porte bien sur le scope du verrou reel",
+    scenario.conflict.some((c) => c.scope === scenario.holder.scopes[0]),
+    JSON.stringify(scenario.conflict),
   );
-  const realConflict = findScopeConflicts({
-    localRows: rows,
-    remoteRows: mutated,
-    prNumber: 140,
-    now: Date.now(),
-  });
-  check("identite reelle differente = conflit reel", realConflict.length >= 1, JSON.stringify(realConflict));
 
-  // Preuve du faux positif d'origine : l'ancien algoritme (comparaison des
+  // Preuve du faux positif d'origine : l'ancien algorithme (comparaison des
   // scopes seuls) signale des conflits sur le fichier herite identique.
-  const legacyConflicts = rows
-    .filter((r) => r.status === "active")
-    .flatMap((r) => r.scopes.filter((scope) => rows.some((o) => o.status === "active" && o.scopes.includes(scope))))
-    .length;
-  check("l'ancien algorithme (scope seul) aurait signale des conflits", legacyConflicts >= 5, String(legacyConflicts));
-  check("le nouvel algorithme n'en signale aucun sur le meme fichier", inherited.length === 0);
+  // Le seuil est 1 : ce qui doit etre prouve est l'EXISTENCE d'un faux positif
+  // de l'ancien algorithme, pas un nombre de verrous actifs du jour.
+  check(
+    "l'ancien algorithme (scope seul) aurait signale des conflits",
+    scenario.legacyConflicts >= 1,
+    String(scenario.legacyConflicts),
+  );
+  check("le nouvel algorithme n'en signale aucun sur le meme fichier", scenario.inherited.length === 0);
 }
 
 // ── 7. Gate local : execution reelle ────────────────────────────────────────
@@ -281,6 +321,66 @@ console.log("=== 7. gate local ===");
     cwd: ROOT,
   });
   check("gate local : AGENT STATE : OK", out.includes("AGENT STATE : OK"), out.trim());
+}
+
+// ── 8. Garde-fou : scenario independant du cycle de vie des verrous ─────────
+
+console.log("=== 8. scenario independant du cycle de vie des verrous ===");
+{
+  const markdown = readFileSync(path.join(ROOT, "agents", "locks.md"), "utf8");
+  const { rows } = parseLockTable(markdown, "agents/locks.md", NOW);
+
+  // Regression 2026-11-11 : le test etait couple au nombre de verrous actifs
+  // du jour (seuil `legacyConflicts >= 5`) ET exigeait la presence d'un verrou
+  // actif non expire, alors que `p0-payment-prep` expire le 2026-11-12 : le
+  // test se serait rebloque une seconde fois. On rejoue donc le scenario sur
+  // un fichier ou TOUS les verrous sont liberes, puis sur un fichier ou tous
+  // sont expires : les invariants doivent rester vrais a chaque liberation.
+  const allReleased = rows.map((r) => ({ ...r, status: "released", expires: PAST }));
+  const released = buildIdentityScenario(allReleased);
+  check(
+    "verrous tous liberes : heritage identique = 0 conflit",
+    released.inherited.length === 0,
+    JSON.stringify(released.inherited),
+  );
+  check(
+    "verrous tous liberes : identite differente = conflit reel",
+    released.conflict.length >= 1,
+    JSON.stringify(released.conflict),
+  );
+  check(
+    "verrous tous liberes : l'ancien algorithme signale un faux positif",
+    released.legacyConflicts >= 1,
+    String(released.legacyConflicts),
+  );
+
+  const allExpired = rows.map((r) => ({ ...r, status: "active", expires: PAST }));
+  const expired = buildIdentityScenario(allExpired);
+  check(
+    "verrous tous expires : heritage identique = 0 conflit",
+    expired.inherited.length === 0,
+    JSON.stringify(expired.inherited),
+  );
+  check(
+    "verrous tous expires : identite differente = conflit reel",
+    expired.conflict.length >= 1,
+    JSON.stringify(expired.conflict),
+  );
+
+  // Garde-fou final : aucune lecture de l'heure du runner dans le code
+  // executable de ce fichier. L'instant de reference est fige (NOW), sinon le
+  // test depend du jour ou il tourne et se rebloque a chaque expiration.
+  // Le littereal est construit dynamiquement pour que ce controle ne se
+  // detecte pas lui-meme ; les lignes de commentaire sont ignorees.
+  const codeLines = readFileSync(new URL(import.meta.url), "utf8")
+    .split(/\r?\n/)
+    .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line))
+    .join("\n");
+  const wallClock = ["Date", "now()"].join(".");
+  check(
+    "le test ne lit pas l'heure du runner (instant de reference fige)",
+    !codeLines.includes(wallClock),
+  );
 }
 
 console.log(`AGENT STATE LOCKS: OK (${checks} contrôles)`);

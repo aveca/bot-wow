@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FILES } from '../scripts/build-site.mjs';
+import { computeStamp } from '../scripts/versionne-assets.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -65,7 +66,11 @@ for (const p of PAGES) {
   check(p.file + ' does not collect email addresses', !html.includes('type="email"') && !html.includes('id="buyForm"'));
   check(p.file + ' does not bypass the current Stripe buy page', !html.includes('buy.stripe.com'));
   const ids = [...html.matchAll(/data-track="cta_click"[^>]*data-cta-id="([a-z0-9-]+)"/g)].map((m) => m[1]);
-  check(p.file + ' loads analytics and language scripts', html.includes('assets/app.js?v=91f5f0fa') && html.includes('assets/lang-suggest.js?v=91f5f0fa'));
+  // Stamp attendu calcule sur le contenu reel des assets (scripts/versionne-assets.mjs) :
+  // un stamp code en dur ronfle a chaque modification d'asset, comme le
+  // checkout de conversion-path le prouvait (91f5f0fa -> 885b2494).
+  const stamp = computeStamp(ROOT);
+  check(p.file + ' loads analytics and language scripts', html.includes('assets/app.js?v=' + stamp) && html.includes('assets/lang-suggest.js?v=' + stamp), `(stamp attendu ${stamp})`);
   check(p.file + ' has unique instrumented CTA ids', ids.length >= 4 && new Set(ids).size === ids.length);
 }
 for (const [file,href] of [['demo.html','./companion.html'],['fr/demo.html','../companion.html']]) {
