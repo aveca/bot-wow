@@ -34,6 +34,11 @@ for (const file of BUY) {
   check(file + ' : pas de mailto de liste d’attente', !/subject=BOT-WOW%20(liste|waitlist|offers)/i.test(html));
 }
 
+const frHome = fs.readFileSync(path.join(ROOT, 'fr/index.html'), 'utf8');
+check('fr/index.html : retire l’ancien statut indisponible', !/Pas encore en vente|pas de prix, pas de paiement|Il n’existe pas de produit conforme livrable/i.test(frHome));
+check('fr/index.html : affiche Planner et Studio avec leurs prix', /Planner/.test(frHome) && /Studio/.test(frHome) && frHome.includes('9,00 €') && frHome.includes('29,00 €'));
+check('fr/index.html : CTA vers les offres', frHome.includes('href="./buy.html"') && frHome.includes('data-cta-id="fr-home-offers"'));
+
 for (const full of walk(ROOT)) {
   const rel = path.relative(ROOT, full);
   const html = fs.readFileSync(full, 'utf8');
