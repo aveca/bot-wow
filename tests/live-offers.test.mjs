@@ -41,20 +41,22 @@ check('fr/index.html : CTA vers les offres', frHome.includes('href="./buy.html"'
 
 const FAQ = ['faq.html', 'fr/faq.html', 'es/faq.html'];
 const CURRENT_PAGES = ['es/index.html', 'es/buy.html'];
-const LEGACY_OFFER_COPY = /beta reservation|réservation bêta|reserva de la beta|Windows fishing assistant|assistant de pêche Windows|asistente de pesca en Windows|Leer la ventana|Clic como mensaje de ventana|Probado en condiciones reales|entrega manual tras la revisión/i;
+const LEGACY_AUTOMATION_COPY = /Windows fishing assistant|assistant de pêche Windows|asistente de pesca en Windows|Leer la ventana|Clic como mensaje de ventana|Probado en condiciones reales/i;
+const RESERVATION_COPY = /reservation|review|réservation|vérification|reserva|revisión/i;
 
 for (const file of FAQ) {
   const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
   check(file + ' : description du companion actuel', /browser companion|compagnon dans le navigateur|compañero en el navegador/i.test(html));
   check(file + ' : prix Planner et Studio', html.includes('9,00 €') && html.includes('29,00 €'));
-  check(file + ' : accès après confirmation Stripe', /Stripe.{0,120}(confirms|confirmation|confirme)|(?:confirms|confirmation|confirme).{0,120}Stripe/i.test(html));
-  check(file + ' : aucune ancienne offre Windows/bêta', !LEGACY_OFFER_COPY.test(html));
+  check(file + ' : réservation et livraison après revue', RESERVATION_COPY.test(html));
+  check(file + ' : aucune ancienne automatisation de jeu', !LEGACY_AUTOMATION_COPY.test(html));
 }
 
 for (const file of CURRENT_PAGES) {
   const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
-  check(file + ' : offre actuelle Planner/Studio', /Planner/.test(html) && /Studio/.test(html));
-  check(file + ' : aucune ancienne offre Windows/bêta', !LEGACY_OFFER_COPY.test(html));
+  check(file + ' : offre Planner/Studio', /Planner/.test(html) && /Studio/.test(html));
+  check(file + ' : réservation et livraison après revue', RESERVATION_COPY.test(html));
+  check(file + ' : aucune ancienne automatisation de jeu', !LEGACY_AUTOMATION_COPY.test(html));
 }
 
 for (const full of walk(ROOT)) {
