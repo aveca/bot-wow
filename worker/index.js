@@ -525,7 +525,12 @@ async function handleStripeWebhook(request, env2) {
   if (event.type === "charge.refunded" || event.type === "charge.dispute.created" || event.type === "charge.dispute.funds_withdrawn") {
     return handleStripeRevocation(event, env2);
   }
-  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed" || event.type === "payment_intent.payment_failed") {
+  // Une session qui expire n’est pas un échec de paiement : elle n’a pas été payée avant son expiration.
+  if (event.type === "checkout.session.expired") {
+    await emitFunnelEvent(env2, "checkout_expired", null, "/api/stripe-webhook", "en", { step: "checkout_expired", test: 0 });
+    return new Response("OK", { status: 200 });
+  }
+  if (event.type === "checkout.session.async_payment_failed" || event.type === "payment_intent.payment_failed") {
     await emitFunnelEvent(env2, "payment_failed", null, "/api/stripe-webhook", "en", { step: "payment_failed", test: 0 });
     return new Response("OK", { status: 200 });
   }

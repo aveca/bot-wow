@@ -27,6 +27,7 @@ function sign(secret, payload) {
 }
 
 function envFor(state) {
+  const telemetryEvents = [];
   return {
     DB: {
       prepare(sql) {
@@ -62,7 +63,23 @@ function envFor(state) {
         } };
       }
     },
-    TELEMETRY_DB: { prepare() { return { bind() { return { run: async () => ({}) }; } }; } },
+    TELEMETRY_DB: {
+      prepare(sql) {
+        return {
+          bind(...args) {
+            return {
+              run: async () => {
+                if (/INSERT INTO events/i.test(sql) && /VALUES \(\?, \?,/.test(sql)) {
+                  telemetryEvents.push({ event: args[1], step: args[7] });
+                }
+                return {};
+              }
+            };
+          }
+        };
+      }
+    },
+    telemetryEvents,
     RATE_LIMIT: { get: async () => null, put: async () => {} },
     STRIPE_WEBHOOK_SECRET: 'whsec_test',
     RESEND_API_KEY: '',
@@ -158,6 +175,32 @@ console.log('=== COMPANION WEBHOOK ===');
   event.data.object.payment_intent = { id: 'pi_csintentonly', metadata: { price_key: 'studio' } };
   const res = await post(env, event);
   check('repli payment_intent.metadata : licence studio', res.status === 200 && state.licenses[0] && state.licenses[0].status === 'studio', String(res.status));
+}
+
+{
+  const env = envFor({ events: new Set(), orders: [], licenses: [], downloads: [] });
+  const expired = await post(env, {
+    id: 'evt_checkout_expired',
+    type: 'checkout.session.expired',
+    data: { object: { id: 'cs_checkout_expired' } }
+  });
+  check('checkout expiré : webhook 200', expired.status === 200, String(expired.status));
+  check('checkout expiré : événement checkout_expired', env.telemetryEvents.some((e) => e.event === 'checkout_expired' && e.step === 'checkout_expired'));
+  check('checkout expiré : pas de faux payment_failed', !env.telemetryEvents.some((e) => e.event === 'payment_failed'));
+
+  const asyncFailed = await post(env, {
+    id: 'evt_async_payment_failed',
+    type: 'checkout.session.async_payment_failed',
+    data: { object: { id: 'cs_async_payment_failed' } }
+  });
+  check('paiement asynchrone échoué : payment_failed conservé', asyncFailed.status === 200 && env.telemetryEvents.some((e) => e.event === 'payment_failed' && e.step === 'payment_failed'));
+
+  const intentFailed = await post(env, {
+    id: 'evt_payment_intent_failed',
+    type: 'payment_intent.payment_failed',
+    data: { object: { id: 'pi_payment_intent_failed' } }
+  });
+  check('PaymentIntent échoué : payment_failed conservé', intentFailed.status === 200 && env.telemetryEvents.filter((e) => e.event === 'payment_failed').length === 2);
 }
 
 console.log(failures ? `COMPANION : ${failures} ECHEC(S)` : 'COMPANION : OK');
