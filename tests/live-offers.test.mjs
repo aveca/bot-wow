@@ -42,6 +42,7 @@ check('fr/index.html : CTA vers les offres', frHome.includes('href="./buy.html"'
 const FAQ = ['faq.html', 'fr/faq.html', 'es/faq.html'];
 const CURRENT_PAGES = ['es/index.html', 'es/buy.html'];
 const LEGACY_AUTOMATION_COPY = /Windows fishing assistant|assistant de pêche Windows|asistente de pesca en Windows|Leer la ventana|Clic como mensaje de ventana|Probado en condiciones reales/i;
+const NO_UNVERIFIED_DELIVERY = /key is emailed|la clé est envoyée par e-mail|la clé est envoyée par courriel|la clave se envía por correo|Después de que Stripe confirme el pago/i;
 const RESERVATION_COPY = /reservation|review|réservation|vérification|reserva|revisión/i;
 
 for (const file of FAQ) {
@@ -49,6 +50,7 @@ for (const file of FAQ) {
   check(file + ' : description du companion actuel', /browser companion|compagnon dans le navigateur|compañero en el navegador/i.test(html));
   check(file + ' : prix Planner et Studio', html.includes('9,00 €') && html.includes('29,00 €'));
   check(file + ' : réservation et livraison après revue', RESERVATION_COPY.test(html));
+  check(file + ' : aucune promesse de livraison automatique non vérifiée', !NO_UNVERIFIED_DELIVERY.test(html));
   check(file + ' : aucune ancienne automatisation de jeu', !LEGACY_AUTOMATION_COPY.test(html));
 }
 
@@ -56,6 +58,7 @@ for (const file of CURRENT_PAGES) {
   const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
   check(file + ' : offre Planner/Studio', /Planner/.test(html) && /Studio/.test(html));
   check(file + ' : réservation et livraison après revue', RESERVATION_COPY.test(html));
+  check(file + ' : aucune promesse de livraison automatique non vérifiée', !NO_UNVERIFIED_DELIVERY.test(html));
   check(file + ' : aucune ancienne automatisation de jeu', !LEGACY_AUTOMATION_COPY.test(html));
 }
 
