@@ -148,3 +148,32 @@ Ce dépôt suit le système **Factory V3** d'amélioration continue (voir `FACTO
 ### État de la dernière livraison (voir FACTORY.md)
 
 Voir `FACTORY.md` pour : contrat fonctionnel, design system, composants, règles d'animation, contraintes, commandes, critères de qualité, problèmes connus, backlog priorisé, et état de la dernière livraison vérifiée.
+
+## Test à sec — validation du bridge multi-dépôt (issue #125)
+
+Ce dépôt participe au protocole Factory V3 de validation inter-répositories. Le test à sec ci-dessous est exécuté sur une branche dédiée, sans impact sur `main`, sans paiement, sans secret et sans déploiement de production.
+
+| Élément | Valeur |
+|---|---|
+| Issue | #125 — [TEST DRY-RUN] validation bridge multi-repo sur bot-wow |
+| Dépôt | `aveca/bot-wow` |
+| Branche de test | `factory/issue125-dryrun-bridge-validation` |
+| Fichier modifié | `README.md` (documentation uniquement) |
+| Porte humain | non (`humanGate: false`) |
+| Chemin argent | non (`moneyPath: false`) |
+| Rollback | supprimer la branche de test et fermer la PR |
+
+### Procédure
+
+1. Créer une branche dédiée depuis `origin/main`.
+2. Apporter la modification documentaire minimale (ci-dessous).
+3. Exécuter `npm run validate` et `npm test` localement.
+4. Inspector le diff complet (`git diff --check`).
+5. Commit ciblé et push de la branche (jamais de push direct sur `main`).
+6. Ouvrir une PR liée à l'issue #125 et associer le CI au SHA du commit.
+7. Vérifier le résultat CI sur le SHA exact.
+8. Rollback : supprimer la branche et fermer la PR si un contrôle échoue.
+
+### Modification apportée
+
+Ajout de cette section de documentation du test à sec. Aucun code de production, aucune page d'achat, aucun prix, aucun secret, aucun paiement et aucun déploiement Worker/Pages n'est modifié.
