@@ -66,6 +66,8 @@
       </div>
     </div>
   </div></section>
+  <section class="pad signup" id="signup"><div class="w"><header class="section-head"><h2 class="h2">Crea tu cuenta</h2><p class="lead">Introduce tu email para comenzar. Tu clave de licencia se enviará por correo tras confirmar el pago en Stripe.</p></header><div class="signup-form"><form id="signup-form" novalidate><label for="signup-email">Tu email</label><input type="email" id="signup-email" name="email" placeholder="tú@ejemplo.com" required autocomplete="email"><small id="signup-err" style="color:#d00;font-size:0.85rem;display:none;margin-top:4px;">Email inválido.</small><button type="submit" class="btn btn-gold btn-lg" id="signup-btn" style="width:100%;margin-top:12px;">Regístrate y ver las ofertas</button></form><p class="center small" id="signup-ok" style="display:none;margin-top:8px;">Cuenta lista. Tu email se usará para enviarte tu clave tras la compra.</p></div></div></section>
+
   <section class="pad price" id="buy"><div class="w"><header class="section-head"><h2 class="h2" id="planner">Pagar con Stripe</h2><p class="lead" id="pay-note">Cada botón abre su Payment Link de Stripe. La clave se envía por correo después de confirmar el pago. Esta página no confirma el pago. El enlace antiguo de automatización se rechaza.</p></header><div class="price-wrap"><article class="price-card price-card--offer" id="offer-planner"><div class="price-tag">Planner</div><div class="amt center"><b>9,00 €</b> <small>EUR · una vez</small></div><ul class="price-includes"><li><span>Ruta a partir de las coordenadas que usted escribe, exportación y un margen con sus precios.</span></li><li><span>La clave se envía por correo después de confirmar el pago.</span></li></ul><a class="btn btn-gold btn-lg pay-link" style="width:100%;justify-content:center" href="https://buy.stripe.com/4gM4gB62W4749MO78C63K01" data-price-key="planner" data-track="cta_click" data-cta-id="planner-buy">Pagar 9,00 € con Stripe</a></article><article class="price-card" id="studio"><div class="price-tag">Studio</div><div class="amt center"><b>29,00 €</b> <small>EUR · una vez</small></div><ul class="price-includes"><li><span>Planner, más 40 puntos, listas con nombre y un diario de capturas que usted escribe.</span></li></ul><a class="btn btn-gold btn-lg pay-link" style="width:100%;justify-content:center" href="https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02" data-price-key="studio" data-track="cta_click" data-cta-id="studio-buy">Pagar 29,00 € con Stripe</a></article></div><p class="center small">Sin captura de pantalla. Sin clics enviados al juego. <a href="../companion.html">Abrir la herramienta</a> · <a href="../legal/es/terms.html">Condiciones</a> · <a href="../legal/es/refund.html">Reembolsos</a></p></div></section>
   <section class="pad" id="demo"><div class="w">
     <header class="section-head"><h2 class="h2">Ver primero el planificador</h2>
@@ -113,5 +115,45 @@
 <script type="module" src="../assets/app.js?v=885b2494"></script>
 <script type="module" src="../assets/payment-links.js?v=91f5f0fa"></script>
 <script src="../assets/lang-suggest.js?v=885b2494"></script>
+<script>
+(function(){
+  var form = document.getElementById('signup-form');
+  var emailInput = document.getElementById('signup-email');
+  var err = document.getElementById('signup-err');
+  var ok = document.getElementById('signup-ok');
+  var btn = document.getElementById('signup-btn');
+  var links = document.querySelectorAll('a.pay-link');
+  var stored = localStorage.getItem('bw_signup_email');
+  if(stored){
+    emailInput.value = stored;
+    err.style.display = 'none';
+    ok.style.display = 'block';
+    btn.textContent = 'Email registrado — ver las ofertas';
+    applyEmail(stored);
+  }
+  function applyEmail(email){
+    links.forEach(function(link){
+      var href = link.getAttribute('href') || '';
+      var sep = href.indexOf('?') >= 0 ? '&' : '?';
+      link.setAttribute('href', href + sep + 'prefilled_email=' + encodeURIComponent(email));
+    });
+  }
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = (emailInput.value || '').trim();
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!re.test(email)){
+      err.style.display = 'block';
+      ok.style.display = 'none';
+      return;
+    }
+    localStorage.setItem('bw_signup_email', email);
+    err.style.display = 'none';
+    ok.style.display = 'block';
+    btn.textContent = 'Email registrado — ver las ofertas';
+    applyEmail(email);
+  });
+})();
+</script>
 </body>
 </html>
