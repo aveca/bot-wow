@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>BOT-WOW — Compagnon de planification manuel · test de positionnement</title>
+<style>
+  :root{
+    --bg:#070d16; --bg2:#0b1624; --panel:#0f1e30; --line:#1d344b;
+    --ink:#e9f4f7; --muted:#93a8b8; --cyan:#39e0d0; --amber:#f2b34b;
+    --danger:#ff7a6b; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 80%)}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px;position:relative}
+  .proto{background:var(--amber);color:#1a1206;font-weight:700;font-size:12px;letter-spacing:.06em;text-align:center;padding:7px 12px}
+  header{position:sticky;top:0;z-index:5;background:rgba(7,13,22,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px}
+  .brand{font-weight:800;letter-spacing:.04em}.brand span{color:var(--cyan)}
+  nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  nav a{color:var(--muted);text-decoration:none;font-size:14px;padding:8px 10px;border-radius:8px}
+  nav a:hover,nav a:focus-visible{color:var(--ink);background:var(--panel);outline:2px solid var(--cyan)}
+  .lang{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+  .hero{padding:64px 0 40px;display:grid;gap:28px;grid-template-columns:1.1fr .9fr;align-items:center}
+  h1{font-size:clamp(32px,6vw,54px);line-height:1.05;margin:0 0 16px;letter-spacing:-.02em}
+  .accent{color:var(--cyan)}
+  .lead{color:var(--muted);font-size:clamp(17px,2.4vw,20px);max-width:56ch}
+  .facts{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}
+  .chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--muted)}
+  .chip b{color:var(--amber)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:0;border-radius:12px;font-weight:750;font-size:16px;cursor:pointer;text-decoration:none}
+  .btn-primary{background:var(--cyan);color:#04201f}.btn-primary:hover,.btn-primary:focus-visible{filter:brightness(1.08);outline:3px solid #04201f}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .panel h2{margin:0 0 6px;font-size:20px}
+  .panel p{margin:0 0 14px;color:var(--muted);font-size:14px}
+  .field{display:grid;gap:6px;margin-bottom:12px}
+  label{font-size:13px;color:var(--muted)}
+  input,select{width:100%;min-height:46px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:0 12px;font:inherit}
+  input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);border-color:var(--cyan)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1 1 140px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .pill{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;background:#123;color:var(--cyan);border:1px solid var(--line)}
+  section{padding:46px 0;border-top:1px solid var(--line)}
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h3{margin:0 0 8px;font-size:18px}
+  .card p{color:var(--muted);font-size:14px;margin:0}
+  .note{border-left:3px solid var(--amber);background:#1a1508;padding:12px 14px;border-radius:0 10px 10px 0;color:#f7dca6;font-size:14px;margin:16px 0}
+  footer{padding:36px 0;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+  form.demo{margin:0}
+  .out{margin-top:14px;min-height:60px}
+  .status{font-size:13px;color:var(--cyan)}
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr;padding-top:40px}
+    .grid{grid-template-columns:1fr}
+    nav a{font-size:13px;padding:6px 8px}
+    .wrap{padding:0 16px}
+  }
+</style>
+</head>
+<body>
+<div class="proto">TEST DE POSITIONNEMENT — AUCUN PAIEMENT, AUCUN PRIX, AUCUN CHECKOUT, AUCUN ENVOI DE DONNÉES</div>
+<header><div class="wrap bar">
+  <div class="brand">BOT<span>-WOW</span></div>
+  <nav aria-label="Navigation principale">
+    <a href="#demo">Démo</a><a href="#positionnement">Positionnement</a><a href="#demande">Test de demande</a><a href="#faq">FAQ</a>
+    <button class="lang" id="lang" type="button" aria-label="Changer de langue">EN</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1 data-i18n="h1">Tu décides où pêcher.<br><span class="accent">L'outil ne joue pas à ta place.</span></h1>
+      <p class="lead" data-i18n="lead">Un carnet de spots et un planificateur de route dans le navigateur. Tu saisis tes lieux et tes chiffres ; l'outil t'aide à choisir. Aucune automatisation du jeu, aucune installation, aucune prise de contrôle du compte.</p>
+      <div class="facts">
+        <span class="chip"><b>0</b> automatisation</span>
+        <span class="chip"><b>0</b> installation</span>
+        <span class="chip"><b>100 %</b> saisie manuelle</span>
+      </div>
+      <a class="btn btn-primary" href="#demo" data-i18n="ctaDemo">Voir la démo réelle</a>
+      <a class="btn btn-ghost" href="#demande" data-i18n="ctaRequest">Tester la demande</a>
+      <div class="note" data-i18n="noteStatus">Statut commercial : la vente et le paiement ne sont pas ouverts. Cette page sert à valider la demande, pas à encaisser.</div>
+    </div>
+    <div class="panel" id="demo">
+      <h2 data-i18n="demoTitle">Démo — planificateur manuel</h2>
+      <p data-i18n="demoSub">Ajoute tes propres spots. Le calcul ci-dessous est fait à partir de ce que tu as saisi — aucune donnée simulée présentée comme réelle.</p>
+      <form class="demo" id="spotForm">
+        <div class="field"><label for="spotName" data-i18n="lName">Nom du spot</label><input id="spotName" required placeholder="ex. Baie nord" maxlength="40"></div>
+        <div class="row">
+          <div class="field"><label for="spotTime" data-i18n="lTime">Temps estimé (min)</label><input id="spotTime" type="number" min="1" max="600" value="20" required></div>
+          <div class="field"><label for="spotValue" data-i18n="lValue">Valeur / priorité (1-10)</label><input id="spotValue" type="number" min="1" max="10" value="5" required></div>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" type="submit" data-i18n="add">Ajouter le spot</button>
+          <button class="btn btn-ghost" type="button" id="reset" data-i18n="reset">Réinitialiser</button>
+        </div>
+      </form>
+      <div class="out" aria-live="polite">
+        <table>
+          <thead><tr><th data-i18n="thSpot">Spot</th><th data-i18n="thTime">Temps</th><th data-i18n="thValue">Priorité</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <p class="status" id="summary" data-i18n="empty">Aucun spot saisi pour l'instant.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="positionnement">
+    <h2 data-i18n="posTitle">Trois positionnements étudiés</h2>
+    <p class="lead" data-i18n="posLead">Issus de l'analyse concurrentielle du 2026-11-18. Les concurrents vérifiés sont PixelBuddy, WRobot, SquireBot et AutoFishForever ; six autres restent à vérifier.</p>
+    <div class="grid">
+      <article class="card"><h3 data-i18n="aTitle">A — Carnet de spots</h3><p data-i18n="aBody">Mémoriser ses lieux et leur fiabilité, saisis à la main. Concurrence directe vérifiée : aucune sur ce créneau manuel.</p></article>
+      <article class="card"><h3 data-i18n="bTitle">B — Planificateur de route</h3><p data-i18n="bBody">Choisir un ordre de passage à partir de ses propres chiffres, avant de lancer le jeu.</p></article>
+      <article class="card"><h3 data-i18n="cTitle">C — Compagnon de démarrage</h3><p data-i18n="cBody">Guide et suivi de progression, sans promesse de rendement ni de résultat.</p></article>
+    </div>
+    <div class="note" data-i18n="recommend">Recommandation : A + B en un seul compagnon manuel. C devient le contenu d'accompagnement. Aucun prix n'est fixé dans ce prototype.</div>
+  </section>
+
+  <section id="demande">
+    <h2 data-i18n="reqTitle">Test de demande — sans paiement</h2>
+    <p class="lead" data-i18n="reqLead">Laisse ton e-mail pour être informé. Aucun prix, aucun moyen de paiement, aucun compte, aucun engagement. Ceci est un prototype local : le formulaire n'envoie rien.</p>
+    <form id="reqForm" class="panel" style="max-width:520px">
+      <div class="field"><label for="email" data-i18n="emailLabel">Adresse e-mail</label><input id="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
+      <button class="btn btn-primary" type="submit" data-i18n="send">Être informé</button>
+      <p class="status" id="reqStatus" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section id="faq">
+    <h2 data-i18n="faqTitle">FAQ</h2>
+    <div class="grid">
+      <article class="card"><h3 data-i18n="q1">Est-ce un bot ?</h3><p data-i18n="a1">Non. Tu saisis tes spots et tu décides. L'outil ne clique pas, ne lit pas le jeu et ne contrôle pas ton compte.</p></article>
+      <article class="card"><h3 data-i18n="q2">Faut-il installer quelque chose ?</h3><p data-i18n="a2">Non. Le prototype fonctionne dans le navigateur. Aucun fichier, aucun addon, aucun executable.</p></article>
+      <article class="card"><h3 data-i18n="q3">Puis-je acheter maintenant ?</h3><p data-i18n="a3">Non. La vente n'est pas ouverte. Cette page valide l'intérêt avant toute décision de prix ou de paiement.</p></article>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">Prototype local — REVENUE RESCUE 2026 · Aucune modification de production · <span id="footNote">Données saisies localement, non transmises.</span></div></footer>
+
+<script>
+(function(){
+  var FR={
+    h1:"Tu décides où pêcher.<br><span class=\"accent\">L'outil ne joue pas à ta place.</span>",
+    lead:"Un carnet de spots et un planificateur de route dans le navigateur. Tu saisis tes lieux et tes chiffres ; l'outil t'aide à choisir. Aucune automatisation du jeu, aucune installation, aucune prise de contrôle du compte.",
+    ctaDemo:"Voir la démo réelle",ctaRequest:"Tester la demande",
+    noteStatus:"Statut : ce concept de compagnon manuel n'est pas encore commercialisé et n'ouvre aucun paiement. La boutique Planner/Studio existante n'est pas modifiée par cette page.",
+    demoTitle:"Démo — planificateur manuel",demoSub:"Ajoute tes propres spots. Le calcul ci-dessous est fait à partir de ce que tu as saisi — aucune donnée simulée présentée comme réelle.",
+    lName:"Nom du spot",lTime:"Temps estimé (min)",lValue:"Valeur / priorité (1-10)",add:"Ajouter le spot",reset:"Réinitialiser",
+    thSpot:"Spot",thTime:"Temps",thValue:"Priorité",empty:"Aucun spot saisi pour l'instant.",
+    posTitle:"Trois positionnements étudiés",posLead:"Issus de l'analyse concurrentielle du 2026-11-18. Les concurrents vérifiés sont PixelBuddy, WRobot, SquireBot et AutoFishForever ; six autres restent à vérifier.",
+    aTitle:"A — Carnet de spots",aBody:"Mémoriser ses lieux et leur fiabilité, saisis à la main. Concurrence directe vérifiée : aucune sur ce créneau manuel.",
+    bTitle:"B — Planificateur de route",bBody:"Choisir un ordre de passage à partir de ses propres chiffres, avant de lancer le jeu.",
+    cTitle:"C — Compagnon de démarrage",cBody:"Guide et suivi de progression, sans promesse de rendement ni de résultat.",
+    recommend:"Recommandation : A + B en un seul compagnon manuel. C devient le contenu d'accompagnement. Aucun prix n'est fixé dans ce prototype.",
+    reqTitle:"Test de demande — sans paiement",reqLead:"Aucun prix, aucun moyen de paiement, aucun compte, aucun engagement. Ce formulaire est un test de demande : aucune donnée n'est transmise et enregistrée. Pour être informé, écris à support@bot-wow.com.",
+    emailLabel:"Adresse e-mail (non transmise)",send:"Tester l'intérêt",sent:"Test enregistré dans cette page uniquement — rien n'a été envoyé. Pour être informé : support@bot-wow.com.",
+    faqTitle:"FAQ",q1:"Est-ce un bot ?",a1:"Non. Tu saisis tes spots et tu décides. L'outil ne clique pas, ne lit pas le jeu et ne contrôle pas ton compte.",
+    q2:"Faut-il installer quelque chose ?",a2:"Non. Le prototype fonctionne dans le navigateur. Aucun fichier, aucun addon, aucun executable.",
+    q3:"Puis-je acheter ce concept maintenant ?",a3:"Non. Ce concept de carnet/route manuel n'est pas en vente ; cette page mesure l'intérêt. La boutique Planner/Studio existante reste inchangée.",
+    foot:"Données saisies localement, non transmises.",
+    order:"Ordre proposé (priorité / temps) : ", noData:"Aucun spot saisi pour l'instant."
+  };
+  var EN={
+    h1:"You decide where to fish.<br><span class=\"accent\">The tool never plays for you.</span>",
+    lead:"A spot journal and route planner in your browser. You enter places and numbers; the tool helps you choose. No game automation, no install, no account control.",
+    ctaDemo:"See the real demo",ctaRequest:"Test demand",
+    noteStatus:"Status: this manual-companion concept is not sold yet and opens no payment. The existing Planner/Studio store is unchanged by this page.",
+    demoTitle:"Demo — manual planner",demoSub:"Add your own spots. The calculation below uses only what you typed — no simulated data presented as real.",
+    lName:"Spot name",lTime:"Estimated time (min)",lValue:"Value / priority (1-10)",add:"Add spot",reset:"Reset",
+    thSpot:"Spot",thTime:"Time",thValue:"Priority",empty:"No spot entered yet.",
+    posTitle:"Three positioning options studied",posLead:"From the 2026-11-18 competitor analysis. Verified competitors: PixelBuddy, WRobot, SquireBot and AutoFishForever; six others still need verification.",
+    aTitle:"A — Spot journal",aBody:"Remember places and their reliability, entered by hand. No verified direct competitor in this manual niche.",
+    bTitle:"B — Route planner",bBody:"Choose an order from your own numbers, before you launch the game.",
+    cTitle:"C — Getting-started companion",cBody:"Guide and progress tracking, with no yield or result promise.",
+    recommend:"Recommendation: A + B as one manual companion. C becomes supporting content. No price is set in this prototype.",
+    reqTitle:"Demand test — no payment",reqLead:"No price, no payment method, no account, no commitment. This form is a demand test: no data is transmitted or stored. To be notified, write to support@bot-wow.com.",
+    emailLabel:"Email address (not transmitted)",send:"Test interest",sent:"Test recorded in this page only — nothing was sent. To be notified: support@bot-wow.com.",
+    faqTitle:"FAQ",q1:"Is this a bot?",a1:"No. You enter spots and decide. The tool does not click, does not read the game and does not control your account.",
+    q2:"Do I need to install anything?",a2:"No. The prototype runs in the browser. No file, no addon, no executable.",
+    q3:"Can I buy this concept now?",a3:"No. This manual journal/route concept is not for sale; this page measures interest. The existing Planner/Studio store is unchanged.",
+    foot:"Locally entered data, not transmitted.",
+    order:"Suggested order (priority / time): ", noData:"No spot entered yet."
+  };
+  var ES={
+    h1:"Tú decides dónde pescar.<br><span class=\"accent\">La herramienta no juega por ti.</span>",
+    lead:"Un diario de spots y un planificador de rutas en el navegador. Tú introduces los lugares y tus números; la herramienta te ayuda a decidir. Sin automatización del juego, sin instalación y sin control de tu cuenta.",
+    ctaDemo:"Ver la demo real",ctaRequest:"Probar la demanda",
+    noteStatus:"Estado: este concepto de compañero manual aún no se vende y no abre ningún pago. La tienda actual de Planner/Studio no se modifica en esta página.",
+    demoTitle:"Demo — planificador manual",demoSub:"Añade tus propios spots. El cálculo usa solo lo que has escrito: ningún dato simulado se presenta como real.",
+    lName:"Nombre del spot",lTime:"Tiempo estimado (min)",lValue:"Valor / prioridad (1-10)",add:"Añadir spot",reset:"Reiniciar",
+    thSpot:"Spot",thTime:"Tiempo",thValue:"Prioridad",empty:"Aún no hay spots introducidos.",
+    posTitle:"Tres posicionamientos estudiados",posLead:"Del análisis competitivo del 18/11/2026. Competidores verificados: PixelBuddy, WRobot, SquireBot y AutoFishForever; otros seis quedan por verificar.",
+    aTitle:"A — Diario de spots",aBody:"Recordar lugares y su fiabilidad, introducidos a mano. Sin competidor directo verificado en este nicho manual.",
+    bTitle:"B — Planificador de rutas",bBody:"Elegir un orden con tus propios números, antes de iniciar el juego.",
+    cTitle:"C — Compañero de inicio",cBody:"Guía y seguimiento del progreso, sin promesas de rendimiento ni de resultados.",
+    recommend:"Recomendación: A + B como un único compañero manual. C pasa a ser contenido de apoyo. No se fija ningún precio en esta página.",
+    reqTitle:"Prueba de demanda — sin pago",reqLead:"Sin precio, sin método de pago, sin cuenta y sin compromiso. Este formulario es una prueba de demanda: no se transmite ni se guarda ningún dato. Para recibir noticias, escribe a support@bot-wow.com.",
+    emailLabel:"Correo electrónico (no transmitido)",send:"Probar interés",sent:"Prueba registrada solo en esta página: no se ha enviado nada. Para recibir noticias: support@bot-wow.com.",
+    faqTitle:"Preguntas frecuentes",q1:"¿Es un bot?",a1:"No. Tú introduces los spots y decides. La herramienta no hace clics, no lee el juego y no controla tu cuenta.",
+    q2:"¿Hay que instalar algo?",a2:"No. La demo funciona en el navegador. Sin archivos, sin addon, sin ejecutable.",
+    q3:"¿Puedo comprar este concepto ahora?",a3:"No. Este concepto de diario/rutas manual no está a la venta; esta página mide el interés. La tienda actual de Planner/Studio sigue igual.",
+    foot:"Datos introducidos localmente, no transmitidos.",
+    order:"Orden sugerido (prioridad / tiempo): ", noData:"Aún no hay spots introducidos."
+  };
+  var LANG={fr:FR,en:EN,es:ES}, lang="fr", spots=[];
+  function t(k){return (LANG[lang]||FR)[k]||k;}
+  function render(){
+    document.querySelectorAll("[data-i18n]").forEach(function(el){
+      var k=el.getAttribute("data-i18n"); if(k.indexOf("h1")===0||k==="lead"){el.innerHTML=t(k);}else{el.textContent=t(k);}
+    });
+    document.getElementById("footNote").textContent=t("foot");
+    document.documentElement.lang=lang;
+    var tb=document.getElementById("rows"); tb.innerHTML="";
+    spots.forEach(function(s,i){
+      var tr=document.createElement("tr");
+      [s.name,s.time+" min",String(s.value)].forEach(function(v){
+        var td=document.createElement("td"); td.textContent=v; tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    var sum=document.getElementById("summary");
+    if(!spots.length){sum.textContent=t("noData");return;}
+    var sorted=spots.slice().sort(function(a,b){return (b.value/b.time)-(a.value/a.time);});
+    sum.textContent=t("order")+sorted.map(function(s){return s.name;}).join(" → ");
+  }
+  document.getElementById("spotForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    var n=document.getElementById("spotName").value.trim();
+    var tm=parseInt(document.getElementById("spotTime").value,10);
+    var v=parseInt(document.getElementById("spotValue").value,10);
+    if(!n||!tm||!v)return;
+    spots.push({name:n.slice(0,40),time:tm,value:v}); render(); e.target.reset();
+  });
+  document.getElementById("reset").addEventListener("click",function(){spots=[];render();});
+  document.getElementById("reqForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    document.getElementById("reqStatus").textContent=t("sent"); e.target.reset();
+  });
+  document.getElementById("lang").addEventListener("click",function(){
+    lang=lang==="fr"?"en":(lang==="en"?"es":"fr");
+    document.getElementById("lang").textContent=lang==="fr"?"EN":(lang==="en"?"ES":"FR"); render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
