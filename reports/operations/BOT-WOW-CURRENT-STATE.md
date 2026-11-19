@@ -4029,3 +4029,59 @@ task_id : `BOTWOW-P037-SALE-READINESS-20261108`
 ## Prochaine action
 
 Ecrire et committer la licence du runtime et de l'addon (attributions incluses) — seul verrou qui debloque legalement la vente ; les autres etapes (RELEASE_STATUS, methode LIVE, comparaison R2, test 1 EUR) en dependent. Checkout reste ferme.
+
+
+---
+
+# 2026-11-19 — PR #209 (commercial conversion) : régressions corrigées, CI verte, non mergé, non déployé
+
+**État daté de ce cycle.** Faits **[vérifié]** = observés dans cette session (lien ou sortie d'outil).
+
+## Branche et commit
+
+| Élément | Valeur | Preuve |
+|---|---|---|
+| Branche | `feat/commercial-conversion-20261119` | `git branch --show-current` |
+| HEAD | `31d5dd1` | `git log --oneline -1` |
+| origin/main | `51c74a7` | `git rev-parse origin/main` |
+| PR | #209, OPEN, non draft, headRefOid `31d5dd1` | https://github.com/aveca/bot-wow/pull/209 |
+
+## Cause racine (prouvée)
+
+Les 10 échecs de `tests/release-availability.test.mjs` (0 sur `main`, 10 sur branche PR) provenaient de `<input type="email" id="signup-email">` ajouté par PR #209, en violation du garde-fou `!/id="buyForm"|id="buyBtn"|type="email"/i` du test.
+
+## Correction (commit `31d5dd1`, 8 fichiers, +8/−286)
+
+Retrait de la section formulaire email signup + son `<script>` inline des 8 fichiers `buy.html` : `buy.html`, `fr/buy.html`, `de/buy.html`, `es/buy.html`, `it/buy.html`, `pl/buy.html`, `pt-br/buy.html`, `ru/buy.html`. Prix et liens Stripe intacts. Aucun `type="email"` ni `id="signup"` ne reste dans aucun buy.html.
+
+## Résultats des tests (tous exit 0 sur `31d5dd1`)
+
+- `tests/release-availability.test.mjs` → OK (10 régressions résolues, 0 pré-existantes sur main)
+- `tests/live-offers.test.mjs` → OK (inchangé)
+- `tests/conversion-path.test.mjs` → OK (incl. 7 assertions de régression)
+- `npm run validate` → PASS (exit 0)
+- `git diff --check` → exit 0 (propre)
+
+## CI GitHub Actions sur le SHA `31d5dd1` (vérifié)
+
+| Check | État | Bucket | Preuve |
+|---|---|---|---|
+| validate | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| package-candidate | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| GitGuardian Security Checks | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| ui-quality | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` (après polls successifs, initialement IN_PROGRESS) |
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement production, aucun `workflow_dispatch`.
+- Aucun prix, checkout, paiement, webhook, secret, binding, D1, R2, e-mail ni mutation de production.
+- `buy.html` et `fr/buy.html` non modifiés au-delà du retrait de la section signup (pas de toucher aux prix/liens Stripe/i18n).
+- Répertoires `artifacts/` et `test-results/` intacts (non touchés).
+
+## Verrou
+
+`agents/locks.md` : ligne `20261119-commercial-conversion` / scope `storefront-commercial-conversion`, **done**, expirant 2026-11-20, PR #209 ouverte, CI verte sur `31d5dd1`.
+
+## Prochaine action (globale inchangée)
+
+Checkout public fermé ; vente en attente des trois décisions (textes juridiques, provenance R2, profil Mollie dédié). PR #90 reste le seul correctif de credential Mollie. PR #209 reste ouverte, en attente de revue PR / décision propriétaire sur le déploiement.
