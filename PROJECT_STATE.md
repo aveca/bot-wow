@@ -268,3 +268,39 @@ justifiée et le checkout reste fermé.
 4. **Décision propriétaire bloquante** : droits de redistribution `aveca/Casinobabe` et conditions de licence client (B-licence, B-release-terms). `--release` refusé tant que ces deux exigences ne sont pas satisfaites.
 
 Le paquet est construit, reproductible et vérifiable ; il ne manque plus que la décision propriétaire sur les droits de redistribution et les conditions de licence client. Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce dépôt.
+
+---
+
+## Validation test — Factory V3, issue #125 (dry-run bridge multi-dépôt)
+
+**Date :** 2026-11-19
+**Mission :** test à sec de validation du bridge multi-dépôt sur `aveca/bot-wow`, branche dédiée, aucun impact sur `main`, aucun paiement, aucun secret, aucun déploiement de production.
+
+| Élément | Valeur |
+|---|---|
+| Issue | #125 — [TEST DRY-RUN] validation bridge multi-repo sur bot-wow |
+| Dépôt | `aveca/bot-wow` |
+| Branche | `factory/issue125-dryrun-bridge-validation` (depuis `origin/main` @ `51c74a7`) |
+| Commit | `c4d8c1b` — `docs(readme): documenter le test à sec bridge multi-dépôt (issue #125)` |
+| Push | oui sur `origin` |
+| PR | #208 — https://github.com/aveca/bot-wow/pull/208 |
+| Fichier modifié | `README.md` uniquement (documentation du test à sec) |
+| humanGate | false | moneyPath | false |
+| Rollback | supprimer la branche et fermer la PR |
+
+**Tests locaux (réels, exit 0) :**
+- `npm run validate` : PASS
+- `npm test` : exit 0 — toutes les suites passent, incluant `tests/autopilot/multi-repo-bridge.test.cjs` (MULTI-REPO-BRIDGE TESTS : OK, 0 échec)
+- `git diff --check` : PASS
+
+**CI sur le SHA `c4d8c1b` :**
+- GitGuardian Security Checks : pass
+- package-candidate : pass
+- validate : en cours (run 44609025389)
+- ui-quality : en cours (run 44609024672)
+
+**Preuve publiée :** commentaire FACTORY_RESULT sur https://github.com/aveca/bot-wow/issues/125#issuecomment-7021338176
+
+**Statut :** MISSION TERMINÉE — test à sec validé. Aucun déploiement de production déclenché.
+
+**Prochaine action :** vérifier les résultats CI finaux sur le SHA `c4d8c1b`, puis sélectionner la prochaine mission du backlog Factory V3.
