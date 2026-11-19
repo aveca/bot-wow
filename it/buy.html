@@ -66,8 +66,6 @@
       </div>
     </div>
   </div></section>
-  <section class="pad signup" id="signup"><div class="w"><header class="section-head"><h2 class="h2">Crea il tuo account</h2><p class="lead">Inserisci la tua email per iniziare. La tua chiave di licenza ti sarà inviata via email dopo la conferma del pagamento Stripe.</p></header><div class="signup-form"><form id="signup-form" novalidate><label for="signup-email">La tua email</label><input type="email" id="signup-email" name="email" placeholder="tuo@esempio.com" required autocomplete="email"><small id="signup-err" style="color:#d00;font-size:0.85rem;display:none;margin-top:4px;">Email non valida.</small><button type="submit" class="btn btn-gold btn-lg" id="signup-btn" style="width:100%;margin-top:12px;">Registrati e vedi le offerte</button></form><p class="center small" id="signup-ok" style="display:none;margin-top:8px;">Account pronto. La tua email sarà usata per inviarti la tua chiave dopo l'acquisto.</p></div></div></section>
-
   <section class="pad price" id="buy"><div class="w"><header class="section-head"><h2 class="h2">Nessuna offerta a pagamento</h2><p class="lead">Nessuna vendita. Il client che automatizza il gioco non è in offerta. Scrivi per la lista d’attesa.</p></header><div class="price-wrap"><article class="price-card price-card--offer"><div class="price-tag">Lista d’attesa</div><p class="once center">Nessuna offerta a pagamento</p><ul class="price-includes"><li><span>La demo nel browser usa dati simulati e non clicca al posto tuo.</span></li><li><span>Un diario e un percorso che segui tu non sono pronti per la vendita.</span></li><li><span>Un pagamento già fatto si tratta con il supporto, secondo la politica di rimborso.</span></li></ul><a class="btn btn-gold btn-lg" style="width:100%;justify-content:center" href="mailto:support@bot-wow.com?subject=BOT-WOW%20support" data-track="cta_click" data-cta-id="support-mail">Lista d’attesa</a><p class="center"><a href="../legal/it/terms.html">Terms</a> · <a href="mailto:support@bot-wow.com">support@bot-wow.com</a></p></article></div></div></section>
   <section class="pad" id="demo"><div class="w">
     <header class="section-head"><h2 class="h2">Guarda prima il pianificatore</h2>
@@ -114,35 +112,6 @@
 <div class="mbar" role="region" aria-label="Prenota la beta"><div class="mp">Planner 9,00 € ou Studio 29,00 € <small>Beta · consegna manuale</small></div><a class="btn btn-gold" href="#buy" data-track="cta_click" data-cta-id="mbar-status">Lista d’attesa</a></div>
 <script type="module" src="../assets/app.js?v=885b2494"></script>
 <script src="../assets/lang-suggest.js?v=885b2494"></script>
-<script>
-(function(){
-  var form = document.getElementById('signup-form');
-  var emailInput = document.getElementById('signup-email');
-  var err = document.getElementById('signup-err');
-  var ok = document.getElementById('signup-ok');
-  var btn = document.getElementById('signup-btn');
-  var stored = localStorage.getItem('bw_signup_email');
-  if(stored){
-    emailInput.value = stored;
-    err.style.display = 'none';
-    ok.style.display = 'block';
-    btn.textContent = 'Email salvato — vedi le offerte';
-  }
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    var email = (emailInput.value || '').trim();
-    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(!re.test(email)){
-      err.style.display = 'block';
-      ok.style.display = 'none';
-      return;
-    }
-    localStorage.setItem('bw_signup_email', email);
-    err.style.display = 'none';
-    ok.style.display = 'block';
-    btn.textContent = 'Email salvato — vedi le offerte';
-  });
-})();
-</script>
+
 </body>
 </html>
