@@ -1,13 +1,5 @@
 # BOT-WOW — État courant Factory V3
 
-**État court au 2026-11-19 — page de positionnement manuel en production (Factory V3 / OpenCode).** Autorisation propriétaire datée du 19/11. Branche `feat/positioning-page-20261119` depuis `origin/main` `9180924`, commit `ce59bb333db98e09be215a1425c5e7420589b8aa`, PR #206 (ouverte, non fusionnée). Déploiement Pages PRODUCTION `546bc186-188b-4851-a7db-40c70446a2bd` (source `ce59bb3`), précédent `aaa2e484-ef43-4bde-b1b7-fb8eed27c02e`. **LIVE vérifié** : `GET https://bot-wow.com/positionnement.html` → 200 (20 775 o, FR/EN/ES, aucun lien `buy.stripe.com`) et `www` → 200 ; `/` et `/buy.html` inchangés. Page = démo manuelle + test de demande sans transmission, **aucun prix, aucun paiement, aucun checkout, aucun secret, aucune page existante modifiée**. Contrôles : `npm run validate` PASS, agent-state OK, 5 suites ciblées PASS, artefact sans fichier interdit. `npm test` complet BLOQUÉ par `wasmoon-lua5.1` absent (préexistant). Captures visuelles NON VÉRIFIÉES (scope navigateur). Prochaine action : décision propriétaire sur la fusion de #206 ; aucun checkout à ouvrir pour ce concept sans validation de demande.
-
-**État court au 2026-11-13 : PR #200 fusionnée (`ca9e08c`), Worker déployé par le propriétaire, correctif des pages d’achat en cours.** Les pages EN, FR et ES doivent montrer Planner 9 € et Studio 29 €. Une signature webhook absente ou invalide doit répondre 400. Le propriétaire redéploie le Worker lui-même.
-
-**État court au 2026-11-13 : liens LIVE dans la PR #200.** Planner https://buy.stripe.com/4gM4gB62W4749MO78C63K01 (`plink_1UbIoJRnrMmUAHDtGYXfbz3m`). Studio https://buy.stripe.com/eVqdRb8b4dHE6AC50u63K02 (`plink_1UbIoKRnrMmUAHDtQnO7HFRk`). Le webhook de la branche reconnaît `price_key`, puis `payment_intent.metadata.price_key`, puis ces deux `payment_link`. La production sert encore l’ancienne vitrine. Aucun déploiement Worker, aucun secret modifié, aucune fusion.
-
-**État court au 2026-11-12 : `PROJECT_STATE.md`.** Le webhook `checkout.session.completed` délivre aussi une licence pour le Payment Link `plink_1UaG0TRnrMmUAHDtXMyagAIa` (prix `price_1UaG0TRnrMmUAHDtO3r6xVq4`, `metadata.product` `BOT-WOW`). Les boutons publics restent ce lien. Le Worker n'est pas déployé tant que le propriétaire ne le publie pas.
-
 **État court au 2026-11-11T17:10Z — PR #195 : correction CI à la racine.** `validate` et `ui-quality` échouaient sur **la même** assertion de `tests/agent-state-locks.test.mjs` : la section 6 lisait `Date.now()` et exigeait `legacyConflicts >= 5`, seuil codé en dur égal au nombre de verrous actifs **du jour**. La libération des 6 verrous expirés (`41516ae`) a fait tomber ce nombre à 1 : c'est le test qui a cassé, pas le code de production. Correction : `2c5cc166a524efe2b492c092bd9ee815a32bb4a0` sur `factory/corrections-20261111` — instant de référence figé (`NOW`), scénario construit sur une ligne **réelle** de `agents/locks.md` normalisée en verrou actif, invariant « au moins un faux positif » au lieu d'un compte codé en dur, + garde-fou anti-récurrence (section 8). Contrôles 36 → 43. Preuve : ancien test **FAIL 3/3** et nouveau test **PASS 3/3** sur 3 états de `agents/locks.md` (état réel / tous verrous libérés / `p0-payment-prep` expiré — la bombe à retardement du 2026-11-12) ; mutations `Date.now()` et seuil `>= 5` détectées. Aucun contrôle désactivé, aucun autre test touché, aucun code de production modifié ; aucun prix, checkout, secret, binding, déploiement ni suppression de donnée. PR #195 **ouverte, non mergée**. **CI VALIDÉE** sur le SHA exact `9f94ffa39d865530b1ed488c35a3638ac2c6e022` : `validate` success (run `43065917581`), `ui-quality` success (run `43065917655`), `package-candidate` pass, GitGuardian pass. Preuve et note anti-récurrence : https://github.com/aveca/bot-wow/pull/195#issuecomment-6802518356. **Prochaine action :** revue propriétaire de la PR #195 — ne pas merger.
 
 **État court au 2026-11-11T01:10Z : `PROJECT_STATE.md`** (entrée datée 2026-11-11). Mission packaging : PR #179 (`aa02ad3`), #185 (`4a3b657`) et #186 (`0774272`) fusionnées en squash, #182 fermée sans fusion et couverture restituée, nouveau paquet réel byte-identique `7d48c249…` (180 805 o). Rapport : `reports/operations/2026-11-11-package-merge-and-delivery-restitution.md`.
@@ -4037,3 +4029,59 @@ task_id : `BOTWOW-P037-SALE-READINESS-20261108`
 ## Prochaine action
 
 Ecrire et committer la licence du runtime et de l'addon (attributions incluses) — seul verrou qui debloque legalement la vente ; les autres etapes (RELEASE_STATUS, methode LIVE, comparaison R2, test 1 EUR) en dependent. Checkout reste ferme.
+
+
+---
+
+# 2026-11-19 — PR #209 (commercial conversion) : régressions corrigées, CI verte, non mergé, non déployé
+
+**État daté de ce cycle.** Faits **[vérifié]** = observés dans cette session (lien ou sortie d'outil).
+
+## Branche et commit
+
+| Élément | Valeur | Preuve |
+|---|---|---|
+| Branche | `feat/commercial-conversion-20261119` | `git branch --show-current` |
+| HEAD | `31d5dd1` | `git log --oneline -1` |
+| origin/main | `51c74a7` | `git rev-parse origin/main` |
+| PR | #209, OPEN, non draft, headRefOid `31d5dd1` | https://github.com/aveca/bot-wow/pull/209 |
+
+## Cause racine (prouvée)
+
+Les 10 échecs de `tests/release-availability.test.mjs` (0 sur `main`, 10 sur branche PR) provenaient de `<input type="email" id="signup-email">` ajouté par PR #209, en violation du garde-fou `!/id="buyForm"|id="buyBtn"|type="email"/i` du test.
+
+## Correction (commit `31d5dd1`, 8 fichiers, +8/−286)
+
+Retrait de la section formulaire email signup + son `<script>` inline des 8 fichiers `buy.html` : `buy.html`, `fr/buy.html`, `de/buy.html`, `es/buy.html`, `it/buy.html`, `pl/buy.html`, `pt-br/buy.html`, `ru/buy.html`. Prix et liens Stripe intacts. Aucun `type="email"` ni `id="signup"` ne reste dans aucun buy.html.
+
+## Résultats des tests (tous exit 0 sur `31d5dd1`)
+
+- `tests/release-availability.test.mjs` → OK (10 régressions résolues, 0 pré-existantes sur main)
+- `tests/live-offers.test.mjs` → OK (inchangé)
+- `tests/conversion-path.test.mjs` → OK (incl. 7 assertions de régression)
+- `npm run validate` → PASS (exit 0)
+- `git diff --check` → exit 0 (propre)
+
+## CI GitHub Actions sur le SHA `31d5dd1` (vérifié)
+
+| Check | État | Bucket | Preuve |
+|---|---|---|---|
+| validate | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| package-candidate | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| GitGuardian Security Checks | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` |
+| ui-quality | SUCCESS | pass | `gh pr checks 209 --json state,name,bucket` (après polls successifs, initialement IN_PROGRESS) |
+
+## Ce qui n'a PAS été fait (garde-fous)
+
+- Aucun merge, aucun déploiement production, aucun `workflow_dispatch`.
+- Aucun prix, checkout, paiement, webhook, secret, binding, D1, R2, e-mail ni mutation de production.
+- `buy.html` et `fr/buy.html` non modifiés au-delà du retrait de la section signup (pas de toucher aux prix/liens Stripe/i18n).
+- Répertoires `artifacts/` et `test-results/` intacts (non touchés).
+
+## Verrou
+
+`agents/locks.md` : ligne `20261119-commercial-conversion` / scope `storefront-commercial-conversion`, **done**, expirant 2026-11-20, PR #209 ouverte, CI verte sur `31d5dd1`.
+
+## Prochaine action (globale inchangée)
+
+Checkout public fermé ; vente en attente des trois décisions (textes juridiques, provenance R2, profil Mollie dédié). PR #90 reste le seul correctif de credential Mollie. PR #209 reste ouverte, en attente de revue PR / décision propriétaire sur le déploiement.
