@@ -66,7 +66,7 @@ for (const file of ["assets/demo.js", "assets/route-planner.js", "scripts/build-
 const PUBLIC_PAGES = [
   "index.html", "demo.html", "success.html", "cancel.html", "404.html",
   "features.html", "product.html", "fishing.html", "getting-started.html",
-  "compatibility.html", "roadmap.html", "faq.html",
+  "compatibility.html", "roadmap.html", "faq.html", "positionnement.html",
   "modules.html", "compare.html",
   "docs/index.html", "docs/install.html", "docs/changelog.html",
   "docs/known-issues.html", "docs/license.html",

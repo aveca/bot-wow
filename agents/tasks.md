@@ -2,6 +2,7 @@
 
 | id | scope | status | preuve |
 |---|---|---|---|
+| 20261119-positioning-page | storefront-positioning-page | done | Page FR/EN/ES de positionnement « compagnon manuel » publiée sur bot-wow.com/positionnement.html (200, LIVE vérifié). Commit ce59bb3, PR #206, déploiement Pages 546bc186. Aucun prix/paiement/checkout/secret modifié. |
 | 20261106-commercial-truth | agent-state, delivery-sandbox, api-route-map | done | https://github.com/aveca/bot-wow/pull/129 |
 | owner-beta-reservation | réservation bêta Stripe 20 €, transparence et suivi des paiements | done | Décision propriétaire reçue 2026-11-11 : Payment Link Stripe LIVE actif pour une réservation unique, non livrable immédiatement, livraison manuelle après validation finale, remboursement intégral si impossible. PR #188 fusionnée et déployée. Ne pas demander à nouveau l'autorisation de réservation ; ne pas vendre de licence logicielle tant que les droits runtime restent bloquants. |
 | pr-90-mollie-profileid | credential Mollie | open-elsewhere | PR brouillon #90, ne pas dupliquer |
