@@ -28,7 +28,9 @@ const forbidden = [
   /bot-wow-lifetime/i,
   /\b9,00\s?€\b/,
   /\b29,00\s?€\b/,
-  /type=["']?(?:credit|card|number)["']?/i,
+  /type=["']?credit["']?/i,
+  /autocomplete=["']cc-/i,
+  /name=["'][^"']*card/i,
   /action=["'][^"']*(?:checkout|payment|pay)/i,
 ];
 for (const re of forbidden) {
