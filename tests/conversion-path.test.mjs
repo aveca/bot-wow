@@ -295,5 +295,32 @@ for (const file of ['index.html', 'fr/index.html']) {
     /:focus-visible\{[^}]*outline:\s*3px solid var\(--gold\)/.test(read('assets/theme.css')));
 }
 
+// 14. Améliorations commerciales : CTA clairs, SEO, capture B2B (reversible, hors verrous).
+{
+  const idx = read('index.html');
+  const fea = read('features.html');
+  const pro = read('product.html');
+
+  // Titre accueil : mentionne les deux offres (SEO commercial).
+  check('accueil : titre mentionne Planner et Studio',
+    /Planner/.test(idx) && /Studio/.test(idx));
+
+  // Méta description accueil : pas de prix historique 20 €.
+  check('accueil : méta sans prix historique', !/20,00\s?€/.test(idx));
+
+  // Section B2B présente sur l'accueil (guides / agences).
+  check('accueil : section B2B presente', /id="b2b"/.test(idx));
+  check('accueil : lien mailto B2B present', /mailto:b2b@bot-wow\.com/.test(idx));
+
+  // Textes CTA clairs sur l'accueil (hors attributs testes ailleurs).
+  check('accueil : CTA hero texte clair', /See Planner &amp; Studio/.test(idx));
+
+  // Features : titre SEO.
+  check('features : titre SEO', /features\s*—\s*Route planner/.test(fea));
+
+  // Product : CTA texte clair.
+  check('product : CTA texte clair', /See Planner &amp; Studio/.test(pro));
+}
+
 console.log(failures === 0 ? '\nPARCOURS DE CONVERSION : OK' : `\nPARCOURS DE CONVERSION : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
