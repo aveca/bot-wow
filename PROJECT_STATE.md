@@ -266,3 +266,22 @@ justifiée et le checkout reste fermé.
 4. **Décision propriétaire bloquante** : droits de redistribution `aveca/Casinobabe` et conditions de licence client (B-licence, B-release-terms). `--release` refusé tant que ces deux exigences ne sont pas satisfaites.
 
 Le paquet est construit, reproductible et vérifiable ; il ne manque plus que la décision propriétaire sur les droits de redistribution et les conditions de licence client. Un test d'activation dans un vrai client WoW autorisé reste à faire, hors de ce dépôt.
+
+**Ajout 2026-11-19 — mission améliorations commerciales (conversion, non financière, réversible).** Branche `feat/commercial-conversion-20261119` créée depuis `factory/p0-recovery-20261119`, commit `cd93c61`, poussée sur origin, PR #209 ouverte (`feat/commercial-conversion-20261119` → `main`, https://github.com/aveca/bot-wow/pull/209). Aucun déploiement (pas d'autorisation fondateur ; PR #207 bloquée sur cette autorisation).
+
+Modifications (4 fichiers, 43 ajouts / 13 suppressions), buy.html et pages i18n intacts (verrous live-offer-copy / i18n respectés ; aucun prix, checkout, paiement, secret, dépense publicitaire, envoi massif) :
+- index.html : title/meta/og title mentionnent Planner & Studio (SEO) ; CTA plus clairs sur nav-buy et offer-status ("See Planner & Studio") ; CTA de statut (hero-status, nav-status, mbar-status) conservés "See the offers" (release-availability test) ; nouvelle section B2B pour guides de pêche/agences (mailto b2b@bot-wow.com, aucun formulaire email, aucune PII) ; nav "Register" → "Feature register".
+- features.html / product.html : title SEO et libellés CTA plus clairs.
+- tests/conversion-path.test.mjs : +7 assertions de régression (titre SEO, méta sans prix historique 20 €, section B2B, mailto B2B, CTA clair, features title, product CTA).
+
+Tests réels (exit codes) :
+- `npm run validate` → PASS (exit 0)
+- `node tests/conversion-path.test.mjs` → PARCOURS DE CONVERSION : OK (exit 0), incl. les 7 nouvelles assertions
+- `npm test` → exit 1 mais revenu aux 10 échecs pré-existants sur buy.html/fr/buy.html uniquement (scope verrou live-offer-copy, non modifié par cette branche) ; 0 NOUVELLE régression vs base (vérifié par git stash : base = 10 échecs identiques)
+- `git diff --check` → exit 0 (propre)
+
+NON VÉRIFIÉ : déploiement production (PR #207 bloquée, autorisation fondateur requise). GitHub Actions CI sur le SHA cd93c61 non encore consultée.
+
+BLOCAGE : non — aucun verrou actif non expiré ne couvre ce scope ; travail terminé en attente de revue PR / décision propriétaire sur le déploiement.
+
+**Prochaine action (globale) inchangée :** checkout public fermé ; vente en attente des trois décisions (textes juridiques, provenance R2, profil Mollie dédié). PR #90 reste le seul correctif de credential Mollie.
