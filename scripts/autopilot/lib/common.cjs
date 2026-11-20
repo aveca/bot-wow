@@ -66,5 +66,6 @@ module.exports = {
     runs: path.join(AP_DIR, 'runs'),
     opportunities: path.join(AP_DIR, 'opportunities'),
     runnerLog: path.join(AP_DIR, 'runs', 'runner.log'),
+    lock: path.join(AP_DIR, 'runs', 'queue.lock'),
   },
 };
