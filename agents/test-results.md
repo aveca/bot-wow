@@ -40,6 +40,8 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `node tests/conversion-path.test.mjs` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, `PARCOURS DE CONVERSION : OK` (0 régression ; commentaire lève-faux-positif réécrit) |
 | `npm run validate` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | PASS, exit 0 |
 | `npm test` (suite complète) | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, 0 régression |
+| `gh api repos/aveca/bot-wow/commits/73e7147/check-runs` | CI PR #211, 2026-11-20 | GitGuardian Security Checks ✅ success (0 secrets sur 6 commits) ; validate ✅ success ; package-candidate ✅ success ; ui-quality `in_progress` (démarré 2026-11-20T08:25:20Z) |
+| Sargasses évaluation (repo `aveca/sargagame`, séparé) | 2026-11-20 | Aucun test exécuté — évaluation comparative uniquement, aucun commit/PR sur `aveca/bot-wow`, déploiement bloqué (ERDDAP stale depuis 2026-11-04) |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
 | `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |
