@@ -18,7 +18,22 @@
  *   checkout_start { step }                       depart du checkout (soumission formulaire)
  *   checkout_requested { step }                   clic sur un CTA d'achat
  *   checkout_error { step }                       echec du checkout
+ *   checkout_abandoned { step }                   abandon d'entonnoir : depart de page
+ *                                                 apres checkout_requested/checkout_start
+ *                                                 sans finalisation
  *   journey_view   { cta, step }                  changement de section
+ *
+ * Evenements cote serveur (emis par le Worker de paiement, jamais par le
+ * navigateur, jamais acceptes par /api/track) :
+ *   checkout_created   session de paiement creee
+ *   checkout_failed    echec de creation de session
+ *   payment_confirmed  paiement confirme par le webhook
+ *   delivery_sent      livraison envoyee au client
+ *   delivery_failed    echec de livraison
+ *
+ * Une conversion reelle requiert la sequence complete :
+ * checkout_requested -> checkout_created -> payment_confirmed -> delivery_sent.
+ * Un clic sur un CTA d'achat (checkout_requested) n'est pas une vente.
  *
  * REGLES
  *   - aucune donnee personnelle : ni email, ni nom, ni identifiant de
@@ -29,6 +44,15 @@
  *   - l'interface n'est jamais bloquee par la collecte : les echecs sont
  *     silencieux et sans nouvelle tentative ;
  *   - tampon memoire borne (20 evenements) et vide a l'envoi.
+ *
+ * Ecart connus (non bouches dans cette version) :
+ *   - checkout_requested (lien Stripe direct sur buy.html) n'a pas de
+ *     checkout_created cote serveur car Stripe cree la session en externe,
+ *     pas via /api/checkout.
+ *   - checkout_abandoned n'est pas encore dans la liste fermee du Worker
+ *     de telemetry (telemetry-worker/index.js, EVENT_SPEC) : l'evenement
+ *     est emis coter client mais rejete par /api/track tant que le Worker
+ *     n'est pas mis a jour. Aucune modification du Worker n'est faite ici.
  */
 (function () {
   var SCHEMA = 1;
@@ -58,6 +82,13 @@
   }
 
   var JID = journeyId();
+
+  /* Dernier evenement piste de la session : utilise pour detecter
+     l'abandon d'entonnoir (depart de page apres checkout sans
+     finalisation). Aucune donnee personnelle : seul le type
+     d'evenement et l'etape (cta-id ou section id). */
+  var LAST_EVENT = null;
+  var LAST_STEP = '';
 
   /* Provenance du trafic, normalisee en courte liste fermee :
      google, yt, reddit, discord, forum, direct, other.
@@ -180,6 +211,8 @@
 
   function track(event, props) {
     if (!enabled) return;
+    LAST_EVENT = event;
+    LAST_STEP = (props && props.step) || '';
     if (DEDUP_ENABLED) {
       var key = dedupKey(event, props);
       if (seenEvents[key]) return;
@@ -279,8 +312,16 @@
     track('demo_open', { step: 'demo_open' });
   }
 
-  /* 7. Fin de page : on vide le tampon. */
-  window.addEventListener('pagehide', function () { window.botwowTrackFlush(); });
+  /* 7. Fin de page : detecte l'abandon d'entonnoir puis vide le tampon. */
+  window.addEventListener('pagehide', function () {
+    // Si la session s'arrete juste apres checkout_requested ou
+    // checkout_start, l'utilisateur a quitte l'entonnoir sans
+    // finaliser. Pas de PII : seul le type d'evenement est envoye.
+    if (LAST_EVENT === 'checkout_requested' || LAST_EVENT === 'checkout_start') {
+      track('checkout_abandoned', { step: LAST_STEP || '' });
+    }
+    window.botwowTrackFlush();
+  });
 
   /* 8. Affichage de la section offre (offre_view) : quand la section
         #pricing entre dans le viewport. */
