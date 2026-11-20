@@ -36,6 +36,10 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `npm run validate` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | PASS, exit 0 |
 | `git diff --check` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | exit 0 |
 | `node --check` | scripts/autopilot/multi-repo-bridge.cjs, 2026-11-20 | OK |
+| `node tests/telemetry.test.mjs` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, `TELEMETRIE : validation du point de collecte` OK, inclut `checkout_abandoned` (section 8 acceptation `/api/track` + section 9 événements émis par le site) |
+| `node tests/conversion-path.test.mjs` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, `PARCOURS DE CONVERSION : OK` (0 régression ; commentaire lève-faux-positif réécrit) |
+| `npm run validate` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | PASS, exit 0 |
+| `npm test` (suite complète) | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, 0 régression |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
 | `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |
