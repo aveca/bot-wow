@@ -24,6 +24,10 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `npm test` | sandbox local, 2026-11-08, suite complete incluse `storefront-product-sheet.test.mjs` | exit 0, toutes les suites vertes (liens, conversion, release-availability, artefact, agent-state-locks inclus) |
 | `npm run validate` | local, 2026-11-08 | exit 0, `BOT-WOW validation PASS` |
 | `git diff --check` | local, 2026-11-08 | exit 0 |
+| `npm run validate` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `BOT-WOW validation PASS` |
+| `node tests/release-availability.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `RELEASE AVAILABILITY : OK` |
+| `node tests/conversion-path.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `PARCOURS DE CONVERSION : OK` (incl. 7 assertions de régression) |
+| `node tests/live-offers.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `OFFRES LIVE : OK` |
 | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-08 | `AGENT STATE : OK`, exit 0 |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
