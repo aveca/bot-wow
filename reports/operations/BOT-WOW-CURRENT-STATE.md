@@ -1696,6 +1696,17 @@ Toutes les requêtes D1 de ce cycle ont renvoyé `changed_db=false` et `rows_wri
 
 Aucun prix, checkout, paiement, email, secret, binding, D1, R2, DNS, cache, Worker ou production n'a été modifié dans cette revalidation.
 
+# P0.43 — Validation technique PR #141 (factory-control / feat/chatgpt-mcp-remote-bridge) — 2026-11-21
+
+- PR #141 : https://github.com/aveca/factory-control/pull/141, OUVERTE, MERGEABLE, non draft, non mergée.
+- Head validé : `cab4d06ca07a265b8f8bccc9ff035f5e9c0a9ba9` + correction de test `3fcb4ac` poussés sur `origin/feat/chatgpt-mcp-remote-bridge`.
+- Correction : `happy-opencode-bridge/tests/mcp-http-integration.test.cjs` — ajout de la fonction `rpc()` JSON-RPC 2.0 (appelée par `waitForServer`) et correction de deux assertions d'erreur au niveau outil (`result.isError` au lieu de `error`, les échecs d'auth HTTP Bearer surfacent comme erreurs d'outil).
+- Tests E2E isolés (localhost 127.0.0.1 uniquement, jamais exposé sur Internet) : happy-opencode-bridge 61/61 PASS (exit 0) — redact, allowlist, tools-security, audit, factory-state, mcp-protocol, integration-live, e2e-shared-memory, mcp-http-integration.
+- Tests factory-control-bridge root : bom-safe PASS, delivery-decision E1-E9 PASS, multi-repo-dispatch PASS, ux-audit-results PASS (exit 0).
+- `git diff --check` exit 0.
+- Aucun merge, aucun déploiement production, aucun secret/modification de production, aucun webhook public, aucune mission sur dépôt production.
+- Prochaine action : revue propriétaire de PR #141, ne pas merger.
+
 
 ---
 
