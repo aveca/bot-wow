@@ -1708,6 +1708,89 @@ Aucun prix, checkout, paiement, email, secret, binding, D1, R2, DNS, cache, Work
 - Prochaine action : revue propriétaire de PR #141, ne pas merger.
 
 
+# P0.44 — Validation opérationnelle du transport MCP HTTP distant (ChatGPT ↔ Factory) — 2026-11-21
+
+## Contexte
+
+- Mission P0.44 : valider opérationnellement le transfert réel et bidirectionnel des missions entre ChatGPT et Factory, sans copier-coller manuel.
+- PR #141 (`feat/chatgpt-mcp-remote-bridge`, SHA `3fcb4ac`) : validation technique du pont, 61/61 tests PASS, laissée ouverte non mergée (https://github.com/aveca/factory-control/pull/141).
+- PR #175 (`feat/p044-mcp-remote-e2e-validation`, SHA `5d527faf6660d1a65fccd71db3dd98a8f08995fb`) : preuve E2E réelle du transport MCP HTTP distant, ouverte non mergée (https://github.com/aveca/factory-control/pull/175).
+
+## Architecture retenue
+
+- Serveur MCP HTTP (`happy-opencode-bridge/src/mcp-http.cjs`) : écoute UNIQUEMENT sur `127.0.0.1:4097` (localhost, jamais exposé sur Internet).
+- Transport : JSON-RPC 2.0 sur `POST /mcp`, réponse synchrone dans la même réponse HTTP (pas de SSE).
+- Authentification : header `Authorization: Bearer <bridgeToken>` sur chaque requête (fail-closed).
+- Mécanisme de transfert bidirectionnel : registres partagés `chatgpt_inbox` (ChatGPT → Factory) et `chatgpt_outbox` (Factory → ChatGPT), outils `chatgpt_deposit` / `chatgpt_retrieve` / `chatgpt_ack` + `memory_read` / `memory_write`.
+- Audit : journal JSONL redacted (`src/audit.cjs`), redaction des secrets (`src/redact.cjs`).
+- Allowlist : dépôts `aveca/bot-wow`, `aveca/sargagame` ; répertoires autorisés ; `allowMissionCreate: false`.
+
+## Cause racine du blocage distant
+
+Le serveur MCP HTTP écoute uniquement sur `127.0.0.1:4097`. ChatGPT (serveurs OpenAI, cloud) ne peut pas atteindre `localhost` de la machine hôte. Par conséquent :
+- Le transport distant direct ChatGPT → MCP → Factory est impossible sans tunnel ou reverse proxy protégé.
+- Aucun tunnel n'a été activé (cloudflared v2026.7.3 disponible sur la machine, mais tunnel non activé, pas d'autorisation).
+- Le retour automatique des rapports dans la conversation d'origine de ChatGPT est impossible en l'état.
+
+## Ce qui est prouvé (tests réels)
+
+- `node --test tests/p044-e2e-remote.test.cjs` → **20/20 PASS** (transport JSON-RPC 2.0, auth Bearer 401/401/200, factory_status, factory_missions, flux bidirectionnel deposit→read→write→retrieve→ack, idempotence, sécurité, erreurs).
+- Suite complète `happy-opencode-bridge/tests/*.test.cjs` → **62/62 PASS**, 0 régression.
+- `git diff --check` → exit 0 (propre).
+- Tests factory-control-bridge root : bom-safe PASS, delivery-decision E1-E9 PASS, multi-repo-dispatch PASS, ux-audit-results PASS (exit 0).
+
+## Fichiers concernés (factory-control)
+
+- `happy-opencode-bridge/tests/p044-e2e-remote.test.cjs` — test E2E P0.44, 20/20 PASS, commité (commit `5d527fa`).
+- `happy-opencode-bridge/src/mcp-http.cjs` — serveur MCP HTTP (127.0.0.1:4097, Bearer bridgeToken, JSON-RPC 2.0 sur POST /mcp).
+- `happy-opencode-bridge/src/tools.cjs` — 13 outils dont `chatgpt_deposit`, `chatgpt_retrieve`, `chatgpt_ack`, `opencode_send`, `memory_read`, `memory_write`, `factory_mission_create`.
+- `happy-opencode-bridge/src/audit.cjs` — journal JSONL redacted.
+- `happy-opencode-bridge/src/redact.cjs` — rédaction des secrets.
+- `config/bridge.json` — bridgeToken, opencode baseUrl, allowlist, sharedMemory (gitignoré, NE PAS commit).
+- `pr-body.md` — corps de PR #175.
+
+## Sécurité
+
+- Aucun secret commit : `config/bridge.json` reste gitignoré.
+- Le bridgeToken n'apparaît dans aucune réponse ni dans l'audit JSONL (vérifié par le test).
+- Refus fail-closed : mauvais token → HTTP 401, absence de token → HTTP 401.
+- Allowlist : dépôt cible non autorisé rejeté, `from` non autorisé rejeté, outil inconnu rejeté (erreur JSON-RPC -32601).
+- Aucun paiement, checkout, secret, binding, déploiement, R2, D1, webhook public, mission sur dépôt production.
+
+## Critères d'acceptation
+
+| Critère | Statut | Preuve |
+|---|---|---|
+| Transport JSON-RPC 2.0 sur POST /mcp fonctionnel | ✅ PASS | test 1, 20/20 |
+| Authentification Bearer (401 sans/mauvais, 200 bon) | ✅ PASS | test 2 |
+| factory_status (lecture réelle de l'état Factory) | ✅ PASS | test 3 |
+| factory_missions (lecture réelle via gh) | ✅ PASS | test 4 |
+| Flux bidirectionnel deposit→read→write→retrieve→ack | ✅ PASS | test 5 |
+| Idempotence (dépôt dupliqué rejeté) | ✅ PASS | test 6 |
+| Sécurité (outil inconnu, from non autorisé, dépôt hors allowlist, pas de fuite de token) | ✅ PASS | test 7 |
+| Gestion des erreurs (outil inconnu, méthode inconnue) | ✅ PASS | test 8 |
+| Retour automatique des rapports dans la conversation ChatGPT | ❌ BLOQUÉ | serveur sur 127.0.0.1 uniquement, ChatGPT cloud ne peut pas atteindre localhost |
+
+## Limitation documentée
+
+Aucune instance ChatGPT distante n'a pu joindre le serveur (écoute localhost uniquement). Le meilleur mécanisme compatible est implémenté : mémoire partagée (`chatgpt_inbox`/`chatgpt_outbox`) + polling via outils locaux MCP. Le retour automatique des rapports dans la conversation d'origine de ChatGPT nécessite un tunnel ou reverse proxy protégé, non autorisé à ce jour.
+
+## Actions restantes
+
+1. Revue propriétaire de PR #141 et PR #175 — ne pas merger sans autorisation explicite.
+2. Si un tunnel/reverse proxy protégé est autorisé à l'avenir : activer cloudflared (disponible v2026.7.3) pour exposer le MCP HTTP de façon authentifiée, puis réitérer le test E2E avec une instance ChatGPT réelle.
+3. Aucune écriture R2, aucun déploiement production, aucun secret modifié, aucun paiement.
+
+## Preuves
+
+- PR #175 : https://github.com/aveca/factory-control/pull/175 (ouverte, non mergée, commit `5d527fa`, 11 commits, 5284 additions, 219 deletions, 28 changed files)
+- PR #141 : https://github.com/aveca/factory-control/pull/141 (ouverte, mergeable, non mergée, commit `3fcb4ac`)
+- Test E2E : `C:\factory\worktrees\factory-control-bridge\happy-opencode-bridge\tests\p044-e2e-remote.test.cjs`
+- PR body : `C:\factory\worktrees\factory-control-bridge\pr-body.md`
+
+Aucun secret dans ce rapport.
+
+
 ---
 
 # P0.42 — R2 list/get discrepancy after documentation merge — 2026-11-05T06:25Z
