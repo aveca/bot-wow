@@ -61,7 +61,7 @@ if (/<loc>[^<]*\/404\.html<\/loc>/i.test(sitemap)) {
 
 if (!workflow.includes("actions/deploy-pages@v4")) failures.push("Pages deploy action missing");
 if (!workflow.includes("actions/upload-pages-artifact@v3")) failures.push("Pages artifact action missing");
-if (/sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|password\\s*[:=]/i.test(index + app)) {
+if (/sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|password\s*[:=]/i.test(index + app)) {
   failures.push("possible secret/credential pattern detected in frontend");
 }
 
