@@ -76,3 +76,14 @@ BLOCAGE: oui/non — <raison>
 For every task: inspect prior issues/PRs/reports first; prove the current root cause; implement the smallest authorized correction; add a regression test; run relevant tests and inspect the full diff; report exact commands, exit codes, commit SHA and CI on that SHA; then verify the actual live URL/API or runtime. If live verification is unavailable, mark NON VÉRIFIÉ. A report, dispatch, build or green CI alone never closes a task.
 
 Publish an actionable anti-recurrence note for the responsible agents (symptom, proven cause, exact fix, regression test, guardrail and links). Never claim an agent handoff without a posted message or confirmed receipt. Reuse existing issues/PRs; do not duplicate work. Keep CORRIGÉ, TESTÉ, CI VALIDÉE, DÉPLOYÉ, LIVE VÉRIFIÉ and BLOQUÉ as separate evidence-backed statuses. Never bypass a delivery policy, legal/payment/security gate or human approval. A failed/blocked task remains blocked until the underlying gate is corrected through its authorized process.
+
+
+## Canonical autonomy contract (mandatory)
+
+Read `AUTONOMY_CONTRACT.md` before every mission. It is the canonical cross-agent operating contract for autonomy, evidence, human-approval boundaries, and conflict resolution. Repository-specific product and delivery restrictions remain in force; this contract does not grant new credentials or override a safety gate.
+
+- Do not ask the founder to copy/paste prompts or relay routine reports when the authorized Factory/GitHub channel is operational.
+- For ordinary reversible work in the permitted scope, claim, implement, test, branch, push, PR, report, and resume autonomously.
+- Never claim local GUI execution from API/headless evidence. Use a dedicated Factory-owned GUI profile; never touch personal/protected sessions.
+- Never expand permissions by editing only documentation. Runtime admission and delivery code must enforce the same policy.
+- If policies conflict or a capability is missing, fail closed, identify the exact blocker, and continue with safe preparatory work.
