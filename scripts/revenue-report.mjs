@@ -193,7 +193,7 @@ export function buildReport({ productionQuery, analyticsQuery, source = 'SQLite 
     SELECT
       COALESCE(l.lang, '(aucune)') AS lang,
       COUNT(*) AS licenses,
-      SUM(CASE WHEN ${CONFIRMED_PAYMENT} THEN 1 ELSE 0 END) AS providerConfirmedPaidOrders
+      COUNT(DISTINCT CASE WHEN ${CONFIRMED_PAYMENT} THEN o.id END) AS providerConfirmedPaidOrders
     FROM licenses l
     LEFT JOIN orders o ON o.id = l.order_id
     GROUP BY l.lang
