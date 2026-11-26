@@ -58,10 +58,13 @@ try {
     .run('payment:cs_unverified', 'mollie', now);
   production.prepare('INSERT INTO webhook_events (id, provider, processed_at) VALUES (?, ?, ?)')
     .run('payment:manual-ref', 'bitcoin_manual', now);
-  production.prepare(`
+  const insertLicense = production.prepare(`
     INSERT INTO licenses (key, order_id, email, lang, status, max_activations, created_at, updated_at)
     VALUES (?, ?, ?, ?, 'active', 1, ?, ?)
-  `).run('SECRET-LICENSE-1', 'ord_stripe_confirmed', 'private-one@example.test', 'en', now, now);
+  `);
+  insertLicense.run('SECRET-LICENSE-1', 'ord_stripe_confirmed', 'private-one@example.test', 'en', now, now);
+  // Two license rows for one provider-confirmed order must still count as one order.
+  insertLicense.run('SECRET-LICENSE-2', 'ord_stripe_confirmed', 'private-one@example.test', 'en', now, now);
   production.prepare(`
     INSERT INTO downloads (token, license_id, expires_at, count, max_count, created_at)
     VALUES (?, 1, ?, 2, 3, ?)
@@ -124,6 +127,10 @@ try {
   assert.equal(report.funnel.commandesRejetees, 1);
   assert.equal(report.funnel.commandesEchoueesOuRejetees, 2);
   assert.equal(report.funnel.commandesRemboursees, 1);
+  assert.deepEqual(report.parLangue, [
+    { lang: 'en', licenses: 2, providerConfirmedPaidOrders: 1 },
+  ]);
+  assert.equal(report.funnel.licencesDelivrees, 2);
   assert.equal(report.funnel.activations, 1);
   assert.equal(report.funnel.livraisonsMarqueesEnvoyees, 1);
   assert.equal(report.funnel.livraisonsEnAttenteDeRejeu, 1);
