@@ -321,3 +321,17 @@ NON VERIFIE : deploiement Cloudflare Pages (aucun demande) ; installabilite sur 
 
 BLOCAGE : aucun. Verrou 20261127-mobile-pwa-companion (scope docs-mobile-pwa) ajoute dans gents/locks.md et gents/tasks.md avec ce commit. 
 ode scripts/check-agent-state.mjs -> AGENT STATE : OK.
+
+**Rectificatif 2026-11-27 (16:44 UTC) - affirmation fausse corrigee.** La section precedente de ce fichier, le commentaire de la PR #227 et deux passages de docs/mobile/index.html affirmaient que POST /api/access repondait 404 en production (mesure du 2026-11-27 a 14:56 UTC). Cette mesure etait FAUSSE. Re-mesure sur la meme API en direct :
+
+- POST https://bot-wow.com/api/access corps vide -> HTTP 400 {"ok":false,"error":"missing_key"}
+- POST avec une cle {"key":"x"} -> HTTP 400 {"ok":false,"error":"invalid_json"}
+- GET /api/access -> HTTP 404 {"ok":false,"error":"not_found","message":"Endpoint not found"}
+
+Corrige dans le commit 6e09428d24937cfb35d6ecdd908d4943fd5c8895 (pousse sur la branche de mission, PR #227). La decision produit ne change pas et reste justifiee autrement : aucune API de licence documentee et sure n'existe cote public, donc aucune fonctionnalite compte/licence n'est simulee et aucun champ de cle n'est offert. Ce qui change, c'est l'affirmation, desormais exacte, horodatee, et la page arrete de promettre un "jusqu'a ce que le service reponde" que personne ne peut garantir.
+
+La CI est repassee au vert sur 6e09428 : validate 25 s, ui-quality 2 min 15 s (520 tests dont les 24 nouveaux), package-candidate 9 s, GitGuardian pass. Locaux : 
+ode scripts/build-site.mjs _site exit 0, 
+pm run test:e2e 520 passed exit 0.
+
+AUTRE VERIFICATION FAUSSE A SIGNALER : l'API locale OpenCode (port 28894) ne repond plus en JSON sur les routes /session/... (elle renvoie le HTML de l'application, 9 401 octets, avec ou sans en-tete d'authentification). Aucun nouveau message n'a donc pu etre depose via l'API. Le seul message de session reel facture reste msg_21d3b42500017jq1Qw51q3Y5Ni dans ses_e671a50b5ffdMhnHEsTn27JTLs. NON VERIFIE / BLOCAGE : je ne pretends aucun depot de preuve par l'API OpenCode.
