@@ -241,8 +241,9 @@ test('mobile companion: no account, no licence, no game automation claimed', asy
   const html = (await page.content()).toLowerCase();
   expect(html).not.toContain('no paid offer');
   expect(html).not.toContain('waitlist');
-  // L'endpoint des cles repond 404 en production (verifie 2026-11-27) :
-  // la page ne doit proposer aucun champ de saisie de cle.
+  // Aucune API de licence n'est documentee ni sure en production (mesure du
+  // 2026-11-27 : POST /api/access -> 400 missing_key / invalid_json,
+  // GET -> 404 not_found) : la page ne doit proposer aucun champ de cle.
   await expect(page.locator('#key-form')).toHaveCount(0);
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   await expect(page.getByText(/reads the game|automatically clicks|injects/i)).toHaveCount(0);

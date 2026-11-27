@@ -218,7 +218,7 @@ ul.plain .nm{flex:1;min-width:0;overflow-wrap:anywhere}
     </dl>
     <hr class="hr">
     <p class="note" id="k-api-detail">Read from the public status API. If the page is offline this box keeps the last answer and says so.</p>
-    <p class="note" id="k-key-detail">The access-key endpoint returned <span class="mono">HTTP 404</span> on 2026‑11‑27 (14:56 UTC), so no account or licence state is shown here. Spot cap stays at the free tier until that service answers.</p>
+    <p class="note" id="k-key-detail">Measured against the live API on 2026‑11‑27 (16:44 UTC): <span class="mono">POST /api/access</span> answers <span class="mono">400 missing_key</span> without a key and <span class="mono">400 invalid_json</span> with one, and <span class="mono">GET</span> answers <span class="mono">404 not_found</span>. No documented, safe endpoint exists, so no licence state is claimed and no key field is offered. The spot cap stays at the free tier.</p>
     <p class="note">Two offers are published: BOT‑WOW Planner <span class="mono">9,00 EUR</span> and BOT‑WOW Studio <span class="mono">29,00 EUR</span>. Prices are read from the status API; the offers page is the place to check them.</p>
   </section>
 
@@ -343,9 +343,11 @@ ul.plain .nm{flex:1;min-width:0;overflow-wrap:anywhere}
 
 <script type="module">
 /* Compagnon mobile — tout est calcule et stocke sur l'appareil.
-   Aucun appel de licence : l'endpoint des cles repond 404 en production
-   (verifie le 2026-11-27), donc aucune fonctionnalite de compte n'est
-   simulee ici. Le seul appel reseau est la lecture de l'etat public
+   Aucun appel de licence : l'endpoint des cles ne repond rien d'utile en
+   production (mesure du 2026-11-27 16:44 UTC : POST sans cle -> 400
+   missing_key, POST avec cle -> 400 invalid_json, GET -> 404 not_found).
+   Aucune API documentee et sure n'existe, donc aucune fonctionnalite de
+   compte n'est simulee ici. Le seul appel reseau est la lecture de l'etat public
    /api/config, qui peut echouer : chaque echec est affiche telle quelle. */
 const FREE = 4, PLANNER = 12, STUDIO = 40;   // plafonds : memes regles que le compagnon bureau
 const API = 'https://api.bot-wow.com/api/config';
