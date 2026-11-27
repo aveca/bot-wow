@@ -33,6 +33,15 @@ for (const [file, lang, canon] of pages) {
   check(file + ' no redirect script', !/window\.location\s*=/.test(html));
   check(file + ' switcher', html.includes('class="langs"') && html.includes('lang="pt-BR"'));
 }
+
+const ruFaq = read('ru/faq.html');
+const ruFaqDescription = (ruFaq.match(/<meta name="description" content="([^"]*)">/i) || [])[1] || '';
+check('ru FAQ lang', ruFaq.includes('<html lang="ru">'));
+check('ru FAQ canonical', ruFaq.includes('rel="canonical" href="https://bot-wow.com/ru/faq.html"'));
+check('ru FAQ description localized', /[А-Яа-яЁё]/.test(ruFaqDescription)
+  && !['ou Studio', 'once', 'manual delivery', 'full refund'].some((term) => ruFaqDescription.toLowerCase().includes(term)));
+check('ru FAQ description <= 160 chars', ruFaqDescription.length > 0 && ruFaqDescription.length <= 160);
+
 const terms = read('legal/de/terms.html');
 check('de terms third-party risk', /eigenes Risiko|Drittanbieter/.test(terms));
 const worker = read('worker/index.js');
