@@ -99,6 +99,26 @@ que le déploiement Worker est autorisé.
 > Aucune offre n'est déclarée rentable : les données commerciales
 > sont insuffisantes (0,00 € encaissés, 0 client réel).
 
+## 0.9 Mission #224 — clarification de livraison (éditorial, non déployé)
+
+**Date :** 2026-11-27
+**Branche :** `fix/buy-delivery-clarification-20261127`
+**Commit :** `ff0d464` — `docs(buy): clarify delivery - licence key + download link by email after server confirmation`
+**Fichiers :** `buy.html`, `fr/buy.html` (+18 lignes)
+
+**Décision :** le moyen de paiement affiché reste **Mollie**, conformément au code du dépôt (`worker/index.js` implémente `/api/mollie-webhook`, badge « Paiement par Mollie »). Aucun circuit Stripe n'est présent dans le dépôt BOT-WOW. Les deux connexions Stripe et leur identifiant marchand commun ne prouvent pas que BOT-WOW utilise Stripe pour son checkout. Aucun changement de configuration Stripe, aucun paiement réel, aucun remboursement déclenché.
+
+**Clarification apportée :** un bloc « What you receive — and when » / « Ce que vous recevez — et quand » a été ajouté entre l'avis de blocage de livraison et le formulaire d'achat. Il indique que le paiement n'accorde aucun accès immédiat : après confirmation serveur (webhook), le client reçoit par e-mail sa clé de licence, son lien de téléchargement v1.2.0 et la procédure d'installation/activation.
+
+**Prix inchangés :** 20,00 €, paiement unique, aucun abonnement (ONE CORE OFFER).
+**Checkout resté bloqué :** livraison v1.2.0 non confirmée → garde-fou commercial actif, bouton désactivé.
+
+**Tests :** `npm test` exit 0 — toutes les suites vertes, y compris `RELEASE AVAILABILITY` (buy.html + fr/buy.html), `GARDE MOLLIE`, `LIVRAISON REPRISE`.
+
+**Statut :** préparé sur branche, **non déployé en production**, **non mergé sur main**. Pas de publication tant que le blocage de livraison v1.2.0 n'est pas levé et que le circuit réel n'est pas vérifié.
+
+**Prochaine action :** lever le blocage de livraison (vérifier la disponibilité du paquet v1.2.0 dans R2) avant tout déploiement ou ouverture commerciale.
+
 ---
 
 # Historique — snapshot du 2026-10-28 (PR #54 mergée)
