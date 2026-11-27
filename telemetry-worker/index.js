@@ -40,6 +40,10 @@ const EVENT_SPEC = {
   // Intention de paiement : clic sur un CTA d'achat. Ce n'est PAS une
   // vente ; seule la validation du webhook Mollie en etablit une.
   checkout_requested: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
+  // Abandon d'entonnoir : depart de page apres checkout_requested ou
+  // checkout_start sans finalisation. Emis cote client, stocke cote
+  // serveur ; pas une vente ; aucune donnee personnelle.
+  checkout_abandoned: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
   offer_view: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
   demo_open: { cta: null, mode: null, years: null, step: 'step', source: 'source' },
 };

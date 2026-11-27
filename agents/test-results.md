@@ -24,7 +24,24 @@ Les lignes « à remplir » sont complétées par la commande réelle du cycle. 
 | `npm test` | sandbox local, 2026-11-08, suite complete incluse `storefront-product-sheet.test.mjs` | exit 0, toutes les suites vertes (liens, conversion, release-availability, artefact, agent-state-locks inclus) |
 | `npm run validate` | local, 2026-11-08 | exit 0, `BOT-WOW validation PASS` |
 | `git diff --check` | local, 2026-11-08 | exit 0 |
+| `npm run validate` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `BOT-WOW validation PASS` |
+| `node tests/release-availability.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `RELEASE AVAILABILITY : OK` |
+| `node tests/conversion-path.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `PARCOURS DE CONVERSION : OK` (incl. 7 assertions de régression) |
+| `node tests/live-offers.test.mjs` | local, 2026-11-19, arbre origin/main `55ca9dd` | exit 0, `OFFRES LIVE : OK` |
 | `CHECK_OPEN_PR_LOCKS=1 node scripts/check-agent-state.mjs` | local, 2026-11-08 | `AGENT STATE : OK`, exit 0 |
+| `gh issue comment 165 --body-file <fichier>` | bidi E2E Factory → ChatGPT, issue #165, 2026-11-20 | publié, commentaire 7031904261, marqueur CHATGPT_BRIDGE_E2E_BOTWOW_20261120, statut `completed` |
+| Poll check-suites SHA `2a9ae79` | CI sur branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | 9 check suites queued, 0 run (apps tierces : Vercel, Supabase, Devin, Cursor, MistralAI, Render, Cloudflare Workers/Pages + 2 ; pas d'association `pull_requests` ; ne s'exécutent pas sur push direct de branche) |
+| `npm run test:autopilot:consume` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | 38/38 OK, exit 0 |
+| `npm run test:autopilot` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | 0 échec |
+| `npm run validate` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | PASS, exit 0 |
+| `git diff --check` | local, branche `fix/autopilot-consume-lock-cold-start-20261120`, 2026-11-20 | exit 0 |
+| `node --check` | scripts/autopilot/multi-repo-bridge.cjs, 2026-11-20 | OK |
+| `node tests/telemetry.test.mjs` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, `TELEMETRIE : validation du point de collecte` OK, inclut `checkout_abandoned` (section 8 acceptation `/api/track` + section 9 événements émis par le site) |
+| `node tests/conversion-path.test.mjs` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, `PARCOURS DE CONVERSION : OK` (0 régression ; commentaire lève-faux-positif réécrit) |
+| `npm run validate` | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | PASS, exit 0 |
+| `npm test` (suite complète) | local, branche `fix/funnel-abandon-tracking-20261120`, 2026-11-20 | exit 0, 0 régression |
+| `gh api repos/aveca/bot-wow/commits/73e7147/check-runs` | CI PR #211, 2026-11-20 | GitGuardian Security Checks ✅ success (0 secrets sur 6 commits) ; validate ✅ success ; package-candidate ✅ success ; ui-quality `in_progress` (démarré 2026-11-20T08:25:20Z) |
+| Sargasses évaluation (repo `aveca/sargagame`, séparé) | 2026-11-20 | Aucun test exécuté — évaluation comparative uniquement, aucun commit/PR sur `aveca/bot-wow`, déploiement bloqué (ERDDAP stale depuis 2026-11-04) |
 
 La CI GitHub de cette branche est enregistrée dans la PR, pas inventée ici. `npm run test:e2e` n'a pas été relancé : aucun changement de mise en page.
 | `npm test`, `npm run validate` (PR #150, branche `p0/reproducible-runtime-package-20261107`) | local, 2026-11-08, apres durcissement integrite | exit 0 toutes les deux ; payment-flow OK, checkout-security OK, worker-fulfillment-reconciliation OK ; `git diff --check` exit 0 |

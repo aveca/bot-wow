@@ -221,6 +221,18 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
     res.status === 202 && row[1] === 'checkout_requested' && row[12] === okJid,
     `(status ${res.status}, event ${row[1]})`);
 
+  // checkout_abandoned est emis cote client (pagehide apres
+  // checkout_requested / checkout_start) et doit etre accepte cote serveur.
+  // Ce n'est jamais une conversion ; il mesure le desistement.
+  const resAbandoned = await handleTrack(req(JSON.stringify({
+    v: 1, event: 'checkout_abandoned', page: '/', lang: 'en',
+    props: { step: 'buy_form', journey_id: okJid, source: 'google' },
+  })), CURRENT_ENV);
+  const rowAbandoned = state.inserts[state.inserts.length - 1] || [];
+  check('checkout_abandoned accepte et stocke (abandon, pas conversion)',
+    resAbandoned.status === 202 && rowAbandoned[1] === 'checkout_abandoned' && rowAbandoned[12] === okJid,
+    `(status ${resAbandoned.status}, event ${rowAbandoned[1]})`);
+
   // un journey_id malforme est refuse (pas de fabrication).
   const bad = await handleTrack(req(JSON.stringify({
     v: 1, event: 'page_view', page: '/', lang: 'en', props: { journey_id: 'x'.repeat(80) },
@@ -235,7 +247,7 @@ console.log('=== TELEMETRIE : validation du point de collecte ===');
   const emitted = {
     page_view: {}, journey_view: {}, cta_click: { cta: 'hero-buy' },
     planner_mode: { mode: 'equilibre' }, ownership_view: { years: 1 },
-    checkout_start: {}, checkout_requested: {}, offer_view: {},
+    checkout_start: {}, checkout_requested: {}, checkout_abandoned: { step: 'buy_form' }, offer_view: {},
     demo_open: {}, checkout_error: {},
   };
   for (const [name, extra] of Object.entries(emitted)) {
