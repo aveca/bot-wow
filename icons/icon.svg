@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="BOT-WOW">
+  <!-- Source des icones de la PWA. Les PNG sont rendus par scripts/render-icons.mjs.
+       Identite : instrumentation de peche / console de navire — abyssal, sonar
+       cyan, ancre or. Aucun degrade decoratif, aucune image fabriquee. -->
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#5fb4d8" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="512" height="512" fill="#06070a"/>
+  <rect width="512" height="512" fill="url(#grid)"/>
+
+  <!-- sonar : anneaux concentriques d'epaisseur constante, opacite decroissante -->
+  <g fill="none" stroke="#5fb4d8">
+    <circle cx="256" cy="256" r="170" stroke-opacity=".14" stroke-width="2"/>
+    <circle cx="256" cy="256" r="120" stroke-opacity=".22" stroke-width="2"/>
+    <circle cx="256" cy="256" r="70" stroke-opacity=".30" stroke-width="2"/>
+  </g>
+  <path d="M104 408 L256 256" stroke="#5fb4d8" stroke-opacity=".32" stroke-width="2"/>
+
+  <!-- ancre : anneau, hampe, barre, bras termines par des boules -->
+  <g stroke="#c9a227" fill="none" stroke-width="16" stroke-linecap="round">
+    <circle cx="256" cy="150" r="34"/>
+    <path d="M256 184 V330"/>
+    <path d="M206 212 H306"/>
+    <path d="M180 292 Q256 368 332 292"/>
+  </g>
+  <g fill="#c9a227">
+    <circle cx="180" cy="292" r="15"/>
+    <circle cx="332" cy="292" r="15"/>
+  </g>
+</svg>

@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BOT-WOW mobile companion — spots, route, margin</title>
+<meta name="description" content="Installable mobile companion. You type your own spots and prices; the page orders a walking route and computes a margin. It does not read the game and does not click.">
+<link rel="canonical" href="https://bot-wow.com/docs/mobile/">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#06070a">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Jetons + styles de base du depot : assets/theme.css, 5,1 Ko. Pas
+     assets/style.css (130 Ko : hero, premium, pixel-skin...) : une page
+     mobile n'a pas besoin de la vitrine, et chaque octet compte ici.
+     Pas de ?v= sur ce lien : theme.css n'est pas dans la liste ASSETS de
+     scripts/versionne-assets.mjs, donc un stamp ecrit a la main deriverait
+     silencieusement au prochain changement d'assets. Sans query, l'entete
+     /assets/* (max-age=600, must-revalidate) borne la fraicheur a 10 min.
+     Aucune police Google ici : une requete externe casserait le hors ligne. -->
+<link rel="stylesheet" href="../../assets/theme.css">
+<link rel="icon" href="../../assets/favicon.svg?v=885b2494" type="image/svg+xml">
+<style>
+/* ─────────────────────────────────────────────────────────────────────────────
+   BOT-WOW mobile companion — feuille de route mobile-first.
+
+   Pourquoi ce CSS est INLINE et pas dans assets/ : un fichier ajoute dans
+   assets/ change l'empreinte calculee par scripts/versionne-assets.mjs, donc
+   reecrit les ?v= de toutes les pages du depot — et 15 PR ouvertes touchent
+   ces memes fichiers (index.html, companion.html, assets/*). Le HTML, lui,
+   est servi avec `max-age=0, must-revalidate` (_headers) : le garder inline
+   evite tout conflit de fusion sans rien perdre en fraicheur.
+
+   Jetons : les variables sont definies dans assets/theme.css (audite par
+   scripts/audit-tokens.mjs). Seules les valeurs SPECIFIQUES au mobile
+   (zones sûres, tailles tactiles) sont definies ici.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tap: 48px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--bg-deep);
+  color:var(--txt);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  padding-bottom:calc(24px + var(--safe-bottom));
+}
+h1,h2,h3{margin:0 0 8px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+h1{font-size:1.45rem}
+h2{font-size:1.05rem}
+p{margin:0 0 10px}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono)}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--gold);color:#000;padding:10px 14px;z-index:20}
+.skip-link:focus{left:8px;top:8px}
+
+/* Barre d'application : zones sûres encadrées, une seule ligne, rien de décoratif. */
+.app-bar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--safe-top)) 16px 10px;
+  background:color-mix(in srgb, var(--bg-deep) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.app-bar .brand{font-weight:900;letter-spacing:.02em;color:var(--txt);font-size:.95rem}
+.app-bar .brand .dot{color:var(--gold)}
+.pill{
+  font-size:.7rem;font-weight:700;letter-spacing:.06em;
+  padding:3px 8px;border-radius:999px;
+  border:1px solid var(--gold-line);color:var(--gold);background:var(--gold-dim);
+}
+.app-bar .grow{flex:1}
+.tap{
+  min-height:var(--tap);min-width:var(--tap);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:0 14px;border-radius:var(--r);
+  font:inherit;font-weight:700;font-size:.85rem;
+  border:1px solid var(--line-bright);background:var(--panel);color:var(--txt);
+  cursor:pointer;
+}
+.tap--gold{border-color:var(--gold-line);background:var(--gold-dim);color:var(--gold)}
+.tap:disabled{opacity:.45;cursor:not-allowed}
+
+.wrap{padding:16px 16px 0;max-width:560px;margin:0 auto}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px;margin:0 0 14px;
+}
+.card--deep{background:var(--slate)}
+.eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin-bottom:6px}
+.note{font-size:.82rem;color:var(--mut);margin:0}
+.hr{height:1px;background:var(--line);border:0;margin:14px 0}
+
+/* Ligne de statut : 2 colonnes compactes, pas de tableau. */
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.kv:last-child{border-bottom:0}
+.kv dt{color:var(--mut)}
+.kv dd{margin:0;text-align:right;font-weight:600}
+.ok{color:var(--green)}
+.away{color:var(--gold)}
+
+/* Formulaire : une colonne, cibles tactiles, jamais de champ minuscule. */
+.field{display:block;margin:0 0 10px}
+.field > span{display:block;font-size:.75rem;color:var(--mut);margin-bottom:4px}
+.field input{
+  width:100%;min-height:var(--tap);
+  padding:0 12px;border-radius:10px;
+  border:1px solid var(--line-bright);background:var(--bg-deep);color:var(--txt);
+  font:inherit;font-family:var(--mono);font-size:1rem;
+}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row > *{flex:1 1 0;min-width:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* Listes : ligne par ligne, suppression accessible au pouce. */
+ol.route,ul.plain{margin:0;padding:0;list-style:none}
+ol.route{counter-reset:leg}
+ol.route li{
+  counter-increment:leg;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem;
+}
+ol.route li::before{
+  content:counter(leg);
+  flex:0 0 24px;height:24px;border-radius:999px;
+  display:grid;place-items:center;
+  background:var(--cyan-dim);border:1px solid var(--cyan-line);color:var(--cyan);
+  font-size:.72rem;font-weight:700;font-family:var(--mono);
+}
+ol.route li .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+ol.route li .ds{color:var(--mut);font-size:.78rem;font-family:var(--mono)}
+.x{
+  flex:0 0 34px;height:34px;border-radius:10px;
+  border:1px solid var(--line-bright);background:transparent;color:var(--mut);
+  font:inherit;cursor:pointer;
+}
+.x:hover{color:var(--txt);border-color:var(--gold-line)}
+ul.plain li{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem;
+}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.status{font-size:.82rem;color:var(--mut);min-height:1.2em;margin:8px 0 0}
+.empty{font-size:.88rem;color:var(--mut);margin:8px 0 0}
+
+/* Bandeau hors ligne : annonce claire, jamais une simulation. */
+#offline{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:flex;gap:10px;align-items:flex-start;
+  padding:12px 16px calc(12px + var(--safe-bottom));
+  background:var(--slate);border-top:1px solid var(--gold-line);
+  font-size:.82rem;
+}
+#offline[hidden]{display:none}
+#offline .ic{color:var(--gold);font-weight:900}
+
+/* Feuille d'installation iOS : la marche a suivre reelle, pas une promesse. */
+#ios{
+  position:fixed;inset:auto 0 0 0;z-index:31;
+  background:var(--panel);border-top:1px solid var(--gold-line);
+  border-radius:16px 16px 0 0;padding:18px 16px calc(18px + var(--safe-bottom));
+}
+#ios[hidden]{display:none}
+#ios ol{margin:8px 0 0;padding-left:20px;font-size:.88rem}
+#ios li{margin-bottom:6px}
+.scrim{position:fixed;inset:0;z-index:29;background:rgba(0,0,0,.55)}
+.scrim[hidden]{display:none}
+
+.links{display:grid;gap:2px;margin:0}
+.links a{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:var(--tap);padding:0 4px;color:var(--txt);font-size:.9rem;
+  border-bottom:1px solid var(--line);
+}
+.links a:last-child{border-bottom:0}
+.links a .go{color:var(--mut)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#tool">Skip to the tool</a>
+
+<header class="app-bar">
+  <span class="brand">BOT<span class="dot">·</span>WOW</span>
+  <span class="pill" id="ver">v1.2.0</span>
+  <span class="grow"></span>
+  <button class="tap tap--gold" id="install" type="button" hidden>Install</button>
+</header>
+
+<div class="wrap">
+
+  <section class="card card--deep" aria-labelledby="h-what">
+    <div class="eyebrow" id="h-what">What this page is</div>
+    <h1>Mobile companion</h1>
+    <p>You type every coordinate and every price. The page orders a walking route and computes a margin on the numbers you type. It does not read the game, does not click, and sends nothing to a server.</p>
+    <p class="note">Route, margin and journal are calculated on this device and stored in this browser only. Blizzard's EULA prohibits bots; nothing here automates World of Warcraft.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-status">
+    <div class="eyebrow" id="h-status">Service status</div>
+    <dl>
+      <div class="kv"><dt>Companion version</dt><dd class="mono" id="k-version">1.2.0</dd></div>
+      <div class="kv"><dt>Interface language</dt><dd>English</dd></div>
+      <div class="kv"><dt>Status API</dt><dd id="k-api">Checking…</dd></div>
+      <div class="kv"><dt>Access-key service</dt><dd class="away" id="k-key">Not available</dd></div>
+    </dl>
+    <hr class="hr">
+    <p class="note" id="k-api-detail">Read from the public status API. If the page is offline this box keeps the last answer and says so.</p>
+    <p class="note" id="k-key-detail">Measured against the live API on 2026‑11‑27 (16:44 UTC): <span class="mono">POST /api/access</span> answers <span class="mono">400 missing_key</span> without a key and <span class="mono">400 invalid_json</span> with one, and <span class="mono">GET</span> answers <span class="mono">404 not_found</span>. No documented, safe endpoint exists, so no licence state is claimed and no key field is offered. The spot cap stays at the free tier.</p>
+    <p class="note">Two offers are published: BOT‑WOW Planner <span class="mono">9,00 EUR</span> and BOT‑WOW Studio <span class="mono">29,00 EUR</span>. Prices are read from the status API; the offers page is the place to check them.</p>
+  </section>
+
+  <section class="card" id="tool" aria-labelledby="h-spots">
+    <div class="eyebrow" id="h-spots">Spots and route</div>
+    <h2>Spots and route</h2>
+    <p class="note">Coordinates are the ones YOU type — this page cannot see the game screen. Order is the nearest neighbour from the first spot: an ordinary greedy walk, not a promise about the terrain.</p>
+    <form id="spot-form" novalidate>
+      <label class="field" for="spot-name"><span>Name (what you call the spot)</span>
+        <input id="spot-name" name="name" maxlength="40" autocomplete="off" required></label>
+      <div class="row">
+        <label class="field" for="spot-x"><span>X</span>
+          <input id="spot-x" name="x" type="number" step="any" inputmode="decimal" required></label>
+        <label class="field" for="spot-y"><span>Y</span>
+          <input id="spot-y" name="y" type="number" step="any" inputmode="decimal" required></label>
+      </div>
+      <button class="tap tap--gold" type="submit">Add spot</button>
+      <p class="status" id="spot-msg" role="status" aria-live="polite"></p>
+    </form>
+    <ol class="route" id="route"></ol>
+    <p class="empty" id="route-empty">No spot yet. Add the coordinates where you are standing.</p>
+    <p class="note" id="distance"></p>
+    <div class="actions">
+      <button class="tap" id="copy" type="button" disabled>Copy route</button>
+      <button class="tap" id="clear" type="button" disabled>Clear spots</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-margin">
+    <div class="eyebrow" id="h-margin">Margin</div>
+    <h2>Margin</h2>
+    <p class="note">Arithmetic on the numbers you type: <span class="mono">(sell − buy) × count</span>. Not a market price, not a catch rate.</p>
+    <form id="margin-form" novalidate>
+      <label class="field" for="m-label"><span>Label</span>
+        <input id="m-label" maxlength="40" autocomplete="off"></label>
+      <div class="row">
+        <label class="field" for="m-buy"><span>Buy</span>
+          <input id="m-buy" type="number" step="any" inputmode="decimal"></label>
+        <label class="field" for="m-sell"><span>Sell</span>
+          <input id="m-sell" type="number" step="any" inputmode="decimal"></label>
+      </div>
+      <label class="field" for="m-count"><span>Count</span>
+        <input id="m-count" type="number" step="1" inputmode="numeric"></label>
+      <button class="tap" type="submit">Calculate</button>
+      <p class="status" id="margin-out" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="h-journal">
+    <div class="eyebrow" id="h-journal">Catch journal</div>
+    <h2>Catch journal</h2>
+    <p class="note">Kept in this browser. No server receives it, and nothing here counts as proof of a catch.</p>
+    <form id="journal-form" novalidate>
+      <label class="field" for="j-date"><span>Date</span>
+        <input id="j-date" type="date"></label>
+      <label class="field" for="j-what"><span>What you caught</span>
+        <input id="j-what" maxlength="60" autocomplete="off"></label>
+      <label class="field" for="j-count"><span>Count</span>
+        <input id="j-count" type="number" step="1" inputmode="numeric"></label>
+      <button class="tap" type="submit">Add note</button>
+    </form>
+    <ul class="plain" id="journal"></ul>
+    <p class="empty" id="journal-empty">No note yet.</p>
+    <div class="actions"><button class="tap" id="journal-clear" type="button" disabled>Clear journal</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-support">
+    <div class="eyebrow" id="h-support">Support</div>
+    <h2>Support</h2>
+    <p class="note">The tracked address is <a href="mailto:support@bot-wow.com" id="mail-link">support@bot-wow.com</a>. Nothing is sent from this page: the button below only prepares an email in your own mail app.</p>
+    <form id="support-form" novalidate>
+      <label class="field" for="s-subject"><span>Subject</span>
+        <input id="s-subject" maxlength="80" autocomplete="off"></label>
+      <label class="field" for="s-body"><span>What you need</span>
+        <input id="s-body" maxlength="600" autocomplete="off"></label>
+      <div class="actions">
+        <button class="tap tap--gold" type="submit">Prepare email</button>
+      </div>
+      <p class="status" id="support-msg" role="status" aria-live="polite"></p>
+    </form>
+    <p class="note" style="margin-top:12px">Local tracker — kept on this device only. A row here means "a draft was prepared", not "a ticket was opened". Replies arrive by email.</p>
+    <ul class="plain" id="tracker"></ul>
+    <p class="empty" id="tracker-empty">No request prepared yet.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-links">
+    <div class="eyebrow" id="h-links">The rest of the site</div>
+    <h2>Documentation</h2>
+    <div class="links">
+      <a href="../index.html">Documentation<span class="go">→</span></a>
+      <a href="../changelog.html">Release notes<span class="go">→</span></a>
+      <a href="../license.html">Licence and activation<span class="go">→</span></a>
+      <a href="../../faq.html">FAQ<span class="go">→</span></a>
+      <a href="../../companion.html">Desktop companion<span class="go">→</span></a>
+      <a href="../../buy.html">Offers<span class="go">→</span></a>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-offline">
+    <div class="eyebrow" id="h-offline">Offline</div>
+    <h2>What works offline</h2>
+    <p class="note">Installed, this page opens without a network: spots, route, margin and journal are computed and stored on the device. Service status, offers and documentation links cannot be refreshed offline, and the status box is then marked "cached" with the time it was read.</p>
+  </section>
+
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div id="offline" hidden>
+  <span class="ic" aria-hidden="true">!</span>
+  <span><strong>Offline.</strong> You are looking at the cached copy. Route, margin and journal stay on this device; status and offers are not refreshed.</span>
+</div>
+<div id="ios" role="dialog" aria-modal="true" aria-labelledby="ios-title" hidden>
+  <h2 id="ios-title">Install on iPhone or iPad</h2>
+  <ol>
+    <li>Tap the Share button in Safari's toolbar.</li>
+    <li>Choose <strong>Add to Home Screen</strong>.</li>
+    <li>Confirm the name, then tap Add.</li>
+  </ol>
+  <p class="note">On iOS the page then opens without the browser bars, offline, with the icon you see here.</p>
+  <div class="actions"><button class="tap" id="ios-close" type="button">Close</button></div>
+</div>
+
+<script type="module">
+/* Compagnon mobile — tout est calcule et stocke sur l'appareil.
+   Aucun appel de licence : l'endpoint des cles ne repond rien d'utile en
+   production (mesure du 2026-11-27 16:44 UTC : POST sans cle -> 400
+   missing_key, POST avec cle -> 400 invalid_json, GET -> 404 not_found).
+   Aucune API documentee et sure n'existe, donc aucune fonctionnalite de
+   compte n'est simulee ici. Le seul appel reseau est la lecture de l'etat public
+   /api/config, qui peut echouer : chaque echec est affiche telle quelle. */
+const FREE = 4, PLANNER = 12, STUDIO = 40;   // plafonds : memes regles que le compagnon bureau
+const API = 'https://api.bot-wow.com/api/config';
+const KEY_SPOTS = 'botwow_mobile_spots_v1';
+const KEY_JOURNAL = 'botwow_mobile_journal_v1';
+const KEY_TRACKER = 'botwow_mobile_tracker_v1';
+const KEY_API = 'botwow_mobile_api_v1';
+
+const $ = (id) => document.getElementById(id);
+const spots = load(KEY_SPOTS, []);
+const journal = load(KEY_JOURNAL, []);
+const tracker = load(KEY_TRACKER, []);
+
+function load(key, fallback) {
+  try { const raw = localStorage.getItem(key); const v = raw ? JSON.parse(raw) : fallback; return Array.isArray(v) ? v : fallback; }
+  catch { return fallback; }
+}
+function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* stockage refuse : la page continue, on le dit */ } }
+
+/* Route : voisin le plus proche depuis le premier spot saisi (meme regle que
+   la page bureau : distance euclidienne ordinaire, aucun repli). */
+const hypot = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function order(list) {
+  const left = list.map((s, i) => ({ ...s, i }));
+  if (!left.length) return [];
+  const route = [left.shift()];
+  while (left.length) {
+    const cur = route[route.length - 1];
+    let best = 0, bestD = Infinity;
+    left.forEach((s, i) => { const d = hypot(cur, s); if (d < bestD) { bestD = d; best = i; } });
+    route.push(left.splice(best, 1)[0]);
+  }
+  return route;
+}
+
+function renderSpots() {
+  const route = order(spots);
+  $('route').innerHTML = route.map((s, n) => {
+    const leg = n === 0 ? null : hypot(route[n - 1], s);
+    return `<li><span class="nm">${esc(s.name)} <span class="ds mono">(${fmt(s.x)}, ${fmt(s.y)})</span></span>` +
+      `<span class="ds mono">${leg === null ? 'départ' : leg.toFixed(2)}</span>` +
+      `<button class="x" type="button" data-drop="${s.i}" aria-label="Remove ${esc(s.name)}">×</button></li>`;
+  }).join('');
+  const dist = route.reduce((sum, s, i) => i === 0 ? 0 : sum + hypot(route[i - 1], s), 0);
+  $('distance').textContent = route.length > 1
+    ? `Total Euclidean distance: ${dist.toFixed(2)} in your coordinates.`
+    : '';
+  $('route-empty').hidden = route.length > 0;
+  $('copy').disabled = route.length === 0;
+  $('clear').disabled = spots.length === 0;
+  $('spot-msg').textContent = spots.length >= FREE
+    ? `Free companion stops at ${FREE} spots. Planner (${PLANNER}) and Studio (${STUDIO}) need an access key, and the key service does not answer on mobile — nothing is unlocked here.`
+    : '';
+}
+
+function renderJournal() {
+  $('journal').innerHTML = journal.map((r, i) =>
+    `<li><span class="nm">${esc(r.date || '—')} · ${esc(r.what || '—')} × ${esc(String(r.count ?? ''))}</span>` +
+    `<button class="x" type="button" data-unlog="${i}" aria-label="Delete note ${i + 1}">×</button></li>`).join('');
+  $('journal-empty').hidden = journal.length > 0;
+  $('journal-clear').disabled = journal.length === 0;
+}
+
+function renderTracker() {
+  $('tracker').innerHTML = tracker.map((t) =>
+    `<li><span class="nm">${esc(t.at)} · ${esc(t.subject)}</span><span class="ds mono">draft</span></li>`).join('');
+  $('tracker-empty').hidden = tracker.length > 0;
+}
+
+const ENTITY = { 38: 'amp', 60: 'lt', 62: 'gt', 34: 'quot', 39: '#39' };
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => '&' + ENTITY[c.charCodeAt(0)] + ';');
+}
+function fmt(n) { return Number.isFinite(n) ? String(n) : '—'; }
+function stamp() { return new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
+
+/* ── Spots ─────────────────────────────────────────────────────────────────── */
+$('spot-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const name = $('spot-name').value.trim();
+  const x = Number($('spot-x').value), y = Number($('spot-y').value);
+  if (!name || !Number.isFinite(x) || !Number.isFinite(y)) { $('spot-msg').textContent = 'A name and two numbers are needed.'; return; }
+  if (spots.length >= FREE) { renderSpots(); return; }
+  spots.push({ name, x, y, i: spots.length });
+  save(KEY_SPOTS, spots);
+  $('spot-name').value = ''; $('spot-x').value = ''; $('spot-y').value = '';
+  $('spot-name').focus();
+  renderSpots();
+});
+
+$('route').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('[data-drop]');
+  if (!btn) return;
+  const i = Number(btn.dataset.drop);
+  spots.splice(spots.findIndex((s) => s.i === i), 1);
+  spots.forEach((s, n) => { s.i = n; });
+  save(KEY_SPOTS, spots);
+  renderSpots();
+});
+
+$('clear').addEventListener('click', () => { spots.length = 0; save(KEY_SPOTS, spots); renderSpots(); });
+
+$('copy').addEventListener('click', async () => {
+  const route = order(spots);
+  const lines = route.map((s, n) => `${n + 1}\t${s.name}\t${s.x}\t${s.y}`).join('\n');
+  try { await navigator.clipboard.writeText(lines); $('spot-msg').textContent = 'Route copied to the clipboard.'; }
+  catch { $('spot-msg').textContent = 'The clipboard was refused. The route is on screen.'; }
+});
+
+/* ── Marge ─────────────────────────────────────────────────────────────────── */
+$('margin-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const buy = Number($('m-buy').value), sell = Number($('m-sell').value), count = Number($('m-count').value);
+  if (!Number.isFinite(buy) || !Number.isFinite(sell) || !Number.isFinite(count)) { $('margin-out').textContent = 'Enter buy, sell and count.'; return; }
+  const margin = (sell - buy) * count;
+  $('margin-out').textContent = `${$('m-label').value.trim() || 'Item'}: (${sell} − ${buy}) × ${count} = ${margin}`;
+});
+
+/* ── Journal ───────────────────────────────────────────────────────────────── */
+$('journal-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const what = $('j-what').value.trim();
+  if (!what) { $('journal-empty').textContent = 'Type what you caught.'; return; }
+  journal.unshift({ date: $('j-date').value, what, count: $('j-count').value });
+  save(KEY_JOURNAL, journal);
+  $('j-what').value = ''; $('j-count').value = '';
+  renderJournal();
+});
+
+$('journal').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('[data-unlog]');
+  if (!btn) return;
+  journal.splice(Number(btn.dataset.unlog), 1);
+  save(KEY_JOURNAL, journal);
+  renderJournal();
+});
+
+$('journal-clear').addEventListener('click', () => { journal.length = 0; save(KEY_JOURNAL, journal); renderJournal(); });
+
+/* ── Support : preparation d'un e-mail, suivi LOCAL ─────────────────────────── */
+$('support-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const subject = $('s-subject').value.trim() || 'BOT-WOW mobile companion';
+  const body = $('s-body').value.trim();
+  if (!body) { $('support-msg').textContent = 'Write what you need first — nothing is prepared empty.'; return; }
+  const href = `mailto:support@bot-wow.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $('mail-link').setAttribute('href', href);
+  $('support-msg').textContent = 'Draft prepared. Your mail app opens it — this page sends nothing.';
+  tracker.unshift({ at: stamp(), subject });
+  save(KEY_TRACKER, tracker);
+  window.location.href = href;
+  renderTracker();
+});
+
+/* ── Statut du service : lu, jamais suppose ────────────────────────────────── */
+function showApi(state) {
+  const box = $('k-api');
+  if (state.kind === 'live') {
+    box.textContent = 'Answered ' + state.at;
+    box.className = 'ok';
+    $('k-api-detail').textContent = state.detail;
+  } else if (state.kind === 'cached') {
+    box.textContent = 'Cached ' + state.at;
+    box.className = 'away';
+    $('k-api-detail').textContent = state.detail + ' Not refreshed: the last answer is shown.';
+  } else {
+    box.textContent = 'No answer';
+    box.className = 'away';
+    $('k-api-detail').textContent = state.detail;
+  }
+  save(KEY_API, state);
+}
+
+async function probe() {
+  const previous = load(KEY_API, [])[0] || null;
+  const detail = (c) => `Status API read: Planner 9,00 EUR, Studio 29,00 EUR, contact ${c}.`;
+  try {
+    const res = await fetch(API, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const cfg = await res.json();
+    showApi({ kind: 'live', at: stamp(), detail: detail(cfg.contactEmail || 'support@bot-wow.com') });
+  } catch (err) {
+    const reason = err && err.name === 'TypeError' ? 'network' : String(err && err.message || err);
+    showApi(previous
+      ? { kind: 'cached', at: previous.at || stamp(), detail: 'The status API did not answer (' + reason + ').' }
+      : { kind: 'away', at: stamp(), detail: 'The status API did not answer (' + reason + '). No offer state is shown.' });
+  }
+  updateOffline();
+}
+
+/* ── Hors ligne : annonce reelle, pas decorative ────────────────────────────── */
+function updateOffline() {
+  $('offline').hidden = navigator.onLine;
+}
+window.addEventListener('online', () => { updateOffline(); probe(); });
+window.addEventListener('offline', updateOffline);
+
+/* ── Installation : seulement si le navigateur le propose ──────────────────── */
+let prompt = null;
+window.addEventListener('beforeinstallprompt', (ev) => {
+  ev.preventDefault();
+  prompt = ev;
+  $('install').hidden = false;
+});
+$('install').addEventListener('click', async () => {
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) { $('scrim').hidden = false; $('ios').hidden = false; return; }
+  if (!prompt) { $('install').hidden = true; return; }
+  prompt.prompt();
+  const choice = await prompt.userChoice;
+  if (choice && choice.outcome) $('install').textContent = choice.outcome === 'accepted' ? 'Installed' : 'Install';
+  prompt = null;
+});
+$('ios-close').addEventListener('click', () => { $('ios').hidden = true; $('scrim').hidden = true; });
+$('scrim').addEventListener('click', () => { $('ios').hidden = true; $('scrim').hidden = true; });
+
+/* ── Service worker : coquille hors ligne honnete ───────────────────────────── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* pas de SW : la page reste utilisable en ligne */ });
+  });
+}
+
+renderSpots(); renderJournal(); renderTracker(); updateOffline(); probe();
+</script>
+</body>
+</html>
