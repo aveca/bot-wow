@@ -303,10 +303,12 @@ Tests locaux reels (exit 0): npm test (dont live-offers sur les nouvelles pages 
 
 NON VERIFIE: chemin de succes /api/subscribe (ecriture D1) non teste en production (declare non verifie). Deploiement Pages non demande (pas d'autorisation fondateur).
 
-**Ajout 2026-11-27 — mission #38 en cours (lanceur fenetres auxiliaires + test d'acceptation 9 etapes).** Branche `agent/commercial/botwow-commercial-launcher-20261127`, verrou `20261127-commercial-launcher` actif (expire 2026-12-04). Livrables prevus (fichiers neufs uniquement, aucun fichier existant touche):
+**Ajout 2026-11-27 — mission #38 TERMINEE (lanceur fenetres auxiliaires + test d'acceptation 9 etapes).** Branche `agent/commercial/botwow-commercial-launcher-20261127`, verrou `20261127-commercial-launcher` passé en `done` (expire 2026-12-04). Livrables (fichiers neufs uniquement, aucun fichier existant touche) :
 - docs/commercial-reset-launcher/index.html : lanceur 4 fenetres auxiliaires (help, demo, qualification, FAQ), pas d'input email, pas de lien Stripe, pas de waitlist / no paid offer, pas de prix/paiement/checkout.
 - tests/e2e/commercial-reset-launcher.spec.mjs : test d'acceptation 9 etapes via test.step().
-- agents/locks.md : verrou 20261127-commercial-launcher en active.
+- agents/locks.md : verrou 20261127-commercial-launcher en done.
 - PROJECT_STATE.md : cette entree.
 
-Prochaine action: valider #38 (npm test, npm run validate, npm run audit:css, e2e), commit, push, PR, attendre CI verte sur SHA exact, puis previsualisations Cloudflare.
+Previsualisations Cloudflare : PR #229 ouverte, CI verte sur SHA exact `9d54500` (validate, ui-quality, GitGuardian, package-candidate). Preuves : https://github.com/aveca/bot-wow/pull/229.
+
+Prochaine action : aucune — mission #38 closee. Prochaine mission #39.
