@@ -289,3 +289,35 @@ BLOCAGE : non — aucun verrou actif non expiré ne couvre ce scope ; travail te
 **Ajout 2026-11-19 — PR #209 (commercial conversion) : régressions corrigées, CI verte, non mergé, non déployé.** Branche `feat/commercial-conversion-20261119` à `31d5dd1`, poussée sur origin, PR https://github.com/aveca/bot-wow/pull/209 (OPEN, non draft, headRefOid `31d5dd1`). Cause racine prouvée : les 10 échecs de `tests/release-availability.test.mjs` (0 sur main, 10 sur branche PR) provenaient de `<input type="email" id="signup-email">` ajouté par PR #209 en violation du garde-fou `!/id="buyForm"|id="buyBtn"|type="email"/i`. Correction : retrait de la section formulaire email signup + son `<script>` inline des 8 fichiers `buy.html` (EN, FR, DE, ES, IT, PL, PT-BR, RU). Prix et liens Stripe intacts. `buy.html` et `fr/buy.html` déjà corrigés sur la branche ; les 6 locales restantes corrigées pour cohérence. Aucun `type="email"` ni `id="signup"` ne reste dans aucun buy.html.
 
 Tests réels (exit 0 chacun) sur `31d5dd1` : `release-availability.test.mjs` OK, `live-offers.test.mjs` OK, `conversion-path.test.mjs` OK (incl. 7 assertions de régression). `npm run validate` PASS, `git diff --check` exit 0. GitHub Actions sur le SHA `31d5dd1` : `validate` SUCCESS, `package-candidate` SUCCESS, `GitGuardian Security Checks` SUCCESS, `ui-quality` SUCCESS (confirmé après polls successifs). Fichiers modifiés : 8 (+8/−286). Aucun merge, aucun déploiement production. État fichiers état : PROJECT_STATE.md, agents/locks.md et BOT-WOW-CURRENT-STATE.md à mettre à jour dans le même commit (ci-après).
+**Ajout 2026-11-27 - compagnon mobile PWA installable (mission #225).** Branche gent/mobile/botwow-mobile-pwa-20261127 creee depuis origin/main (55ca9dd7), commit 4c7ac25173ca62b0156e98f28e967cf088ee7c4c, poussee sur origin, PR https://github.com/aveca/bot-wow/pull/227 (OPEN, MERGEABLE, NON DEPLOYEE). 15 fichiers NEUFS, aucun fichier existant modifie, aucun prix, aucun checkout, aucun secret, aucun asset re-estampille (le stamp reste 885b2494).
+
+Livrables (tous neufs) :
+- docs/mobile/index.html : compagnon mobile-first (spots personnels, ordre de marche, marge sur des nombres saisis par le visiteur, notes locales). CSS en <style> inline car scripts/audit-classes.mjs et udit-tokens.mjs ne lisent que ssets/*.css + les blocs inline. Jetons charges depuis ssets/theme.css (5,1 Ko) et NON ssets/style.css (130 Ko : hero, premium, pixel-skin...) : une page mobile n'a pas besoin de la vitrine et chaque octet compte. Aucune police Google (une requete externe casserait le hors ligne).
+- docs/mobile/manifest.webmanifest : start_url/scope ./, display: standalone, lang: en, theme #06070a, 4 icones.
+- docs/mobile/sw.js : reseau d'abord pour les navigations, cache d'abord pour les icones, aucune reponse d'API jamais mise en cache ; la page affiche un badge horodate quand elle est servie depuis le cache.
+- docs/mobile/icons/*.png : 192, 512, maskable 512, apple-touch 180, rendues depuis icons/icon.svg (source vectorielle versionnee) par scripts/render-icons.mjs (nouveau, Playwright).
+- 	ests/e2e/mobile-companion.spec.mjs : 24 controles (2 projets Playwright x 12). 
+pm test n'a PAS ete modifie (chaine explicite contestee par 6 PR) ; le spec tourne en CI via 
+pm run test:e2e que .github/workflows/ui-quality.yml execute deja.
+
+Preuves dures :
+- Installabilite reelle : CDP Chromium Page.getInstallabilityErrors -> installabilityErrors: [], Page.getAppManifest -> errors: []. Le headless ne declenche pas eforeinstallprompt (comportement connu, pas un defaut de la page).
+- CI verte sur le SHA exact 4c7ac25 : alidate 28 s, ui-quality 2 min 38 s (520 tests, dont les 24 nouveaux), package-candidate 9 s, GitGuardian pass.
+- Locaux : 
+pm run validate exit 0 ; 
+pm run audit:css exit 0 (0 jeton utilise non defini) ; 
+pm test exit 0 ; 
+ode scripts/build-site.mjs _site exit 0 (docs/mobile/ publie, 7 fichiers) ; 
+pm run test:e2e 520 passed exit 0.
+- Couverture navigateur reelle : largeurs 320/375/390/430 sans debordement horizontal, zones sures declarees ET resolues, manifeste + chaque icone en HTTP 200, service worker enregistre puis rechargement hors ligne qui rend la vraie coquille, statut honnete quand /api/config ne repond pas, aucun compte/licence/automatisation du jeu, bases d'accessibilite (lien d'evitement focalisable, champs libelles, ria-live, cibles tactiles >= 44 px), arithmetique locale spots/marge/journal.
+
+Choix assumes et limites :
+- **Aucune fonctionnalite compte ou licence.** POST /api/access repond 404 en production (verifie le 2026-11-27) : rien n'est simule, aucun champ de cle n'existe. Le support est un mailto:support@bot-wow.com et le suivi des demandes est un journal local (localStorage) sans serveur.
+- **Aucune automatisation du jeu.** La page ne lit pas le jeu, ne clique pas, n'injecte rien, et l'ecrit a l'ecran.
+- La page ne statue PAS sur le checkout public (contradiction interne connue du depot entre docs/license.html - activation sous verification, checkout public ferme - et uy.html qui porte des liens Stripe LIVE imposes par les tests) : elle renvoie vers les pages existantes.
+- docs/ etant publie recursivement via DIRS de scripts/build-site.mjs, aucun ajout au script de build, aucun conflit avec les PR ouvertes.
+
+NON VERIFIE : deploiement Cloudflare Pages (aucun demande) ; installabilite sur un vrai iOS Safari et un vrai Android Chrome (seul Chromium desktop est disponible ici) ; aucun binaire natif publie. Recommandation d'empaquetage native livree sur la PR (politique store, confidentialite, maintenance, distribution) SANS publication de binaire.
+
+BLOCAGE : aucun. Verrou 20261127-mobile-pwa-companion (scope docs-mobile-pwa) ajoute dans gents/locks.md et gents/tasks.md avec ce commit. 
+ode scripts/check-agent-state.mjs -> AGENT STATE : OK.
