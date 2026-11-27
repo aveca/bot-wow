@@ -289,3 +289,18 @@ BLOCAGE : non — aucun verrou actif non expiré ne couvre ce scope ; travail te
 **Ajout 2026-11-19 — PR #209 (commercial conversion) : régressions corrigées, CI verte, non mergé, non déployé.** Branche `feat/commercial-conversion-20261119` à `31d5dd1`, poussée sur origin, PR https://github.com/aveca/bot-wow/pull/209 (OPEN, non draft, headRefOid `31d5dd1`). Cause racine prouvée : les 10 échecs de `tests/release-availability.test.mjs` (0 sur main, 10 sur branche PR) provenaient de `<input type="email" id="signup-email">` ajouté par PR #209 en violation du garde-fou `!/id="buyForm"|id="buyBtn"|type="email"/i`. Correction : retrait de la section formulaire email signup + son `<script>` inline des 8 fichiers `buy.html` (EN, FR, DE, ES, IT, PL, PT-BR, RU). Prix et liens Stripe intacts. `buy.html` et `fr/buy.html` déjà corrigés sur la branche ; les 6 locales restantes corrigées pour cohérence. Aucun `type="email"` ni `id="signup"` ne reste dans aucun buy.html.
 
 Tests réels (exit 0 chacun) sur `31d5dd1` : `release-availability.test.mjs` OK, `live-offers.test.mjs` OK, `conversion-path.test.mjs` OK (incl. 7 assertions de régression). `npm run validate` PASS, `git diff --check` exit 0. GitHub Actions sur le SHA `31d5dd1` : `validate` SUCCESS, `package-candidate` SUCCESS, `GitGuardian Security Checks` SUCCESS, `ui-quality` SUCCESS (confirmé après polls successifs). Fichiers modifiés : 8 (+8/−286). Aucun merge, aucun déploiement production. État fichiers état : PROJECT_STATE.md, agents/locks.md et BOT-WOW-CURRENT-STATE.md à mettre à jour dans le même commit (ci-après).
+
+**Ajout 2026-11-27 — mission #224 commercial reset livree (fichiers neufs uniquement).** Branche `agent/commercial/botwow-commercial-reset-20261127`, commit `4202feab1150d8370fb5a68e5df8a1a5dea899d4`, poussee sur origin, PR #228 ouverte (`agent/commercial/botwow-commercial-reset-20261127` -> `main`), CI verte sur le SHA exact : validate pass, ui-quality pass, GitGuardian pass, package-candidate pass.
+
+Livrables (aucun fichier existant touche, aucun fichier conteste par PR #211/#67/#226 touche):
+- docs/commercial-reset/index.html : vitrine mobile-first, enonce produit unique (planner de route + marge), liens fiche produit/demo/offres/FAQ. Pas d'input email, pas de lien Stripe, pas de waitlist / no paid offer.
+- docs/commercial-reset/qualification.html : parcours demo -> support, formulaire POST /api/subscribe avec accuse honnete + fallback mailto. Aucun paiement, pas d'achat, pas de webhook.
+- tests/e2e/commercial-reset.spec.mjs : mobile + desktop, a11y skip link, resolution des liens, echec de soumission, funnel page_view dedup + test flag/ref, support_lead sur tentative.
+
+Verrou 20261127-commercial-reset (agents/locks.md ligne 29) passe en done. Resultat : PR #228, CI verte, preuves publiees sur issue #224.
+
+Tests locaux reels (exit 0): npm test (dont live-offers sur les nouvelles pages : 0 waitlist / no paid offer), npm run validate PASS, npm run audit:css exit 0, playwright 10/10 (desktop + mobile).
+
+NON VERIFIE: chemin de succes /api/subscribe (ecriture D1) non teste en production (declare non verifie). Deploiement Pages non demande (pas d'autorisation fondateur).
+
+Prochaine action: #38 (lanceur fenetres auxiliaires + test d'acceptation 9 etapes), puis previsualisations Cloudflare.
