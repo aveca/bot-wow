@@ -112,6 +112,25 @@
   }
 
   window.__botwowSignup = { validateSignup: validateSignup, wireSignup: wireSignup };
+
+  // Menu mobile toggle
+  (function wireMobileMenu() {
+    var btn = document.querySelector(".menu-toggle");
+    var nav = document.querySelector("header .nav nav");
+    if (!btn || !nav) return;
+    btn.addEventListener("click", function () {
+      var open = nav.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    // Fermer le menu au clic sur un lien
+    nav.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () {
+        nav.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+      });
+    });
+  })();
+
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", function () {
