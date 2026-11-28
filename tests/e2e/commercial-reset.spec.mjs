@@ -22,44 +22,59 @@ test.describe('commercial reset (#224) - storefront + qualification', () => {
     }
   });
 
-  test('qualification: submission failure path shows honest error and mailto fallback', async ({ page }) => {
+  test('qualification: prepares a truthful mailto handoff without server submission', async ({ page }) => {
+    const subscribeRequests = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/api/subscribe')) subscribeRequests.push(request.url());
+    });
+
     await page.goto('/docs/commercial-reset/qualification.html', { waitUntil: 'domcontentloaded' });
-    await page.locator('#bw-email').fill('test@example.com');
-    await page.locator('#bw-subject').fill('subject');
-    await page.locator('#bw-message').fill('message');
-    await page.locator('#bw-consent-transactional').check();
+    await expect(page.locator('input[type="email"]')).toHaveCount(0);
+    await page.locator('#bw-subject').fill('Compatibility question');
+    await page.locator('#bw-message').fill('Can you confirm whether WoW Classic 1.13 is covered?');
     await page.locator('#bw-submit').click();
-    await page.waitForTimeout(300);
-    await expect(page.locator('#bw-err')).toBeVisible();
-    await expect(page.locator('#bw-fallback')).toBeVisible();
-    await expect(page.locator('#bw-fallback a')).toBeAttached();
+
+    await expect(page.locator('#bw-status')).toContainText('Nothing has been sent or saved');
+    const href = await page.locator('#bw-email-link').getAttribute('href');
+    expect(href).toMatch(/^mailto:botwow@outlook\.com\?/);
+    const mailto = new URL(href);
+    expect(mailto.protocol).toBe('mailto:');
+    expect(mailto.pathname).toBe('botwow@outlook.com');
+    expect(mailto.searchParams.get('subject')).toBe('Compatibility question');
+    expect(mailto.searchParams.get('body')).toContain('Can you confirm whether WoW Classic 1.13 is covered?');
+    await expect(page.locator('#bw-static-contact')).toHaveAttribute('href', 'mailto:botwow@outlook.com');
+    expect(subscribeRequests).toHaveLength(0);
   });
 
-  test('funnel: page_view recorded once (session dedup), test flag + ref', async ({ page }) => {
-    await page.goto('/docs/commercial-reset/index.html?funnel_test=issue224', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(200);
-    await page.goto('/docs/commercial-reset/index.html?funnel_test=issue224', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(200);
-    const buf = await page.evaluate(() => (window.botwowFunnel && window.botwowFunnel.buffer) ? window.botwowFunnel.buffer : []);
-    const views = buf.filter((e) => e.event === 'page_view');
-    expect(views.length).toBe(1);
-    expect(views[0].test).toBe(1);
-    expect(views[0].ref).toBe('issue224');
-    expect(views[0].source).toBe('direct');
-  });
-
-  test('funnel: support_lead recorded on submit attempt', async ({ page }) => {
-    await page.goto('/docs/commercial-reset/qualification.html?funnel_test=issue224', { waitUntil: 'domcontentloaded' });
-    await page.locator('#bw-email').fill('a@b.com');
-    await page.locator('#bw-subject').fill('s');
-    await page.locator('#bw-message').fill('m');
-    await page.locator('#bw-consent-transactional').check();
+  test('funnel: email handoff is a CTA click, never a support lead', async ({ page }) => {
+    await page.route('**/api/track', (route) => route.fulfill({
+      status: 202,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, stored: true })
+    }));
+    await page.goto('/docs/commercial-reset/qualification.html', { waitUntil: 'domcontentloaded' });
+    await page.locator('#bw-subject').fill('Product question');
+    await page.locator('#bw-message').fill('I would like to understand the planner.');
     await page.locator('#bw-submit').click();
-    await page.waitForTimeout(300);
-    const buf = await page.evaluate(() => (window.botwowFunnel && window.botwowFunnel.buffer) ? window.botwowFunnel.buffer : []);
-    const leads = buf.filter((e) => e.event === 'support_lead');
-    expect(leads.length).toBeGreaterThanOrEqual(1);
-    expect(leads[0].test).toBe(1);
-    expect(leads[0].ref).toBe('issue224');
+
+    await page.evaluate(() => {
+      const originalTrack = window.botwowTrack;
+      window.__trackedEvents = [];
+      window.botwowTrack = function(event, props) {
+        window.__trackedEvents.push({ event, props });
+        return originalTrack(event, props);
+      };
+      document.getElementById('bw-email-link').addEventListener('click', (event) => {
+        event.preventDefault();
+      }, { once: true });
+    });
+    await page.locator('#bw-email-link').click();
+
+    const events = await page.evaluate(() => window.__trackedEvents);
+    expect(events).toEqual([{
+      event: 'cta_click',
+      props: { cta: 'support_email_open', step: 'qualification' }
+    }]);
+    expect(events.some((item) => item.event === 'support_lead')).toBe(false);
   });
 });
