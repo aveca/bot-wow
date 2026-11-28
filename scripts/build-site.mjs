@@ -25,11 +25,11 @@ const FILES = [
   'index.html', 'demo.html', 'compare.html', 'modules.html', 'features.html',
   'product.html', 'fishing.html', 'getting-started.html', 'compatibility.html', 'roadmap.html',
   'faq.html', 'success.html', 'thanks.html', 'cancel.html', '404.html', 'buy.html', 'companion.html', 'positionnement.html',
-  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'version.txt', '.nojekyll', '_headers', '_redirects',
+  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'sitemap-guides.xml', 'version.txt', '.nojekyll', '_headers', '_redirects',
 ];
 
 /* Repertoires publies recursivement. */
-const DIRS = ['assets', 'docs', 'legal', 'fr', 'de', 'es', 'pt-br', 'ru', 'it', 'pl'];
+const DIRS = ['assets', 'docs', 'legal', 'fr', 'de', 'es', 'pt-br', 'ru', 'it', 'pl', 'guides'];
 
 /* Motifs de fichiers JAMAIS publies (meme s'ils se trouvaient dans un
    repertoire publie) : secrets, sources, migrations, sauvegardes. */
