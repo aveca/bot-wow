@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Contact / qualification - BOT-WOW</title>
-<meta name="description" content="Write to BOT-WOW support. You receive a real acknowledgment. No license, no key, no download, no payment on this page.">
+<title>Contact BOT-WOW</title>
+<meta name="description" content="Contact BOT-WOW by email. This page opens your email app; it does not send or store a request.">
 <link rel="canonical" href="https://bot-wow.com/docs/commercial-reset/qualification.html">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#06070a">
@@ -29,22 +29,18 @@
   label{display:block;font-size:0.9rem;margin:0 0 4px;font-weight:600}
   input,textarea{width:100%;background:#020617;border:1px solid var(--bw-border);color:var(--bw-txt);border-radius:8px;padding:10px 12px;font-size:1rem;margin:0 0 10px}
   input:focus,textarea:focus{outline:3px solid var(--bw-gold);border-color:transparent}
-  .ok{color:#22c55e;margin:0 0 10px}
-  .err{color:#f87171;margin:0 0 10px}
-  fieldset{border:0;padding:0;margin:0}
-  .consent{display:flex;align-items:flex-start;gap:8px;margin:0 0 10px}
-  .consent input{width:auto;margin:0}
+  .status{color:#22c55e;margin:0 0 10px}
   @media (min-width:640px){.container{max-width:640px}body{font-size:17px}}
 </style>
 </head>
 <body>
 <a href="#content" class="skip-link">Skip to content</a>
 <div class="container">
-  <h1 id="content">Contact / qualification</h1>
-  <p class="muted">BOT-WOW support - real acknowledgment, no license, no key, no download.</p>
+  <h1 id="content">Contact BOT-WOW</h1>
+  <p class="muted">Product questions and support</p>
   <div class="card">
-    <h2>What happens when you write</h2>
-    <p>Your request is acknowledged locally and an acknowledgment is shown. BOT-WOW does not sell a downloadable package, does not issue license keys, and does not process payments on this page.</p>
+    <h2>How this contact works</h2>
+    <p>Prepare your message below. Your email app will open with the message addressed to BOT-WOW. You must press Send in that app. This website does not submit or store your request and cannot confirm that it was sent or received.</p>
     <h2>What you can ask</h2>
     <ul>
       <li>whether your server version is covered (WoW Classic 1.13 tested; no claim for other versions)</li>
@@ -52,92 +48,53 @@
       <li>how the margin is computed: (sell - buy) x count</li>
     </ul>
   </div>
-  <form id="bw-qualification" novalidate>
-    <label for="bw-email">Your email</label>
-    <input type="email" id="bw-email" name="email" placeholder="you@example.com" required>
+  <form id="bw-qualification">
     <label for="bw-subject">Subject</label>
-    <input type="text" id="bw-subject" name="subject" placeholder="Qualification request" required>
+    <input type="text" id="bw-subject" name="subject" maxlength="120" placeholder="Product question" required>
     <label for="bw-message">Message</label>
-    <textarea id="bw-message" name="message" rows="4" placeholder="Tell us about your setup."></textarea>
-    <fieldset class="consent">
-      <input type="checkbox" id="bw-consent-marketing" name="consent_marketing">
-      <label for="bw-consent-marketing">I agree to receive news about BOT-WOW (separate from this request).</label>
-    </fieldset>
-    <fieldset class="consent">
-      <input type="checkbox" id="bw-consent-transactional" name="consent_transactional">
-      <label for="bw-consent-transactional">I agree to receive the acknowledgment for this request.</label>
-    </fieldset>
-    <button type="submit" id="bw-submit" class="btn">Send request</button>
+    <textarea id="bw-message" name="message" rows="5" maxlength="3000" placeholder="Tell us what you need help with." required></textarea>
+    <button type="submit" id="bw-submit" class="btn">Prepare email</button>
   </form>
-  <p id="bw-ack" class="ok" style="display:none"></p>
-  <p id="bw-err" class="err" style="display:none"></p>
-  <p class="muted" id="bw-fallback" style="display:none">Or write directly: <a href="mailto:support@bot-wow.com">support@bot-wow.com</a></p>
-  <p class="muted">Questions? <a href="mailto:support@bot-wow.com">support@bot-wow.com</a></p>
-  <a href="index.html" class="btn-ghost" style="margin-top:8px">Back to storefront</a>
+  <p id="bw-status" class="status" role="status" aria-live="polite" hidden></p>
+  <a id="bw-email-link" class="btn" href="mailto:botwow@outlook.com" hidden>Open email app to send your request</a>
+  <p class="muted">Nothing is sent or saved until you send the message from your email app. If the prepared link does not open it, <a id="bw-static-contact" href="mailto:botwow@outlook.com">email botwow@outlook.com</a>.</p>
+  <a href="index.html" class="btn btn-ghost" style="margin-top:8px">Back to storefront</a>
 </div>
+<script src="../../assets/analytics.js"></script>
 <script>
   (function(){
-    var F = window.botwowFunnel = window.botwowFunnel || {};
-    var seen = F.seen = F.seen || {};
-    var sessionId = sessionStorage.getItem('bw:sid');
-    if(!sessionId){ sessionId = Math.random().toString(36).slice(2); sessionStorage.setItem('bw:sid', sessionId); }
-    function source(){
-      var r = document.referrer || '';
-      if(!r) return 'direct';
-      var h='';
-      try{ h = new URL(r).hostname; }catch(e){ return 'other'; }
-      if(h.indexOf('google') !== -1) return 'google';
-      if(h.indexOf('youtube') !== -1) return 'yt';
-      if(h.indexOf('reddit') !== -1) return 'reddit';
-      if(h.indexOf('discord') !== -1) return 'discord';
-      if(h.indexOf('forum') !== -1) return 'forum';
-      return 'other';
-    }
-    F.record = function(event, props){
-      var p = props || {};
-      var key = event + '|' + (location.pathname||'/') + '|' + (p.cta||'') + '|' + (p.step||'') + '|' + (p.mode||'') + '|' + (p.years||'');
-      if(seen[key]) return;
-      seen[key] = true;
-      var test = /[?&]funnel_test=([a-z0-9_-]{1,40})/.test(location.search);
-      var rec = { event: event, page: location.pathname||'/', source: source(), session: sessionId, test: test ? 1 : 0, ts: Date.now() };
-      try{ sessionStorage.setItem('bw:funnel:' + sessionId + ':' + key, JSON.stringify(rec)); }catch(e){}
-      if(test) rec.ref = location.search.match(/[?&]funnel_test=([a-z0-9_-]{1,40})/)[1];
-      var buf = F.buffer || (F.buffer = []);
-      buf.push(rec);
-      if(buf.length > 20) buf.shift();
-    };
-    F.record('page_view');
     var form = document.getElementById('bw-qualification');
-    var ack = document.getElementById('bw-ack');
-    var err = document.getElementById('bw-err');
-    var fb = document.getElementById('bw-fallback');
-    var submit = document.getElementById('bw-submit');
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      ack.style.display='none'; err.style.display='none'; fb.style.display='none';
-      submit.disabled = true;
-      var email = document.getElementById('bw-email').value;
-      var subject = document.getElementById('bw-subject').value;
-      var message = document.getElementById('bw-message').value;
-      var cm = document.getElementById('bw-consent-marketing').checked;
-      var ct = document.getElementById('bw-consent-transactional').checked;
-      var payload = { email: email, source: 'qualification', consent_marketing: cm === true ? 1 : 0, consent_transactional: ct === true ? 1 : 0 };
-      fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true, credentials: 'omit' })
-        .then(function(r){ return r.text().then(function(t){ return { ok: r.ok, status: r.status, body: t }; }); })
-        .then(function(r){
-          if(r.ok){ try{ var j = JSON.parse(r.body); ack.textContent = (j && j.message) ? j.message : 'Request received. Thank you.'; }catch(e){ ack.textContent = 'Request received (status ' + r.status + ').'; } ack.style.display=''; }
-          else { err.textContent = 'Server said no (' + r.status + '). Your request was not recorded. Try again or write directly.'; err.style.display=''; fb.style.display=''; }
-          F.record('support_lead', { cta: 'qualification_send', step: email ? 'filled' : 'unknown' });
-        })
-        .catch(function(){
-          err.textContent = 'Could not reach the server. Your request was not recorded. Write directly:';
-          err.style.display=''; fb.style.display='';
-          F.record('support_lead', { cta: 'qualification_send', step: 'offline' });
-        })
-        .finally(function(){ submit.disabled = false; });
+    var status = document.getElementById('bw-status');
+    var emailLink = document.getElementById('bw-email-link');
+
+    form.addEventListener('submit', function(event){
+      event.preventDefault();
+      var subject = document.getElementById('bw-subject').value.trim();
+      var message = document.getElementById('bw-message').value.trim();
+      if (!subject || !message) {
+        form.reportValidity();
+        return;
+      }
+
+      var body = [
+        'Hello BOT-WOW,',
+        '',
+        message,
+        '',
+        'Page: ' + location.origin + location.pathname
+      ].join('\n');
+      emailLink.href = 'mailto:botwow@outlook.com?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(body);
+      emailLink.hidden = false;
+      status.textContent = 'Your email app is ready. Select “Open email app to send your request” and press Send there. Nothing has been sent or saved by this page.';
+      status.hidden = false;
     });
-    var links = document.querySelectorAll('a[href*="buy.html"], a[href*="/buy"]');
-    links.forEach(function(a){ a.addEventListener('click', function(){ F.record('checkout_intent', { cta: 'buy_link' }); }); });
+
+    emailLink.addEventListener('click', function(){
+      if (typeof window.botwowTrack === 'function') {
+        window.botwowTrack('cta_click', { cta: 'support_email_open', step: 'qualification' });
+      }
+    });
   })();
 </script>
 </body>
