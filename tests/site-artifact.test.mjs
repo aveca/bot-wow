@@ -88,9 +88,9 @@ check('guide exclut la connexion au jeu et l’automatisation',
   /does not send clicks/i.test(guidePage) &&
   /simulated data/i.test(guidePage));
 check('guide relie la démo, le compagnon et la fiche produit',
-  guidePage.includes('href="/demo"') &&
-  guidePage.includes('href="/companion"') &&
-  guidePage.includes('href="/product"'));
+  guidePage.includes('href="/demo.html"') &&
+  guidePage.includes('href="/companion.html"') &&
+  guidePage.includes('href="/product.html"'));
 
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
