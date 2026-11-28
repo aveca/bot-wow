@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WoW Fishing Route Planner | Manual Spots &amp; Routes — BOT-WOW</title>
+  <meta name="description" content="Plan a WoW fishing route from coordinates you enter yourself. Compare spot order and calculate margin from observed prices—no game connection or automation.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://bot-wow.com/guides/wow-fishing-route-planner/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BOT-WOW">
+  <meta property="og:title" content="WoW Fishing Route Planner | Manual Spots &amp; Routes — BOT-WOW">
+  <meta property="og:description" content="Plan a route from coordinates you enter yourself. Compare spot order and calculate margin from observed prices. No game connection or automation.">
+  <meta property="og:url" content="https://bot-wow.com/guides/wow-fishing-route-planner/">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "WoW Fishing Route Planner: Manual Spots and Routes",
+    "url": "https://bot-wow.com/guides/wow-fishing-route-planner/",
+    "description": "A practical guide to planning a manual fishing route from coordinates and prices entered by the user.",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "BOT-WOW",
+      "url": "https://bot-wow.com/"
+    }
+  }
+  </script>
+  <style>
+    :root { color-scheme: dark; --bg:#08111d; --panel:#101d2d; --line:#26394d; --ink:#edf5fb; --muted:#a9bacb; --accent:#55e0c7; --gold:#f2bd66; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    a { color:var(--accent); }
+    a:focus-visible, summary:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
+    .skip { position:absolute; left:-9999px; top:8px; z-index:10; padding:10px 14px; background:var(--gold); color:#17202a; border-radius:8px; }
+    .skip:focus { left:12px; }
+    header { border-bottom:1px solid var(--line); background:#0b1725; }
+    nav, main, footer { width:min(1080px,calc(100% - 40px)); margin-inline:auto; }
+    nav { min-height:68px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { color:var(--ink); text-decoration:none; font-weight:900; letter-spacing:.06em; }
+    .brand span { color:var(--accent); }
+    .navlinks { display:flex; gap:18px; flex-wrap:wrap; }
+    .navlinks a { color:var(--muted); text-decoration:none; font-size:14px; }
+    main { padding:54px 0 72px; }
+    .eyebrow { color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { max-width:850px; margin:10px 0 18px; font-size:clamp(2.2rem,6vw,4.2rem); line-height:1.04; letter-spacing:-.04em; }
+    h2 { margin:0 0 12px; font-size:clamp(1.45rem,3vw,2rem); line-height:1.2; }
+    h3 { margin:0 0 8px; font-size:1.1rem; }
+    .lead { max-width:760px; color:#d5e0eb; font-size:clamp(1.1rem,2.4vw,1.35rem); }
+    .notice { margin:28px 0 38px; padding:18px 20px; border:1px solid #3b665f; border-left:4px solid var(--accent); border-radius:12px; background:#0e2028; }
+    section { margin-top:42px; }
+    .steps { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:0; list-style:none; counter-reset:step; }
+    .steps li { counter-increment:step; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+    .steps li::before { content:counter(step,decimal-leading-zero); display:block; margin-bottom:8px; color:var(--gold); font-weight:900; letter-spacing:.08em; }
+    .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:12px; }
+    table { width:100%; border-collapse:collapse; background:var(--panel); }
+    th,td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; }
+    th { color:var(--muted); font-size:.85rem; }
+    .formula { display:inline-block; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--panel); font-weight:800; }
+    .cta { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+    .button { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 18px; border-radius:10px; border:1px solid var(--accent); background:var(--accent); color:#06201d; text-decoration:none; font-weight:800; }
+    .button.secondary { background:transparent; color:var(--accent); }
+    details { margin:10px 0; padding:14px 16px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+    summary { cursor:pointer; font-weight:750; }
+    details p { margin-bottom:0; color:var(--muted); }
+    .muted { color:var(--muted); }
+    footer { padding:24px 0 36px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+    @media (max-width:680px) { nav,main,footer { width:min(100% - 28px,1080px); } nav { align-items:flex-start; flex-direction:column; padding:14px 0; } .steps { grid-template-columns:1fr; } main { padding-top:38px; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header>
+    <nav aria-label="Main navigation">
+      <a class="brand" href="/">BOT<span>-WOW</span></a>
+      <div class="navlinks">
+        <a href="/product">Product</a>
+        <a href="/demo">Simulated demo</a>
+        <a href="/companion">Browser companion</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <article>
+      <p class="eyebrow">Fishing planning guide</p>
+      <h1>Plan a WoW fishing route from spots you choose</h1>
+      <p class="lead">A useful route starts with places you have recorded yourself. BOT-WOW helps you organise those coordinates, compare a suggested stop order and calculate a margin from prices you have actually observed.</p>
+
+      <div class="notice">
+        <strong>Important:</strong> BOT-WOW is a manual browser planner. It does not connect to World of Warcraft, discover in-game locations, read your character or move it. You enter the coordinates and prices; you follow the route yourself.
+      </div>
+
+      <section>
+        <h2>When a manual fishing route planner helps</h2>
+        <p>If you already keep notes about fishing spots, a route planner can make those notes easier to compare. Instead of deciding from memory each time, you can enter the places you want to visit, give each one a name and review a geometric order before you start.</p>
+        <p>This approach is useful when you want to organise a short list of familiar locations, compare a few possible stops or keep your own notes alongside the route. It is not a live map of Azeroth and it cannot tell you whether a spot is currently safe, reachable or productive.</p>
+      </section>
+
+      <section>
+        <h2>How to plan a route in four steps</h2>
+        <ol class="steps">
+          <li><h3>Record the spots yourself</h3><p>Write down a name and a pair of coordinates for each place. Use one consistent coordinate system for the whole list. BOT-WOW does not read the game map or collect locations for you.</p></li>
+          <li><h3>Enter your coordinates</h3><p>Add the coordinates to the browser companion. The planner compares straight-line Euclidean distances between the numbers you entered; it does not calculate an in-game path.</p></li>
+          <li><h3>Review the proposed order</h3><p>Use the suggested order as a planning aid. Terrain, water, flight paths, transport, obstacles, server rules and changing conditions are outside the geometric calculation, so use your own judgement.</p></li>
+          <li><h3>Follow the route manually</h3><p>Keep the route visible, then travel and fish yourself. The companion does not capture the game screen, send clicks or control a character.</p></li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Example: three spots entered by hand</h2>
+        <p>The coordinates below are illustrative values only. They are not real in-game locations or a recommended fishing route.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Spot name</th><th>X</th><th>Y</th><th>What you record</th></tr></thead>
+            <tbody>
+              <tr><td>North bank</td><td>0</td><td>0</td><td>Your own reference point</td></tr>
+              <tr><td>Rocky point</td><td>4</td><td>1</td><td>A second place you chose</td></tr>
+              <tr><td>South cove</td><td>2</td><td>5</td><td>A third place you chose</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">The planner can compare the straight-line distances between these entries. The result is a geometric suggestion, not a guarantee of the shortest journey through the game world.</p>
+      </section>
+
+      <section>
+        <h2>Calculate margin from prices you observed</h2>
+        <p>If you want to compare the economics of a fishing session, enter the buy price, sell price and quantity yourself. BOT-WOW uses only those inputs:</p>
+        <p class="formula">Margin = (sell price − buy price) × quantity</p>
+        <p>It does not read live Auction House prices, supply, demand, catch rates or sale history. Check the market yourself and update the numbers when they change.</p>
+      </section>
+
+      <section>
+        <h2>What BOT-WOW does not do</h2>
+        <ul>
+          <li>It does not connect to a World of Warcraft client or addon.</li>
+          <li>It does not capture the game screen or read process memory.</li>
+          <li>It does not send clicks, move a character, cast a line or automate gameplay.</li>
+          <li>It does not discover fishing spots or provide live Auction House prices.</li>
+          <li>The public demo uses simulated data, not real catches or measured in-game results.</li>
+        </ul>
+        <p>World of Warcraft is a trademark of Blizzard Entertainment. BOT-WOW is independent and is not affiliated with or endorsed by Blizzard Entertainment.</p>
+      </section>
+
+      <section>
+        <h2>Try the planner</h2>
+        <p>Inspect the simulated route first, then open the browser companion to enter your own coordinates and prices. The product page explains the current browser tools and their limits.</p>
+        <div class="cta">
+          <a class="button" href="/demo">Try the simulated demo</a>
+          <a class="button secondary" href="/companion">Open the browser companion</a>
+          <a class="button secondary" href="/product">Read the product page</a>
+        </div>
+      </section>
+
+      <section>
+        <h2>Common questions</h2>
+        <details><summary>Does BOT-WOW connect to World of Warcraft?</summary><p>No. It is a browser information tool and uses coordinates that you enter yourself.</p></details>
+        <details><summary>Does it find fishing spots automatically?</summary><p>No. You choose the places and enter their coordinates manually.</p></details>
+        <details><summary>Does it use live Auction House prices?</summary><p>No. The margin calculation uses the buy and sell prices you type in.</p></details>
+        <details><summary>Does it move or click for my character?</summary><p>No. You follow the proposed route and play manually.</p></details>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>BOT-WOW · Manual route planning from user-entered coordinates. <a href="/">Home</a> · <a href="/product">Product</a> · <a href="/demo">Demo</a></p>
+  </footer>
+</body>
+</html>

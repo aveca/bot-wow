@@ -50,7 +50,7 @@ for (const f of ['worker/index.js', 'package.json', 'package-lock.json', 'wrangl
 // 3. Les pages publiques sont bien presentes
 for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'features.html',
   'fishing.html', 'faq.html', 'success.html', 'cancel.html', '404.html',
-  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'version.txt',
+  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'sitemap-guides.xml', 'version.txt',
   'fr/index.html', 'fr/compare.html', 'fr/modules.html']) {
   check(`present dans l'artefact : ${f}`, fs.existsSync(path.join(out, f)));
 }
@@ -67,6 +67,30 @@ check('sitemap commercial contient uniquement le canonical de la page commercial
 check('page commercial-reset indexable et canonical',
   commercialPage.includes('<meta name="robots" content="index,follow">') &&
   commercialPage.includes('<link rel="canonical" href="https://bot-wow.com/docs/commercial-reset/">'));
+
+// 3a-2. Le guide de planification est indexable et découvert via son sitemap dédié.
+const guideSitemap = fs.readFileSync(path.join(out, 'sitemap-guides.xml'), 'utf8');
+const guideRobots = fs.readFileSync(path.join(out, 'robots.txt'), 'utf8');
+const guidePage = fs.readFileSync(path.join(out, 'guides/wow-fishing-route-planner/index.html'), 'utf8');
+const guideLocs = guideSitemap.split('<loc>').slice(1).map((part) => part.split('</loc>')[0]);
+const guideCanonical = 'https://bot-wow.com/guides/wow-fishing-route-planner/';
+check('robots référence le sitemap guides',
+  guideRobots.includes('Sitemap: https://bot-wow.com/sitemap-guides.xml'));
+check('sitemap guides contient uniquement le canonical du guide',
+  guideLocs.length === 1 && guideLocs[0] === guideCanonical);
+check('guide indexable et canonical',
+  guidePage.includes('<meta name="robots" content="index,follow">') &&
+  guidePage.includes('<link rel="canonical" href="' + guideCanonical + '">'));
+check('guide cible la requête et décrit un planificateur manuel',
+  /WoW Fishing Route Planner/.test(guidePage) && /coordinates you enter yourself/i.test(guidePage));
+check('guide exclut la connexion au jeu et l’automatisation',
+  /does not connect to World of Warcraft/i.test(guidePage) &&
+  /does not send clicks/i.test(guidePage) &&
+  /simulated data/i.test(guidePage));
+check('guide relie la démo, le compagnon et la fiche produit',
+  guidePage.includes('href="/demo"') &&
+  guidePage.includes('href="/companion"') &&
+  guidePage.includes('href="/product"'));
 
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');

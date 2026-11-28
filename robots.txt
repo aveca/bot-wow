@@ -8,3 +8,4 @@ Disallow: /tests/
 
 Sitemap: https://bot-wow.com/sitemap.xml
 Sitemap: https://bot-wow.com/sitemap-commercial.xml
+Sitemap: https://bot-wow.com/sitemap-guides.xml
