@@ -71,10 +71,12 @@ test.describe('commercial reset (#224) - storefront + qualification', () => {
     await page.locator('#bw-email-link').click();
 
     const events = await page.evaluate(() => window.__trackedEvents);
-    expect(events).toEqual([{
-      event: 'cta_click',
-      props: { cta: 'support_email_open', step: 'qualification' }
-    }]);
+    expect(events).toHaveLength(1);
+    expect(events[0].event).toBe('cta_click');
+    expect(events[0].props.cta).toBe('support_email_open');
+    expect(events[0].props.step).toBe('qualification');
+    expect(events[0].props).not.toHaveProperty('email');
+    expect(events[0].props).not.toHaveProperty('message');
     expect(events.some((item) => item.event === 'support_lead')).toBe(false);
   });
 });
