@@ -11,6 +11,10 @@ test.describe('commercial reset (#224) - storefront + qualification', () => {
     expect(html).not.toContain('waitlist');
     expect(html).not.toContain('no paid offer');
     await expect(page.locator('[data-cta-id="qualification-contact"]')).toBeVisible();
+    const html = await page.content();
+    expect(html).not.toContain('real acknowledgment');
+    expect(html).toContain('you must send it yourself');
+    expect(html).toContain('does not send or store the request');
   });
 
 
