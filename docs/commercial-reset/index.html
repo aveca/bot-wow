@@ -42,61 +42,26 @@
     <h2>What it is not</h2>
     <p>It does not read World of Warcraft, it does not capture the game window, it does not click or inject anything, and it does not automate gameplay. No downloadable package is offered.</p>
   </div>
-  <div class="card">
+  <div class="card" id="pricing">
     <h2>Offers (reference)</h2>
     <p>Free plan: 4 spots. Planner: 12 spots - 9,00 &euro;. Studio: 40 spots - 29,00 &euro;. One-time payment, no subscription.</p>
     <p class="muted">Prices and purchase links are on the official pages linked below. No payment is taken on this page.</p>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a href="../../product.html" class="btn btn-ghost">Product sheet</a>
-    <a href="../../demo.html" class="btn btn-ghost">Try the demo</a>
+    <a href="../../product.html" class="btn btn-ghost" data-track="cta_click" data-cta-id="commercial-product-sheet">Product sheet</a>
+    <a href="../../demo.html" class="btn btn-ghost" data-track="cta_click" data-cta-id="commercial-demo">Try the demo</a>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-    <a href="../../buy.html" class="btn btn-ghost">See offers</a>
-    <a href="../../faq.html" class="btn btn-ghost">FAQ</a>
+    <a href="../../buy.html" class="btn btn-ghost" data-track="cta_click" data-cta-id="commercial-offers">See offers</a>
+    <a href="../../faq.html" class="btn btn-ghost" data-track="cta_click" data-cta-id="commercial-faq">FAQ</a>
   </div>
   <div class="card" style="margin-top:12px">
     <h2>Contact / qualification</h2>
-    <p class="muted">One action: write to support. You receive a real acknowledgment. No license, no key, no download.</p>
-    <a href="qualification.html" data-cta-id="qualification-contact" class="btn">Contact / qualification</a>
+    <p class="muted">One action: prepare an email to support. Your email app opens and you must send it yourself; this page does not send or store the request. No license, no key, no download.</p>
+    <a href="qualification.html" data-track="cta_click" data-cta-id="qualification-contact" class="btn">Contact / qualification</a>
   </div>
-  <p class="muted">Questions? <a href="mailto:support@bot-wow.com">support@bot-wow.com</a></p>
+  <p class="muted">Questions? <a href="mailto:support@bot-wow.com" data-track="cta_click" data-cta-id="support-email">support@bot-wow.com</a></p>
 </div>
-<script>
-  (function(){
-    var F = window.botwowFunnel = window.botwowFunnel || {};
-    var seen = F.seen = F.seen || {};
-    var sessionId = sessionStorage.getItem('bw:sid');
-    if(!sessionId){ sessionId = Math.random().toString(36).slice(2); sessionStorage.setItem('bw:sid', sessionId); }
-    function source(){
-      var r = document.referrer || '';
-      if(!r) return 'direct';
-      var h='';
-      try{ h = new URL(r).hostname; }catch(e){ return 'other'; }
-      if(h.indexOf('google') !== -1) return 'google';
-      if(h.indexOf('youtube') !== -1) return 'yt';
-      if(h.indexOf('reddit') !== -1) return 'reddit';
-      if(h.indexOf('discord') !== -1) return 'discord';
-      if(h.indexOf('forum') !== -1) return 'forum';
-      return 'other';
-    }
-    F.record = function(event, props){
-      var p = props || {};
-      var key = event + '|' + (location.pathname||'/') + '|' + (p.cta||'') + '|' + (p.step||'') + '|' + (p.mode||'') + '|' + (p.years||'');
-      if(seen[key]) return;
-      seen[key] = true;
-      var test = /[?&]funnel_test=([a-z0-9_-]{1,40})/.test(location.search);
-      var rec = { event: event, page: location.pathname||'/', source: source(), session: sessionId, test: test ? 1 : 0, ts: Date.now() };
-      try{ sessionStorage.setItem('bw:funnel:' + sessionId + ':' + key, JSON.stringify(rec)); }catch(e){}
-      if(test) rec.ref = location.search.match(/[?&]funnel_test=([a-z0-9_-]{1,40})/)[1];
-      var buf = F.buffer || (F.buffer = []);
-      buf.push(rec);
-      if(buf.length > 20) buf.shift();
-    };
-    F.record('page_view');
-    var btn = document.querySelector('[data-cta-id="qualification-contact"]');
-    if(btn) btn.addEventListener('click', function(){ F.record('cta', { cta: 'qualification-contact', step: 'clicked' }); });
-  })();
-</script>
+<script src="../../assets/analytics.js"></script>
 </body>
 </html>

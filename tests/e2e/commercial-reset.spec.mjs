@@ -11,6 +11,50 @@ test.describe('commercial reset (#224) - storefront + qualification', () => {
     expect(html).not.toContain('waitlist');
     expect(html).not.toContain('no paid offer');
     await expect(page.locator('[data-cta-id="qualification-contact"]')).toBeVisible();
+    const supportHtml = await page.content();
+    expect(supportHtml).not.toContain('real acknowledgment');
+    expect(supportHtml).toContain('you must send it yourself');
+    expect(supportHtml).toContain('does not send or store the request');
+  });
+
+
+  test('storefront funnel: sends first-party page, offer and CTA events without personal data', async ({ page }) => {
+    const events = [];
+    await page.route('**/api/track', async (route) => {
+      const payload = route.request().postDataJSON();
+      events.push(payload);
+      await route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, stored: true })
+      });
+    });
+
+    await page.goto('/docs/commercial-reset/index.html', { waitUntil: 'domcontentloaded' });
+    await expect.poll(() => events.some((item) => item.event === 'page_view')).toBeTruthy();
+
+    await page.locator('#pricing').scrollIntoViewIfNeeded();
+    await expect.poll(() => events.some((item) => item.event === 'offer_view' && item.props.step === 'pricing')).toBeTruthy();
+
+    const demoCta = page.locator('[data-cta-id="commercial-demo"]');
+    await demoCta.evaluate((element) => {
+      element.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    });
+    await demoCta.click();
+    await expect.poll(() => events.some((item) => item.event === 'cta_click' && item.props.cta === 'commercial-demo')).toBeTruthy();
+
+    const pageView = events.find((item) => item.event === 'page_view');
+    expect(pageView).toMatchObject({
+      v: 1,
+      page: '/docs/commercial-reset/index.html',
+      lang: 'en'
+    });
+    for (const item of events) {
+      expect(item.props || {}).not.toHaveProperty('email');
+      expect(item.props || {}).not.toHaveProperty('message');
+      expect(item.props || {}).not.toHaveProperty('name');
+      expect(item.props || {}).not.toHaveProperty('text');
+    }
   });
 
   test('storefront: links resolve to existing pages', async ({ page }) => {
