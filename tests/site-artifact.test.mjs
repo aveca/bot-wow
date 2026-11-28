@@ -55,6 +55,19 @@ for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'fea
   check(`present dans l'artefact : ${f}`, fs.existsSync(path.join(out, f)));
 }
 
+// 3a. La page commerciale indexable doit etre decouverte via robots.txt.
+const commercialSitemap = fs.readFileSync(path.join(out, 'sitemap-commercial.xml'), 'utf8');
+const commercialRobots = fs.readFileSync(path.join(out, 'robots.txt'), 'utf8');
+const commercialPage = fs.readFileSync(path.join(out, 'docs/commercial-reset/index.html'), 'utf8');
+const commercialLocs = commercialSitemap.split('<loc>').slice(1).map((part) => part.split('</loc>')[0]);
+check('robots référence le sitemap commercial',
+  commercialRobots.includes('Sitemap: https://bot-wow.com/sitemap-commercial.xml'));
+check('sitemap commercial contient uniquement le canonical de la page commerciale',
+  commercialLocs.length === 1 && commercialLocs[0] === 'https://bot-wow.com/docs/commercial-reset/');
+check('page commercial-reset indexable et canonical',
+  commercialPage.includes('<meta name="robots" content="index,follow">') &&
+  commercialPage.includes('<link rel="canonical" href="https://bot-wow.com/docs/commercial-reset/">'));
+
 // 3b. La disponibilité du paquet doit être annoncée honnêtement avant l'achat.
 const enHome = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 const frHome = fs.readFileSync(path.join(out, 'fr/index.html'), 'utf8');
