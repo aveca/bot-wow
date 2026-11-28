@@ -1,22 +1,8 @@
 #!/usr/bin/env node
 /**
  * tests/legacy-landing.test.mjs — l'hote API ne doit plus servir de page
- * marketing contradictoire.
- *
- * CONTEXTE MESURE (2026-11-04, production) :
- *   https://api.bot-wow.com/de/  -> HTTP 200, HTML contenant
- *     - « anti-detection »
- *     - « Farm your WoW gold »
- *     - « 100% free » / « Get BOT-WOW free »
- *     - JSON-LD SoftwareApplication avec "offers":{"price":"0"}
- *   Meme constat sur /en/, /es/, /pt/, /ru/.
- *
- * Ces contenus contredisaient l'offre unique payante (20 EUR) et le registre
- * de modules (seul `fish` est `available`, les promesses d'indetectabilite
- * sont explicitement interdites). Le test verrouille la correction :
- * toute requete GET non-API sur l'hote API redirige (308) vers l'URL
- * canonique unique, et le code source ne contient plus aucune de ces
- * promesses.
+ * marketing contradictoire et la page de retour ne doit pas annoncer une
+ * livraison avant une confirmation serveur.
  *
  * Aucun paiement, aucun e-mail, aucun appel a un service tiers.
  */
@@ -34,6 +20,7 @@ function check(name, ok, detail = '') {
 }
 
 const workerSrc = readFileSync(join(REPO, 'worker', 'index.js'), 'utf8');
+const thanks = readFileSync(join(REPO, 'thanks.html'), 'utf8');
 const tmpWorker = join(HERE, '.worker-under-test.mjs');
 writeFileSync(tmpWorker, workerSrc);
 const workerMod = await import('file:///' + tmpWorker.replace(/\\/g, '/') + '?t=' + Date.now());
@@ -43,9 +30,9 @@ const LEGACY_PATHS = ['/', '/de/', '/en/', '/es/', '/pt/', '/ru/', '/de/index.ht
 
 /* Promesses interdites : ne doivent plus exister dans le Worker deploye. */
 const FORBIDDEN = [
-  ['anti-detection', 'promesse d\'indetectabilite'],
+  ['anti-detection', 'promesse d\\'indetectabilite'],
   ['"price":"0"', 'JSON-LD prix 0'],
-  ['Farm your', 'promesse de farm de l\'or'],
+  ['Farm your', 'promesse de farm de l\\'or'],
   ['100% free', 'promesse gratuite'],
   ['Get BOT-WOW free', 'promesse gratuite'],
   ['Free lifetime access', 'promesse gratuite'],
@@ -85,22 +72,32 @@ for (const path of LEGACY_PATHS) {
 
 /* ----- 4. Le prix serveur reste aligne sur le prix affiche ----- */
 {
-  const m = workerSrc.match(/PRICE_TABLE\s*=\s*\{[\s\S]{0,200}?amount:\s*(\d+),\s*currency:\s*"([A-Z]+)"/);
+  const m = workerSrc.match(/PRICE_TABLE\\s*=\\s*\\{[\\s\\S]{0,200}?amount:\\s*(\\d+),\\s*currency:\\s*"([A-Z]+)"/);
   check('PRICE_TABLE est toujours a 2000 centimes', !!m && m[1] === '2000', `(trouve=${m ? m[1] : 'aucun'})`);
   check('PRICE_TABLE reste en EUR', !!m && m[2] === 'EUR', `(devise=${m ? m[2] : 'aucune'})`);
 }
 
-/* ----- 5. Une seule offre payante cote Worker (pas de forfaits articiels) ----- */
+/* ----- 5. Une seule offre payante cote Worker (pas de forfaits artificiels) ----- */
 {
-  const tableMatch = workerSrc.match(/PRICE_TABLE\s*=\s*\{([\s\S]*?)\n\};/);
-  // On compte les CLES d'offre ("id": { ... }), pas les chaines (la
-  // description et la devise sont aussi entre guillemets).
-  const keys = tableMatch ? (tableMatch[1].match(/^\s*"[^"]+"\s*:\s*\{/gm) || []) : [];
-  check('PRICE_TABLE a l\'offre historique plus Planner et Studio',
+  const tableMatch = workerSrc.match(/PRICE_TABLE\\s*=\\s*\\{([\\s\\S]*?)\\n\\};/);
+  const keys = tableMatch ? (tableMatch[1].match(/^\\s*"[^"]+"\\s*:\\s*\\{/gm) || []) : [];
+  check('PRICE_TABLE a l'offre historique plus Planner et Studio',
     keys.length === 3 && /"planner"/.test(tableMatch[1]) && /"studio"/.test(tableMatch[1]),
     `(offres=${keys.length})`);
 }
 
+/* ----- 6. Le retour de paiement reste strictement informatif ----- */
+check('thanks.html ne prétend pas que la clé a déjà été envoyée',
+  !/clé envoyée par e-?mail|key sent by email/i.test(thanks));
+check('thanks.html affiche un état de vérification explicite',
+  /Payment status — verification pending/.test(thanks) &&
+  /Paiement en cours de vérification/.test(thanks));
+check('thanks.html ne confirme ni paiement ni accès depuis l’URL',
+  /does not confirm payment or create access/i.test(thanks) &&
+  /ne confirme pas le paiement et ne crée pas d’accès/i.test(thanks));
+check('thanks.html garde un canal support accessible',
+  /mailto:support@bot-wow.com/.test(thanks));
+
 console.log('');
-console.log(failures === 0 ? 'OFFRE UNIQUE : OK' : `OFFRE UNIQUE : ${failures} ECHEC(S)`);
+console.log(failures === 0 ? 'OFFRE UNIQUE + RETOUR PAIEMENT : OK' : `OFFRE UNIQUE + RETOUR PAIEMENT : ${failures} ECHEC(S)`);
 process.exit(failures === 0 ? 0 : 1);
