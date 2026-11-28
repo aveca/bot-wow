@@ -50,7 +50,7 @@ for (const f of ['worker/index.js', 'package.json', 'package-lock.json', 'wrangl
 // 3. Les pages publiques sont bien presentes
 for (const f of ['index.html', 'compare.html', 'modules.html', 'demo.html', 'features.html',
   'fishing.html', 'faq.html', 'success.html', 'cancel.html', '404.html',
-  'robots.txt', 'sitemap.xml', 'version.txt',
+  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'version.txt',
   'fr/index.html', 'fr/compare.html', 'fr/modules.html']) {
   check(`present dans l'artefact : ${f}`, fs.existsSync(path.join(out, f)));
 }
