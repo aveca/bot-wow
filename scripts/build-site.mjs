@@ -25,7 +25,7 @@ const FILES = [
   'index.html', 'demo.html', 'compare.html', 'modules.html', 'features.html',
   'product.html', 'fishing.html', 'getting-started.html', 'compatibility.html', 'roadmap.html',
   'faq.html', 'success.html', 'thanks.html', 'cancel.html', '404.html', 'buy.html', 'companion.html', 'positionnement.html',
-  'robots.txt', 'sitemap.xml', 'version.txt', '.nojekyll', '_headers', '_redirects',
+  'robots.txt', 'sitemap.xml', 'sitemap-commercial.xml', 'version.txt', '.nojekyll', '_headers', '_redirects',
 ];
 
 /* Repertoires publies recursivement. */
