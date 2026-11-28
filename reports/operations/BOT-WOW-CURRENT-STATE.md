@@ -4085,3 +4085,38 @@ Retrait de la section formulaire email signup + son `<script>` inline des 8 fich
 ## Prochaine action (globale inchangée)
 
 Checkout public fermé ; vente en attente des trois décisions (textes juridiques, provenance R2, profil Mollie dédié). PR #90 reste le seul correctif de credential Mollie. PR #209 reste ouverte, en attente de revue PR / décision propriétaire sur le déploiement.
+---
+
+## Session 2026-11-27 (PR #231) — correctif assets `.git/`
+
+**PR :** [#231](https://github.com/aveca/bot-wow/pull/231) — branche `fix/assetsignore-git-20261127-main`, base `main` `1b3651ed8e63431b859fc3b073d6c90f8f2ac2f6`
+**Commit :** `9c9caa135555d0fec697bc0a984941b0f9a2d6dc` (1 fichier, +7 lignes)
+**Déployé :** non. Aucun déploiement Worker ni Pages ; aucun secret modifié ; aucun paiement testé.
+**Historisation :** PR #230 fermée sans merge (base `revenue/early-access-monthly-499-20261104`, 70 fichiers dont 9 commits de la mission revenue — mélange de missions interdit par AGENTS.md).
+
+### Faits directement vérifiés (outils : wrangler 4.127.1, git, docs Cloudflare)
+
+| Fait | Preuve |
+|---|---|
+| `[assets] directory = "./"` (racine du dépôt) dans `wrangler.toml` | lecture fichier |
+| `.git` local = **69,2 MiB**, pack unique **68,3 MiB** | mesure disque (`os.walk`) |
+| Wrangler lisait bien le `.git` comme asset : `wrangler dev` échouait | `C:\factory-service\logs\bot_wow_api.log`, 2026-11-27 18:10 et 18:12 UTC : `Asset too large ... pack-c49b8139...pack 68.3 MiB` |
+| Limite produit : **25 MiB par fichier d'asset** (inchangée, toutes offres) | doc Cloudflare (changelog 2025-09-04) |
+| Mécanisme d'exclusion officiel = `.assetsignore` (style gitignore) | doc Cloudflare, framework-guides/automatic-configuration |
+| AVANT : `npx wrangler deploy --dry-run` → `Read 1123 files` puis **erreur** `Asset too large` | exécution réelle, session du 2026-11-27 |
+| APRÈS : même commande → `Read 1127 files`, build valide, `Total Upload: 258.86 KiB / gzip: 63.79 KiB`, `--dry-run: exiting now` | exécution réelle, même machine, même poste |
+| `wrangler deploy --dry-run` ne publie rien (build + validation, aucun appel API, aucune credential) | doc Cloudflare (cf/projects) |
+| Workflows CI : `pages.yml` / `validate.yml` = push `main` ; `ui-quality.yml` = PR vers `main` | lecture `.github/workflows/*.yml` — push d'une branche feature ne déploie rien |
+| `git diff --check` : propre | exécution |
+| Untracked `artifacts/ui/*` (15 fichiers) et `test-results/` : **préservés, non commités** | `git status` |
+
+### Effet secondaire du défaut (risque réel)
+
+Le pack contenait **l'intégralité de l'historique git du dépôt** : sans l'exclusion, il aurait été servi comme asset statique public dès qu'un déploiement aurait franchi le contrôle de taille.
+
+### Observations non corrigées (hors périmètre de cette PR)
+
+- `test-results/` et `artifacts/` (sorties locales de tests Playwright) restent candidats à une exclusion d'assets — non bloquants, à traiter si le besoin est démontré.
+- `wrangler 4.127.1` local vs `4.169.0` disponible (message wrangler).
+
+**Prochaine action :** faire tourner `validate.yml` + `ui-quality.yml` sur la PR #231 ; après merge autorisé seulement, vérifier en production que `wrangler dev`/`deploy` ne reprennent pas ce blocage.

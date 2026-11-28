@@ -1,4 +1,4 @@
-dist/
+﻿dist/
 worker/
 telemetry-worker/
 security-guard/
@@ -10,3 +10,10 @@ node_modules/
 package.json
 package-lock.json
 wrangler.toml
+# Artefacts locaux du poste de travail : jamais destin├®s ├á un upload d'assets.
+# .git/ = 69,2 MiB dans ce clone (pack unique de 68,3 MiB) : au-del├á de la
+# limite Workers de 25 MiB par fichier, `wrangler dev` ET `wrangler deploy
+# --dry-run` ├®chouaient en "Asset too large" sur .git/objects/pack/*.pack.
+# .wrangler/ = ├®tat local de Wrangler (cache, logs, sortie de build).
+.git/
+.wrangler/
